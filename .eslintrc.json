@@ -1,0 +1,6 @@
+{
+    "extends": "standard",
+    "plugins": [
+        "standard", "flowtype"
+    ]
+}
