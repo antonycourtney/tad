@@ -4,7 +4,12 @@
   "dependencies": {
     "babel-runtime": "^6.18.0",
     "bootstrap": "^3.3.7",
-    "lodash": "^4.16.4"
+    "d3-fetch": "0.0.2",
+    "flow-bin": "^0.33.0",
+    "immutable": "^3.8.1",
+    "jsesc": "^2.2.0",
+    "lodash": "^4.16.4",
+    "q": "^1.4.1"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
@@ -35,7 +40,7 @@
     "build:bootstrap": "mkdir -p build && cpx \"node_modules/bootstrap/dist/**/*\" build",
     "build": "npm run build:bootstrap && npm run build:jquery",
     "lint": "eslint .",
-    "test": "standard src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/reltabTests.js | tap-spec"
+    "test": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/reltabTests.js | tap-spec"
   },
   "standard": {
     "ignore": [
