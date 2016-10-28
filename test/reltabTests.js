@@ -4,6 +4,15 @@ import * as reltab from '../src/reltab' // eslint-disable-line
 
 const {col, constVal} = reltab
 
+import * as Q from 'q'
+import * as FS from 'fs'
+
+// A fetch polyfill using ReadFile that assumes url is relative:
+global.fetch = (url: string): Promise<any> => Q.nfcall(FS.readFile, url, 'utf-8').then(txt => ({ text: () => txt }))
+
+// require('es6-promise').polyfill()
+// require('isomorphic-fetch')
+
 test('trivial test', (t) => {
   t.plan(1)
   t.ok(true, 'trivial truth value')
@@ -31,5 +40,15 @@ test('reltab filter expressions', (t) => {
 
   console.log('e4s.toSqlWhere: ', e4s)
 
+  t.end()
+})
+
+test('basic table read', (t) => {
+  t.plan(1)
+  const tq = reltab.tableQuery('test-data/bart-comp-all.json')
+  reltab.local.evalQuery(tq).then(res => {
+    console.log('basic table read result: ', res)
+    t.ok(true, 'basic table read')
+  })
   t.end()
 })
