@@ -43,7 +43,7 @@ test('reltab filter expressions', (t) => {
   t.end()
 })
 
-test('basic table read', (t) => {
+test('basic table read', t => {
   t.plan(5)
   const tq = reltab.tableQuery('test-data/bart-comp-all.json')
   reltab.local.evalQuery(tq).then(res => {
@@ -66,12 +66,30 @@ test('basic table read', (t) => {
     const rowData = res.rowData
     t.equal(rowData.length, 2873, 'q1 rowData.length')
 
-    console.log(rowData[0])
-
+    // console.log(rowData[0])
     var expRow0 = ['Crunican, Grace', 'General Manager', 312461, 0, 3846, 19141, 37513,
       17500, 1869, 7591, 399921, 'MNP', 'Executive Management', 'Non-Represented']
 
     t.deepEqual(rowData[0], expRow0, 'first row matches expected')
+    t.end()
+  })
+})
+
+test('basic project operator', t => {
+  t.plan(3)
+  const pcols = ['Job', 'Title', 'Union', 'Name', 'Base', 'TCOE']
+  const tq = reltab.tableQuery('test-data/bart-comp-all.json')
+  const q2 = tq.project(pcols)
+  // console.log('q2: ', q2)
+  reltab.local.evalQuery(q2).then(res => {
+    t.ok(true, 'project query returned success')
+    // console.log('project query schema: ', res.schema)
+    t.deepEqual(res.schema.columns, pcols, 'result schema from project')
+
+    // console.log(res.rowData[0])
+    var expRow0 = ['Executive Management', 'General Manager', 'Non-Represented', 'Crunican, Grace', 312461, 399921]
+
+    t.deepEqual(res.rowData[0], expRow0, 'project result row 0')
     t.end()
   })
 })

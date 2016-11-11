@@ -165,6 +165,11 @@ class QueryExp {
     this.valArgs = valArgs
     this.tableArgs = tableArgs
   }
+
+  // operator chaining methods:
+  project (cols: Array<string>): QueryExp {
+    return new QueryExp('project', List([cols]), List([this]))
+  }
 }
 
 // Create base of a query expression chain by starting with "table":
@@ -426,7 +431,6 @@ class CSEEvaluator {
    * Returns: promise for the result value
    */
   evalTable (tableId: number): Promise<TableRep> {
-    console.log('evalTable: tableId: ', tableId, ', valExps: ', this.valExps)
     var resp = this.promises[tableId]
     if (typeof resp === 'undefined') {
       // no entry yet, make one:
