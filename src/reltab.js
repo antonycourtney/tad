@@ -1,6 +1,8 @@
 /* @flow */
 
-import * as d3 from 'd3-fetch'
+import * as Q from 'q'
+import * as d3f from 'd3-fetch'
+import * as d3a from 'd3-array'
 import * as Immutable from 'immutable'
 import jsesc from 'jsesc'
 // import type { List } from 'immutable' // eslint-disable-line
@@ -10,7 +12,7 @@ const {List} = Immutable
  * In older versions of d3, d3.json wasn't promise based, now it is.
  *
  */
-export const fetch: (url: string) => Promise<any> = d3.json
+export const fetch: (url: string) => Promise<any> = d3f.json
 
 /**
  * AST for filter expressions, consisting of a tree of
@@ -154,14 +156,14 @@ type QueryOp = 'table' | 'project' | 'filter' | 'groupBy'
 class QueryExp {
   expType: 'QueryExp'
   operator: string
-  tableArgs: List<string>
   valArgs: List<any>
+  tableArgs: List<QueryExp>
 
-  constructor (operator: QueryOp, tableArgs: List<string>, valArgs: List<any> = List()) {
+  constructor (operator: QueryOp, valArgs: List<any>, tableArgs: List<QueryExp> = List()) {
     this.expType = 'QueryExp'
     this.operator = operator
-    this.tableArgs = tableArgs
     this.valArgs = valArgs
+    this.tableArgs = tableArgs
   }
 }
 
@@ -187,19 +189,21 @@ class SchemaError {
   }
 }
 
+type ColumnMetaMap = {[colId: string]: ColumnMetadata}
+
 class Schema {
-  columnMetadata:{[colId: string]: ColumnMetadata}
+  columnMetadata: ColumnMetaMap
   columns: Array<string>
   columnIndices:{[colId: string]: number}
 
-  constructor (schemaData) {
+  constructor (columns: Array<string>, columnMetadata: ColumnMetaMap) {
     // TODO: really need to clone these to be safe
-    this.columnMetadata = schemaData.columnMetadata
-    this.columns = schemaData.columns
+    this.columns = columns
+    this.columnMetadata = columnMetadata
 
     var columnIndices = {}
-    for (var i = 0; i < schemaData.columns.length; i++) {
-      var col = schemaData.columns[ i ]
+    for (var i = 0; i < columns.length; i++) {
+      var col = columns[ i ]
       columnIndices[ col ] = i
     }
     this.columnIndices = columnIndices
@@ -265,17 +269,186 @@ class TableRep {
   }
 }
 
-const localEvalQuery = (query: QueryExp): Promise<TableRep> => {
-  // FIXME: This assumes a table query!
-  const tableName = query.tableArgs.first()
+const loadTable = (tableName: string): Promise<TableRep> => {
   return fetch(tableName).then(jsonData => {
     // json format is [ schemaData, { rowData }]
     const [schemaData, {rowData}] = jsonData
-    const schema = new Schema(schemaData)
+    const schema = new Schema(schemaData.columns, schemaData.columnMetadata)
     return new TableRep(schema, rowData)
   }, error => {
     console.error('fetch failed: ', error)
   })
+}
+
+const tableCache: {[tableName: string]: Promise<TableRep>} = {}
+// simple wrapper around loadTable that uses tableCache:
+const tableRefImpl = (tableName: string): Promise<TableRep> => {
+  var tcp = tableCache[tableName]
+  if (!tcp) {
+    // cache miss:
+    tcp = loadTable(tableName)
+    tableCache[tableName] = tcp
+  }
+  return tcp
+}
+
+// base expressions:  Do not have any sub-table arguments, and produce a promise<TableData>
+const baseOpImplMap = {
+  'table': tableRefImpl
+}
+
+const evalBaseExp = (exp: QueryExp): Promise<TableRep> => {
+  const opImpl = baseOpImplMap[exp.operator]
+  if (!opImpl) {
+    throw new Error('evalBaseExp: unknown primitive table operator "' + exp.operator + '"')
+  }
+  var args = exp.valArgs.toArray()
+  var opRes = opImpl.apply(null, args)
+  return opRes
+}
+
+/*
+ * A TableOp is a function that takes a number of tables (an Array of TableRep)
+ * as an argument and produces a result table
+ */
+type TableOp = (subTables: Array<TableRep>) => TableRep
+
+// Given an input Schema and an array of columns to project, calculate permutation
+// to apply to each row to obtain the projection
+const calcProjectionPermutation = (inSchema: Schema, projectCols: Array<string>): Array<number> => {
+  var perm = []
+  // ensure all columns in projectCols in schema:
+  for (var i = 0; i < projectCols.length; i++) {
+    const colId = projectCols[ i ]
+    if (!(inSchema.columnMetadata[ colId ])) {
+      const err = new Error('project: unknown column Id "' + colId + '"')
+      throw err
+    }
+    perm.push(inSchema.columnIndex(colId))
+  }
+  return perm
+}
+
+const projectImpl = (projectCols: Array<string>): TableOp => {
+  /* Use the inImpl schema and projectCols to calculate the permutation to
+   * apply to each input row to produce the result of the project.
+   */
+  const calcState = (inSchema: Schema): {schema: Schema, permutation: Array<number> } => {
+    const perm = calcProjectionPermutation(inSchema, projectCols)
+    const ns = new Schema(projectCols, inSchema.columnMetadata)
+
+    return {schema: ns, permutation: perm}
+  }
+
+  const pf = (subTables: Array<TableRep>): TableRep => {
+    const tableData = subTables[0]
+
+    const ps = calcState(tableData.schema)
+    const permuteOneRow = (row) => d3a.permute(row, ps.permutation)
+    const outRowData = tableData.rowData.map(permuteOneRow)
+
+    return new TableRep(ps.schema, outRowData)
+  }
+
+  return pf
+}
+
+const simpleOpImplMap = {
+  'project': projectImpl
+}
+
+/*
+ * Evaluate a non-base expression from its sub-tables
+ */
+const evalInteriorExp = (exp: QueryExp, subTables: Array<TableRep>): Promise<TableRep> => {
+  const opImpl = simpleOpImplMap[exp.operator]
+  var valArgs = exp.valArgs.toArray()
+  var impFn = opImpl.apply(null, valArgs)
+  var tres = impFn(subTables)
+  return tres
+}
+
+/*
+ * use simple depth-first traversal and value numbering to
+ * identify common subexpressions for query evaluation.
+ *
+ * For now, a new evaluator is created for each top-level query
+ * and only exists for the duration of query evaluation.
+ * Later may want to use some more LRU-like strategy to cache
+ * results across top level evaluations.
+ */
+
+/* A NumberedQuery is a QueryExp extended with an array mapping all table
+ * expressions to corresponding table numbers in associated CSE Evaluator
+ */
+class NumberedExp {
+  exp: QueryExp
+  tableNums: List<number>
+
+  constructor (exp: QueryExp, tableNums: List<number>) {
+    this.exp = exp
+    this.tableNums = tableNums
+  }
+}
+
+class CSEEvaluator {
+  invMap: { [expRep: string]: number }    // Map from stringify'ed expr to value number
+  valExps: Array<NumberedExp>
+  promises: Array<Promise<TableRep>>
+
+  constructor () {
+    this.invMap = {}
+    this.valExps = []
+    this.promises = []
+  }
+
+  /*
+   * use simple depth-first traversal and value numbering to
+   * identify common table subexpressions.
+   */
+  buildCSEMap (query: QueryExp): number {
+    const tableNums = query.tableArgs.map(e => this.buildCSEMap(e))
+    const expKey = query.operator + '( [ ' + tableNums.toString() + ' ], ' + JSON.stringify(query.valArgs) + ' )'
+    let valNum = this.invMap[expKey]
+    if (typeof valNum === 'undefined') {
+      // no entry, need to add it:
+      // let's use opRep as prototype, and put tableNums in the new object:
+      const numExp = new NumberedExp(query, tableNums)
+      valNum = this.valExps.length
+      this.valExps[valNum] = numExp
+      this.invMap[expKey] = valNum
+    } // else: cache hit! nothing to do
+
+    return valNum
+  }
+
+  /* evaluate the table identified by the specified tableId using the CSE Map.
+   * Returns: promise for the result value
+   */
+  evalTable (tableId: number): Promise<TableRep> {
+    console.log('evalTable: tableId: ', tableId, ', valExps: ', this.valExps)
+    var resp = this.promises[tableId]
+    if (typeof resp === 'undefined') {
+      // no entry yet, make one:
+      const numExp = this.valExps[tableId]
+
+      if (numExp.tableNums.count() > 0) {
+        // dfs eval of sub-tables:
+        const subTables = numExp.tableNums.map(tid => this.evalTable(tid))
+        resp = Q.all(subTables.toArray()).then(tvals => evalInteriorExp(numExp.exp, tvals))
+      } else {
+        resp = evalBaseExp(numExp.exp)
+      }
+      this.promises[tableId] = resp
+    }
+    return resp
+  }
+}
+
+const localEvalQuery = (query: QueryExp): Promise<TableRep> => {
+  const evaluator = new CSEEvaluator()
+  const tableId = evaluator.buildCSEMap(query)
+  return evaluator.evalTable(tableId)
 }
 
 export const local = {

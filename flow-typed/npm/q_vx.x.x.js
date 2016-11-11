@@ -13,9 +13,11 @@ declare module 'q' {
   }
 
   declare class QLib {
+    all<T>(promises: Array<Promise<T>>): Promise<Array<T>>;
     defer<T>(): Deferred<T>;
     nfcall<T>(f: any, ...rest: Array<any>): Promise<T>;
   }
+
   declare module.exports: QLib;
 }
 
