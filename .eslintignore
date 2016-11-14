@@ -1,1 +1,2 @@
 flow-typed/**/*.js
+webpack.config.js

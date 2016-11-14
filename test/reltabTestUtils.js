@@ -16,6 +16,7 @@ type Handler = (err: any) => void
 
 export const mkAsyncErrHandler = (t: any, msg: string): Handler => {
   return (err) => {
+    console.error('caught async promise exception: ', err.stack)
     t.fail(msg + ': ' + err)
   }
 }

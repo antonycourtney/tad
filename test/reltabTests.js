@@ -119,6 +119,7 @@ test('basic groupBy', t => {
 })
 
 const q4 = q2.groupBy(['Job'], ['Title', 'Union', 'Name', 'Base', 'TCOE'])
+
 test('groupBy aggs', t => {
   reltab.local.evalQuery(q4).then(res => {
     var rs = res.schema
@@ -132,4 +133,13 @@ test('groupBy aggs', t => {
     t.deepEqual(groupSum, tcoeSum, 'tcoe sum after groupBy')
     t.end()
   }).fail(util.mkAsyncErrHandler(t, 'evalQuery q4'))
+})
+
+const q5 = q1.filter(reltab.and().eq(col('Job'), constVal('Executive Management')))
+
+test('basic filter', t => {
+  reltab.local.evalQuery(q5).then(res => {
+    t.ok(res.rowData.length === 14, 'expected row count after filter')
+    t.end()
+  }).fail(util.mkAsyncErrHandler(t, 'basic filter test'))
 })

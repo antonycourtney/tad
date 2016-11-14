@@ -3,10 +3,7 @@
 import * as Q from 'q'
 import * as d3f from 'd3-fetch'
 import * as d3a from 'd3-array'
-import * as Immutable from 'immutable'
-const {List} = Immutable
 import jsesc from 'jsesc'
-// import type { List } from 'immutable' // eslint-disable-line
 
 /**
  * In older versions of d3, d3.json wasn't promise based, now it is.
@@ -99,9 +96,9 @@ export type BoolOp = 'AND' | 'OR'
 export class FilterExp {
   expType: 'FilterExp'
   op: BoolOp
-  opArgs: List<SubExp>
+  opArgs: Array<SubExp>
 
-  constructor (op: BoolOp, opArgs = Immutable.List()) {
+  constructor (op: BoolOp, opArgs: Array<SubExp> = []) {
     this.expType = 'FilterExp'
     this.op = op
     this.opArgs = opArgs
@@ -110,7 +107,7 @@ export class FilterExp {
   // chained operator constructors for relational expressions:
   chainRelExp (op: RelOp, lhs: ValExp, rhs: ValExp): FilterExp {
     const relExp = new RelExp(op, lhs, rhs)
-    const extOpArgs = this.opArgs.push(relExp)
+    const extOpArgs = this.opArgs.concat(relExp)
     return new FilterExp(this.op, extOpArgs)
   }
 
@@ -131,7 +128,7 @@ export class FilterExp {
   }
 
   subExp (sub: FilterExp): FilterExp {
-    const extOpArgs = this.opArgs.push(sub)
+    const extOpArgs = this.opArgs.concat(sub)
     return new FilterExp(this.op, extOpArgs)
   }
 
@@ -164,29 +161,33 @@ type AggColSpec = string
 class QueryExp {
   expType: 'QueryExp'
   operator: string
-  valArgs: List<any>
-  tableArgs: List<QueryExp>
+  valArgs: Array<any>
+  tableArgs: Array<QueryExp>
 
-  constructor (operator: QueryOp, valArgs: List<any>, tableArgs: List<QueryExp> = List()) {
+  constructor (operator: QueryOp, valArgs: Array<any>, tableArgs: Array<QueryExp> = []) {
     this.expType = 'QueryExp'
     this.operator = operator
-    this.valArgs = valArgs
-    this.tableArgs = tableArgs
+    this.valArgs = valArgs.slice()
+    this.tableArgs = tableArgs.slice()
   }
 
   // operator chaining methods:
   project (cols: Array<string>): QueryExp {
-    return new QueryExp('project', List([cols]), List([this]))
+    return new QueryExp('project', [cols], [this])
   }
 
   groupBy (cols: Array<string>, aggs: Array<AggColSpec>): QueryExp {
-    return new QueryExp('groupBy', List([cols, aggs]), List([this]))
+    return new QueryExp('groupBy', [cols, aggs], [this])
+  }
+
+  filter (fexp: FilterExp): QueryExp {
+    return new QueryExp('filter', [fexp], [this])
   }
 }
 
 // Create base of a query expression chain by starting with "table":
 export const tableQuery = (tableName: string): QueryExp => {
-  return new QueryExp('table', List([tableName]))
+  return new QueryExp('table', [tableName])
 }
 
 type Scalar = number|string
@@ -319,7 +320,7 @@ const evalBaseExp = (exp: QueryExp): Promise<TableRep> => {
   if (!opImpl) {
     throw new Error('evalBaseExp: unknown primitive table operator "' + exp.operator + '"')
   }
-  var args = exp.valArgs.toArray()
+  var args = exp.valArgs
   var opRes = opImpl.apply(null, args)
   return opRes
 }
@@ -532,9 +533,122 @@ const groupByImpl = (cols: Array<string>, aggs: Array<AggColSpec>): TableOp => {
   return gbf
 }
 
+/*
+ * compile the given filter expression with rest to the given schema
+ */
+/*
+function compileFilterExp (schema, fexp) {
+  function compileAccessor (tok) {
+    var af = undefined
+    if (tok.tt == TOK_IDENT) {
+      var idx = schema.columnIndex(tok.val)
+      if (typeof idx == 'undefined') {
+        throw new Error("compiling filter expression: Unknown column identifier '" + tok.val + "'")
+      }
+      af = function (row) {
+        return row[ idx ]
+      }
+    } else {
+      af = function (row) {
+        return tok.val
+      }
+    }
+    return af
+  }
+
+  var relOpFnMap = {
+    'eq': function (l, r) { return l == r; }
+  }
+
+  function compileRelOp (relop) {
+    var tlhs = tokenize(relop.lhs)
+    var trhs = tokenize(relop.rhs)
+    var lhsef = compileAccessor(tlhs)
+    var rhsef = compileAccessor(trhs)
+    var cmpFn = relOpFnMap[ relop.relOp ]
+    if (!cmpFn) {
+      throw new Error("compileRelOp: unknown relational operator '" + relop.op + "'")
+    }
+
+    function rf (row) {
+      var lval = lhsef(row)
+      var rval = rhsef(row)
+      return cmpFn(lval, rval)
+    }
+    return rf
+  }
+
+  function compileSimpleExp (se) {
+    if (se.type == 'RelOp') {
+      return compileRelOp(se)
+    } else if (se.type == 'subexp') {
+      return compileExp(se.exp)
+    } else {
+      throw new Error('error compile simple expression ' + JSON.stringify(se) + ': unknown expr type')
+    }
+  }
+
+  function compileAndExp (argExps) {
+    var argCFs = argExps.map(compileSimpleExp)
+
+    function cf (row) {
+      for ( var i = 0; i < argCFs.length; i++) {
+        var acf = argCFs[ i ]
+        var ret = acf(row)
+        if (!ret)
+          return false
+      }
+      return true
+    }
+    return cf
+  }
+
+  function compileOrExp (argExps) {
+    // TODO
+  }
+
+  function compileExp (exp: FilterExp) {
+    let cfn
+    if (exp.op === 'AND')
+      cfn = compileAndExp
+    else
+      cfn = compileOrExp
+
+    return cfn(exp.opArgs)
+  }
+
+  return {
+    'evalFilterExp': compileExp(fexp)
+  }
+}
+
+const filterImpl = (fexp: FilterExp): TableOp => {
+  const ff = (subTables: Array<TableRep>): TableRep => {
+    const tableData = subTables[ 0 ]
+
+    const ce = compileFilterExp(tableData.schema, fexp)
+
+    let outRows = []
+    for (var i = 0; i < tableData.rowData.length; i++) {
+      let row = tableData.rowData[i]
+      if (ce.evalFilterExp(row)) {
+        outRows.push(row)
+      }
+    }
+
+    return {schema: tableData.schema, rowData: outRows}
+  }
+
+  return ff
+}
+
+*/
+
 const simpleOpImplMap = {
   'project': projectImpl,
   'groupBy': groupByImpl
+// ,
+//  'filterImpl': filterImpl
 }
 
 /*
@@ -542,7 +656,10 @@ const simpleOpImplMap = {
  */
 const evalInteriorExp = (exp: QueryExp, subTables: Array<TableRep>): Promise<TableRep> => {
   const opImpl = simpleOpImplMap[exp.operator]
-  var valArgs = exp.valArgs.toArray()
+  if (!opImpl) {
+    throw new Error('reltab query evaluation: unsupported operator "' + exp.operator + '"')
+  }
+  var valArgs = exp.valArgs
   var impFn = opImpl.apply(null, valArgs)
   var tres = impFn(subTables)
   return tres
@@ -563,9 +680,9 @@ const evalInteriorExp = (exp: QueryExp, subTables: Array<TableRep>): Promise<Tab
  */
 class NumberedExp {
   exp: QueryExp
-  tableNums: List<number>
+  tableNums: Array<number>
 
-  constructor (exp: QueryExp, tableNums: List<number>) {
+  constructor (exp: QueryExp, tableNums: Array<number>) {
     this.exp = exp
     this.tableNums = tableNums
   }
@@ -611,10 +728,10 @@ class CSEEvaluator {
       // no entry yet, make one:
       const numExp = this.valExps[tableId]
 
-      if (numExp.tableNums.count() > 0) {
+      if (numExp.tableNums.length > 0) {
         // dfs eval of sub-tables:
         const subTables = numExp.tableNums.map(tid => this.evalTable(tid))
-        resp = Q.all(subTables.toArray()).then(tvals => evalInteriorExp(numExp.exp, tvals))
+        resp = Q.all(subTables).then(tvals => evalInteriorExp(numExp.exp, tvals))
       } else {
         resp = evalBaseExp(numExp.exp)
       }
