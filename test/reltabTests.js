@@ -1,6 +1,7 @@
 /* @flow */
 import test from 'tape'
 import * as reltab from '../src/reltab' // eslint-disable-line
+import * as util from './reltabTestUtils'
 
 const {col, constVal} = reltab
 
@@ -43,10 +44,13 @@ test('reltab filter expressions', (t) => {
   t.end()
 })
 
+const q1 = reltab.tableQuery('test-data/bart-comp-all.json')
+
+var tcoeSum = 0
+
 test('basic table read', t => {
   t.plan(5)
-  const tq = reltab.tableQuery('test-data/bart-comp-all.json')
-  reltab.local.evalQuery(tq).then(res => {
+  reltab.local.evalQuery(q1).then(res => {
     t.ok(true, 'basic table read')
     var schema = res.schema
     var expectedCols = ['Name', 'Title', 'Base', 'OT', 'Other', 'MDV', 'ER',
@@ -69,17 +73,20 @@ test('basic table read', t => {
     // console.log(rowData[0])
     var expRow0 = ['Crunican, Grace', 'General Manager', 312461, 0, 3846, 19141, 37513,
       17500, 1869, 7591, 399921, 'MNP', 'Executive Management', 'Non-Represented']
-
     t.deepEqual(rowData[0], expRow0, 'first row matches expected')
+
+    tcoeSum = util.columnSum(res, 'TCOE')
+    console.log('TCOE sum: ', tcoeSum)
+
     t.end()
   })
 })
 
+const pcols = ['Job', 'Title', 'Union', 'Name', 'Base', 'TCOE']
+const q2 = q1.project(pcols)
+
 test('basic project operator', t => {
   t.plan(3)
-  const pcols = ['Job', 'Title', 'Union', 'Name', 'Base', 'TCOE']
-  const tq = reltab.tableQuery('test-data/bart-comp-all.json')
-  const q2 = tq.project(pcols)
   // console.log('q2: ', q2)
   reltab.local.evalQuery(q2).then(res => {
     t.ok(true, 'project query returned success')
@@ -90,6 +97,23 @@ test('basic project operator', t => {
     var expRow0 = ['Executive Management', 'General Manager', 'Non-Represented', 'Crunican, Grace', 312461, 399921]
 
     t.deepEqual(res.rowData[0], expRow0, 'project result row 0')
+    t.end()
+  })
+})
+
+const q3 = q1.groupBy(['Job', 'Title'], ['TCOE'])  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
+
+test('basic groupBy', t => {
+  reltab.local.evalQuery(q3).then(res => {
+    // console.log('groupBy result: ', res)
+
+    const expCols = ['Job', 'Title', 'TCOE']
+    t.deepEqual(res.schema.columns, expCols, 'groupBy query schema')
+
+    t.deepEqual(res.rowData.length, 380, 'correct number of grouped rows')
+
+    const groupSum = util.columnSum(res, 'TCOE')
+    t.equal(groupSum, tcoeSum, 'grouped TCOE sum matches raw sum')
     t.end()
   })
 })

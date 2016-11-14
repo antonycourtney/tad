@@ -43,7 +43,8 @@
     "build:bootstrap": "mkdir -p build && cpx \"node_modules/bootstrap/dist/**/*\" build",
     "build": "npm run build:bootstrap && npm run build:jquery",
     "lint": "eslint .",
-    "test": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/reltabTests.js | tap-spec"
+    "test": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/reltabTests.js | tap-spec",
+    "test-debug": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node-debug --presets es2015,react ./test/reltabTests.js"
   },
   "standard": {
     "ignore": [

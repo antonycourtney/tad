@@ -4,9 +4,9 @@ import * as Q from 'q'
 import * as d3f from 'd3-fetch'
 import * as d3a from 'd3-array'
 import * as Immutable from 'immutable'
+const {List} = Immutable
 import jsesc from 'jsesc'
 // import type { List } from 'immutable' // eslint-disable-line
-const {List} = Immutable
 
 /**
  * In older versions of d3, d3.json wasn't promise based, now it is.
@@ -153,6 +153,14 @@ export const or = () : FilterExp => new FilterExp('OR')
 
 type QueryOp = 'table' | 'project' | 'filter' | 'groupBy'
 
+export type AggStr = 'uniq' | 'sum' | 'avg'
+
+// An AggColSpec is either a column name (for default aggregation based on column type
+// or a pair of column name and AggStr
+// TODO: type AggColSpec = string | [string, AggStr]
+// For now we'll only handle string types (default agg):
+type AggColSpec = string
+
 class QueryExp {
   expType: 'QueryExp'
   operator: string
@@ -170,6 +178,10 @@ class QueryExp {
   project (cols: Array<string>): QueryExp {
     return new QueryExp('project', List([cols]), List([this]))
   }
+
+  groupBy (cols: Array<string>, aggs: Array<AggColSpec>): QueryExp {
+    return new QueryExp('groupBy', List([cols, aggs]), List([this]))
+  }
 }
 
 // Create base of a query expression chain by starting with "table":
@@ -178,7 +190,7 @@ export const tableQuery = (tableName: string): QueryExp => {
 }
 
 type Scalar = number|string
-type Row = {[col: string]: Scalar}
+type Row = Array<Scalar>
 
 // metadata for a single column:
 type ColumnType = 'integer' | 'text'
@@ -260,7 +272,7 @@ class Schema {
   }
 }
 
-class TableRep {
+export class TableRep {
   schema: Schema
   rowData: Array<Row>
 
@@ -358,8 +370,179 @@ const projectImpl = (projectCols: Array<string>): TableOp => {
   return pf
 }
 
+/* An aggregation accumulator (AggAcc) holds hidden internal mutable
+ * state to accumulate a value of type T.
+ * Additional values can be added to the aggregation with mplus.
+ * The result is obtained with finalize
+ */
+interface AggAcc<T> { // eslint-disable-line
+  mplus (x: ?T): void; // eslint-disable-line
+  finalize (): T; // eslint-disable-line
+} // eslint-disable-line
+
+class SumAgg {
+  sum: number
+  constructor () {
+    this.sum = 0
+  }
+
+  mplus (x: ?number): void {
+    if (x !== null) {
+      this.sum += x
+    }
+  }
+  finalize (): number {
+    return this.sum
+  }
+}
+
+// map from column type to default agg functions:
+const defaultAggs = {
+  'integer': SumAgg,
+  'real': SumAgg,
+  'text': null /* TODO: should be UniqAgg */
+}
+
+/*
+  function SumAgg() {
+    this.sum = 0;
+  }
+
+  SumAgg.prototype.mplus = function( val ) {
+    if ( typeof val !== "undefined" )
+      this.sum += val;
+
+    return this;
+  }
+
+  SumAgg.prototype.finalize = function() {
+    return this.sum;
+  }
+
+  function UniqAgg() {
+    this.initial = true;
+    this.str = null;
+  }
+
+  UniqAgg.prototype.mplus = function( val ) {
+    if ( this.initial && val != null ) {
+      // this is our first non-null value:
+      this.str = val;
+      this.initial = false;
+    } else {
+      if( this.str != val )
+        this.str = null;
+    }
+  }
+  UniqAgg.prototype.finalize = function() {
+    return this.str;
+  }
+
+  function AvgAgg() {
+    this.count = 0;
+    this.sum = 0;
+  }
+
+  AvgAgg.prototype.mplus = function( val ) {
+    if ( typeof val !== "undefined" ) {
+      this.count++;
+      this.sum += val;
+    }
+    return this;
+  }
+  AvgAgg.prototype.finalize = function() {
+    if ( this.count == 0 )
+      return NaN;
+    return this.sum / this.count;
+  }
+
+  // map of constructors for agg operators:
+  var aggMap = {
+    "uniq": UniqAgg,
+    "sum": SumAgg,
+    "avg": AvgAgg
+  }
+*/
+
+const groupByImpl = (cols: Array<string>, aggs: Array<AggColSpec>): TableOp => {
+  const aggCols: Array<string> = aggs  // TODO: deal with explicitly specified (non-default) aggregations!
+
+  const calcSchema = (inSchema: Schema): Schema => {
+    const rs = new Schema(cols.concat(aggCols), inSchema.columnMetadata)
+    return rs
+  }
+
+  const gbf = (subTables: Array<TableRep>): TableRep => {
+    const tableData = subTables[0]
+    const inSchema = tableData.schema
+    const outSchema = calcSchema(inSchema)
+
+    const aggCols = aggs // TODO: deal with explicitly specified (non-default) aggregations!
+
+    // The groupMap is where actually collect each group value
+    type AggGroup = { keyData: Array<any>, aggs: Array<AggAcc<any>> } // eslint-disable-line
+    // let groupMap: {[groupKey: string]: AggGroup} = {}
+    let groupMap = {}
+
+    const keyPerm = calcProjectionPermutation(inSchema, cols)
+    const aggColsPerm = calcProjectionPermutation(inSchema, aggCols)
+
+    // construct and return an an array of aggregation objects appropriate
+    // to each agg fn and agg column passed to groupBy
+
+    function mkAggAccs (): Array<AggAcc<any>> { // eslint-disable-line
+      return aggCols.map(colId => {
+        const aggColType = inSchema.columnMetadata[colId].type
+        const AggCtor = defaultAggs[aggColType]
+        if (!AggCtor) {
+          throw new Error('could not find aggregator for column ' + colId)
+        }
+        const accObj = new AggCtor()
+        return accObj
+      })
+    }
+
+    for (var i = 0; i < tableData.rowData.length; i++) {
+      var inRow = tableData.rowData[ i ]
+
+      var keyData = d3a.permute(inRow, keyPerm)
+      var aggInData = d3a.permute(inRow, aggColsPerm)
+      var keyStr = JSON.stringify(keyData)
+      var groupRow = groupMap[ keyStr ]
+      var aggAccs
+      if (!groupRow) {
+        aggAccs = mkAggAccs()
+        // make an entry in our map:
+        groupRow = keyData.concat(aggAccs)
+        groupMap[ keyStr ] = groupRow
+      }
+      for (var j = keyData.length; j < groupRow.length; j++) {
+        var acc = groupRow[j]
+        acc.mplus(aggInData[j - keyData.length])
+      }
+    }
+
+    // finalize!
+    var rowData = []
+    for (keyStr in groupMap) {
+      if (groupMap.hasOwnProperty(keyStr)) {
+        groupRow = groupMap[ keyStr ]
+        keyData = groupRow.slice(0, cols.length)
+        for (j = keyData.length; j < groupRow.length; j++) {
+          groupRow[ j ] = groupRow[ j ].finalize()
+        }
+        rowData.push(groupRow)
+      }
+    }
+    return new TableRep(outSchema, rowData)
+  }
+
+  return gbf
+}
+
 const simpleOpImplMap = {
-  'project': projectImpl
+  'project': projectImpl,
+  'groupBy': groupByImpl
 }
 
 /*
