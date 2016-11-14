@@ -117,3 +117,19 @@ test('basic groupBy', t => {
     t.end()
   })
 })
+
+const q4 = q2.groupBy(['Job'], ['Title', 'Union', 'Name', 'Base', 'TCOE'])
+test('groupBy aggs', t => {
+  reltab.local.evalQuery(q4).then(res => {
+    var rs = res.schema
+
+    const expCols = ['Job', 'Title', 'Union', 'Name', 'Base', 'TCOE']
+    t.deepEqual(rs.columns, expCols)
+
+    t.deepEqual(res.rowData.length, 19, 'number of grouped rows in q4 result')
+
+    const groupSum = util.columnSum(res, 'TCOE')
+    t.deepEqual(groupSum, tcoeSum, 'tcoe sum after groupBy')
+    t.end()
+  }).fail(util.mkAsyncErrHandler(t, 'evalQuery q4'))
+})

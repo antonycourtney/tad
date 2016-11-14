@@ -396,48 +396,40 @@ class SumAgg {
   }
 }
 
+class UniqAgg {
+  initial: boolean
+  str: ?string
+
+  constructor () {
+    this.initial = true
+    this.str = null
+  }
+
+  mplus (val: any) {
+    if (this.initial && val !== null) {
+      // this is our first non-null value:
+      this.str = val
+      this.initial = false
+    } else {
+      if (this.str !== val) {
+        this.str = null
+      }
+    }
+  }
+
+  finalize () {
+    return this.str
+  }
+}
+
 // map from column type to default agg functions:
 const defaultAggs = {
   'integer': SumAgg,
   'real': SumAgg,
-  'text': null /* TODO: should be UniqAgg */
+  'text': UniqAgg
 }
 
 /*
-  function SumAgg() {
-    this.sum = 0;
-  }
-
-  SumAgg.prototype.mplus = function( val ) {
-    if ( typeof val !== "undefined" )
-      this.sum += val;
-
-    return this;
-  }
-
-  SumAgg.prototype.finalize = function() {
-    return this.sum;
-  }
-
-  function UniqAgg() {
-    this.initial = true;
-    this.str = null;
-  }
-
-  UniqAgg.prototype.mplus = function( val ) {
-    if ( this.initial && val != null ) {
-      // this is our first non-null value:
-      this.str = val;
-      this.initial = false;
-    } else {
-      if( this.str != val )
-        this.str = null;
-    }
-  }
-  UniqAgg.prototype.finalize = function() {
-    return this.str;
-  }
-
   function AvgAgg() {
     this.count = 0;
     this.sum = 0;

@@ -11,3 +11,11 @@ export const columnSum = (tableData: reltab.TableRep, columnId: string): number 
   }
   return sum
 }
+
+type Handler = (err: any) => void
+
+export const mkAsyncErrHandler = (t: any, msg: string): Handler => {
+  return (err) => {
+    t.fail(msg + ': ' + err)
+  }
+}
