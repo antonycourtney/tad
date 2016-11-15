@@ -533,42 +533,38 @@ const groupByImpl = (cols: Array<string>, aggs: Array<AggColSpec>): TableOp => {
   return gbf
 }
 
+type RowPred = (row: Row) => boolean
+type RowEval = (row: Row) => any
+
 /*
  * compile the given filter expression with rest to the given schema
  */
-/*
 function compileFilterExp (schema, fexp) {
-  function compileAccessor (tok) {
-    var af = undefined
-    if (tok.tt == TOK_IDENT) {
-      var idx = schema.columnIndex(tok.val)
-      if (typeof idx == 'undefined') {
-        throw new Error("compiling filter expression: Unknown column identifier '" + tok.val + "'")
+  function compileAccessor (vexp: ValExp): RowEval {
+    if (vexp.expType === 'ColRef') {
+      const idx = schema.columnIndex(vexp.colName)
+      if (typeof idx === 'undefined') {
+        throw new Error('compiling filter expression: Unknown column identifier "' + vexp.colName + '"')
       }
-      af = function (row) {
-        return row[ idx ]
-      }
+      return row => row[idx]
     } else {
-      af = function (row) {
-        return tok.val
-      }
+      const cexp = (vexp : ConstVal)
+      return row => cexp.val
     }
-    return af
   }
 
-  var relOpFnMap = {
-    'eq': function (l, r) { return l == r; }
+  const relOpFnMap = {
+    'EQ': (l, r) => l === r,
+    'GT': (l, r) => l > r,
+    'GE': (l, r) => l >= r,
+    'LE': (l, r) => l <= r,
+    'LT': (l, r) => l < r
   }
 
-  function compileRelOp (relop) {
-    var tlhs = tokenize(relop.lhs)
-    var trhs = tokenize(relop.rhs)
-    var lhsef = compileAccessor(tlhs)
-    var rhsef = compileAccessor(trhs)
-    var cmpFn = relOpFnMap[ relop.relOp ]
-    if (!cmpFn) {
-      throw new Error("compileRelOp: unknown relational operator '" + relop.op + "'")
-    }
+  const compileRelOp = (relop: RelExp): RowPred => {
+    const lhsef = compileAccessor(relop.lhs)
+    const rhsef = compileAccessor(relop.rhs)
+    const cmpFn = relOpFnMap[relop.op]
 
     function rf (row) {
       var lval = lhsef(row)
@@ -578,42 +574,43 @@ function compileFilterExp (schema, fexp) {
     return rf
   }
 
-  function compileSimpleExp (se) {
-    if (se.type == 'RelOp') {
+  const compileSubExp = (se: SubExp): RowPred => {
+    if (se.expType === 'RelExp') {
       return compileRelOp(se)
-    } else if (se.type == 'subexp') {
-      return compileExp(se.exp)
+    } else if (se.expType === 'FilterExp') {
+      return compileExp(se)
     } else {
       throw new Error('error compile simple expression ' + JSON.stringify(se) + ': unknown expr type')
     }
   }
 
-  function compileAndExp (argExps) {
-    var argCFs = argExps.map(compileSimpleExp)
+  const compileAndExp = (argExps: Array<SubExp>): RowPred => {
+    var argCFs = argExps.map(compileSubExp)
 
     function cf (row) {
-      for ( var i = 0; i < argCFs.length; i++) {
+      for (var i = 0; i < argCFs.length; i++) {
         var acf = argCFs[ i ]
         var ret = acf(row)
-        if (!ret)
+        if (!ret) {
           return false
+        }
       }
       return true
     }
     return cf
   }
 
-  function compileOrExp (argExps) {
-    // TODO
+  const compileOrExp = (argExps: Array<SubExp>): RowPred => {
+    throw new Error('OR expressions - not yet implemented')
   }
 
-  function compileExp (exp: FilterExp) {
+  const compileExp = (exp: FilterExp): RowPred => {
     let cfn
-    if (exp.op === 'AND')
+    if (exp.op === 'AND') {
       cfn = compileAndExp
-    else
+    } else {
       cfn = compileOrExp
-
+    }
     return cfn(exp.opArgs)
   }
 
@@ -636,19 +633,16 @@ const filterImpl = (fexp: FilterExp): TableOp => {
       }
     }
 
-    return {schema: tableData.schema, rowData: outRows}
+    return new TableRep(tableData.schema, outRows)
   }
 
   return ff
 }
 
-*/
-
 const simpleOpImplMap = {
   'project': projectImpl,
-  'groupBy': groupByImpl
-// ,
-//  'filterImpl': filterImpl
+  'groupBy': groupByImpl,
+  'filter': filterImpl
 }
 
 /*
