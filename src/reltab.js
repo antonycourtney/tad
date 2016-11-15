@@ -148,7 +148,7 @@ export class FilterExp {
 export const and = () : FilterExp => new FilterExp('AND')
 export const or = () : FilterExp => new FilterExp('OR')
 
-type QueryOp = 'table' | 'project' | 'filter' | 'groupBy'
+type QueryOp = 'table' | 'project' | 'filter' | 'groupBy' | 'mapColumns' | 'mapColumnsByIndex'
 
 export type AggStr = 'uniq' | 'sum' | 'avg'
 
@@ -158,7 +158,7 @@ export type AggStr = 'uniq' | 'sum' | 'avg'
 // For now we'll only handle string types (default agg):
 type AggColSpec = string
 
-class QueryExp {
+export class QueryExp {
   expType: 'QueryExp'
   operator: string
   valArgs: Array<any>
@@ -183,6 +183,15 @@ class QueryExp {
   filter (fexp: FilterExp): QueryExp {
     return new QueryExp('filter', [fexp], [this])
   }
+
+  mapColumns (cmap: {[colName: string]: ColumnMapInfo}): QueryExp {
+    return new QueryExp('mapColumns', [cmap], [this])
+  }
+
+  mapColumnsByIndex (cmap: {[colIndex: number]: ColumnMapInfo}): QueryExp {
+    return new QueryExp('mapColumnsByIndex', [cmap], [this])
+  }
+
 }
 
 // Create base of a query expression chain by starting with "table":
@@ -639,10 +648,112 @@ const filterImpl = (fexp: FilterExp): TableOp => {
   return ff
 }
 
+/*
+ * map the display name or type of columns.
+ * TODO: perhaps split this into different functions since most operations are only schema transformations,
+ * but type mapping will involve touching all input data.
+ */
+
+/*
+ * Could almost use an intersection type of {id,type} & ColumnMetadata, but
+ * properties are all optional here
+ */
+type ColumnMapInfo = {id?: string, type?: ColumnType, displayName?: string}
+
+const mapColumnsImpl = (cmap: {[colName: string]: ColumnMapInfo}): TableOp => {
+  // TODO: check that all columns are columns of original schema,
+  // and that applying cmap will not violate any invariants on Schema....but need to nail down
+  // exactly what those invariants are first!
+
+  const mc = (subTables: Array<TableRep>): TableRep => {
+    var tableData = subTables[ 0 ]
+    var inSchema = tableData.schema
+
+    var outColumns = []
+    var outMetadata = {}
+    for (var i = 0; i < inSchema.columns.length; i++) {
+      var inColumnId = inSchema.columns[ i ]
+      var inColumnInfo = inSchema.columnMetadata[ inColumnId ]
+      var cmapColumnInfo = cmap[ inColumnId ]
+      if (typeof cmapColumnInfo === 'undefined') {
+        outColumns.push(inColumnId)
+        outMetadata[ inColumnId ] = inColumnInfo
+      } else {
+        var outColumnId = cmapColumnInfo.id
+        if (typeof outColumnId === 'undefined') {
+          outColumnId = inColumnId
+        }
+
+        // Form outColumnfInfo from inColumnInfo and all non-id keys in cmapColumnInfo:
+        var outColumnInfo = JSON.parse(JSON.stringify(inColumnInfo))
+        for (var key in cmapColumnInfo) {
+          if (key !== 'id' && cmapColumnInfo.hasOwnProperty(key)) {
+            outColumnInfo[ key ] = cmapColumnInfo[ key ]
+          }
+        }
+        outMetadata[ outColumnId ] = outColumnInfo
+        outColumns.push(outColumnId)
+      }
+    }
+    var outSchema = new Schema(outColumns, outMetadata)
+
+    // TODO: remap types as needed!
+
+    return new TableRep(outSchema, tableData.rowData)
+  }
+
+  return mc
+}
+
+const mapColumnsByIndexImpl = (cmap: {[colId: number]: ColumnMapInfo}): TableOp => {
+  // TODO: try to unify with mapColumns.  Probably means mapColumns will construct an argument to
+  // mapColumnsByIndex and use this impl
+  function mc (subTables) {
+    var tableData = subTables[ 0 ]
+    var inSchema = tableData.schema
+
+    var outColumns = []
+    var outMetadata = {}
+    for (var inIndex = 0; inIndex < inSchema.columns.length; inIndex++) {
+      var inColumnId = inSchema.columns[ inIndex ]
+      var inColumnInfo = inSchema.columnMetadata[ inColumnId ]
+      var cmapColumnInfo = cmap[ inIndex ]
+      if (typeof cmapColumnInfo === 'undefined') {
+        outColumns.push(inColumnId)
+        outMetadata[ inColumnId ] = inColumnInfo
+      } else {
+        var outColumnId = cmapColumnInfo.id
+        if (typeof outColumnId === 'undefined') {
+          outColumnId = inColumnId
+        }
+
+        // Form outColumnfInfo from inColumnInfo and all non-id keys in cmapColumnInfo:
+        var outColumnInfo = JSON.parse(JSON.stringify(inColumnInfo))
+        for (var key in cmapColumnInfo) {
+          if (key !== 'id' && cmapColumnInfo.hasOwnProperty(key)) {
+            outColumnInfo[ key ] = cmapColumnInfo[ key ]
+          }
+        }
+        outMetadata[ outColumnId ] = outColumnInfo
+        outColumns.push(outColumnId)
+      }
+    }
+    var outSchema = new Schema(outColumns, outMetadata)
+
+    // TODO: remap types as needed!
+
+    return new TableRep(outSchema, tableData.rowData)
+  }
+
+  return mc
+}
+
 const simpleOpImplMap = {
   'project': projectImpl,
   'groupBy': groupByImpl,
-  'filter': filterImpl
+  'filter': filterImpl,
+  'mapColumns': mapColumnsImpl,
+  'mapColumbsByIndexImpl': mapColumnsByIndexImpl
 }
 
 /*

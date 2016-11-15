@@ -8,6 +8,8 @@ const {col, constVal} = reltab
 import * as Q from 'q'
 import * as FS from 'fs'
 
+require('console.table')
+
 // A fetch polyfill using ReadFile that assumes url is relative:
 global.fetch = (url: string): Promise<any> => Q.nfcall(FS.readFile, url, 'utf-8').then(txt => ({ text: () => txt }))
 
@@ -137,9 +139,26 @@ test('groupBy aggs', t => {
 
 const q5 = q1.filter(reltab.and().eq(col('Job'), constVal('Executive Management')))
 
+util.queryTest('basic filter', q5, (t, res) => {
+  t.ok(res.rowData.length === 14, 'expected row count after filter')
+  // console.table(res.schema.columns, res.rowData)
+  t.end()
+})
+/*
 test('basic filter', t => {
   reltab.local.evalQuery(q5).then(res => {
     t.ok(res.rowData.length === 14, 'expected row count after filter')
+    // console.table(res.schema.columns, res.rowData)
     t.end()
   }).fail(util.mkAsyncErrHandler(t, 'basic filter test'))
+})
+*/
+
+const q6 = q1.mapColumns({Name: {id: 'EmpName', displayName: 'Employee Name'}})
+util.queryTest('mapColumns', q6, (t, res) => {
+  const rs = res.schema
+  t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
+  const em = rs.columnMetadata['EmpName']
+  t.deepEqual(em, {type: 'text', displayName: 'Employee Name'}, 'EmpName metadata')
+  t.end()
 })
