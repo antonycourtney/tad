@@ -2,6 +2,7 @@
 import test from 'tape'
 import * as reltab from '../src/reltab' // eslint-disable-line
 import * as util from './reltabTestUtils'
+import * as _ from 'lodash'
 
 const {col, constVal} = reltab
 
@@ -141,7 +142,7 @@ const q5 = q1.filter(reltab.and().eq(col('Job'), constVal('Executive Management'
 
 util.queryTest('basic filter', q5, (t, res) => {
   t.ok(res.rowData.length === 14, 'expected row count after filter')
-  // console.table(res.schema.columns, res.rowData)
+  // util.logTable(res)
   t.end()
 })
 
@@ -154,9 +155,30 @@ util.queryTest('mapColumns', q6, (t, res) => {
   t.end()
 })
 
-var q7 = q1.mapColumnsByIndex({'0': {id: 'EmpName'}})
+const q7 = q1.mapColumnsByIndex({'0': {id: 'EmpName'}})
 util.queryTest('mapColumnsByIndex', q7, (t, res) => {
   const rs = res.schema
   t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
+  t.end()
+})
+
+const q8 = q5.concat(q1.filter(reltab.and().eq(col('Job'), constVal('Safety'))))
+util.queryTest('concat', q8, (t, res) => {
+  t.ok(res.rowData.length === 24, 'expected row count after filter and concat')
+  const jobCol = res.getColumn('Job')
+  const jobs = _.sortedUniq(jobCol)
+  t.deepEqual(jobs, ['Executive Management', 'Safety'], 'filter and concat column vals')
+  t.end()
+})
+
+const q9 = q8.sort([['Name', true]])
+util.queryTest('basic sort', q9, (t, res) => {
+  util.logTable(res)
+  t.end()
+})
+
+const q10 = q8.sort([['Job', true], ['TCOE', false]])
+util.queryTest('compound key sort', q10, (t, res) => {
+  util.logTable(res)
   t.end()
 })

@@ -25,6 +25,13 @@ export const mkAsyncErrHandler = (t: any, msg: string): Handler => {
 export const queryTest = (label: string, query: reltab.QueryExp,
                           cf: (t: any, res: reltab.TableRep) => void): void => {
   test(label, t => {
-    reltab.local.evalQuery(query).then(res => cf(t, res), mkAsyncErrHandler(t, label))
+    reltab.local.evalQuery(query).then(res => cf(t, res)).fail(mkAsyncErrHandler(t, label))
   })
+}
+
+export const logTable = (table: reltab.TableRep): void => {
+  // Node's console-table package has slightly different synopsis
+  // than browser version; accepts column names as first arg:
+  const ctf : any = console.table
+  ctf(table.schema.columns, table.rowData)
 }

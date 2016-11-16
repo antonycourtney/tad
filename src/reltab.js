@@ -4,6 +4,7 @@ import * as Q from 'q'
 import * as d3f from 'd3-fetch'
 import * as d3a from 'd3-array'
 import jsesc from 'jsesc'
+import * as _ from 'lodash'
 
 /**
  * In older versions of d3, d3.json wasn't promise based, now it is.
@@ -148,7 +149,8 @@ export class FilterExp {
 export const and = () : FilterExp => new FilterExp('AND')
 export const or = () : FilterExp => new FilterExp('OR')
 
-type QueryOp = 'table' | 'project' | 'filter' | 'groupBy' | 'mapColumns' | 'mapColumnsByIndex'
+type QueryOp = 'table' | 'project' | 'filter' | 'groupBy' |
+               'mapColumns' | 'mapColumnsByIndex' | 'concat' | 'sort' | 'extend'
 
 export type AggStr = 'uniq' | 'sum' | 'avg'
 
@@ -193,6 +195,13 @@ export class QueryExp {
     return new QueryExp('mapColumnsByIndex', [cmap], [this])
   }
 
+  concat (qexp: QueryExp): QueryExp {
+    return new QueryExp('concat', [], [this, qexp])
+  }
+
+  sort (keys: Array<[string, boolean]>): QueryExp {
+    return new QueryExp('sort', [keys], [this])
+  }
 }
 
 // Create base of a query expression chain by starting with "table":
@@ -295,6 +304,15 @@ export class TableRep {
   getRow (row: number): Row {
     return this.rowData[ row ]
   }
+
+  getColumn (columnId: string): Array<any> {
+    const idx = this.schema.columnIndex(columnId)
+    if (idx === undefined) {
+      throw new Error('TableRep.getColumn: no such column "' + columnId + '"')
+    }
+    return this.rowData.map(r => r[idx])
+  }
+
 }
 
 const loadTable = (tableName: string): Promise<TableRep> => {
@@ -749,13 +767,154 @@ const mapColumnsByIndexImpl = (cmap: {[colId: string]: ColumnMapInfo}): TableOp 
 
   return mc
 }
+/*
+ * extend a RelTab by adding a column computed from existing columns.
+ */
+function extendImpl (columns, columnMetadata, columnValMap) {
+  /*
+   * TODO: What are the semantics of doing an extend on a column that already exists?  Decide and spec. it!
+   */
+  function ef (subTables) {
+    var tableData = subTables[ 0 ]
+    var inSchema = tableData.schema
+
+    var outCols = inSchema.columns.concat(columns)
+    var outMetadata = _.extend({}, inSchema.columnMetadata, columnMetadata)
+    var outSchema = new Schema(outCols, outMetadata)
+
+    var extValues = []
+    for (var i = 0; i < columns.length; i++) {
+      var colId = columns[ i ]
+      var val = columnValMap && columnValMap[ colId ]
+      if (typeof val === 'undefined') {
+        val = null
+      }
+      extValues.push(val)
+    }
+
+    /*
+     * For now we only allow extensions to depend on columns of the original
+     * table.  We may want to relax this to allow columns to depend on earlier
+     * entries in columns[] array.
+     */
+    var outRows = []
+    for (i = 0; i < tableData.rowData.length; i++) {
+      var inRow = tableData.rowData[ i ]
+      var rowMap = null // only build on-demand
+      // TODO: For performance could cons up an object with getters that use schema to just do an array index
+      // For now, let's just build the row object:
+
+      var outRow = inRow.slice()
+      for (var j = 0; j < extValues.length; j++) {
+        var ev = extValues[ j ]
+        if (typeof ev === 'function') {
+          if (!rowMap) {
+            rowMap = tableData.schema.rowMapFromRow(inRow)
+          }
+          var outVal = ev(rowMap)
+        } else {
+          // extending with a constant value:
+          outVal = ev
+        }
+        outRow.push(outVal)
+      }
+      outRows.push(outRow)
+    }
+
+    return { schema: outSchema, rowData: outRows }
+  }
+
+  return ef
+}
+
+const concatImpl = (qexp: QueryExp): TableOp => {
+  const cf = (subTables: Array<TableRep>): TableRep => {
+    var tbl = subTables[ 0 ]
+    var res = new TableRep(tbl.schema, tbl.rowData)
+    for (var i = 1; i < subTables.length; i++) {
+      tbl = subTables[ i ]
+      // check schema compatibility:
+      res.schema.compatCheck(tbl.schema)
+
+      res.rowData = res.rowData.concat(tbl.rowData)
+    }
+
+    return res
+  }
+
+  return cf
+}
+
+type RowCmpFn = (rowA: Array<any>, rowB: Array<any>) => number
+
+const compileSortFunc = (schema: Schema, keys: Array<[string, boolean]>): RowCmpFn => {
+  const strcmp = (s1, s2) => (s1 < s2 ? -1 : ((s1 > s2) ? 1 : 0))
+  const intcmp = (i1, i2) => i1 - i2
+
+  var cmpFnMap = {
+    'text': strcmp,
+    'integer': intcmp
+  }
+
+  function mkRowCompFn (valCmpFn, idx, nextFunc) {
+    function rcf (rowa, rowb) {
+      var va = rowa[idx]
+      var vb = rowb[idx]
+      var ret = valCmpFn(va, vb)
+      return (ret === 0 ? nextFunc(rowa, rowb) : ret)
+    }
+
+    return rcf
+  }
+
+  var rowCmpFn = function (rowa, rowb) {
+    return 0
+  }
+
+  function reverseArgs (cfn) {
+    const rf = (v1, v2) => cfn(v2, v1)
+    return rf
+  }
+
+  for (var i = keys.length - 1; i >= 0; i--) {
+    var colId = keys[i][0]
+    var asc = keys[i][1]
+    var idx = schema.columnIndex(colId)
+
+    // look up comparison func for values of specific column type (taking asc in to account):
+    var colType = schema.columnType(colId)
+    var valCmpFn = cmpFnMap[ colType ]
+    if (!asc) {
+      valCmpFn = reverseArgs(valCmpFn)
+    }
+    rowCmpFn = mkRowCompFn(valCmpFn, idx, rowCmpFn)
+  }
+  return rowCmpFn
+}
+
+const sortImpl = (sortKeys: Array<[string, boolean]>): TableOp => {
+  const sf = (subTables: Array<TableRep>): TableRep => {
+    var tableData = subTables[ 0 ]
+
+    var rsf = compileSortFunc(tableData.schema, sortKeys)
+    // force a copy:
+    var outRows = tableData.rowData.slice()
+    outRows.sort(rsf)
+
+    return new TableRep(tableData.schema, outRows)
+  }
+  return sf
+}
 
 const simpleOpImplMap = {
   'project': projectImpl,
   'groupBy': groupByImpl,
   'filter': filterImpl,
   'mapColumns': mapColumnsImpl,
-  'mapColumnsByIndex': mapColumnsByIndexImpl
+  'mapColumnsByIndex': mapColumnsByIndexImpl,
+  'extend': extendImpl,
+  'concat': concatImpl,
+  'sort': sortImpl
 }
 
 /*
