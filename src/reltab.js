@@ -188,7 +188,8 @@ export class QueryExp {
     return new QueryExp('mapColumns', [cmap], [this])
   }
 
-  mapColumnsByIndex (cmap: {[colIndex: number]: ColumnMapInfo}): QueryExp {
+  // colIndex is a string here because Flow doesn't support non-string keys in object literals
+  mapColumnsByIndex (cmap: {[colIndex: string]: ColumnMapInfo}): QueryExp {
     return new QueryExp('mapColumnsByIndex', [cmap], [this])
   }
 
@@ -705,7 +706,8 @@ const mapColumnsImpl = (cmap: {[colName: string]: ColumnMapInfo}): TableOp => {
   return mc
 }
 
-const mapColumnsByIndexImpl = (cmap: {[colId: number]: ColumnMapInfo}): TableOp => {
+// colIndex is a string here because Flow doesn't support non-string keys in object literals
+const mapColumnsByIndexImpl = (cmap: {[colId: string]: ColumnMapInfo}): TableOp => {
   // TODO: try to unify with mapColumns.  Probably means mapColumns will construct an argument to
   // mapColumnsByIndex and use this impl
   function mc (subTables) {
@@ -717,7 +719,7 @@ const mapColumnsByIndexImpl = (cmap: {[colId: number]: ColumnMapInfo}): TableOp 
     for (var inIndex = 0; inIndex < inSchema.columns.length; inIndex++) {
       var inColumnId = inSchema.columns[ inIndex ]
       var inColumnInfo = inSchema.columnMetadata[ inColumnId ]
-      var cmapColumnInfo = cmap[ inIndex ]
+      var cmapColumnInfo = cmap[ inIndex.toString() ]
       if (typeof cmapColumnInfo === 'undefined') {
         outColumns.push(inColumnId)
         outMetadata[ inColumnId ] = inColumnInfo
@@ -753,7 +755,7 @@ const simpleOpImplMap = {
   'groupBy': groupByImpl,
   'filter': filterImpl,
   'mapColumns': mapColumnsImpl,
-  'mapColumbsByIndexImpl': mapColumnsByIndexImpl
+  'mapColumnsByIndex': mapColumnsByIndexImpl
 }
 
 /*

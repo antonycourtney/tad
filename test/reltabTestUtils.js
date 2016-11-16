@@ -25,6 +25,6 @@ export const mkAsyncErrHandler = (t: any, msg: string): Handler => {
 export const queryTest = (label: string, query: reltab.QueryExp,
                           cf: (t: any, res: reltab.TableRep) => void): void => {
   test(label, t => {
-    reltab.local.evalQuery(query).then(res => cf(t, res), mkAsyncErrHandler(t, 'label'))
+    reltab.local.evalQuery(query).then(res => cf(t, res), mkAsyncErrHandler(t, label))
   })
 }

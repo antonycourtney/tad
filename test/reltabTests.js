@@ -144,15 +144,6 @@ util.queryTest('basic filter', q5, (t, res) => {
   // console.table(res.schema.columns, res.rowData)
   t.end()
 })
-/*
-test('basic filter', t => {
-  reltab.local.evalQuery(q5).then(res => {
-    t.ok(res.rowData.length === 14, 'expected row count after filter')
-    // console.table(res.schema.columns, res.rowData)
-    t.end()
-  }).fail(util.mkAsyncErrHandler(t, 'basic filter test'))
-})
-*/
 
 const q6 = q1.mapColumns({Name: {id: 'EmpName', displayName: 'Employee Name'}})
 util.queryTest('mapColumns', q6, (t, res) => {
@@ -160,5 +151,12 @@ util.queryTest('mapColumns', q6, (t, res) => {
   t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
   const em = rs.columnMetadata['EmpName']
   t.deepEqual(em, {type: 'text', displayName: 'Employee Name'}, 'EmpName metadata')
+  t.end()
+})
+
+var q7 = q1.mapColumnsByIndex({'0': {id: 'EmpName'}})
+util.queryTest('mapColumnsByIndex', q7, (t, res) => {
+  const rs = res.schema
+  t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
   t.end()
 })
