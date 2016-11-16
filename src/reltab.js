@@ -160,6 +160,23 @@ export type AggStr = 'uniq' | 'sum' | 'avg'
 // For now we'll only handle string types (default agg):
 type AggColSpec = string
 
+type Scalar = number|string
+type Row = Array<Scalar>
+
+// A RowObject uses column ids from schema as keys:
+type RowObject ={[columnId: string]: Scalar}
+
+// metadata for a single column:
+type ColumnType = 'integer' | 'text'
+type ColumnMetadata = { displayName: string, type: ColumnType }
+
+/*
+ * A ColumnExtendVal is either a simple scalar or a function from a row object
+ * to a scalar.
+ */
+type ExtendFunc = (row: RowObject) => Scalar // eslint-disable-line
+type ColumnExtendVal = Scalar | ExtendFunc // eslint-disable-line
+
 export class QueryExp {
   expType: 'QueryExp'
   operator: string
@@ -202,19 +219,17 @@ export class QueryExp {
   sort (keys: Array<[string, boolean]>): QueryExp {
     return new QueryExp('sort', [keys], [this])
   }
+
+  // extend by adding a single column
+  extend (colId: string, columnMetadata: ColumnMapInfo, colVal: ColumnExtendVal): QueryExp {
+    return new QueryExp('extend', [colId, columnMetadata, colVal], [this])
+  }
 }
 
 // Create base of a query expression chain by starting with "table":
 export const tableQuery = (tableName: string): QueryExp => {
   return new QueryExp('table', [tableName])
 }
-
-type Scalar = number|string
-type Row = Array<Scalar>
-
-// metadata for a single column:
-type ColumnType = 'integer' | 'text'
-type ColumnMetadata = { displayName: string, type: ColumnType }
 
 class SchemaError {
   message: string
@@ -767,10 +782,12 @@ const mapColumnsByIndexImpl = (cmap: {[colId: string]: ColumnMapInfo}): TableOp 
 
   return mc
 }
+
 /*
  * extend a RelTab by adding a column computed from existing columns.
  */
-function extendImpl (columns, columnMetadata, columnValMap) {
+const extendImpl = (colId: string, columnMetadata: ColumnMapInfo,
+                    ev: ColumnExtendVal): TableOp => {
   /*
    * TODO: What are the semantics of doing an extend on a column that already exists?  Decide and spec. it!
    */
@@ -778,19 +795,11 @@ function extendImpl (columns, columnMetadata, columnValMap) {
     var tableData = subTables[ 0 ]
     var inSchema = tableData.schema
 
-    var outCols = inSchema.columns.concat(columns)
-    var outMetadata = _.extend({}, inSchema.columnMetadata, columnMetadata)
+    var outCols = inSchema.columns.concat([colId])
+    let cMap = {}
+    cMap[colId] = columnMetadata
+    var outMetadata = _.extend(cMap, inSchema.columnMetadata)
     var outSchema = new Schema(outCols, outMetadata)
-
-    var extValues = []
-    for (var i = 0; i < columns.length; i++) {
-      var colId = columns[ i ]
-      var val = columnValMap && columnValMap[ colId ]
-      if (typeof val === 'undefined') {
-        val = null
-      }
-      extValues.push(val)
-    }
 
     /*
      * For now we only allow extensions to depend on columns of the original
@@ -798,30 +807,27 @@ function extendImpl (columns, columnMetadata, columnValMap) {
      * entries in columns[] array.
      */
     var outRows = []
-    for (i = 0; i < tableData.rowData.length; i++) {
-      var inRow = tableData.rowData[ i ]
-      var rowMap = null // only build on-demand
-      // TODO: For performance could cons up an object with getters that use schema to just do an array index
-      // For now, let's just build the row object:
-
-      var outRow = inRow.slice()
-      for (var j = 0; j < extValues.length; j++) {
-        var ev = extValues[ j ]
-        if (typeof ev === 'function') {
-          if (!rowMap) {
-            rowMap = tableData.schema.rowMapFromRow(inRow)
-          }
-          var outVal = ev(rowMap)
-        } else {
-          // extending with a constant value:
-          outVal = ev
-        }
-        outRow.push(outVal)
+    for (var i = 0; i < tableData.rowData.length; i++) {
+      let outVal = null
+      let inRow = tableData.rowData[ i ]
+      /*
+       * TODO: could create a RowObject with getters that uses schema to do an
+       * array index into the array for the row.
+       * For now we just construct the full row object (if we need it)
+       */
+      let outRow = inRow.slice()
+      if (typeof ev === 'function') {
+        let rowMap = tableData.schema.rowMapFromRow(inRow)
+        outVal = ev(rowMap)
+      } else {
+        // extending with a constant value:
+        outVal = ev
       }
+      outRow.push(outVal)
       outRows.push(outRow)
     }
 
-    return { schema: outSchema, rowData: outRows }
+    return new TableRep(outSchema, outRows)
   }
 
   return ef

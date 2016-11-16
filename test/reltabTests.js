@@ -182,3 +182,9 @@ util.queryTest('compound key sort', q10, (t, res) => {
   util.logTable(res)
   t.end()
 })
+
+const q11 = q8.extend('BaseAndOT', {type: 'integer'}, r => r.Base + r.OT)
+util.queryTest('extend with function', q11, (t, res) => {
+  util.logTable(res)
+  t.end()
+})
