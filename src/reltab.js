@@ -160,7 +160,7 @@ export type AggStr = 'uniq' | 'sum' | 'avg'
 // For now we'll only handle string types (default agg):
 type AggColSpec = string
 
-type Scalar = number|string
+type Scalar = ?number | ?string
 type Row = Array<Scalar>
 
 // A RowObject uses column ids from schema as keys:
@@ -243,7 +243,7 @@ class SchemaError {
 
 type ColumnMetaMap = {[colId: string]: ColumnMetadata}
 
-class Schema {
+export class Schema {
   columnMetadata: ColumnMetaMap
   columns: Array<string>
   columnIndices:{[colId: string]: number}
@@ -1017,6 +1017,10 @@ const localEvalQuery = (query: QueryExp): Promise<TableRep> => {
   const evaluator = new CSEEvaluator()
   const tableId = evaluator.buildCSEMap(query)
   return evaluator.evalTable(tableId)
+}
+
+export interface Connection { // eslint-disable-line
+  evalQuery (query: QueryExp): Promise<TableRep>
 }
 
 export const local = {

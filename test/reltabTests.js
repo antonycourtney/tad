@@ -6,17 +6,6 @@ import * as _ from 'lodash'
 
 const {col, constVal} = reltab
 
-import * as Q from 'q'
-import * as FS from 'fs'
-
-require('console.table')
-
-// A fetch polyfill using ReadFile that assumes url is relative:
-global.fetch = (url: string): Promise<any> => Q.nfcall(FS.readFile, url, 'utf-8').then(txt => ({ text: () => txt }))
-
-// require('es6-promise').polyfill()
-// require('isomorphic-fetch')
-
 test('trivial test', (t) => {
   t.plan(1)
   t.ok(true, 'trivial truth value')
@@ -183,7 +172,7 @@ util.queryTest('compound key sort', q10, (t, res) => {
   t.end()
 })
 
-const q11 = q8.extend('BaseAndOT', {type: 'integer'}, r => r.Base + r.OT)
+const q11 = q8.extend('BaseAndOT', {type: 'integer'}, r => (r.Base: any) + (r.OT: any))
 util.queryTest('extend with function', q11, (t, res) => {
   util.logTable(res)
   t.end()
