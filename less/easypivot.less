@@ -1,0 +1,52 @@
+
+@import "~slickgrid-es6/dist/slick.grid.variables.less";
+@import "~slickgrid-es6/dist/slick.grid.less";
+@import "~slickgrid-es6/dist/slick-default-theme.less";
+
+.cell-story {
+  white-space: normal !important;
+  line-height: 19px !important;
+}
+
+.loading-indicator {
+  display: inline-block;
+  padding: 12px;
+  background: white;
+  -opacity: 0.5;
+  color: black;
+  font-weight: bold;
+  z-index: 9999;
+  border: 1px solid red;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -moz-box-shadow: 0 0 5px red;
+  -webkit-box-shadow: 0px 0px 5px red;
+  -text-shadow: 1px 1px 1px white;
+}
+
+.loading-indicator label {
+  padding-left: 20px;
+  background: url('~slickgrid-es6/images/ajax-loader-small.gif') no-repeat center left;
+}
+
+.pivot-column {
+/*  background: white; */
+  border: none;
+  border-right: 1px dotted silver;
+}
+
+.pivot-column.active {
+  border-color: none;
+  border-style: none;
+  border-right: 1px dotted silver;
+  border-top: 1px dotted silver;
+  border-bottom: 1px dotted silver;
+}
+
+body {
+  margin: 16px;
+  margin-top: 8px;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-weight: 400;
+  font-size: 8pt; 
+}

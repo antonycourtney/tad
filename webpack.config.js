@@ -5,7 +5,7 @@ var webpack = require('webpack');
 
 module.exports = {
     entry: {
-      epmain: "./src/epmain.js"
+      eprender: "./src/eprender.js"
     },
     output: {
         path: "./build/",
@@ -25,7 +25,22 @@ module.exports = {
               presets:['es2015','react']
             }
           },
-          { test: /\.(json)$/, loader: "json-loader" }
+          { test: /\.(json)$/, loader: "json-loader" },
+          {
+            test: /\.less$/,
+            loader: 'style-loader!css-loader!less-loader'
+          },
+          {
+            test: /\.css$/,
+            loader: 'style-loader!css-loader'
+          },
+          {
+            test: /\.(jpe?g|png|gif|svg)$/i,
+            loaders: [
+                'file?hash=sha512&digest=hex&name=[hash].[ext]',
+                'image-webpack?bypassOnDebug&optimizationLevel=7&interlaced=false'
+            ]
+          }
         ]
     }
 };

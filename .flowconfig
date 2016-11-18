@@ -1,4 +1,5 @@
 [ignore]
+less/*.less
 
 [include]
 
@@ -6,3 +7,4 @@
 interfaces/
 
 [options]
+module.name_mapper.extension='less' -> '<PROJECT_ROOT>/CSSModule.js.flow'
