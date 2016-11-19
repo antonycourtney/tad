@@ -4,6 +4,7 @@ var webpack = require('webpack');
 
 
 module.exports = {
+    target: "electron",
     entry: {
       eprender: "./src/eprender.js"
     },

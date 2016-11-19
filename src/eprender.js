@@ -3,34 +3,43 @@
 import * as styles from '../less/easypivot.less'
 
 import * as reltab from './reltab' // eslint-disable-line
+import * as epslick from './epslick'
+import { Grid, Data, Formatters } from 'slickgrid-es6'
+import PivotTreeModel from './PivotTreeModel'
+import * as Q from 'q'
 
-import { FrozenGrid as Grid, Data, Formatters } from 'slickgrid-es6'
+var fs = require('electron').remote.require('fs')
 
-import data from './example-data'
+// A fetch polyfill using ReadFile that assumes url is relative:
+// N.B. We do readFileSync here (rather than some async call) just for testing
+window.fetch = (url: string): Promise<any> => {
+  const deferred = Q.defer()
 
-const columns = [
-  {id: 'title', name: 'Title', field: 'title', maxWidth: 100, minWidth: 80},
-  {id: 'duration', name: 'Duration', field: 'duration', resizable: false},
-  {id: '%', name: '% Complete', field: 'percentComplete'},
-  {id: 'start', name: 'Start', field: 'start'},
-  {id: 'finish', name: 'Finish', field: 'finish'},
-  {id: 'effort-driven', name: 'Effort Driven', field: 'effortDriven'}
-]
-
-let grid
-
-const options = {
-  enableCellNavigation: true,
-  enableColumnReorder: false,
-  forceFitColumns: !true,
-  frozenColumn: 0,
-  frozenRow: 1
+  const contents = fs.readFileSync(url)
+  const response = { text: () => contents }
+  deferred.resolve(response)
+  return deferred.promise
 }
 
-const init = (id) => {
-    grid = new Grid(id, data, columns, options)
-}
 console.log('Hello EasyPivot!')
-init('#epGrid')
-console.log('slickgrid initialized')
-console.log('styles: ', styles)
+
+const rt = reltab.local
+const baseQuery = reltab.tableQuery('test-data/bart-comp-all.json')
+                  .project( [ "Job", "Title", "Union", "Name", "Base", "TCOE" ])
+const {col, constVal} = reltab
+const q5 = baseQuery.filter(reltab.and().eq(col('Job'), constVal('Executive Management')))
+rt.evalQuery(q5).then(res => {
+  console.log('q5 evaluation completed, result: ', res)
+  console.table(res.rowData)
+},err => {
+  console.error('q5 evaluation failed, error: ', err)
+})
+
+var ptm = new PivotTreeModel( rt, baseQuery, [ "Union", "Job", "Title" ])
+ptm.openPath([])
+ptm.openPath(["Non-Represented", "Audit"])
+ptm.openPath(["Non-Represented", "Clerical"])
+ptm.openPath(["Non-Represented", "Information Systems"])
+ptm.openPath(["Non-Represented", "Information Systems", "Manager of Information Systems"])
+const sgv = epslick.sgView('#epGrid', ptm)
+const sgc = epslick.sgController(sgv, ptm)

@@ -32,7 +32,7 @@ export const decodePath = (pathStr: string): Path => {
   return path
 }
 
-class VPivotTree {
+export class VPivotTree {
   rt: reltab.Connection
   rtBaseQuery: reltab.QueryExp
   pivotColumns: Array<string>
