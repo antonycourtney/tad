@@ -9,6 +9,7 @@
     "d3-fetch": "0.0.2",
     "electron": "^1.4.7",
     "es6-promise": "^4.0.5",
+    "fast-csv": "^2.3.0",
     "flow-bin": "^0.33.0",
     "immutable": "^3.8.1",
     "isomorphic-fetch": "^2.2.1",
@@ -17,6 +18,7 @@
     "lodash": "^4.16.4",
     "q": "^1.4.1",
     "slickgrid-es6": "^0.4.2",
+    "sqlite3": "^3.1.8",
     "webpack": "^1.13.3"
   },
   "devDependencies": {

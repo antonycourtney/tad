@@ -145,7 +145,7 @@ export default class PivotTreeModel {
     const dvPromise = this.treeQueryPromise
       .then(treeQuery => this.rt.evalQuery(treeQuery))
       .then(tableData => this.loadDataView(tableData))
-      .fail(err => console.error('PivotTreeModel: error: ', err))
+      .fail(err => console.error('PivotTreeModel: error: ', err, err.stack))
 
     return dvPromise
   }
@@ -168,7 +168,7 @@ export default class PivotTreeModel {
 
     var orderFn = (dir > 0) ? d3a.ascending : d3a.descending
 
-    function cmpFn (ra, rb) {
+    const cmpFn = (ra, rb) => {
       var idA = ra._id
       var idB = rb._id
 
