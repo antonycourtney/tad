@@ -187,6 +187,12 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
         return
       }
       console.log('table created')
+      db.run('begin', err => {
+        if (err) {
+          console.error(err)
+          reject(err)
+        }
+      })
       const qs = Array(md.columnNames.length).fill('?')
       const insertStmtStr = 'insert into ' + qTableName + ' values (' + qs.join(', ') + ')'
       const insertStmt = db.prepare(insertStmtStr)
@@ -206,7 +212,15 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
                   reject(err)
                   return
                 }
-                resolve(tableName)
+                console.log('committing...')
+                db.run('commit', err => {
+                  if (err) {
+                    reject(err)
+                    return
+                  }
+                  console.log('commit succeeded!')
+                  resolve(tableName)
+                })
               })
               insertStmt.finalize()
             } else {
@@ -227,14 +241,15 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
   })
 }
 
-// const testPath = '/Users/antony/home/src/easypivot-old/csv/bart-comp-all.csv'
-const testPath = '/Users/antony/data/movie_metadata.csv'
+const testPath = '/Users/antony/home/src/easypivot-old/csv/bart-comp-all.csv'
+// const testPath = '/Users/antony/data/movie_metadata.csv'
+// const testPath = '/Users/antony/data/uber-pickups-in-new-york-city/uber-raw-data-apr14.csv'
 
 const db = new sqlite3.Database(':memory:')
 db.serialize(() => {
   metaScan(testPath)
   .then(md => {
-    console.log('metascan complete.')
+    console.log('metascan complete. rows to import: ', md.rowCount)
     return importData(db, md, testPath)
   }).then(tableName => {
     console.log('table import complete: ', tableName)
