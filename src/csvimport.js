@@ -1,6 +1,5 @@
 /* @flow */
 import csv from 'fast-csv'
-import * as Q from 'q'
 import * as _ from 'lodash'
 import * as sqlite3raw from 'sqlite3'
 import * as path from 'path'
@@ -38,21 +37,21 @@ const realRE = /[-+]?[$]?[0-9,]*\.?[0-9]+([eE][-+]?[0-9]+)?/
  * TODO: support various date formats
  */
 const guessColumnType = (cg: ?ColumnType, cs: ?string): ?ColumnType => {
-  if (cg==='text') {
+  if (cg === 'text') {
     return cg   // already most general case
   }
-  if (cs==null || cs.length===0) {
+  if (cs == null || cs.length === 0) {
     return cg // empty cells don't affect current guess
   }
-  if (cg===null || cg==='integer') {
+  if (cg === null || cg === 'integer') {
     let match = intRE.exec(cs)
-    if (match!==null && match.index===0 && match[0].length===cs.length) {
+    if (match !== null && match.index === 0 && match[0].length === cs.length) {
       return 'integer'
     }
   }
-  if (cg!=='text') {
+  if (cg !== 'text') {
     let match = realRE.exec(cs)
-    if (match!==null && match.index===0 && match[0].length===cs.length) {
+    if (match !== null && match.index === 0 && match[0].length === cs.length) {
       return 'real'
     }
   }
@@ -62,13 +61,13 @@ const guessColumnType = (cg: ?ColumnType, cs: ?string): ?ColumnType => {
 /**
  * prepare a raw value string for db insert based on column type
  */
-const badCharsRE = /\$\,/g
-const prepValue = (ct: ColumnType,vs: ?string): string => {
-  if (vs==null || (vs.length===0 && ct!=='text')) {
+const badCharsRE = /\$,/g
+const prepValue = (ct: ColumnType, vs: ?string): ?string => {
+  if (vs == null || (vs.length === 0 && ct !== 'text')) {
     return null
   }
-  if ((ct==='integer') || (ct==='real')) {
-    let cs = vs.trim().replace(badCharsRE,'')
+  if ((ct === 'integer') || (ct === 'real')) {
+    let cs = vs.trim().replace(badCharsRE, '')
     return cs
   }
   // TODO: Will probably need to deal with charset encoding issues for SQLite
@@ -95,7 +94,7 @@ const reFindAll = (re: RegExp, str: string): Array<string> => {
  */
 const MAXIDENT = 16
 const mkColId = (words: Array<string>): string => {
-  return words.join('').substr(0,MAXIDENT)
+  return words.join('').substr(0, MAXIDENT)
 }
 
 /**
@@ -115,8 +114,8 @@ const mkColId = (words: Array<string>): string => {
  * origHeader is the original column header string
  */
 const identRE = /[a-zA-Z]\w*/g
-const genColumnIds = (headerRow: Array<string>): Array<[string,string]> => {
-  let colInfo: Array<[string,string]> = []
+const genColumnIds = (headerRow: Array<string>): Array<[string, string]> => {
+  let colInfo: Array<[string, string]> = []
   let colIdMap = {}
   for (var i = 0; i < headerRow.length; i++) {
     let origHeader = headerRow[i]
@@ -130,17 +129,17 @@ const genColumnIds = (headerRow: Array<string>): Array<[string,string]> => {
         colId = baseColId + '_' + j.toString()
       }
     }
-    colInfo.push([colId,origHeader])
-    colIdMap[colId]=i
+    colInfo.push([colId, origHeader])
+    colIdMap[colId] = i
   }
   return colInfo
 }
 
 /* scanTypes will read a CSV file and return a Promise<FileMetadata> */
 const metaScan = (pathname: string): Promise<FileMetadata> => {
-  return new Promise((resolve,reject) => {
+  return new Promise((resolve, reject) => {
     let firstRow = true
-    var colIdInfo: Array<[string,string]>
+    var colIdInfo: Array<[string, string]>
     var colTypes: Array<string>
     let rowCount = 0
 
@@ -148,20 +147,20 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
       .fromPath(pathname)
       .on('data', row => {
         if (firstRow) {
-         colIdInfo = genColumnIds(row)
-         colTypes = Array(colIdInfo.length).fill(null)
-         firstRow = false
-       } else {
-         colTypes = _.zipWith(colTypes, row, guessColumnType)
-         rowCount++
-       }
+          colIdInfo = genColumnIds(row)
+          colTypes = Array(colIdInfo.length).fill(null)
+          firstRow = false
+        } else {
+          colTypes = _.zipWith(colTypes, row, guessColumnType)
+          rowCount++
+        }
+      })
+     .on('end', () => {
+       const columnIds = colIdInfo.map(p => p[0])
+       const columnNames = colIdInfo.map(p => p[1])
+       resolve({columnIds, columnNames, columnTypes: colTypes, rowCount})
      })
-     .on('end', function() {
-         const columnIds = colIdInfo.map(p => p[0])
-         const columnNames = colIdInfo.map(p => p[1])
-         resolve({ columnIds, columnNames, columnTypes: colTypes, rowCount})
-     })
-   })
+  })
 }
 
 /**
@@ -170,16 +169,16 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
  * returns: Promise<string> with table name of populated sqlite table
  */
 const importData = (db: any, md: FileMetadata, pathname: string): Promise<string> => {
-  return new Promise((resolve,reject) => {
+  return new Promise((resolve, reject) => {
     // extract table name from file path and quote it:
     const tableName = path.basename(pathname, path.extname(pathname))
     const qTableName = '\'' + tableName + '\''
     const dropStmt = 'drop table if exists ' + qTableName
     db.run(dropStmt)
-    const colIds = md.columnIds
-    const colTypes = md.columnTypes
-    const typedCols = _.zipWith(colIds, colTypes,
-      (cid,ct) => '\'' + cid + '\' ' + ct )
+    // *sigh* Would be better to use _zipWith here instead of zip and map,
+    // but Flow type chokes if we do that
+    const idts = _.zip(md.columnIds, md.columnTypes)
+    const typedCols = idts.map(([cid, ct]) => '\'' + cid + '\' ' + (ct ? ct : ''))  // eslint-disable-line
     const schemaStr = typedCols.join(', ')
     const createStmt = 'create table ' + qTableName + ' ( ' + schemaStr + ' )'
     db.run(createStmt, err => {
@@ -200,9 +199,9 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
             // header row -- skip
             firstRow = false
           } else {
-            let rowVals = _.zipWith(md.columnTypes,row,prepValue)
+            let rowVals = _.zipWith(md.columnTypes, row, prepValue)
             if (insertCount === (md.rowCount - 1)) {
-              insertStmt.run(rowVals,err => {
+              insertStmt.run(rowVals, err => {
                 if (err) {
                   reject(err)
                   return
@@ -228,8 +227,8 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
   })
 }
 
-const testPath = '/Users/antony/home/src/easypivot-old/csv/bart-comp-all.csv'
-// const testPath = '/Users/antony/data/movie_metadata.csv'
+// const testPath = '/Users/antony/home/src/easypivot-old/csv/bart-comp-all.csv'
+const testPath = '/Users/antony/data/movie_metadata.csv'
 
 const db = new sqlite3.Database(':memory:')
 db.serialize(() => {
@@ -240,7 +239,7 @@ db.serialize(() => {
   }).then(tableName => {
     console.log('table import complete: ', tableName)
 
-    db.all('select * from \'bart-comp-all\' limit 10', (err,rows) => {
+    db.all('select * from \'' + tableName + '\' limit 10', (err, rows) => {
       if (err) {
         console.error(err)
         return
