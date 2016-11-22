@@ -1,7 +1,7 @@
 /* @flow */
 import * as reltab from './reltab'
 
-type CmpFn<A> = (x: A,y: A) => number
+type CmpFn<A> = (x: A, y: A) => number
 
 export default class SimpleDataView {
   rawData: Array<any>
@@ -9,11 +9,11 @@ export default class SimpleDataView {
   sortCmpFn: ?CmpFn<any>
   schema: ?reltab.Schema
 
-  constructor() {
+  constructor () {
     this.rawData = []
     this.idMap = []
     this.sortCmpFn = null
-    this.scheam = null
+    this.schema = null
   }
 
   getLength (): number {
@@ -40,8 +40,9 @@ export default class SimpleDataView {
   }
 
   updateView () {
-    if (this.sortCmpFn)
+    if (this.sortCmpFn) {
       this.sort(this.sortCmpFn)
+    }
   }
 
   sort (cmpFn: CmpFn<any>) {

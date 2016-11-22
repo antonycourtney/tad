@@ -22,7 +22,7 @@ export default class PivotTreeModel {
     this.listeners = []
     this.treeQueryPromise = null
     this.vpivotPromise = null
-    this.needPivot = true; // pivots have been set, need to call vpivot()
+    this.needPivot = true // pivots have been set, need to call vpivot()
     this.dataView = new SimpleDataView()
     this.rt = rt
     this.baseQuery = baseQuery
@@ -40,15 +40,15 @@ export default class PivotTreeModel {
   }
 
   addPath (path: Array<string>) {
-    if (!this.openNodeMap)
+    if (!this.openNodeMap) {
       this.openNodeMap = {}
-
+    }
     var nm = this.openNodeMap
     for (var i = 0; i < path.length; i++) {
-      var subMap = nm[ path[ i ]]
+      var subMap = nm[path[i]]
       if (!subMap) {
         subMap = {}
-        nm[ path[ i ]] = subMap
+        nm[path[i]] = subMap
       }
       nm = subMap
     }
@@ -59,7 +59,7 @@ export default class PivotTreeModel {
       return
     }
     var entry = path.shift()
-    if (path.length == 0) {
+    if (path.length === 0) {
       delete nodeMap[ entry ]
     } else {
       var subMap = nodeMap[ entry ]
@@ -69,11 +69,11 @@ export default class PivotTreeModel {
     }
   }
 
-  openPath (path) {
+  openPath (path: Array<string>) {
     this.addPath(path)
   }
 
-  closePath (path) {
+  closePath (path: Array<string>) {
     this.removePath(this.openNodeMap, path)
   }
 
@@ -81,25 +81,26 @@ export default class PivotTreeModel {
   // calling openPath and refresh() will return a value inconsisent with
   // the current state of the UI.
   pathIsOpen (path: Array<string>): boolean {
-    if (!this.openNodeMap)
+    if (!this.openNodeMap) {
       return false
-
+    }
     var nm = this.openNodeMap
-    for ( var i = 0; i < path.length; i++) {
-      var subMap = nm[ path[ i ]]
-      if (!subMap)
+    for (var i = 0; i < path.length; i++) {
+      var subMap = nm[path[i]]
+      if (!subMap) {
         return false
+      }
       nm = subMap
     }
     return true
   }
 
-  loadDataView (tableData) {
+  loadDataView (tableData: reltab.TableRep) {
     console.log('loadDataView: ', tableData)
     var nPivots = this.pivots.length
     var rowData = []
     var parentIdStack = []
-    for ( var i = 0; i < tableData.rowData.length; i++) {
+    for (var i = 0; i < tableData.rowData.length; i++) {
       var rowMap = tableData.schema.rowMapFromRow(tableData.rowData[ i ])
       var path = aggtree.decodePath(rowMap._path)
       var depth = rowMap._depth
@@ -141,7 +142,6 @@ export default class PivotTreeModel {
     this.treeQueryPromise =
       this.vpivotPromise.then(ptree => ptree.getTreeQuery(this.openNodeMap))
 
-
     const dvPromise = this.treeQueryPromise
       .then(treeQuery => this.rt.evalQuery(treeQuery))
       .then(tableData => this.loadDataView(tableData))
@@ -151,10 +151,10 @@ export default class PivotTreeModel {
   }
 
   // recursively get ancestor of specified row at the given depth:
-  getAncestor (row, depth): Array<any> {
+  getAncestor (row: Object, depth: number): Object {
     if (depth > row._depth) {
-      throw new Error('getAncestor: depth ' + depth + ' > row.depth of '
-        + row._depth + ' at row ' + row._id)
+      throw new Error('getAncestor: depth ' + depth +
+        ' > row.depth of ' + row._depth + ' at row ' + row._id)
     }
     while (depth < row._depth) {
       row = this.dataView.getItemById(row._parentId)
@@ -162,29 +162,24 @@ export default class PivotTreeModel {
     return row
   }
 
-  setSort (column, dir) {
-    var sortcol = column
-    var sortdir = dir
-
-    var orderFn = (dir > 0) ? d3a.ascending : d3a.descending
+  setSort (column: string, dir: number) {
+    const sortcol = column
+    const orderFn = (dir > 0) ? d3a.ascending : d3a.descending
 
     const cmpFn = (ra, rb) => {
-      var idA = ra._id
-      var idB = rb._id
-
-      if (ra._depth == 0 || rb._depth == 0)
+      if (ra._depth === 0 || rb._depth === 0) {
         return (ra._depth - rb._depth) // 0 always wins
-
+      }
       if (ra._depth < rb._depth) {
         // get ancestor of rb at depth ra._depth:
         rb = this.getAncestor(rb, ra._depth)
-        if (rb._id == ra._id) {
+        if (rb._id === ra._id) {
           // ra is itself an ancestor of rb, so comes first:
           return -1
         }
       } else if (ra._depth > rb._depth) {
         ra = this.getAncestor(ra, rb._depth)
-        if (ra._id == rb._id) {
+        if (ra._id === rb._id) {
           // rb is itself an ancestor of ra, so must come first:
           return 1
         }

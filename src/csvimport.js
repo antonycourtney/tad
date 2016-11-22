@@ -279,7 +279,7 @@ const testIt = () => {
           console.log(rows)
           db.close()
         })
-      },err => {
+      }, err => {
         console.error('caught exception in importSqlite: ', err, err.stack)
       })
   })
