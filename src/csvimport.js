@@ -1,11 +1,10 @@
 /* @flow */
 import csv from 'fast-csv'
 import * as _ from 'lodash'
-import * as sqlite3raw from 'sqlite3'
 import * as path from 'path'
-
-// TODO: turn this off!  Apparently quite costly
-const sqlite3 = sqlite3raw.verbose() // long stacks for debugging
+import db from 'sqlite'
+import * as stream from 'stream'
+import through from 'through'
 
 // column types, for now...
 // TODO: date, time, datetime, URL, ...
@@ -14,13 +13,13 @@ type ColumnType = 'integer' | 'real' | 'text'
 /*
  * FileMetaData is an array of unique column IDs, column display names and
  * ColumnType for each column in a CSV file.
- * The possible nulll for ColumnType deals with an empty file (no rows)
+ * The possible null for ColumnType deals with an empty file (no rows)
  */
 type FileMetadata = {
-columnIds: Array<string>,
-columnNames: Array<string>,
-columnTypes: Array<?ColumnType>,
-rowCount: number
+  columnIds: Array<string>,
+  columnNames: Array<string>,
+  columnTypes: Array<?ColumnType>,
+  rowCount: number
 }
 
 /*
@@ -62,7 +61,7 @@ const guessColumnType = (cg: ?ColumnType, cs: ?string): ?ColumnType => {
  * prepare a raw value string for db insert based on column type
  */
 const badCharsRE = /\$,/g
-const prepValue = (ct: ColumnType, vs: ?string): ?string => {
+const prepValue = (ct: ?ColumnType, vs: ?string): ?string => {
   if (vs == null || (vs.length === 0 && ct !== 'text')) {
     return null
   }
@@ -163,6 +162,57 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
   })
 }
 
+/*
+ * consume a stream, sending all records to the Promise-returning write
+ * function.
+ *
+ * returns: A Promise that resolves only when all recrords from readable
+ * input stream have been written using wrf.
+ * Promise value is number of recrords written
+ */
+const consumeStream = (s: stream.Readable,
+                        wrf: (buf: any) => Promise<any>,
+                        skipFirst: boolean): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    let firstItem = true
+    let writeCount = 0
+    let readCount = 0
+    let inputDone = false
+
+    const onData = (row) => {
+      if (firstItem) {
+        firstItem = false
+        if (skipFirst) {
+          return
+        }
+      }
+      readCount++
+      wrf(row)
+        .then(() => {
+          writeCount++
+          if (inputDone && writeCount === readCount) {
+            resolve(writeCount)
+          }
+        })
+        .catch(err => {
+          reject(err)
+        })
+    }
+    const onEnd = () => {
+      inputDone = true
+      if (writeCount === readCount) {
+        // may have already written all read items
+        resolve(writeCount)
+      } else {
+        console.log('consumeStream: readCount: ', readCount, ', writeCount: ', writeCount)
+      }
+    }
+
+    let wr = through(onData, onEnd)
+    s.pipe(wr)
+  })
+}
+
 /**
  * Use metadata to create and populate sqlite table from CSV data
  *
@@ -174,76 +224,45 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
     const tableName = path.basename(pathname, path.extname(pathname))
     const qTableName = "'" + tableName + "'"
     const dropStmt = 'drop table if exists ' + qTableName
-    db.run(dropStmt)
-    // *sigh* Would be better to use _zipWith here instead of zip and map,
-    // but Flow type chokes if we do that
     const idts = _.zip(md.columnIds, md.columnTypes)
     const typedCols = idts.map(([cid, ct]) => "'" + cid + "' " + (ct ? ct : '')) // eslint-disable-line
     const schemaStr = typedCols.join(', ')
     const createStmt = 'create table ' + qTableName + ' ( ' + schemaStr + ' )'
-    db.run(createStmt, err => {
-      if (err) {
-        console.error('error creating table: ', err)
-        return
-      }
-      console.log('table created')
-      /*
-       * TODO: multiple sources indicate wrapping inserts in a transaction is key to getting
-       * decent bulk load performance.
-       * We're currently wrapping all inserts in one huge transaction. Should probably break
-       * this into more reasonable (50K rows?) chunks.
-       */
-      db.run('begin', err => {
-        if (err) {
-          console.error(err)
-          reject(err)
-        }
-      })
-      const qs = Array(md.columnNames.length).fill('?')
-      const insertStmtStr = 'insert into ' + qTableName + ' values (' + qs.join(', ') + ')'
-      const insertStmt = db.prepare(insertStmtStr)
-      let firstRow = true
-      let insertCount = 0
-      csv
-        .fromPath(pathname)
-        .on('data', row => {
-          if (firstRow) {
-            // header row -- skip
-            firstRow = false
-          } else {
-            let rowVals = _.zipWith(md.columnTypes, row, prepValue)
-            if (insertCount === (md.rowCount - 1)) {
-              insertStmt.run(rowVals, err => {
-                if (err) {
-                  reject(err)
-                  return
-                }
-                console.log('committing...')
-                db.run('commit', err => {
-                  if (err) {
-                    reject(err)
-                    return
-                  }
-                  console.log('commit succeeded!')
-                  resolve(tableName)
+
+    const qs = Array(md.columnNames.length).fill('?')
+    const insertStmtStr = 'insert into ' + qTableName + ' values (' + qs.join(', ') + ')'
+
+    /*
+     * TODO: multiple sources indicate wrapping inserts in a transaction is key to getting
+     * decent bulk load performance.
+     * We're currently wrapping all inserts in one huge transaction. Should probably break
+     * this into more reasonable (50K rows?) chunks.
+     */
+    db.run(dropStmt)
+      .then(() => db.run(createStmt))
+      .then(() => console.log('table created'))
+      .then(() => db.run('begin'))
+      .then(() => db.prepare(insertStmtStr))
+      .then(insertStmt => {
+        return consumeStream(csv.fromPath(pathname),
+                  (row) => {
+                    let typedRow = _.zip(md.columnTypes, row)
+                    let rowVals = typedRow.map(([t, v]) => prepValue(t, v))
+                    return insertStmt.run(rowVals)
+                  },
+                  true)
+                .then(rowCount => {
+                  console.log('consumeStream completed, rowCount: ', rowCount)
+                  return insertStmt.finalize()
                 })
-              })
-              insertStmt.finalize()
-            } else {
-              insertStmt.run(rowVals, err => {
-                if (err) {
-                  console.error('error during row insert: ', err)
-                  reject(err)
-                }
-              })
-            }
-            insertCount++
-          }
-        })
-        .on('end', () => {
-          console.log('done reading csv data')
-        })
-    })
+      })
+      .then(() => db.run('commit'))
+      .then(() => console.log('commit succeeded!'))
+      .then(() => resolve(tableName))
+      .catch(err => {
+        console.error(err, err.stack)
+        reject(err)
+      })
   })
 }
 
@@ -265,24 +284,18 @@ const testIt = () => {
   // const testPath = '/Users/antony/data/movie_metadata.csv'
   // const testPath = '/Users/antony/data/uber-pickups-in-new-york-city/uber-raw-data-apr14.csv'
 
-  const db = new sqlite3.Database(':memory:')
-  db.serialize(() => {
-    importSqlite(db, testPath)
-      .then(tableName => {
-        console.log('table import complete: ', tableName)
+  // Let's assume we no longerneed db.serialize() from sqlite3 anymore
 
-        db.all("select * from '" + tableName + "' limit 10", (err, rows) => {
-          if (err) {
-            console.error(err)
-            return
-          }
-          console.log(rows)
-          db.close()
-        })
-      }, err => {
-        console.error('caught exception in importSqlite: ', err, err.stack)
-      })
-  })
+  db.open(':memory:')
+    .then(() => importSqlite(db, testPath))
+    .then(tableName => {
+      console.log('table import complete: ', tableName)
+      return db.all("select * from '" + tableName + "' limit 10")
+    })
+    .then(rows => console.log(rows))
+    .then(() => db.close())
+    .catch(err => {
+      console.error('caught exception in importSqlite: ', err, err.stack)
+    })
 }
-
 testIt()

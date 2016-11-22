@@ -125,7 +125,7 @@ test('groupBy aggs', t => {
     const groupSum = util.columnSum(res, 'TCOE')
     t.deepEqual(groupSum, tcoeSum, 'tcoe sum after groupBy')
     t.end()
-  }).fail(util.mkAsyncErrHandler(t, 'evalQuery q4'))
+  }, util.mkAsyncErrHandler(t, 'evalQuery q4'))
 })
 
 const q5 = q1.filter(reltab.and().eq(col('Job'), constVal('Executive Management')))

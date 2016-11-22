@@ -16,10 +16,10 @@
     "jquery": "^3.1.1",
     "jsesc": "^2.2.0",
     "lodash": "^4.16.4",
-    "q": "^1.4.1",
     "slickgrid-es6": "^0.4.2",
+    "sqlite": "^2.2.3",
     "sqlite3": "^3.1.8",
-    "webpack": "^1.13.3"
+    "through": "^2.3.8"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
@@ -48,7 +48,7 @@
     "style-loader": "^0.13.1",
     "tap-spec": "^4.1.1",
     "tape": "^4.6.2",
-    "webpack": "^1.13.2"
+    "webpack": "^1.13.3"
   },
   "main": "main.js",
   "scripts": {

@@ -6,7 +6,7 @@
 
 import { ConstVal, TableRep, Schema, RelExp, FilterExp, QueryExp } from './reltab'
 import type { ValExp, Row, AggColSpec, SubExp, ColumnMapInfo, ColumnExtendVal } from './reltab' // eslint-disable-line
-import * as Q from 'q'
+// import * as Q from 'q'
 import * as d3f from 'd3-fetch'
 import * as d3a from 'd3-array'
 
@@ -685,7 +685,7 @@ class CSEEvaluator {
       if (numExp.tableNums.length > 0) {
         // dfs eval of sub-tables:
         const subTables = numExp.tableNums.map(tid => this.evalTable(tid))
-        resp = Q.all(subTables).then(tvals => evalInteriorExp(numExp.exp, tvals))
+        resp = Promise.all(subTables).then(tvals => evalInteriorExp(numExp.exp, tvals))
       } else {
         resp = evalBaseExp(numExp.exp)
       }
