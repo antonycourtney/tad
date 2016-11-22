@@ -187,6 +187,12 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
         return
       }
       console.log('table created')
+      /*
+       * TODO: multiple sources indicate wrapping inserts in a transaction is key to getting
+       * decent bulk load performance.
+       * We're currently wrapping all inserts in one huge transaction. Should probably break
+       * this into more reasonable (50K rows?) chunks.
+       */
       db.run('begin', err => {
         if (err) {
           console.error(err)
@@ -241,26 +247,38 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
   })
 }
 
-const testPath = '/Users/antony/home/src/easypivot-old/csv/bart-comp-all.csv'
-// const testPath = '/Users/antony/data/movie_metadata.csv'
-// const testPath = '/Users/antony/data/uber-pickups-in-new-york-city/uber-raw-data-apr14.csv'
-
-const db = new sqlite3.Database(':memory:')
-db.serialize(() => {
-  metaScan(testPath)
-  .then(md => {
+/*
+ * import the specified CSV file into an in-memory sqlite table
+ *
+ * returns: Promise<tableName: string>
+ *
+ */
+export const importSqlite = (db: any, pathname: string): Promise<string> => {
+  return metaScan(testPath).then(md => {
     console.log('metascan complete. rows to import: ', md.rowCount)
     return importData(db, md, testPath)
-  }).then(tableName => {
-    console.log('table import complete: ', tableName)
-
-    db.all('select * from \'' + tableName + '\' limit 10', (err, rows) => {
-      if (err) {
-        console.error(err)
-        return
-      }
-      console.log(rows)
-    })
-    db.close()
   })
-})
+}
+
+const testIt = () => {
+  const testPath = '/Users/antony/home/src/easypivot-old/csv/bart-comp-all.csv'
+  // const testPath = '/Users/antony/data/movie_metadata.csv'
+  // const testPath = '/Users/antony/data/uber-pickups-in-new-york-city/uber-raw-data-apr14.csv'
+
+  const db = new sqlite3.Database(':memory:')
+  db.serialize(() => {
+    importSqlite(db, testPath)
+      .then(tableName => {
+        console.log('table import complete: ', tableName)
+
+        db.all('select * from \'' + tableName + '\' limit 10', (err, rows) => {
+          if (err) {
+            console.error(err)
+            return
+          }
+          console.log(rows)
+        })
+        db.close()
+      })
+  })
+}
