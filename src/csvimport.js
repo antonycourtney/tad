@@ -2,7 +2,6 @@
 import csv from 'fast-csv'
 import * as _ from 'lodash'
 import * as path from 'path'
-import db from 'sqlite'
 import * as stream from 'stream'
 import through from 'through'
 
@@ -19,7 +18,8 @@ type FileMetadata = {
   columnIds: Array<string>,
   columnNames: Array<string>,
   columnTypes: Array<?ColumnType>,
-  rowCount: number
+  rowCount: number,
+  tableName: string
 }
 
 /*
@@ -141,6 +141,8 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
     var colIdInfo: Array<[string, string]>
     var colTypes: Array<string>
     let rowCount = 0
+    // extract table name from file path:
+    const tableName = path.basename(pathname, path.extname(pathname))
 
     csv
       .fromPath(pathname)
@@ -157,7 +159,7 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
       .on('end', () => {
         const columnIds = colIdInfo.map(p => p[0])
         const columnNames = colIdInfo.map(p => p[1])
-        resolve({columnIds, columnNames, columnTypes: colTypes, rowCount})
+        resolve({columnIds, columnNames, columnTypes: colTypes, rowCount, tableName})
       })
   })
 }
@@ -216,12 +218,11 @@ const consumeStream = (s: stream.Readable,
 /**
  * Use metadata to create and populate sqlite table from CSV data
  *
- * returns: Promise<string> with table name of populated sqlite table
+ * returns: Promise<FileMetadata>
  */
-const importData = (db: any, md: FileMetadata, pathname: string): Promise<string> => {
+const importData = (db: any, md: FileMetadata, pathname: string): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
-    // extract table name from file path and quote it:
-    const tableName = path.basename(pathname, path.extname(pathname))
+    const tableName = md.tableName
     const qTableName = "'" + tableName + "'"
     const dropStmt = 'drop table if exists ' + qTableName
     const idts = _.zip(md.columnIds, md.columnTypes)
@@ -258,7 +259,7 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
       })
       .then(() => db.run('commit'))
       .then(() => console.log('commit succeeded!'))
-      .then(() => resolve(tableName))
+      .then(() => resolve(md))
       .catch(err => {
         console.error(err, err.stack)
         reject(err)
@@ -278,24 +279,3 @@ export const importSqlite = (db: any, pathname: string): Promise<string> => {
     return importData(db, md, pathname)
   })
 }
-
-const testIt = () => {
-  const testPath = '/Users/antony/home/src/easypivot-old/csv/bart-comp-all.csv'
-  // const testPath = '/Users/antony/data/movie_metadata.csv'
-  // const testPath = '/Users/antony/data/uber-pickups-in-new-york-city/uber-raw-data-apr14.csv'
-
-  // Let's assume we no longerneed db.serialize() from sqlite3 anymore
-
-  db.open(':memory:')
-    .then(() => importSqlite(db, testPath))
-    .then(tableName => {
-      console.log('table import complete: ', tableName)
-      return db.all("select * from '" + tableName + "' limit 10")
-    })
-    .then(rows => console.log(rows))
-    .then(() => db.close())
-    .catch(err => {
-      console.error('caught exception in importSqlite: ', err, err.stack)
-    })
-}
-testIt()

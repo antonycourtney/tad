@@ -24,3 +24,4 @@ global.fetch = (url: string): Promise<any> => readFileAsync(url, 'utf-8').then(t
  */
 require('./reltabTests')
 require('./aggtreeTests')
+require('./csvImportTests')
