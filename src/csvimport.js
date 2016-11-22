@@ -17,11 +17,11 @@ type ColumnType = 'integer' | 'real' | 'text'
  * The possible nulll for ColumnType deals with an empty file (no rows)
  */
 type FileMetadata = {
-    columnIds: Array<string>,
-    columnNames: Array<string>,
-    columnTypes: Array<?ColumnType>,
-    rowCount: number
-  }
+columnIds: Array<string>,
+columnNames: Array<string>,
+columnTypes: Array<?ColumnType>,
+rowCount: number
+}
 
 /*
  * regex to match a float or int:
@@ -38,7 +38,7 @@ const realRE = /[-+]?[$]?[0-9,]*\.?[0-9]+([eE][-+]?[0-9]+)?/
  */
 const guessColumnType = (cg: ?ColumnType, cs: ?string): ?ColumnType => {
   if (cg === 'text') {
-    return cg   // already most general case
+    return cg // already most general case
   }
   if (cs == null || cs.length === 0) {
     return cg // empty cells don't affect current guess
@@ -155,11 +155,11 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
           rowCount++
         }
       })
-     .on('end', () => {
-       const columnIds = colIdInfo.map(p => p[0])
-       const columnNames = colIdInfo.map(p => p[1])
-       resolve({columnIds, columnNames, columnTypes: colTypes, rowCount})
-     })
+      .on('end', () => {
+        const columnIds = colIdInfo.map(p => p[0])
+        const columnNames = colIdInfo.map(p => p[1])
+        resolve({columnIds, columnNames, columnTypes: colTypes, rowCount})
+      })
   })
 }
 
@@ -172,13 +172,13 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
   return new Promise((resolve, reject) => {
     // extract table name from file path and quote it:
     const tableName = path.basename(pathname, path.extname(pathname))
-    const qTableName = '\'' + tableName + '\''
+    const qTableName = "'" + tableName + "'"
     const dropStmt = 'drop table if exists ' + qTableName
     db.run(dropStmt)
     // *sigh* Would be better to use _zipWith here instead of zip and map,
     // but Flow type chokes if we do that
     const idts = _.zip(md.columnIds, md.columnTypes)
-    const typedCols = idts.map(([cid, ct]) => '\'' + cid + '\' ' + (ct ? ct : ''))  // eslint-disable-line
+    const typedCols = idts.map(([cid, ct]) => "'" + cid + "' " + (ct ? ct : '')) // eslint-disable-line
     const schemaStr = typedCols.join(', ')
     const createStmt = 'create table ' + qTableName + ' ( ' + schemaStr + ' )'
     db.run(createStmt, err => {
@@ -271,7 +271,7 @@ const testIt = () => {
       .then(tableName => {
         console.log('table import complete: ', tableName)
 
-        db.all('select * from \'' + tableName + '\' limit 10', (err, rows) => {
+        db.all("select * from '" + tableName + "' limit 10", (err, rows) => {
           if (err) {
             console.error(err)
             return

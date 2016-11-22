@@ -3,7 +3,7 @@
 import * as reltab from './reltab'
 const {col, constVal} = reltab
 
-import type {Connection} from './reltab'  // eslint-disable-line
+import type { Connection } from './reltab' // eslint-disable-line
 
 const PATHSEP = '#'
 
@@ -146,7 +146,7 @@ export class VPivotTree {
 }
 
 export const vpivot = (rt: reltab.Connection, rtBaseQuery: reltab.QueryExp,
-                       pivotColumns: Array<string>): Promise<VPivotTree> => {
+pivotColumns: Array<string>): Promise<VPivotTree> => {
   // add a count column:
   rtBaseQuery = rtBaseQuery.extend('Rec', { type: 'integer' }, 1)
   // obtain schema for base query:

@@ -1,4 +1,4 @@
-import {Slick} from 'slickgrid-es6'
+import { Slick } from 'slickgrid-es6'
 
 import * as aggtree from './aggtree'
 import $ from 'jquery'
@@ -32,8 +32,9 @@ function SGView (container, ptmodel) {
     console.log('onGridClick: ', e, args)
     var item = this.getDataItem(args.row)
     console.log('data item: ', item)
-    if (item.isLeaf)
+    if (item.isLeaf) {
       return
+    }
     var path = aggtree.decodePath(item._path)
     if (item.isOpen) {
       ptmodel.closePath(path)
@@ -68,8 +69,9 @@ function SGView (container, ptmodel) {
       grid.updateRowCount()
       grid.render()
 
-      if (loadingIndicator)
+      if (loadingIndicator) {
         loadingIndicator.fadeOut()
+      }
     })
   }
 
@@ -131,8 +133,7 @@ function SGView (container, ptmodel) {
     var pivotStr = item._pivot || ''
 
     var ret = "<span class='" + options.toggleCssClass + ' ' +
-      ((!item.isLeaf) ? (item.isOpen ? options.toggleExpandedCssClass :
-        options.toggleCollapsedCssClass) : '' ) +
+      ((!item.isLeaf) ? (item.isOpen ? options.toggleExpandedCssClass : options.toggleCollapsedCssClass) : '') +
       "' style='margin-left:" + indentation + "'>" +
       '</span>' +
       "<span class='" + options.groupTitleCssClass + "' level='" + item._depth + "'>" +
@@ -142,7 +143,7 @@ function SGView (container, ptmodel) {
   }
 
   function refreshGrid (dataView) {
-    grid.invalidateAllRows(); // TODO: optimize
+    grid.invalidateAllRows() // TODO: optimize
     grid.updateRowCount()
     grid.render()
   }
@@ -158,14 +159,14 @@ function SGView (container, ptmodel) {
     var MAXCOLWIDTH = 300
     var colWidths = {}
     var nRows = dataView.getLength()
-    for ( var i = 0; i < nRows; i++) {
+    for (var i = 0; i < nRows; i++) {
       var row = dataView.getItem(i)
       var cnm
-      for ( cnm in row) {
+      for (cnm in row) {
         var cellVal = row[ cnm ]
         var cellWidth = MINCOLWIDTH
         if (cellVal) {
-          cellWidth = 8 + (6 * cellVal.toString().length); // TODO: measure!
+          cellWidth = 8 + (6 * cellVal.toString().length) // TODO: measure!
         }
         colWidths[ cnm ] = Math.min(MAXCOLWIDTH,
           Math.max(colWidths[ cnm ] || MINCOLWIDTH, cellWidth))
@@ -177,7 +178,6 @@ function SGView (container, ptmodel) {
 
   // construct SlickGrid column info from RelTab schema:
   function mkGridCols (schema, colWidths, showHiddenColumns) {
-    var columnIds = schema.columns
     var gridWidth = 0 // initial padding amount
     var GRIDWIDTHPAD = 16
 
@@ -189,14 +189,15 @@ function SGView (container, ptmodel) {
     for (var i = 0; i < schema.columns.length; i++) {
       var colId = schema.columns[ i ]
       if (!showHiddenColumns) {
-        if (colId[0] == '_') {
-          if (colId !== '_pivot')
+        if (colId[0] === '_') {
+          if (colId !== '_pivot') {
             continue
+          }
         }
       }
       var cmd = schema.columnMetadata[ colId ]
       var ci = { id: colId, field: colId }
-      if (colId == '_pivot') {
+      if (colId === '_pivot') {
         ci.cssClass = 'pivot-column'
         ci.name = ''
         ci.formatter = options.groupFormatter
@@ -207,7 +208,7 @@ function SGView (container, ptmodel) {
         ci.sortable = true
       }
       var colWidth = colWidths[ ci.field ]
-      if (i == schema.columns.length - 1) {
+      if (i === schema.columns.length - 1) {
         // pad out last column to allow for dynamic scrollbar
         colWidth += GRIDWIDTHPAD
       }
@@ -224,9 +225,9 @@ function SGView (container, ptmodel) {
   }
 
   function loadInitialImage (dataView) {
-    console.log( "loadInitialImage: ", dataView )
+    console.log('loadInitialImage: ', dataView)
 
-    var showHiddenColumns = false; // Useful for debugging.  TODO: make configurable!
+    var showHiddenColumns = false // Useful for debugging.  TODO: make configurable!
 
     var colWidths = getInitialColWidths(dataView)
     gridColumnInfo = mkGridCols(dataView.schema, colWidths, showHiddenColumns)
@@ -237,8 +238,9 @@ function SGView (container, ptmodel) {
     grid.resizeCanvas()
   }
 
-  var rt = ptmodel.rt
-  var pData = ptmodel.refresh().then(loadInitialImage).fail(err => console.error('loadInitialImage: async error: ', err, err.stack))
+  ptmodel.refresh()
+    .then(loadInitialImage)
+    .fail(err => console.error('loadInitialImage: async error: ', err, err.stack))
 }
 
 export function sgView (div, ptmodel) {

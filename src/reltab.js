@@ -150,7 +150,7 @@ export const and = () : FilterExp => new FilterExp('AND')
 export const or = () : FilterExp => new FilterExp('OR')
 
 type QueryOp = 'table' | 'project' | 'filter' | 'groupBy' |
-               'mapColumns' | 'mapColumnsByIndex' | 'concat' | 'sort' | 'extend'
+'mapColumns' | 'mapColumnsByIndex' | 'concat' | 'sort' | 'extend'
 
 export type AggStr = 'uniq' | 'sum' | 'avg'
 
@@ -420,8 +420,8 @@ const projectImpl = (projectCols: Array<string>): TableOp => {
  * The result is obtained with finalize
  */
 interface AggAcc<T> { // eslint-disable-line
-  mplus (x: ?T): void; // eslint-disable-line
-  finalize (): T; // eslint-disable-line
+mplus (x: ?T): void; // eslint-disable-line
+finalize (): T; // eslint-disable-line
 } // eslint-disable-line
 
 class SumAgg {
@@ -475,21 +475,21 @@ const defaultAggs = {
 
 /*
   function AvgAgg() {
-    this.count = 0;
-    this.sum = 0;
+    this.count = 0
+    this.sum = 0
   }
 
   AvgAgg.prototype.mplus = function( val ) {
     if ( typeof val !== "undefined" ) {
-      this.count++;
-      this.sum += val;
+      this.count++
+      this.sum += val
     }
-    return this;
+    return this
   }
   AvgAgg.prototype.finalize = function() {
     if ( this.count == 0 )
-      return NaN;
-    return this.sum / this.count;
+      return NaN
+    return this.sum / this.count
   }
 
   // map of constructors for agg operators:
@@ -501,7 +501,7 @@ const defaultAggs = {
 */
 
 const groupByImpl = (cols: Array<string>, aggs: Array<AggColSpec>): TableOp => {
-  const aggCols: Array<string> = aggs  // TODO: deal with explicitly specified (non-default) aggregations!
+  const aggCols: Array<string> = aggs // TODO: deal with explicitly specified (non-default) aggregations!
 
   const calcSchema = (inSchema: Schema): Schema => {
     const rs = new Schema(cols.concat(aggCols), inSchema.columnMetadata)
@@ -787,7 +787,7 @@ const mapColumnsByIndexImpl = (cmap: {[colId: string]: ColumnMapInfo}): TableOp 
  * extend a RelTab by adding a column computed from existing columns.
  */
 const extendImpl = (colId: string, columnMetadata: ColumnMapInfo,
-                    ev: ColumnExtendVal): TableOp => {
+ev: ColumnExtendVal): TableOp => {
   /*
    * TODO: What are the semantics of doing an extend on a column that already exists?  Decide and spec. it!
    */
@@ -961,7 +961,7 @@ class NumberedExp {
 }
 
 class CSEEvaluator {
-  invMap: { [expRep: string]: number }    // Map from stringify'ed expr to value number
+  invMap: { [expRep: string]: number } // Map from stringify'ed expr to value number
   valExps: Array<NumberedExp>
   promises: Array<Promise<TableRep>>
 
@@ -1020,7 +1020,7 @@ const localEvalQuery = (query: QueryExp): Promise<TableRep> => {
 }
 
 export interface Connection { // eslint-disable-line
-  evalQuery (query: QueryExp): Promise<TableRep>
+evalQuery (query: QueryExp): Promise<TableRep>
 }
 
 export const local = {

@@ -3,7 +3,7 @@
 import * as reltab from './reltab'
 import * as aggtree from './aggtree'
 import SimpleDataView from './SimpleDataView'
-import type {Connection} from './reltab'  // eslint-disable-line
+import type { Connection } from './reltab' // eslint-disable-line
 import * as d3a from 'd3-array'
 
 export default class PivotTreeModel {

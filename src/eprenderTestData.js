@@ -4,7 +4,7 @@ import * as styles from '../less/easypivot.less'
 
 import * as reltab from './reltab' // eslint-disable-line
 
-import { FrozenGrid as Grid, Data, Formatters } from 'slickgrid-es6'
+import { FrozenGrid as Grid } from 'slickgrid-es6'
 
 import data from './example-data'
 
@@ -17,8 +17,6 @@ const columns = [
   {id: 'effort-driven', name: 'Effort Driven', field: 'effortDriven'}
 ]
 
-let grid
-
 const options = {
   enableCellNavigation: true,
   enableColumnReorder: false,
@@ -27,10 +25,12 @@ const options = {
   frozenRow: 1
 }
 
+let grid
 const init = (id) => {
-    grid = new Grid(id, data, columns, options)
+  grid = new Grid(id, data, columns, options)
 }
 console.log('Hello EasyPivot!')
 init('#epGrid')
 console.log('slickgrid initialized')
+console.log('grid: ', grid)
 console.log('styles: ', styles)
