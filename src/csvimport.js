@@ -254,9 +254,9 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<string
  *
  */
 export const importSqlite = (db: any, pathname: string): Promise<string> => {
-  return metaScan(testPath).then(md => {
+  return metaScan(pathname).then(md => {
     console.log('metascan complete. rows to import: ', md.rowCount)
-    return importData(db, md, testPath)
+    return importData(db, md, pathname)
   })
 }
 
@@ -277,8 +277,12 @@ const testIt = () => {
             return
           }
           console.log(rows)
+          db.close()
         })
-        db.close()
+      },err => {
+        console.error('caught exception in importSqlite: ', err, err.stack)
       })
   })
 }
+
+testIt()
