@@ -1,6 +1,7 @@
 /* @flow */
 
 import * as reltab from '../src/reltab' // eslint-disable-line
+import rtc from '../src/reltab-local'
 import test from 'tape'
 
 export const columnSum = (tableData: reltab.TableRep, columnId: string): number => {
@@ -25,7 +26,7 @@ export const mkAsyncErrHandler = (t: any, msg: string): Handler => {
 export const queryTest = (label: string, query: reltab.QueryExp,
                           cf: (t: any, res: reltab.TableRep) => void): void => {
   test(label, t => {
-    reltab.local.evalQuery(query).then(res => cf(t, res)).fail(mkAsyncErrHandler(t, label))
+    rtc.evalQuery(query).then(res => cf(t, res)).fail(mkAsyncErrHandler(t, label))
   })
 }
 

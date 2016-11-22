@@ -1,6 +1,7 @@
 /* @flow */
 import test from 'tape'
 import * as reltab from '../src/reltab' // eslint-disable-line
+import rtc from '../src/reltab-local'
 import * as util from './reltabTestUtils'
 import * as _ from 'lodash'
 
@@ -42,7 +43,7 @@ var tcoeSum = 0
 
 test('basic table read', t => {
   t.plan(5)
-  reltab.local.evalQuery(q1).then(res => {
+  rtc.evalQuery(q1).then(res => {
     t.ok(true, 'basic table read')
     var schema = res.schema
     var expectedCols = ['Name', 'Title', 'Base', 'OT', 'Other', 'MDV', 'ER',
@@ -80,7 +81,7 @@ const q2 = q1.project(pcols)
 test('basic project operator', t => {
   t.plan(3)
   // console.log('q2: ', q2)
-  reltab.local.evalQuery(q2).then(res => {
+  rtc.evalQuery(q2).then(res => {
     t.ok(true, 'project query returned success')
     // console.log('project query schema: ', res.schema)
     t.deepEqual(res.schema.columns, pcols, 'result schema from project')
@@ -96,7 +97,7 @@ test('basic project operator', t => {
 const q3 = q1.groupBy(['Job', 'Title'], ['TCOE'])  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
 
 test('basic groupBy', t => {
-  reltab.local.evalQuery(q3).then(res => {
+  rtc.evalQuery(q3).then(res => {
     // console.log('groupBy result: ', res)
 
     const expCols = ['Job', 'Title', 'TCOE']
@@ -113,7 +114,7 @@ test('basic groupBy', t => {
 const q4 = q2.groupBy(['Job'], ['Title', 'Union', 'Name', 'Base', 'TCOE'])
 
 test('groupBy aggs', t => {
-  reltab.local.evalQuery(q4).then(res => {
+  rtc.evalQuery(q4).then(res => {
     var rs = res.schema
 
     const expCols = ['Job', 'Title', 'Union', 'Name', 'Base', 'TCOE']

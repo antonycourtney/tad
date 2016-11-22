@@ -3,6 +3,7 @@
 // import * as styles from '../less/easypivot.less'
 
 import * as reltab from './reltab' // eslint-disable-line
+import rtc from './reltab-local'
 import * as epslick from './epslick'
 // import { Grid, Data, Formatters } from 'slickgrid-es6'
 import PivotTreeModel from './PivotTreeModel'
@@ -23,19 +24,18 @@ window.fetch = (url: string): Promise<any> => {
 
 console.log('Hello EasyPivot!')
 
-const rt = reltab.local
 const baseQuery = reltab.tableQuery('test-data/bart-comp-all.json')
   .project([ 'Job', 'Title', 'Union', 'Name', 'Base', 'TCOE' ])
 const {col, constVal} = reltab
 const q5 = baseQuery.filter(reltab.and().eq(col('Job'), constVal('Executive Management')))
-rt.evalQuery(q5).then(res => {
+rtc.evalQuery(q5).then(res => {
   console.log('q5 evaluation completed, result: ', res)
   console.table(res.rowData)
 }, err => {
   console.error('q5 evaluation failed, error: ', err)
 })
 
-var ptm = new PivotTreeModel(rt, baseQuery, [ 'Union', 'Job', 'Title' ])
+var ptm = new PivotTreeModel(rtc, baseQuery, [ 'Union', 'Job', 'Title' ])
 ptm.openPath([])
 ptm.openPath(['Non-Represented', 'Audit'])
 ptm.openPath(['Non-Represented', 'Clerical'])
