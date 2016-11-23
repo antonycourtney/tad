@@ -39,7 +39,7 @@ test('reltab filter expressions', (t) => {
 
 const q1 = reltab.tableQuery('test-data/bart-comp-all.json')
 
-var tcoeSum = 0
+var tcoeSum
 
 test('basic table read', t => {
   t.plan(5)

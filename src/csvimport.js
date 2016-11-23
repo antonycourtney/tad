@@ -1,26 +1,15 @@
 /* @flow */
+/**
+ * Import CSV files into sqlite
+ */
+
+import type {ColumnType, FileMetadata} from './reltab'
 import csv from 'fast-csv'
 import * as _ from 'lodash'
 import * as path from 'path'
 import * as stream from 'stream'
 import through from 'through'
-
-// column types, for now...
-// TODO: date, time, datetime, URL, ...
-type ColumnType = 'integer' | 'real' | 'text'
-
-/*
- * FileMetaData is an array of unique column IDs, column display names and
- * ColumnType for each column in a CSV file.
- * The possible null for ColumnType deals with an empty file (no rows)
- */
-type FileMetadata = {
-  columnIds: Array<string>,
-  columnNames: Array<string>,
-  columnTypes: Array<?ColumnType>,
-  rowCount: number,
-  tableName: string
-}
+import db from 'sqlite'
 
 /*
  * regex to match a float or int:
@@ -220,7 +209,7 @@ const consumeStream = (s: stream.Readable,
  *
  * returns: Promise<FileMetadata>
  */
-const importData = (db: any, md: FileMetadata, pathname: string): Promise<FileMetadata> => {
+const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
     const tableName = md.tableName
     const qTableName = "'" + tableName + "'"
@@ -258,7 +247,6 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<FileMe
                 })
       })
       .then(() => db.run('commit'))
-      .then(() => console.log('commit succeeded!'))
       .then(() => resolve(md))
       .catch(err => {
         console.error(err, err.stack)
@@ -273,9 +261,9 @@ const importData = (db: any, md: FileMetadata, pathname: string): Promise<FileMe
  * returns: Promise<tableName: string>
  *
  */
-export const importSqlite = (db: any, pathname: string): Promise<string> => {
+export const importSqlite = (pathname: string): Promise<FileMetadata> => {
   return metaScan(pathname).then(md => {
     console.log('metascan complete. rows to import: ', md.rowCount)
-    return importData(db, md, pathname)
+    return importData(md, pathname)
   })
 }

@@ -157,7 +157,8 @@ export type Row = Array<Scalar>
 type RowObject ={[columnId: string]: Scalar}
 
 // metadata for a single column:
-export type ColumnType = 'integer' | 'text'
+// TODO: date, time, datetime, URL, ...
+export type ColumnType = 'integer' | 'real' | 'text'
 export type ColumnMetadata = { displayName: string, type: ColumnType }
 
 /*
@@ -220,6 +221,51 @@ export class QueryExp {
   extend (colId: string, columnMetadata: ColumnMapInfo, colVal: ColumnExtendVal): QueryExp {
     return new QueryExp('extend', [colId, columnMetadata, colVal], [this])
   }
+
+  toSql (): string {
+    return queryToSql(this, true)
+  }
+
+  getSchema (tableMap: TableInfoMap): Schema {
+    return getQuerySchema(tableMap, this)
+  }
+}
+
+type GetSchemaFunc = (tableMap: TableInfoMap, query: QueryExp) => Schema
+type GetSchemaMap = {[operator: string]: GetSchemaFunc }
+
+const tableGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+  return tableMap[query.valArgs[0]].schema
+}
+
+const getSchemaMap : GetSchemaMap = {
+  'table': tableGetSchema
+}
+
+const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+  const gsf = getSchemaMap[query.operator]
+  return gsf(tableMap, query)
+}
+
+type PPFunc = (q: QueryExp) => string
+type PPMap = {[operator: string]: PPFunc }
+
+const tableQueryToSql = (tq: QueryExp): string => {
+  return '\'' + tq.valArgs[0] + '\''
+}
+
+const genSqlMap: PPMap = {
+  'table': tableQueryToSql
+}
+
+const queryToSql = (query: QueryExp, outer: boolean = false): string => {
+  const pp = genSqlMap[query.operator]
+  const s = pp(query)
+  if (outer) {
+    return `select * from (${s})`
+  } else {
+    return s
+  }
 }
 
 // Create base of a query expression chain by starting with "table":
@@ -237,7 +283,7 @@ class SchemaError {
   }
 }
 
-type ColumnMetaMap = {[colId: string]: ColumnMetadata}
+export type ColumnMetaMap = {[colId: string]: ColumnMetadata}
 
 export class Schema {
   columnMetadata: ColumnMetaMap
@@ -301,6 +347,45 @@ export class Schema {
 
     return rowMap
   }
+}
+/*
+ * FileMetaData is an array of unique column IDs, column display names and
+ * ColumnType for each column in a CSV file.
+ * The possible null for ColumnType deals with an empty file (no rows)
+ *
+ * TODO: This began life in csvimport, but moved here because TablInfoMap did,
+ * which we need for QueryExp.getSchema().
+ * This distinct data structure in reltab should perhaps just go away; we could just
+ * use Schema everywhere.
+ */
+export type FileMetadata = {
+  columnIds: Array<string>,
+  columnNames: Array<string>,
+  columnTypes: Array<?ColumnType>,
+  rowCount: number,
+  tableName: string
+}
+
+export type TableInfo = { tableName: string, schema: Schema, md: FileMetadata }
+export type TableInfoMap = { [tableName: string]: TableInfo }
+
+function assertDefined<A> (x: ?A): A {
+  if (x == null) {
+    throw new Error('unexpected null value')
+  }
+  return x
+}
+
+export const mkTableInfo = (md: FileMetadata): TableInfo => {
+  const extendCMap = (cmm: ColumnMetaMap,
+        cnm: string, idx: number): ColumnMetaMap => {
+    const cmd = { displayName: md.columnNames[idx], type: assertDefined(md.columnTypes[idx]) }
+    cmm[cnm] = cmd
+    return cmm
+  }
+  const cmMap = md.columnIds.reduce(extendCMap, {})
+  const schema = new Schema(md.columnIds, cmMap)
+  return { tableName: md.tableName, schema, md }
 }
 
 export class TableRep {

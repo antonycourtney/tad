@@ -6,7 +6,6 @@
 
 import { ConstVal, TableRep, Schema, RelExp, FilterExp, QueryExp } from './reltab'
 import type { ValExp, Row, AggColSpec, SubExp, ColumnMapInfo, ColumnExtendVal } from './reltab' // eslint-disable-line
-// import * as Q from 'q'
 import * as d3f from 'd3-fetch'
 import * as d3a from 'd3-array'
 
@@ -537,11 +536,12 @@ type RowCmpFn = (rowA: Array<any>, rowB: Array<any>) => number
 
 const compileSortFunc = (schema: Schema, keys: Array<[string, boolean]>): RowCmpFn => {
   const strcmp = (s1, s2) => (s1 < s2 ? -1 : ((s1 > s2) ? 1 : 0))
-  const intcmp = (i1, i2) => i1 - i2
+  const numcmp = (i1, i2) => i1 - i2
 
   var cmpFnMap = {
     'text': strcmp,
-    'integer': intcmp
+    'integer': numcmp,
+    'real': numcmp
   }
 
   function mkRowCompFn (valCmpFn, idx, nextFunc) {

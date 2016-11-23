@@ -1,7 +1,8 @@
 /* @flow */
-import test from 'tape'
+// import test from 'tape'
 import db from 'sqlite'
 import * as csvimport from '../src/csvimport'
+import * as util from './reltabTestUtils'
 
 const expRow0 = { Name: 'Crunican, Grace',
     Title: 'General Manager',
@@ -19,10 +20,9 @@ const expRow0 = { Name: 'Crunican, Grace',
     Union: 'Non-Represented'
 }
 
-test('basic csv import', (t) => {
+const csvImportTest = (t:any): Promise<any> => {
   const testPath = 'csv/bart-comp-all.csv'
-  db.open(':memory:')
-    .then(() => csvimport.importSqlite(db, testPath))
+  return csvimport.importSqlite(testPath)
     .then(md => {
       console.log('table import complete: ', md.tableName)
       t.ok(true, 'table import completed.')
@@ -35,9 +35,14 @@ test('basic csv import', (t) => {
       // console.log(rows)
       t.deepEqual(rows[0], expRow0, 'first row as expected')
     })
-    .then(() => db.close())
     .then(() => t.end())
     .catch(err => {
       console.error('caught exception in importSqlite: ', err, err.stack)
+      t.fail(err)
     })
-})
+}
+
+const runTests = () => {
+  util.runSqliteTest('csv import', csvImportTest)
+}
+runTests()

@@ -2,6 +2,7 @@
 
 import * as reltab from '../src/reltab' // eslint-disable-line
 import rtc from '../src/reltab-local'
+import db from 'sqlite'
 import test from 'tape'
 
 export const columnSum = (tableData: reltab.TableRep, columnId: string): number => {
@@ -35,4 +36,13 @@ export const logTable = (table: reltab.TableRep): void => {
   // than browser version; accepts column names as first arg:
   const ctf : any = console.table
   ctf(table.schema.columns, table.rowData)
+}
+
+export const runSqliteTest = (label: string, f: (t: any) => Promise<any>): void => {
+  test(label, t => {
+    db.open(':memory:')
+      .then(() => f(t))
+      .then(() => db.close())
+      .catch(err => console.error('error in runSqlite promise chain: ', err, err.stack))
+  })
 }
