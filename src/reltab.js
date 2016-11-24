@@ -223,8 +223,8 @@ export class QueryExp {
     return new QueryExp('extend', [colId, columnMetadata, colVal], [this])
   }
 
-  toSql (outer: boolean = true): string {
-    return queryToSql(this, outer)
+  toSql (tableMap: TableInfoMap, outer: boolean = true): string {
+    return queryToSql(tableMap, this, outer)
   }
 
   getSchema (tableMap: TableInfoMap): Schema {
@@ -245,9 +245,19 @@ const projectGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   return new Schema(projectCols, _.pick(inSchema.columnMetadata, projectCols))
 }
 
+const groupByGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+  // TODO: deal with non-default aggregations
+  const [ cols, aggCols ] = query.valArgs
+  const inSchema = query.tableArgs[0].getSchema(tableMap)
+  const rs = new Schema(cols.concat(aggCols), inSchema.columnMetadata)
+
+  return rs
+}
+
 const getSchemaMap : GetSchemaMap = {
   'table': tableGetSchema,
-  'project': projectGetSchema
+  'project': projectGetSchema,
+  'groupBy': groupByGetSchema
 }
 
 const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
@@ -264,33 +274,66 @@ const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
  * arrays of strings for a flatmap'ed strjoin
  */
 
-type PPFunc = (q: QueryExp) => string
+type PPFunc = (tableMap: TableInfoMap, q: QueryExp) => string
 type PPMap = {[operator: string]: PPFunc }
 
-const tableQueryToSql = (tq: QueryExp): string => {
+const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): string => {
   return '\'' + tq.valArgs[0] + '\''
 }
 
-const projectQueryToSql = (pq: QueryExp): string => {
+const quoteCol = (cid) => '"' + cid + '"'
+
+const projectQueryToSql = (tableMap: TableInfoMap, pq: QueryExp): string => {
   const projectCols = pq.valArgs[0]
-  const quoteCols = projectCols.map(s => '"' + s + '"')
+  const quoteCols = projectCols.map(quoteCol)
   const pcStr = quoteCols.join(', ')
-  const sqsql = queryToSql(pq.tableArgs[0])
+  const sqsql = queryToSql(tableMap, pq.tableArgs[0])
 
   return `select ${pcStr} from (${sqsql})`
 }
 
-const genSqlMap: PPMap = {
-  'table': tableQueryToSql,
-  'project': projectQueryToSql
+const defaultAggs = {
+  'integer': 'sum',
+  'real': 'sum',
+  'text': 'uniq'
 }
 
-const queryToSql = (query: QueryExp, outer: boolean = false): string => {
+const groupByQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
+  // TODO: deal with non-default aggregations
+  const [ cols, aggCols ] = query.valArgs
+  const inSchema = query.tableArgs[0].getSchema(tableMap)
+
+  // Get the aggregation expressions for each aggCol:
+  const aggExprs = aggCols.map(cid => {
+    const qcid = quoteCol(cid)
+    const colType = inSchema.columnType(cid)
+    const aggStr = defaultAggs[colType]
+    return aggStr + '(' + qcid + ') as ' + qcid
+  })
+
+  const quoteCols = cols.map(quoteCol)
+  const selectCols = quoteCols.concat(aggExprs)
+  const selectStr = selectCols.join(', ')
+
+  const sqsql = queryToSql(tableMap, query.tableArgs[0])
+
+  const gbColsStr = quoteCols.join(', ')
+
+  return `select ${selectStr} from (${sqsql}) group by ${gbColsStr}`
+}
+
+const genSqlMap: PPMap = {
+  'table': tableQueryToSql,
+  'project': projectQueryToSql,
+  'groupBy': groupByQueryToSql
+}
+
+const queryToSql = (tableMap: TableInfoMap, query: QueryExp, outer: boolean = false): string => {
   const pp = genSqlMap[query.operator]
   if (!pp) {
     throw new Error('queryToSql: No implementation for operator \'' + query.operator + '\'')
   }
-  const s = pp(query)
+  const s = pp(tableMap, query)
   if (outer) {
     return `select * from (${s})`
   } else {

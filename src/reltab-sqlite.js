@@ -30,7 +30,7 @@ class SqliteContext {
 
   evalQuery (query: QueryExp): Promise<TableRep> {
     const schema = query.getSchema(this.tableMap)
-    const sqlQuery = query.toSql()
+    const sqlQuery = query.toSql(this.tableMap)
     console.log('SqliteContext.evalQuery: evaluating:')
     console.log(sqlQuery)
     const qp = this.db.all(sqlQuery)

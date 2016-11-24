@@ -73,6 +73,26 @@ const dbTest2 = () => {
   })
 }
 
+const dbTest3 = () => {
+  const q3 = q1.groupBy(['Job', 'Title'], ['TCOE'])  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
+
+  test('basic groupBy', t => {
+    const rtc = sharedRtc
+    rtc.evalQuery(q3).then(res => {
+      // console.log('groupBy result: ', res)
+
+      const expCols = ['Job', 'Title', 'TCOE']
+      t.deepEqual(res.schema.columns, expCols, 'groupBy query schema')
+
+      t.deepEqual(res.rowData.length, 380, 'correct number of grouped rows')
+
+      const groupSum = util.columnSum(res, 'TCOE')
+      t.equal(groupSum, tcoeSum, 'grouped TCOE sum matches raw sum')
+      t.end()
+    })
+  })
+}
+
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
@@ -101,6 +121,7 @@ const runTests = () => {
   sqliteTestSetup()
   dbTest0()
   dbTest2()
+  dbTest3()
   sqliteTestShutdown()
 }
 
