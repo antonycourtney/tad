@@ -1,6 +1,7 @@
 /* @flow */
 
 import jsesc from 'jsesc'
+import * as _ from 'lodash'
 
 /**
  * AST for filter expressions, consisting of a tree of
@@ -222,8 +223,8 @@ export class QueryExp {
     return new QueryExp('extend', [colId, columnMetadata, colVal], [this])
   }
 
-  toSql (): string {
-    return queryToSql(this, true)
+  toSql (outer: boolean = true): string {
+    return queryToSql(this, outer)
   }
 
   getSchema (tableMap: TableInfoMap): Schema {
@@ -238,14 +239,30 @@ const tableGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   return tableMap[query.valArgs[0]].schema
 }
 
+const projectGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+  const inSchema = query.tableArgs[0].getSchema(tableMap)
+  const projectCols = query.valArgs[0]
+  return new Schema(projectCols, _.pick(inSchema.columnMetadata, projectCols))
+}
+
 const getSchemaMap : GetSchemaMap = {
-  'table': tableGetSchema
+  'table': tableGetSchema,
+  'project': projectGetSchema
 }
 
 const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   const gsf = getSchemaMap[query.operator]
+  if (!gsf) {
+    throw new Error('getQuerySchema: No implementation for operator \'' + query.operator + '\'')
+  }
   return gsf(tableMap, query)
 }
+
+/*
+ * Note: If query generation become a performance bottleneck, we
+ * should ditch the string return value and instead return
+ * arrays of strings for a flatmap'ed strjoin
+ */
 
 type PPFunc = (q: QueryExp) => string
 type PPMap = {[operator: string]: PPFunc }
@@ -254,12 +271,25 @@ const tableQueryToSql = (tq: QueryExp): string => {
   return '\'' + tq.valArgs[0] + '\''
 }
 
+const projectQueryToSql = (pq: QueryExp): string => {
+  const projectCols = pq.valArgs[0]
+  const quoteCols = projectCols.map(s => '"' + s + '"')
+  const pcStr = quoteCols.join(', ')
+  const sqsql = queryToSql(pq.tableArgs[0])
+
+  return `select ${pcStr} from (${sqsql})`
+}
+
 const genSqlMap: PPMap = {
-  'table': tableQueryToSql
+  'table': tableQueryToSql,
+  'project': projectQueryToSql
 }
 
 const queryToSql = (query: QueryExp, outer: boolean = false): string => {
   const pp = genSqlMap[query.operator]
+  if (!pp) {
+    throw new Error('queryToSql: No implementation for operator \'' + query.operator + '\'')
+  }
   const s = pp(query)
   if (outer) {
     return `select * from (${s})`

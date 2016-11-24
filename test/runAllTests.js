@@ -22,6 +22,7 @@ global.fetch = (url: string): Promise<any> => readFileAsync(url, 'utf-8').then(t
  * Note (!): We have to pull these in via require() rather than ES6 import because
  * otherwise the import will happen before the above fetch() polyfill is initialized.
  */
+
 require('./reltabTests')
 require('./aggtreeTests')
 require('./csvImportTests')

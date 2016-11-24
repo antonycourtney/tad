@@ -51,6 +51,28 @@ const dbTest0 = () => {
   })
 }
 
+const dbTest2 = () => {
+  const pcols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
+  const q2 = q1.project(pcols)
+
+  test('basic project operator', t => {
+    const rtc = sharedRtc
+    t.plan(3)
+    // console.log('q2: ', q2)
+    rtc.evalQuery(q2).then(res => {
+      t.ok(true, 'project query returned success')
+      // console.log('project query schema: ', res.schema)
+      t.deepEqual(res.schema.columns, pcols, 'result schema from project')
+
+      // console.log(res.rowData[0])
+      var expRow0 = ['Executive Management', 'General Manager', 'Non-Represented', 'Crunican, Grace', 312461, 399921]
+
+      t.deepEqual(res.rowData[0], expRow0, 'project result row 0')
+      t.end()
+    })
+  })
+}
+
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
@@ -78,6 +100,7 @@ const sqliteTestShutdown = () => {
 const runTests = () => {
   sqliteTestSetup()
   dbTest0()
+  dbTest2()
   sqliteTestShutdown()
 }
 
