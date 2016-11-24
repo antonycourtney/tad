@@ -1,17 +1,24 @@
 /* @flow */
 
 import db from 'sqlite'
+import test from 'tape'
 import * as reltab from '../src/reltab'
 import * as reltabSqlite from '../src/reltab-sqlite'
 import * as csvimport from '../src/csvimport'
 import * as util from './reltabTestUtils'
 
+var sharedRtc
+const testPath = 'csv/bart-comp-all.csv'
+
 const q1 = reltab.tableQuery('bart-comp-all')
 
 var tcoeSum
 
-const dbTest0 = (rtc, t) => {
-  return rtc.evalQuery(q1)
+const dbTest0 = () => {
+  test('basic table query', t => {
+    const rtc = sharedRtc // Note: need to ensure we only read sharedRtc inside test()
+    console.log('dbTest0: test start: ', rtc)
+    rtc.evalQuery(q1)
     .then(res => {
       t.ok(true, 'basic table read')
       var schema = res.schema
@@ -41,16 +48,37 @@ const dbTest0 = (rtc, t) => {
       console.log('TCOE sum: ', tcoeSum)
       t.end()
     })
-}
-
-const testPath = 'csv/bart-comp-all.csv'
-
-const runTests = () => {
-  util.runSqliteTest('dbTest0', t => {
-    return csvimport.importSqlite(testPath)
-      .then(md => reltabSqlite.init(db, md))
-      .then(rtc => dbTest0(rtc, t))
-      .catch(err => console.error('reltabSqliteTests: ', err, err.stack))
   })
 }
+
+const sqliteTestSetup = () => {
+  test('sqlite test setup', t => {
+    db.open(':memory:')
+      .then(() => csvimport.importSqlite(testPath))
+      .then(md => reltabSqlite.init(db, md))
+      .then(rtc => {
+        sharedRtc = rtc
+        console.log('set rtc: ', sharedRtc)
+        t.ok(true, 'setup and import complete')
+        t.end()
+      })
+      .catch(err => console.error('sqliteTestSetup failure: ', err, err.stack))
+  })
+}
+
+const sqliteTestShutdown = () => {
+  test('sqlite test setup', t => {
+    db.close()
+      .then(() => {
+        t.ok(true, 'finished db.close')
+        t.end()
+      })
+  })
+}
+const runTests = () => {
+  sqliteTestSetup()
+  dbTest0()
+  sqliteTestShutdown()
+}
+
 runTests()

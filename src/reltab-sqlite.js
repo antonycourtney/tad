@@ -39,11 +39,9 @@ class SqliteContext {
 }
 
 export const init = (db: any, md: FileMetadata): Promise<Connection> => {
-  console.log('reltabSqlite.init: entry')
   return new Promise((resolve, reject) => {
     let tm = {}
     tm[md.tableName] = reltab.mkTableInfo(md)
-    console.log('reltabSqlite.init tableMap: ', tm)
     const ctx = new SqliteContext(db, tm)
     resolve(ctx)
   })
