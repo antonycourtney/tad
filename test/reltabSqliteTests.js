@@ -148,6 +148,16 @@ const dbTest6 = () => {
   })
 }
 
+const q7 = q1.mapColumnsByIndex({'0': {id: 'EmpName'}})
+
+const dbTest7 = () => {
+  sqliteQueryTest('mapColumnsByIndex', q7, (t, res) => {
+    const rs = res.schema
+    t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
+    t.end()
+  })
+}
+
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
@@ -180,6 +190,7 @@ const runTests = () => {
   dbTest4()
   dbTest5()
   dbTest6()
+  dbTest7()
   sqliteTestShutdown()
 }
 

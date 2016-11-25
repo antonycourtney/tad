@@ -297,12 +297,49 @@ const mapColumnsGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema =>
   return outSchema
 }
 
+const mapColumnsByIndexGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+  // TODO: try to unify with mapColumns.  Probably means mapColumns will construct an argument to
+  // mapColumnsByIndex and use this impl
+  const cmap: {[colName: string]: ColumnMapInfo} = query.valArgs[0]
+  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
+
+  var outColumns = []
+  var outMetadata = {}
+  for (var inIndex = 0; inIndex < inSchema.columns.length; inIndex++) {
+    var inColumnId = inSchema.columns[ inIndex ]
+    var inColumnInfo = inSchema.columnMetadata[ inColumnId ]
+    var cmapColumnInfo = cmap[ inIndex.toString() ]
+    if (typeof cmapColumnInfo === 'undefined') {
+      outColumns.push(inColumnId)
+      outMetadata[ inColumnId ] = inColumnInfo
+    } else {
+      var outColumnId = cmapColumnInfo.id
+      if (typeof outColumnId === 'undefined') {
+        outColumnId = inColumnId
+      }
+
+      // Form outColumnfInfo from inColumnInfo and all non-id keys in cmapColumnInfo:
+      var outColumnInfo = JSON.parse(JSON.stringify(inColumnInfo))
+      for (var key in cmapColumnInfo) {
+        if (key !== 'id' && cmapColumnInfo.hasOwnProperty(key)) {
+          outColumnInfo[ key ] = cmapColumnInfo[ key ]
+        }
+      }
+      outMetadata[ outColumnId ] = outColumnInfo
+      outColumns.push(outColumnId)
+    }
+  }
+  var outSchema = new Schema(outColumns, outMetadata)
+  return outSchema
+}
+
 const getSchemaMap : GetSchemaMap = {
   'table': tableGetSchema,
   'project': projectGetSchema,
   'groupBy': groupByGetSchema,
   'filter': filterGetSchema,
-  'mapColumns': mapColumnsGetSchema
+  'mapColumns': mapColumnsGetSchema,
+  'mapColumnsByIndex': mapColumnsByIndexGetSchema
 }
 
 const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
@@ -382,6 +419,9 @@ const filterQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
   return `select * from (${sqsql}) where ${whereStr}`
 }
 
+/*
+ * Note: this implements both mapColumns and mapColumsByIndex
+ */
 const mapColumnsQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
   // const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
   const outSchema: Schema = query.getSchema(tableMap)
@@ -397,7 +437,8 @@ const genSqlMap: PPMap = {
   'project': projectQueryToSql,
   'groupBy': groupByQueryToSql,
   'filter': filterQueryToSql,
-  'mapColumns': mapColumnsQueryToSql
+  'mapColumns': mapColumnsQueryToSql,
+  'mapColumnsByIndex': mapColumnsQueryToSql
 }
 
 const queryToSql = (tableMap: TableInfoMap, query: QueryExp, outer: boolean = false): string => {
