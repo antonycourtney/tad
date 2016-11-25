@@ -7,6 +7,8 @@ import * as reltabSqlite from '../src/reltab-sqlite'
 import * as csvimport from '../src/csvimport'
 import * as util from './reltabTestUtils'
 
+const {col, constVal} = reltab
+
 var sharedRtc
 const testPath = 'csv/bart-comp-all.csv'
 
@@ -116,6 +118,24 @@ const dbTest4 = () => {
   })
 }
 
+const sqliteQueryTest = (label: string, query: reltab.QueryExp,
+                          cf: (t: any, res: reltab.TableRep) => void): void => {
+  test(label, t => {
+    const rtc = sharedRtc
+    rtc.evalQuery(query).then(res => cf(t, res), util.mkAsyncErrHandler(t, label))
+  })
+}
+
+const q5 = q1.filter(reltab.and().eq(col('JobFamily'), constVal('Executive Management')))
+
+const dbTest5 = () => {
+  sqliteQueryTest('basic filter', q5, (t, res) => {
+    t.ok(res.rowData.length === 14, 'expected row count after filter')
+    util.logTable(res)
+    t.end()
+  })
+}
+
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
@@ -146,6 +166,7 @@ const runTests = () => {
   dbTest2()
   dbTest3()
   dbTest4()
+  dbTest5()
   sqliteTestShutdown()
 }
 

@@ -22,11 +22,11 @@ test('reltab filter expressions', (t) => {
 
   const e2 = e1.eq(col('x'), constVal(30))
   const e2s = e2.toSqlWhere()
-  t.ok(e2s === 'x=30', 'basic toSqlWhere')
+  t.ok(e2s === '"x"=30', 'basic toSqlWhere')
 
   const e3 = e2.eq(col('y'), constVal('hello'))
   const e3s = e3.toSqlWhere()
-  t.ok(e3s === "x=30 AND y='hello'", 'compound toSqlWhere')
+  t.ok(e3s === '"x"=30 AND "y"=\'hello\'', 'compound toSqlWhere')
 
   const e4 = e3.subExp(reltab.or().gt(col('z'), constVal(50)).gt(col('a'), col('b')))
 

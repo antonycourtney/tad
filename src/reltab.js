@@ -29,7 +29,7 @@ class ColRef {
     this.colName = colName
   }
   toSqlWhere (): string {
-    return this.colName
+    return '"' + this.colName + '"'
   }
 }
 export const col = (colName: string) => new ColRef(colName)
