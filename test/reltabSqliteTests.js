@@ -136,6 +136,18 @@ const dbTest5 = () => {
   })
 }
 
+const q6 = q1.mapColumns({Name: {id: 'EmpName', displayName: 'Employee Name'}})
+
+const dbTest6 = () => {
+  sqliteQueryTest('mapColumns', q6, (t, res) => {
+    const rs = res.schema
+    t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
+    const em = rs.columnMetadata['EmpName']
+    t.deepEqual(em, {type: 'text', displayName: 'Employee Name'}, 'EmpName metadata')
+    t.end()
+  })
+}
+
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
@@ -167,6 +179,7 @@ const runTests = () => {
   dbTest3()
   dbTest4()
   dbTest5()
+  dbTest6()
   sqliteTestShutdown()
 }
 

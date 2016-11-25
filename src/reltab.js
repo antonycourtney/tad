@@ -259,11 +259,50 @@ const filterGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   return inSchema
 }
 
+const mapColumnsGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+  // TODO: check that all columns are columns of original schema,
+  // and that applying cmap will not violate any invariants on Schema....but need to nail down
+  // exactly what those invariants are first!
+
+  const cmap: {[colName: string]: ColumnMapInfo} = query.valArgs[0]
+  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
+
+  let outColumns = []
+  let outMetadata = {}
+  for (let i = 0; i < inSchema.columns.length; i++) {
+    let inColumnId = inSchema.columns[ i ]
+    let inColumnInfo = inSchema.columnMetadata[ inColumnId ]
+    let cmapColumnInfo = cmap[ inColumnId ]
+    if (typeof cmapColumnInfo === 'undefined') {
+      outColumns.push(inColumnId)
+      outMetadata[ inColumnId ] = inColumnInfo
+    } else {
+      let outColumnId = cmapColumnInfo.id
+      if (typeof outColumnId === 'undefined') {
+        outColumnId = inColumnId
+      }
+
+      // Form outColumnfInfo from inColumnInfo and all non-id keys in cmapColumnInfo:
+      let outColumnInfo = JSON.parse(JSON.stringify(inColumnInfo))
+      for (let key in cmapColumnInfo) {
+        if (key !== 'id' && cmapColumnInfo.hasOwnProperty(key)) {
+          outColumnInfo[ key ] = cmapColumnInfo[ key ]
+        }
+      }
+      outMetadata[ outColumnId ] = outColumnInfo
+      outColumns.push(outColumnId)
+    }
+  }
+  const outSchema = new Schema(outColumns, outMetadata)
+  return outSchema
+}
+
 const getSchemaMap : GetSchemaMap = {
   'table': tableGetSchema,
   'project': projectGetSchema,
   'groupBy': groupByGetSchema,
-  'filter': filterGetSchema
+  'filter': filterGetSchema,
+  'mapColumns': mapColumnsGetSchema
 }
 
 const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
@@ -343,12 +382,22 @@ const filterQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
   return `select * from (${sqsql}) where ${whereStr}`
 }
 
+const mapColumnsQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
+  // const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
+  const outSchema: Schema = query.getSchema(tableMap)
+
+  const outSelStr = outSchema.columns.map(quoteCol).join(', ')
+  const sqsql = queryToSql(tableMap, query.tableArgs[0])
+
+  return `select ${outSelStr} from (${sqsql})`
+}
+
 const genSqlMap: PPMap = {
   'table': tableQueryToSql,
   'project': projectQueryToSql,
   'groupBy': groupByQueryToSql,
-  'filter': filterQueryToSql
-
+  'filter': filterQueryToSql,
+  'mapColumns': mapColumnsQueryToSql
 }
 
 const queryToSql = (tableMap: TableInfoMap, query: QueryExp, outer: boolean = false): string => {

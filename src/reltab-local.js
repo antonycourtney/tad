@@ -374,13 +374,15 @@ const filterImpl = (fexp: FilterExp): TableOp => {
  * TODO: perhaps split this into different functions since most operations are only schema transformations,
  * but type mapping will involve touching all input data.
  */
-
 const mapColumnsImpl = (cmap: {[colName: string]: ColumnMapInfo}): TableOp => {
   // TODO: check that all columns are columns of original schema,
   // and that applying cmap will not violate any invariants on Schema....but need to nail down
   // exactly what those invariants are first!
 
   const mc = (subTables: Array<TableRep>): TableRep => {
+    // TODO: This code now virtually identical to mapColumnsGetSchema in reltab
+    // Get rid of this version and use the impl from there!
+    // Problem is we've already thrown away the QueryExp when we get here
     var tableData = subTables[ 0 ]
     var inSchema = tableData.schema
 
@@ -421,7 +423,7 @@ const mapColumnsImpl = (cmap: {[colName: string]: ColumnMapInfo}): TableOp => {
 }
 
 // colIndex is a string here because Flow doesn't support non-string keys in object literals
-const mapColumnsByIndexImpl = (cmap: {[colId: string]: ColumnMapInfo}): TableOp => {
+const mapColumnsByIndexImpl = (cmap: {[indexStr: string]: ColumnMapInfo}): TableOp => {
   // TODO: try to unify with mapColumns.  Probably means mapColumns will construct an argument to
   // mapColumnsByIndex and use this impl
   function mc (subTables) {
