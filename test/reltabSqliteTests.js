@@ -51,10 +51,10 @@ const dbTest0 = () => {
   })
 }
 
-const dbTest2 = () => {
-  const pcols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
-  const q2 = q1.project(pcols)
+const pcols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
+const q2 = q1.project(pcols)
 
+const dbTest2 = () => {
   test('basic project operator', t => {
     const rtc = sharedRtc
     t.plan(3)
@@ -73,9 +73,9 @@ const dbTest2 = () => {
   })
 }
 
-const dbTest3 = () => {
-  const q3 = q1.groupBy(['Job', 'Title'], ['TCOE'])  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
+const q3 = q1.groupBy(['Job', 'Title'], ['TCOE'])  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
 
+const dbTest3 = () => {
   test('basic groupBy', t => {
     const rtc = sharedRtc
     rtc.evalQuery(q3).then(res => {
@@ -90,6 +90,29 @@ const dbTest3 = () => {
       t.equal(groupSum, tcoeSum, 'grouped TCOE sum matches raw sum')
       t.end()
     })
+  })
+}
+
+const q4 = q2.groupBy(['JobFamily'], ['Title', 'Union', 'Name', 'Base', 'TCOE'])
+
+const dbTest4 = () => {
+  test('groupBy aggs', t => {
+    const rtc = sharedRtc
+    rtc.evalQuery(q4).then(res => {
+      console.log('group by job family: ')
+      util.logTable(res)
+
+      var rs = res.schema
+
+      const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
+      t.deepEqual(rs.columns, expCols)
+
+      t.deepEqual(res.rowData.length, 19, 'number of grouped rows in q4 result')
+
+      const groupSum = util.columnSum(res, 'TCOE')
+      t.deepEqual(groupSum, tcoeSum, 'tcoe sum after groupBy')
+      t.end()
+    }, util.mkAsyncErrHandler(t, 'evalQuery q4'))
   })
 }
 
@@ -122,6 +145,7 @@ const runTests = () => {
   dbTest0()
   dbTest2()
   dbTest3()
+  dbTest4()
   sqliteTestShutdown()
 }
 

@@ -254,10 +254,16 @@ const groupByGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   return rs
 }
 
+const filterGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+  const inSchema = query.tableArgs[0].getSchema(tableMap)
+  return inSchema
+}
+
 const getSchemaMap : GetSchemaMap = {
   'table': tableGetSchema,
   'project': projectGetSchema,
-  'groupBy': groupByGetSchema
+  'groupBy': groupByGetSchema,
+  'filter': filterGetSchema
 }
 
 const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
@@ -303,12 +309,18 @@ const groupByQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
   const [ cols, aggCols ] = query.valArgs
   const inSchema = query.tableArgs[0].getSchema(tableMap)
 
+  // Attempt to generate the uniq agg for SQL:
+  const genUniq = (aggStr, qcid) => `case when min(${qcid})=max(${qcid}) then min(${qcid}) else null end`
+
+  const genAgg = (aggStr, qcid) => aggStr + '(' + qcid + ')'
+
   // Get the aggregation expressions for each aggCol:
   const aggExprs = aggCols.map(cid => {
     const qcid = quoteCol(cid)
     const colType = inSchema.columnType(cid)
     const aggStr = defaultAggs[colType]
-    return aggStr + '(' + qcid + ') as ' + qcid
+    const aggFn = (aggStr === 'uniq') ? genUniq : genAgg
+    return aggFn(aggStr, qcid) + ' as ' + qcid
   })
 
   const quoteCols = cols.map(quoteCol)
@@ -322,10 +334,21 @@ const groupByQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
   return `select ${selectStr} from (${sqsql}) group by ${gbColsStr}`
 }
 
+const filterQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
+  const fexp : FilterExp = query.valArgs[0]
+  const sqsql = queryToSql(tableMap, query.tableArgs[0])
+
+  const whereStr = fexp.toSqlWhere()
+
+  return `select * from (${sqsql}) where ${whereStr}`
+}
+
 const genSqlMap: PPMap = {
   'table': tableQueryToSql,
   'project': projectQueryToSql,
-  'groupBy': groupByQueryToSql
+  'groupBy': groupByQueryToSql,
+  'filter': filterQueryToSql
+
 }
 
 const queryToSql = (tableMap: TableInfoMap, query: QueryExp, outer: boolean = false): string => {
