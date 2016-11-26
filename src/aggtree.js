@@ -97,9 +97,18 @@ export class VPivotTree {
     // Either need to arrange to support this in the db server (best) or find a way to
     // do some local post-processing on results we get back from the db
 
+    /*
+     * An attempt to encode the path calculation in SQL:
+     */
+    // TODO: This is a naieve and unsafe way to perform the encoding
+    const pathExp = '\'' + basePathStr + pathDelim + '\' || replace("_pivot",\'/\',\'%2F\')'
+
+    console.log('applyPath: pathExp: ', pathExp)
+
     pathQuery = pathQuery
       .extend('_depth', { type: 'integer' }, path.length + 1)
-      .extend('_path', {type: 'text'}, r => basePathStr + pathDelim + encodeURIComponent((r._pivot: any)))
+//      .extend('_path', {type: 'text'}, r => basePathStr + pathDelim + encodeURIComponent((r._pivot: any)))
+      .extend('_path', {type: 'text'}, pathExp)
       .project(this.outCols)
 
     // TODO: Should we optionally also insert _childCount and _leafCount ?
@@ -166,7 +175,7 @@ pivotColumns: Array<string>): Promise<VPivotTree> => {
       .groupBy([], gbCols)
       .extend('_pivot', { type: 'text' }, null)
       .extend('_depth', { type: 'integer' }, 0)
-      .extend('_path', {type: 'text'}, '')
+      .extend('_path', {type: 'text'}, "''")
       .project(outCols)
 
     return new VPivotTree(rt, rtBaseQuery, pivotColumns, baseSchema, outCols, rootQuery)

@@ -61,6 +61,7 @@
     "test": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/runAllTests.js | tap-spec",
     "test:notap": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/runAllTests.js",
     "test:nostd": "flow && babel-node --presets es2015,react ./test/runAllTests.js | tap-spec",
+    "runQuery": "babel-node --presets es2015,react ./test/runQuery.js",
     "start": "electron ."
   },
   "standard": {

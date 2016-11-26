@@ -428,8 +428,9 @@ const groupByQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
   const sqsql = queryToSql(tableMap, query.tableArgs[0])
 
   const gbColsStr = quoteCols.join(', ')
+  const gbStr = (quoteCols.length > 0) ? ` group by ${gbColsStr}` : ''
 
-  return `select ${selectStr} from (${sqsql}) group by ${gbColsStr}`
+  return (`select ${selectStr} from (${sqsql})` + gbStr)
 }
 
 const filterQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
@@ -504,11 +505,9 @@ const queryToSql = (tableMap: TableInfoMap, query: QueryExp, outer: boolean = fa
     throw new Error('queryToSql: No implementation for operator \'' + query.operator + '\'')
   }
   const s = pp(tableMap, query)
-  if (outer) {
-    return `select * from (${s})`
-  } else {
-    return s
-  }
+  const ret = outer ? `select * from (${s})` : s
+  console.log('queryToSql: ', ret)
+  return ret
 }
 
 // Create base of a query expression chain by starting with "table":

@@ -19,6 +19,7 @@ p0.then(tree0 => {
     t.end()
   })
 
+/*
   const q1 = tree0.applyPath([])
   util.queryTest('open root', q1, (t, res) => {
     console.log('open root query: ', q1)
@@ -53,4 +54,5 @@ p0.then(tree0 => {
     util.logTable(res)
     t.end()
   })
+*/
 })
