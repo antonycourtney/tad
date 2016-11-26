@@ -170,6 +170,22 @@ const dbTest8 = () => {
   })
 }
 
+const q9 = q8.sort([['Name', true]])
+const dbTest9 = () => {
+  sqliteQueryTest('basic sort', q9, (t, res) => {
+    util.logTable(res)
+    t.end()
+  })
+}
+
+const q10 = q8.sort([['JobFamily', true], ['TCOE', false]])
+const dbTest10 = () => {
+  sqliteQueryTest('compound key sort', q10, (t, res) => {
+    util.logTable(res)
+    t.end()
+  })
+}
+
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
@@ -194,6 +210,7 @@ const sqliteTestShutdown = () => {
       })
   })
 }
+
 const runTests = () => {
   sqliteTestSetup()
   dbTest0()
@@ -204,6 +221,8 @@ const runTests = () => {
   dbTest6()
   dbTest7()
   dbTest8()
+  dbTest9()
+  dbTest10()
   sqliteTestShutdown()
 }
 

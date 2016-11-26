@@ -346,7 +346,8 @@ const getSchemaMap : GetSchemaMap = {
   'filter': filterGetSchema,
   'mapColumns': mapColumnsGetSchema,
   'mapColumnsByIndex': mapColumnsByIndexGetSchema,
-  'concat': concatGetSchema
+  'concat': concatGetSchema,
+  'sort': filterGetSchema
 }
 
 const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
@@ -445,6 +446,17 @@ const concatQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
   return sqSqls.join('\nunion all\n')
 }
 
+const sortQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
+  const sqsql = queryToSql(tableMap, query.tableArgs[0])
+  const sortSpecs = query.valArgs[0]
+
+  const mkSortColStr = ([cid: string, asc: boolean]) => quoteCol(cid) + (asc ? '' : ' desc')
+
+  const sortSpecStr = sortSpecs.map(mkSortColStr).join(', ')
+
+  return `select * from (${sqsql}) order by ${sortSpecStr}`
+}
+
 const genSqlMap: PPMap = {
   'table': tableQueryToSql,
   'project': projectQueryToSql,
@@ -452,7 +464,8 @@ const genSqlMap: PPMap = {
   'filter': filterQueryToSql,
   'mapColumns': mapColumnsQueryToSql,
   'mapColumnsByIndex': mapColumnsQueryToSql,
-  'concat': concatQueryToSql
+  'concat': concatQueryToSql,
+  'sort': sortQueryToSql
 }
 
 const queryToSql = (tableMap: TableInfoMap, query: QueryExp, outer: boolean = false): string => {
