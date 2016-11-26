@@ -23,7 +23,7 @@ global.fetch = (url: string): Promise<any> => readFileAsync(url, 'utf-8').then(t
  * otherwise the import will happen before the above fetch() polyfill is initialized.
  */
 
-require('./reltabTests')
-require('./aggtreeTests')
-require('./csvImportTests')
+// require('./reltabTests')
+// require('./aggtreeTests')
+// require('./csvImportTests')
 require('./reltabSqliteTests')

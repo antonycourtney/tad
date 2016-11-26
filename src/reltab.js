@@ -339,6 +339,19 @@ const concatGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   return inSchema
 }
 
+const extendGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+  const [colId, columnMetadata] = query.valArgs
+  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
+
+  var outCols = inSchema.columns.concat([colId])
+  let cMap = {}
+  cMap[colId] = columnMetadata
+  var outMetadata = _.extend(cMap, inSchema.columnMetadata)
+  var outSchema = new Schema(outCols, outMetadata)
+
+  return outSchema
+}
+
 const getSchemaMap : GetSchemaMap = {
   'table': tableGetSchema,
   'project': projectGetSchema,
@@ -347,7 +360,8 @@ const getSchemaMap : GetSchemaMap = {
   'mapColumns': mapColumnsGetSchema,
   'mapColumnsByIndex': mapColumnsByIndexGetSchema,
   'concat': concatGetSchema,
-  'sort': filterGetSchema
+  'sort': filterGetSchema,
+  'extend': extendGetSchema
 }
 
 const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
@@ -457,6 +471,21 @@ const sortQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
   return `select * from (${sqsql}) order by ${sortSpecStr}`
 }
 
+const extendQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
+  const colId = query.valArgs[0]
+  const colValStr = query.valArgs[2]
+  const sqsql = queryToSql(tableMap, query.tableArgs[0])
+  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
+
+  const colExpStr = `(${colValStr}) as ${quoteCol(colId)}`
+  let selCols = inSchema.columns.map(quoteCol)
+  selCols.push(colExpStr)
+
+  let selColsStr = selCols.join(', ')
+
+  return `select ${selColsStr} from (${sqsql})`
+}
+
 const genSqlMap: PPMap = {
   'table': tableQueryToSql,
   'project': projectQueryToSql,
@@ -465,7 +494,8 @@ const genSqlMap: PPMap = {
   'mapColumns': mapColumnsQueryToSql,
   'mapColumnsByIndex': mapColumnsQueryToSql,
   'concat': concatQueryToSql,
-  'sort': sortQueryToSql
+  'sort': sortQueryToSql,
+  'extend': extendQueryToSql
 }
 
 const queryToSql = (tableMap: TableInfoMap, query: QueryExp, outer: boolean = false): string => {

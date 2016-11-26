@@ -186,6 +186,14 @@ const dbTest10 = () => {
   })
 }
 
+const q11 = q8.extend('BaseAndOT', {type: 'integer'}, 'Base + OT')
+const dbTest11 = () => {
+  sqliteQueryTest('extend with expression', q11, (t, res) => {
+    util.logTable(res)
+    t.end()
+  })
+}
+
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
@@ -223,6 +231,7 @@ const runTests = () => {
   dbTest8()
   dbTest9()
   dbTest10()
+  dbTest11()
   sqliteTestShutdown()
 }
 
