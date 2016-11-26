@@ -208,8 +208,22 @@ const aggTreeTest0 = () => {
       rtc.evalQuery(rq0).then(res => {
         console.log('root query: ', rq0)
         util.logTable(res)
-        t.end()
       }, util.mkAsyncErrHandler(t, 'initial aggtree test'))
+
+      const q1 = tree0.applyPath([])
+      rtc.evalQuery(q1).then(res => {
+        console.log('open root query: ', q1)
+        util.logTable(res)
+        const expCols = ['_depth', '_pivot', '_path', 'JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec']
+
+        t.deepEqual(res.schema.columns, expCols, 'Q1 schema columns')
+        t.deepEqual(res.rowData.length, 19, 'Q1 rowData length')
+
+        const actSum = util.columnSum(res, 'TCOE')
+
+        t.deepEqual(actSum, 349816190, 'Q1 rowData sum(TCOE)')
+        t.end()
+      })
     })
   })
 }

@@ -6,6 +6,7 @@ const {col, constVal} = reltab
 import type { Connection } from './reltab' // eslint-disable-line
 
 const PATHSEP = '#'
+const ENCPATHSEP = '%23'
 
 export type Path = Array<string>
 
@@ -101,8 +102,8 @@ export class VPivotTree {
      * An attempt to encode the path calculation in SQL:
      */
     // TODO: This is a naieve and unsafe way to perform the encoding
-    const pathExp = '\'' + basePathStr + pathDelim + '\' || replace("_pivot",\'/\',\'%2F\')'
-
+    // At the very least, need to nest this with an extra replace of % character itself
+    const pathExp = `'${basePathStr}${pathDelim}' || replace("_pivot",'${PATHSEP}','${ENCPATHSEP}')`
     console.log('applyPath: pathExp: ', pathExp)
 
     pathQuery = pathQuery

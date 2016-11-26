@@ -446,10 +446,21 @@ const filterQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
  * Note: this implements both mapColumns and mapColumsByIndex
  */
 const mapColumnsQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
-  // const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
+  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
   const outSchema: Schema = query.getSchema(tableMap)
 
-  const outSelStr = outSchema.columns.map(quoteCol).join(', ')
+  // Given an output and input column id, emit appropriate selector, using 'as' as
+  // needed:
+  const getCol = ([outCid, inCid]) => {
+    const qin = quoteCol(inCid)
+    const qout = quoteCol(outCid)
+    const cexp = (outCid === inCid) ? qin : `${qin} as ${qout}`
+    return cexp
+  }
+
+  const outSelCols = _.zip(outSchema.columns, inSchema.columns).map(getCol)
+
+  const outSelStr = outSelCols.join(', ')
   const sqsql = queryToSql(tableMap, query.tableArgs[0])
 
   return `select ${outSelStr} from (${sqsql})`
