@@ -2,6 +2,7 @@
 
 import db from 'sqlite'
 import test from 'tape'
+import * as _ from 'lodash'
 import * as reltab from '../src/reltab'
 import * as reltabSqlite from '../src/reltab-sqlite'
 import * as csvimport from '../src/csvimport'
@@ -157,6 +158,17 @@ const dbTest7 = () => {
     t.end()
   })
 }
+const q8 = q5.concat(q1.filter(reltab.and().eq(col('JobFamily'), constVal('Safety'))))
+
+const dbTest8 = () => {
+  sqliteQueryTest('concat', q8, (t, res) => {
+    t.ok(res.rowData.length === 24, 'expected row count after filter and concat')
+    const jobCol = res.getColumn('JobFamily')
+    const jobs = _.sortedUniq(jobCol)
+    t.deepEqual(jobs, ['Executive Management', 'Safety'], 'filter and concat column vals')
+    t.end()
+  })
+}
 
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
@@ -191,6 +203,7 @@ const runTests = () => {
   dbTest5()
   dbTest6()
   dbTest7()
+  dbTest8()
   sqliteTestShutdown()
 }
 

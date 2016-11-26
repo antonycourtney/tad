@@ -333,13 +333,20 @@ const mapColumnsByIndexGetSchema = (tableMap: TableInfoMap, query: QueryExp): Sc
   return outSchema
 }
 
+const concatGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
+
+  return inSchema
+}
+
 const getSchemaMap : GetSchemaMap = {
   'table': tableGetSchema,
   'project': projectGetSchema,
   'groupBy': groupByGetSchema,
   'filter': filterGetSchema,
   'mapColumns': mapColumnsGetSchema,
-  'mapColumnsByIndex': mapColumnsByIndexGetSchema
+  'mapColumnsByIndex': mapColumnsByIndexGetSchema,
+  'concat': concatGetSchema
 }
 
 const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
@@ -432,13 +439,20 @@ const mapColumnsQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string =
   return `select ${outSelStr} from (${sqsql})`
 }
 
+const concatQueryToSql = (tableMap: TableInfoMap, query: QueryExp): string => {
+  const sqSqls = query.tableArgs.map(tq => queryToSql(tableMap, tq, true))
+
+  return sqSqls.join('\nunion all\n')
+}
+
 const genSqlMap: PPMap = {
   'table': tableQueryToSql,
   'project': projectQueryToSql,
   'groupBy': groupByQueryToSql,
   'filter': filterQueryToSql,
   'mapColumns': mapColumnsQueryToSql,
-  'mapColumnsByIndex': mapColumnsQueryToSql
+  'mapColumnsByIndex': mapColumnsQueryToSql,
+  'concat': concatQueryToSql
 }
 
 const queryToSql = (tableMap: TableInfoMap, query: QueryExp, outer: boolean = false): string => {
