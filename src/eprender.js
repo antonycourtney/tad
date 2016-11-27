@@ -34,7 +34,8 @@ console.log('sent query to remoteQuery')
 
 var ptm = new PivotTreeModel(rtc, baseQuery, [ 'Union', 'JobFamily', 'Title' ])
 ptm.openPath([])
-/*ptm.openPath(['Non-Represented', 'Audit'])
+/*
+ptm.openPath(['Non-Represented', 'Audit'])
 ptm.openPath(['Non-Represented', 'Clerical'])
 ptm.openPath(['Non-Represented', 'Information Systems'])
 ptm.openPath(['Non-Represented', 'Information Systems', 'Manager of Information Systems'])

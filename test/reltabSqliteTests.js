@@ -2,12 +2,12 @@
 
 import db from 'sqlite'
 import test from 'tape'
-import * as _ from 'lodash'
+// import * as _ from 'lodash'
 import * as reltab from '../src/reltab'
 import * as reltabSqlite from '../src/reltab-sqlite'
 import * as csvimport from '../src/csvimport'
 import * as util from './reltabTestUtils'
-import * as aggtree from '../src/aggtree'
+// import * as aggtree from '../src/aggtree'
 
 const {col, constVal} = reltab
 
@@ -157,6 +157,7 @@ const serTest0 = () => {
   })
 }
 
+/*
 const q6 = q1.mapColumns({Name: {id: 'EmpName', displayName: 'Employee Name'}})
 
 const dbTest6 = () => {
@@ -258,7 +259,7 @@ const aggTreeTest0 = () => {
     })
   })
 }
-
+*/
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
@@ -292,6 +293,7 @@ const runTests = () => {
   dbTest4()
   dbTest5()
   serTest0()
+/*
   dbTest6()
   dbTest7()
   dbTest8()
@@ -300,7 +302,7 @@ const runTests = () => {
   dbTest11()
 
   aggTreeTest0()
-
+*/
   sqliteTestShutdown()
 }
 
