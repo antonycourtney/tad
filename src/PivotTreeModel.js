@@ -145,7 +145,7 @@ export default class PivotTreeModel {
     const dvPromise = this.treeQueryPromise
       .then(treeQuery => this.rt.evalQuery(treeQuery))
       .then(tableData => this.loadDataView(tableData))
-      .fail(err => console.error('PivotTreeModel: error: ', err, err.stack))
+      .catch(err => console.error('PivotTreeModel: error: ', err, err.stack))
 
     return dvPromise
   }

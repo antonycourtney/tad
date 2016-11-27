@@ -8,6 +8,7 @@
     "d3-array": "^1.0.1",
     "d3-fetch": "0.0.2",
     "electron": "^1.4.7",
+    "electron-compile": "^4.0.2",
     "es6-promise": "^4.0.5",
     "fast-csv": "^2.3.0",
     "flow-bin": "^0.33.0",
@@ -32,6 +33,8 @@
     "babel-preset-react": "^6.16.0",
     "cpx": "^1.5.0",
     "css-loader": "^0.26.0",
+    "electron-compilers": "^4.0.5",
+    "electron-rebuild": "^1.4.0",
     "eslint": "^3.8.1",
     "eslint-config-standard": "^6.2.0",
     "eslint-plugin-flowtype": "^2.23.0",
@@ -50,7 +53,7 @@
     "tape": "^4.6.2",
     "webpack": "^1.13.3"
   },
-  "main": "main.js",
+  "main": "./entry.js",
   "scripts": {
     "clean": "rm -rf build/*",
     "build:jquery": "mkdir -p build && cpx \"node_modules/jquery/dist/**/*\" build/js",

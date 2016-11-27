@@ -1,4 +1,7 @@
 [ignore]
+.*/node_modules/config-chain/test/*
+.*/node_modules/npm/test/fixtures/config/*
+.*/node_modules/typechecker/es2015/*
 less/*.less
 
 [include]

@@ -43,6 +43,7 @@ export const init = (db: any, md: FileMetadata): Promise<Connection> => {
     let tm = {}
     tm[md.tableName] = reltab.mkTableInfo(md)
     const ctx = new SqliteContext(db, tm)
+    global.rtc = ctx
     resolve(ctx)
   })
 }

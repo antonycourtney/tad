@@ -85,7 +85,7 @@ export class VPivotTree {
     } else {
       // leaf level
       pathQuery = pathQuery
-        .extend('_pivot', { type: 'text' }, null)
+        .extend('_pivot', { type: 'text' }, "''")
     }
 
     // add _depth and _path column and project to get get column order correct:

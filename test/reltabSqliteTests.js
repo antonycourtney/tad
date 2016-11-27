@@ -138,6 +138,25 @@ const dbTest5 = () => {
   })
 }
 
+const serTest0 = () => {
+  let dq5
+  test('query deserialization', t => {
+    const ser5 = JSON.stringify(q5, null, 2)
+    console.log('serialized query')
+    console.log(ser5)
+    dq5 = reltab.deserializeQuery(ser5)
+    console.log('deserialized query: ', dq5)
+    const rtc = sharedRtc
+    rtc.evalQuery(dq5)
+      .then(res => {
+        console.log('got results of evaluating deserialized query')
+        util.logTable(res)
+        t.ok(res.rowData.length === 14, 'expected row count after filter')
+        t.end()
+      }, util.mkAsyncErrHandler(t, 'query deserialization'))
+  })
+}
+
 const q6 = q1.mapColumns({Name: {id: 'EmpName', displayName: 'Employee Name'}})
 
 const dbTest6 = () => {
@@ -222,6 +241,18 @@ const aggTreeTest0 = () => {
         const actSum = util.columnSum(res, 'TCOE')
 
         t.deepEqual(actSum, 349816190, 'Q1 rowData sum(TCOE)')
+      })
+
+      const q2 = tree0.applyPath([ 'Executive Management' ])
+      rtc.evalQuery(q2).then(res => {
+        console.log('after opening path "Executive Management":')
+        util.logTable(res)
+      })
+
+      const q3 = tree0.applyPath(['Executive Management', 'General Manager'])
+      rtc.evalQuery(q3).then(res => {
+        console.log('after opening path /Executive Management/General Manager:')
+        util.logTable(res)
         t.end()
       })
     })
@@ -260,6 +291,7 @@ const runTests = () => {
   dbTest3()
   dbTest4()
   dbTest5()
+  serTest0()
   dbTest6()
   dbTest7()
   dbTest8()

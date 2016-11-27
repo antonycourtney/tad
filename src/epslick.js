@@ -240,7 +240,7 @@ function SGView (container, ptmodel) {
 
   ptmodel.refresh()
     .then(loadInitialImage)
-    .fail(err => console.error('loadInitialImage: async error: ', err, err.stack))
+    .catch(err => console.error('loadInitialImage: async error: ', err, err.stack))
 }
 
 export function sgView (div, ptmodel) {

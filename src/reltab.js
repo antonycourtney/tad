@@ -232,6 +232,52 @@ export class QueryExp {
   }
 }
 
+const reviverMap = {
+  'ColRef': v => new ColRef(v.colName),
+  'ConstVal': v => new ConstVal(v.val),
+  'RelExp': v => new RelExp(v.op, v.lhs, v.rhs),
+  'FilterExp': v => new FilterExp(v.op, v.opArgs),
+  'QueryExp': v => new QueryExp(v.operator, v.valArgs, v.tableArgs)
+}
+
+const queryReviver = (key:string, val: any): any => {
+  let retVal = val
+  if (val != null) {
+    if (typeof val === 'object') {
+      const rf = reviverMap[val.expType]
+      if (rf) {
+        retVal = rf(val)
+      } else {
+        if (val.hasOwnProperty('expType')) {
+          // should probably throw...
+          console.warn('*** no reviver found for expType ', val.expType)
+        }
+      }
+    }
+  }
+  return retVal
+}
+
+export const deserializeQuery = (jsonStr: string): QueryExp => {
+  const rq = JSON.parse(jsonStr, queryReviver)
+
+  return rq
+}
+
+const tableRepReviver = (key:string, val: any): any => {
+  let retVal = val
+  if (key === 'schema') {
+    retVal = new Schema(val.columns, val.columnMetadata)
+  }
+  return retVal
+}
+
+export const deserializeTableRep = (jsonStr: string): TableRep => {
+  const rt = JSON.parse(jsonStr, tableRepReviver)
+
+  return rt
+}
+
 type GetSchemaFunc = (tableMap: TableInfoMap, query: QueryExp) => Schema
 type GetSchemaMap = {[operator: string]: GetSchemaFunc }
 

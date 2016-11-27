@@ -1,3 +1,8 @@
+const db = require('sqlite')
+import * as reltab from './src/reltab'
+const reltabSqlite = require('./src/reltab-sqlite')
+const csvimport = require('./src/csvimport')
+
 const electron = require('electron')
 // Module to control application life.
 const app = electron.app
@@ -34,10 +39,42 @@ function createWindow () {
   })
 }
 
+const testPath = 'csv/bart-comp-all.csv'
+
+const runQuery = rtc => (queryStr, cb) => {
+  try {
+    console.log('runQuery: got serialized query: ', queryStr)
+    const query = reltab.deserializeQuery(queryStr)
+    rtc.evalQuery(query)
+      .then(res => {
+        const serRes = JSON.stringify(res, null, 2)
+        cb(serRes)
+      })
+      .catch(err => console.error('error running query: ', err, err.stack))
+  } catch (err) {
+    console.error('runQuery: ', err, err.stack)
+  }
+}
+
+// App initialization:
+const appInit = () => {
+  console.log('appInit: entry')
+  db.open(':memory:')
+    .then(() => csvimport.importSqlite(testPath))
+    .then(md => reltabSqlite.init(db, md))
+    .then(rtc => {
+      console.log('completed reltab initalization.')
+      // Now let's place a function in global so it can be run via remote:
+      global.runQuery = runQuery(rtc)
+      createWindow()
+    })
+    .catch(err => console.error('appInit failed: ', err, err.stack))
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.on('ready', appInit)
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
