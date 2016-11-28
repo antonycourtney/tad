@@ -20,8 +20,21 @@ export type Path = Array<string>
  */
 export type PathTree = Object
 
+/*
+ *  We used to use encodeURIComponent, but this isn't readily available on
+ *  SQLite and we need to use the same encoding in both places so that
+ *  path sort order works out correctly.
+ *
+ *  We'll do this much simpler string encoding that escapes % chars and PATHSEP.
+ *  Can still be decoded with decodeURIComponent.
+ */
+const simpleStringEncode = (str: string): string => {
+  return str.replace('%', '%25').replace(PATHSEP, ENCPATHSEP)
+}
+
 export const encodePath = (path: Path): string => {
-  const eps = path.map(encodeURIComponent)
+  // const eps = path.map(encodeURIComponent)
+  const eps = path.map(simpleStringEncode)
   const ret = PATHSEP + eps.join(PATHSEP)
   return ret
 }
@@ -105,7 +118,7 @@ export class VPivotTree {
     // TODO: This is a naieve and unsafe way to perform the encoding
     // At the very least, need to nest this with an extra replace of % character itself
 
-    const pathExp = `'${basePathStr}${pathDelim}' || replace("_pivot",'${PATHSEP}','${ENCPATHSEP}')`
+    const pathExp = `'${basePathStr}${pathDelim}' || replace(replace("_pivot",'%','%25'),'${PATHSEP}','${ENCPATHSEP}')`
 
     pathQuery = pathQuery
       .extend('_depth', { type: 'integer' }, path.length + 1)
