@@ -43,7 +43,6 @@ const testPath = 'csv/bart-comp-all.csv'
 
 const runQuery = rtc => (queryStr, cb) => {
   try {
-    console.log('runQuery: got serialized query: ', queryStr)
     const query = reltab.deserializeQuery(queryStr)
     rtc.evalQuery(query)
       .then(res => {

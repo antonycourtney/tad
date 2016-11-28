@@ -7,7 +7,7 @@ import * as reltab from '../src/reltab'
 import * as reltabSqlite from '../src/reltab-sqlite'
 import * as csvimport from '../src/csvimport'
 import * as util from './reltabTestUtils'
-// import * as aggtree from '../src/aggtree'
+import * as aggtree from '../src/aggtree'
 
 const {col, constVal} = reltab
 
@@ -217,7 +217,6 @@ const dbTest11 = () => {
   })
 }
 
-/*
 const aggTreeTest0 = () => {
   const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
   test('initial aggTree test', t => {
@@ -227,42 +226,46 @@ const aggTreeTest0 = () => {
     p0.then(tree0 => {
       console.log('vpivot initial promise resolved...')
       const rq0 = tree0.rootQuery
+      rtc.evalQuery(rq0)
+        .then(res => {
+          console.log('root query: ')
+          util.logTable(res)
 
-      rtc.evalQuery(rq0).then(res => {
-        console.log('root query: ', rq0)
-        util.logTable(res)
-      }, util.mkAsyncErrHandler(t, 'initial aggtree test'))
+          const q1 = tree0.applyPath([])
+          return rtc.evalQuery(q1)
+        })
+        .then(res => {
+          console.log('open root query: ')
+          util.logTable(res)
+          const expCols = ['_depth', '_pivot', '_path', 'JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec']
 
-      const q1 = tree0.applyPath([])
-      rtc.evalQuery(q1).then(res => {
-        console.log('open root query: ', q1)
-        util.logTable(res)
-        const expCols = ['_depth', '_pivot', '_path', 'JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec']
+          t.deepEqual(res.schema.columns, expCols, 'Q1 schema columns')
+          t.deepEqual(res.rowData.length, 19, 'Q1 rowData length')
 
-        t.deepEqual(res.schema.columns, expCols, 'Q1 schema columns')
-        t.deepEqual(res.rowData.length, 19, 'Q1 rowData length')
+          const actSum = util.columnSum(res, 'TCOE')
 
-        const actSum = util.columnSum(res, 'TCOE')
+          t.deepEqual(actSum, 349816190, 'Q1 rowData sum(TCOE)')
 
-        t.deepEqual(actSum, 349816190, 'Q1 rowData sum(TCOE)')
-      })
+          const q2 = tree0.applyPath([ 'Executive Management' ])
+          return rtc.evalQuery(q2)
+        })
+        .then(res => {
+          console.log('after opening path "Executive Management":')
+          util.logTable(res)
 
-      const q2 = tree0.applyPath([ 'Executive Management' ])
-      rtc.evalQuery(q2).then(res => {
-        console.log('after opening path "Executive Management":')
-        util.logTable(res)
-      })
-
-      const q3 = tree0.applyPath(['Executive Management', 'General Manager'])
-      rtc.evalQuery(q3).then(res => {
-        console.log('after opening path /Executive Management/General Manager:')
-        util.logTable(res)
-        t.end()
-      })
-    })
+          const q3 = tree0.applyPath(['Executive Management', 'General Manager'])
+          return rtc.evalQuery(q3)
+        })
+        .then(res => {
+          console.log('after opening path /Executive Management/General Manager:')
+          util.logTable(res)
+          t.end()
+        })
+        .catch(util.mkAsyncErrHandler(t, 'aggtree queries chain'))
+    }).catch(util.mkAsyncErrHandler(t, 'initial vpivot'))
   })
 }
-*/
+
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
@@ -303,9 +306,7 @@ const runTests = () => {
 
   dbTest10()
   dbTest11()
-/*
   aggTreeTest0()
-*/
   sqliteTestShutdown()
 }
 

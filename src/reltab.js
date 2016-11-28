@@ -496,7 +496,14 @@ const projectQueryToSql = (tableMap: TableInfoMap, pq: QueryExp): SQLQueryAST =>
   // rewrite an individual select statement to only select projected cols:
   const rewriteSel = (sel: SQLSelectAST): SQLSelectAST => {
     const colsMap = selectColsMap(sel)
-    const outCols = projectCols.map(cid => colsMap[cid])
+    const outCols = projectCols.map(cid => {
+      let outCol = colsMap[cid]
+      if (outCol === undefined) {
+        const sqStr = ppSQLQuery(sqsql)
+        throw new Error('projectQueryToSql: no such column ' + quoteCol(cid) + ' in subquery:  ' + sqStr)
+      }
+      return outCol
+    })
     return _.defaults({selectCols: outCols}, sel)
   }
   return { selectStmts: sqsql.selectStmts.map(rewriteSel) }
@@ -527,25 +534,23 @@ const groupByQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST
   })
 
   const selectCols = cols.concat(aggExprs)
-
-  console.log('groupByToSql: selectCols: ', selectCols)
-
   const sqsql = queryToSql(tableMap, query.tableArgs[0])
 
   // If sub-query is just a single select with no group by
   // and where every select expression a simple column id
   // we can rewrite it:
   let retSel
+  const subSel = sqsql.selectStmts[0]
   if (sqsql.selectStmts.length === 1 &&
-      _.every(sqsql.selectStmts[0].selectCols, sc => (typeof sc === 'string'))) {
-    const subSel = sqsql.selectStmts[0]
+      _.every(subSel.selectCols, sc => (typeof sc === 'string')) &&
+      subSel.where.length === 0 &&
+      subSel.groupBy.length === 0 &&
+      subSel.orderBy.length === 0
+    ) {
     retSel = _.defaults({ selectCols, groupBy: cols }, subSel)
   } else {
     retSel = { selectCols, from: sqsql, groupBy: cols, where: '', orderBy: [] }
   }
-
-  console.log('groupByToSql: retSel: ', retSel)
-
   return { selectStmts: [ retSel ] }
 }
 
@@ -555,11 +560,13 @@ const filterQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST 
 
   const whereStr = fexp.toSqlWhere()
 
-  // If subquery just a single select with no where clause, just add one:
+  // If subquery just a single select with no where or groupBy clause, just add one:
+  const subSel = sqsql.selectStmts[0]
   let retSel
   if (sqsql.selectStmts.length === 1 &&
-      sqsql.selectStmts[0].where.length === 0) {
-    const subSel = sqsql.selectStmts[0]
+      subSel.where.length === 0 &&
+      subSel.groupBy.length === 0
+      ) {
     retSel = _.defaults({ where: whereStr }, subSel)
   } else {
     const selectCols = sqsql.selectStmts[0].selectCols
@@ -572,26 +579,20 @@ const filterQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST 
 /*
  * Note: this implements both mapColumns and mapColumsByIndex
  */
-const mapColumnsQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
-  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
-  const outSchema: Schema = query.getSchema(tableMap)
-
-  // build up a map from inSchema column names to outSchema column names:
-  // BUG: This probably doesn't behave as expected with mapColumnsByIndex
-  // with duplicate column ids in select clause of input query
-  let renameMap = {}
-  for (let [outCid, inCid] of _.zip(outSchema.columns, inSchema.columns)) {
-    renameMap[inCid] = outCid
-  }
+const mapColumnsQueryToSql = (byIndex: boolean) => (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
+  const cMap = query.valArgs[0]
   const sqsql = queryToSql(tableMap, query.tableArgs[0])
 
-  // use renameMap to apply renaming to invididual select expression:
-  const applyColRename = (cexp: SQLSelectColExp): SQLSelectColExp => {
+  // apply renaming to invididual select expression:
+  const applyColRename = (cexp: SQLSelectColExp, index: number): SQLSelectColExp => {
+    const inCid = (typeof cexp === 'string') ? cexp : cexp.as
+    const mapKey = byIndex ? index.toString() : inCid
+    const outCid = cMap.hasOwnProperty(mapKey) ? cMap[mapKey].id : inCid
     if (typeof cexp === 'string') {
-      return { colExp: quoteCol(cexp), as: renameMap[cexp] }
+      return { colExp: quoteCol(cexp), as: outCid }
     }
     // Otherwise it's a SQLSelectAsExp -- apply rename to 'as' part:
-    return { colExp: cexp.colExp, as: renameMap[cexp.as] }
+    return { colExp: cexp.colExp, as: outCid }
   }
 
   // rewrite an individual select statement by applying rename mapping:
@@ -599,7 +600,8 @@ const mapColumnsQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQuery
     const selectCols = sel.selectCols.map(applyColRename)
     return _.defaults({selectCols}, sel)
   }
-  return { selectStmts: sqsql.selectStmts.map(rewriteSel) }
+  const ret = { selectStmts: sqsql.selectStmts.map(rewriteSel) }
+  return ret
 }
 
 const concatQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
@@ -632,15 +634,19 @@ const extendQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST 
   const colExp = query.valArgs[2]
   const sqsql = queryToSql(tableMap, query.tableArgs[0])
 
-  // If subquery just a single select, just add one column:
-  let retSel
+  // Unless we carefully analyze the expression used for the column extend
+  // value, it may refer to columns added in underlying select, so we
+  // always need an extra level of query
   const subSel = sqsql.selectStmts[0]
-  const selectCols = _.concat(subSel.selectCols, { colExp, as })
-  if (sqsql.selectStmts.length === 1) {
-    retSel = _.defaults({ selectCols }, subSel)
-  } else {
-    retSel = { selectCols, from: sqsql, where: '', groupBy: [], orderBy: [] }
+  // Note: We only want to extract the column ids from subquery for use at this level; we
+  // want to skip any calculated expressions or aggregate functions
+  const getColId = (cexp: SQLSelectColExp): string => {
+    return (typeof cexp === 'string') ? cexp : cexp.as
   }
+
+  let selectCols = subSel.selectCols.map(getColId)
+  selectCols.push({ colExp, as })
+  const retSel = { selectCols, from: sqsql, where: '', groupBy: [], orderBy: [] }
 
   return { selectStmts: [ retSel ] }
 }
@@ -650,8 +656,8 @@ const genSqlMap: GenSQLMap = {
   'project': projectQueryToSql,
   'groupBy': groupByQueryToSql,
   'filter': filterQueryToSql,
-  'mapColumns': mapColumnsQueryToSql,
-  'mapColumnsByIndex': mapColumnsQueryToSql,
+  'mapColumns': mapColumnsQueryToSql(false),
+  'mapColumnsByIndex': mapColumnsQueryToSql(true),
   'concat': concatQueryToSql,
   'sort': sortQueryToSql,
   'extend': extendQueryToSql
@@ -662,7 +668,8 @@ const queryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
   if (!gen) {
     throw new Error('queryToSql: No implementation for operator \'' + query.operator + '\'')
   }
-  return gen(tableMap, query)
+  const ret = gen(tableMap, query)
+  return ret
 }
 
 // Create base of a query expression chain by starting with "table":
