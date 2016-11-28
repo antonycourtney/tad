@@ -572,29 +572,37 @@ const filterQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST 
 /*
  * Note: this implements both mapColumns and mapColumsByIndex
  */
-/*
 const mapColumnsQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
   const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
   const outSchema: Schema = query.getSchema(tableMap)
 
-  // Given an output and input column id, emit appropriate selector, using 'as' as
-  // needed:
-  const getCol = ([outCid, inCid]) => {
-    const qin = quoteCol(inCid)
-    const qout = quoteCol(outCid)
-    const cexp = (outCid === inCid) ? qin : `${qin} as ${qout}`
-    return cexp
+  // build up a map from inSchema column names to outSchema column names:
+  // BUG: This probably doesn't behave as expected with mapColumnsByIndex
+  // with duplicate column ids in select clause of input query
+  let renameMap = {}
+  for (let [outCid, inCid] of _.zip(outSchema.columns, inSchema.columns)) {
+    renameMap[inCid] = outCid
   }
-
-  const outSelCols = _.zip(outSchema.columns, inSchema.columns).map(getCol)
-
-  const outSelStr = outSelCols.join(', ')
   const sqsql = queryToSql(tableMap, query.tableArgs[0])
 
-  // return `select ${outSelStr} from (${sqsql})`
-  return null
+  // use renameMap to apply renaming to invididual select expression:
+  const applyColRename = (cexp: SQLSelectColExp): SQLSelectColExp => {
+    if (typeof cexp === 'string') {
+      return { colExp: quoteCol(cexp), as: renameMap[cexp] }
+    }
+    // Otherwise it's a SQLSelectAsExp -- apply rename to 'as' part:
+    return { colExp: cexp.colExp, as: renameMap[cexp.as] }
+  }
+
+  // rewrite an individual select statement by applying rename mapping:
+  const rewriteSel = (sel: SQLSelectAST): SQLSelectAST => {
+    const selectCols = sel.selectCols.map(applyColRename)
+    return _.defaults({selectCols}, sel)
+  }
+  return { selectStmts: sqsql.selectStmts.map(rewriteSel) }
 }
 
+/*
 const concatQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
   const sqSqls = query.tableArgs.map(tq => queryToSql(tableMap, tq, true))
 
@@ -634,10 +642,10 @@ const genSqlMap: GenSQLMap = {
   'table': tableQueryToSql,
   'project': projectQueryToSql,
   'groupBy': groupByQueryToSql,
-  'filter': filterQueryToSql
-/*
+  'filter': filterQueryToSql,
   'mapColumns': mapColumnsQueryToSql,
-  'mapColumnsByIndex': mapColumnsQueryToSql,
+  'mapColumnsByIndex': mapColumnsQueryToSql
+/*
   'concat': concatQueryToSql,
   'sort': sortQueryToSql,
   'extend': extendQueryToSql

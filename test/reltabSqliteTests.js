@@ -157,7 +157,6 @@ const serTest0 = () => {
   })
 }
 
-/*
 const q6 = q1.mapColumns({Name: {id: 'EmpName', displayName: 'Employee Name'}})
 
 const dbTest6 = () => {
@@ -166,6 +165,7 @@ const dbTest6 = () => {
     t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
     const em = rs.columnMetadata['EmpName']
     t.deepEqual(em, {type: 'text', displayName: 'Employee Name'}, 'EmpName metadata')
+    t.ok(res.rowData.length === 2873, 'expected row count after mapColumns')
     t.end()
   })
 }
@@ -176,9 +176,11 @@ const dbTest7 = () => {
   sqliteQueryTest('mapColumnsByIndex', q7, (t, res) => {
     const rs = res.schema
     t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
+    t.ok(res.rowData.length === 2873, 'expected row count after mapColumnsByIndex')
     t.end()
   })
 }
+/*
 const q8 = q5.concat(q1.filter(reltab.and().eq(col('JobFamily'), constVal('Safety'))))
 
 const dbTest8 = () => {
@@ -293,9 +295,9 @@ const runTests = () => {
   dbTest4()
   dbTest5()
   serTest0()
-/*
   dbTest6()
   dbTest7()
+/*
   dbTest8()
   dbTest9()
   dbTest10()
