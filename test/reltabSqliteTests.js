@@ -192,7 +192,7 @@ const dbTest8 = () => {
     t.end()
   })
 }
-/*
+
 const q9 = q8.sort([['Name', true]])
 const dbTest9 = () => {
   sqliteQueryTest('basic sort', q9, (t, res) => {
@@ -217,6 +217,7 @@ const dbTest11 = () => {
   })
 }
 
+/*
 const aggTreeTest0 = () => {
   const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
   test('initial aggTree test', t => {
@@ -298,11 +299,11 @@ const runTests = () => {
   dbTest6()
   dbTest7()
   dbTest8()
-/*
   dbTest9()
+
   dbTest10()
   dbTest11()
-
+/*
   aggTreeTest0()
 */
   sqliteTestShutdown()

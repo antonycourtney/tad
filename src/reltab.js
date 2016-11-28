@@ -452,7 +452,7 @@ const ppSQLSelect = (ss: SQLSelectAST): string => {
   const fromStr = (typeof ss.from === 'string') ? `'${ss.from}'` : '(' + ppSQLQuery(ss.from) + ')'
   const whereStr = (ss.where.length > 0) ? ` where ${ss.where}` : ''
   const gbStr = (ss.groupBy.length > 0) ? ` group by ${ss.groupBy.map(quoteCol).join(', ')}` : ''
-  const obStr = (ss.orderBy.length > 0) ? ` sort by ${ss.orderBy.map(ppSortColExp).join(', ')}` : ''
+  const obStr = (ss.orderBy.length > 0) ? ` order by ${ss.orderBy.map(ppSortColExp).join(', ')}` : ''
 
   return `select ${selColStr} from ${fromStr}${whereStr}${gbStr}${obStr}`
 }
@@ -608,35 +608,43 @@ const concatQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST 
 
   return { selectStmts: _.flatten(allSelStmts) }
 }
-/*
+
 const sortQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
   const sqsql = queryToSql(tableMap, query.tableArgs[0])
-  const sortSpecs = query.valArgs[0]
+  const orderBy = query.valArgs[0].map(([col, asc]) => ({ col, asc }))
 
-  const mkSortColStr = ([cid: string, asc: boolean]) => quoteCol(cid) + (asc ? '' : ' desc')
+  // If subquery just a single select with no orderBy clause, just add one:
+  let retSel
+  if (sqsql.selectStmts.length === 1 &&
+      sqsql.selectStmts[0].orderBy.length === 0) {
+    const subSel = sqsql.selectStmts[0]
+    retSel = _.defaults({ orderBy }, subSel)
+  } else {
+    const selectCols = sqsql.selectStmts[0].selectCols
+    retSel = { selectCols, from: sqsql, where: '', groupBy: [], orderBy }
+  }
 
-  const sortSpecStr = sortSpecs.map(mkSortColStr).join(', ')
-
-  //return `select * from (${sqsql}) order by ${sortSpecStr}`
-  return null
+  return { selectStmts: [ retSel ] }
 }
 
 const extendQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
-  const colId = query.valArgs[0]
-  const colValStr = query.valArgs[2]
+  const as = query.valArgs[0]
+  const colExp = query.valArgs[2]
   const sqsql = queryToSql(tableMap, query.tableArgs[0])
-  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
 
-  const colExpStr = `(${colValStr}) as ${quoteCol(colId)}`
-  let selCols = inSchema.columns.map(quoteCol)
-  selCols.push(colExpStr)
+  // If subquery just a single select, just add one column:
+  let retSel
+  const subSel = sqsql.selectStmts[0]
+  const selectCols = _.concat(subSel.selectCols, { colExp, as })
+  if (sqsql.selectStmts.length === 1) {
+    retSel = _.defaults({ selectCols }, subSel)
+  } else {
+    retSel = { selectCols, from: sqsql, where: '', groupBy: [], orderBy: [] }
+  }
 
-  let selColsStr = selCols.join(', ')
-
-  // return `select ${selColsStr} from (${sqsql})`
-  return null
+  return { selectStmts: [ retSel ] }
 }
-*/
+
 const genSqlMap: GenSQLMap = {
   'table': tableQueryToSql,
   'project': projectQueryToSql,
@@ -644,11 +652,9 @@ const genSqlMap: GenSQLMap = {
   'filter': filterQueryToSql,
   'mapColumns': mapColumnsQueryToSql,
   'mapColumnsByIndex': mapColumnsQueryToSql,
-  'concat': concatQueryToSql
-/*
+  'concat': concatQueryToSql,
   'sort': sortQueryToSql,
   'extend': extendQueryToSql
-*/
 }
 
 const queryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
