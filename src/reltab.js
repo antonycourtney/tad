@@ -602,14 +602,13 @@ const mapColumnsQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQuery
   return { selectStmts: sqsql.selectStmts.map(rewriteSel) }
 }
 
-/*
 const concatQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
-  const sqSqls = query.tableArgs.map(tq => queryToSql(tableMap, tq, true))
+  const sqSqls = query.tableArgs.map(tq => queryToSql(tableMap, tq))
+  const allSelStmts = sqSqls.map(q => q.selectStmts)
 
-  // return sqSqls.join('\nunion all\n')
-  return null
+  return { selectStmts: _.flatten(allSelStmts) }
 }
-
+/*
 const sortQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
   const sqsql = queryToSql(tableMap, query.tableArgs[0])
   const sortSpecs = query.valArgs[0]
@@ -644,9 +643,9 @@ const genSqlMap: GenSQLMap = {
   'groupBy': groupByQueryToSql,
   'filter': filterQueryToSql,
   'mapColumns': mapColumnsQueryToSql,
-  'mapColumnsByIndex': mapColumnsQueryToSql
+  'mapColumnsByIndex': mapColumnsQueryToSql,
+  'concat': concatQueryToSql
 /*
-  'concat': concatQueryToSql,
   'sort': sortQueryToSql,
   'extend': extendQueryToSql
 */

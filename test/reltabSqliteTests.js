@@ -2,7 +2,7 @@
 
 import db from 'sqlite'
 import test from 'tape'
-// import * as _ from 'lodash'
+import * as _ from 'lodash'
 import * as reltab from '../src/reltab'
 import * as reltabSqlite from '../src/reltab-sqlite'
 import * as csvimport from '../src/csvimport'
@@ -180,7 +180,7 @@ const dbTest7 = () => {
     t.end()
   })
 }
-/*
+
 const q8 = q5.concat(q1.filter(reltab.and().eq(col('JobFamily'), constVal('Safety'))))
 
 const dbTest8 = () => {
@@ -192,7 +192,7 @@ const dbTest8 = () => {
     t.end()
   })
 }
-
+/*
 const q9 = q8.sort([['Name', true]])
 const dbTest9 = () => {
   sqliteQueryTest('basic sort', q9, (t, res) => {
@@ -297,8 +297,8 @@ const runTests = () => {
   serTest0()
   dbTest6()
   dbTest7()
-/*
   dbTest8()
+/*
   dbTest9()
   dbTest10()
   dbTest11()
