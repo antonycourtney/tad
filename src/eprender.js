@@ -12,27 +12,17 @@ console.log('Hello EasyPivot!')
 
 const baseQuery = reltab.tableQuery('bart-comp-all')
   .project([ 'JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE' ])
+
+/*
 const {col, constVal} = reltab
 const q5 = baseQuery.filter(reltab.and().eq(col('JobFamily'), constVal('Executive Management')))
 rtc.evalQuery(q5)
   .then(res => {
     console.table(res.rowData)
   })
-/*
-const sq5 = JSON.stringify(q5, null, 2)
-remoteQuery(sq5, res => {
-  console.log('q5 evaluation completed, result: ', res)
-  console.table(res.rowData)
-})
-*/
-console.log('sent query to remoteQuery')
-/*
-, err => {
-  console.error('q5 evaluation failed, error: ', err)
-})
 */
 
-var ptm = new PivotTreeModel(rtc, baseQuery, [ 'Union', 'JobFamily', 'Title' ])
+var ptm = new PivotTreeModel(rtc, baseQuery, [ 'JobFamily', 'Title' ])
 ptm.openPath([])
 /*
 ptm.openPath(['Non-Represented', 'Audit'])

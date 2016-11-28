@@ -12,6 +12,8 @@ const BrowserWindow = electron.BrowserWindow
 const path = require('path')
 const url = require('url')
 
+import 'console.table'
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
@@ -46,6 +48,9 @@ const runQuery = rtc => (queryStr, cb) => {
     const query = reltab.deserializeQuery(queryStr)
     rtc.evalQuery(query)
       .then(res => {
+        // console.log('runQuery returning:')
+        // const ctf : any = console.table
+        // ctf(res.schema.columns, res.rowData)
         const serRes = JSON.stringify(res, null, 2)
         cb(serRes)
       })

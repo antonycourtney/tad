@@ -13,7 +13,9 @@ const rtc = {
       const sq = JSON.stringify(query, null, 2)
       remoteQuery(sq, resStr => {
         const res = reltab.deserializeTableRep(resStr)
-        console.log('reltab-electron got query result: ', res)
+        console.log('reltab-electron got query result: ')
+        console.log('columns: ', res.schema.columns)
+        console.table(res.rowData)
         resolve(res)
       })
     })

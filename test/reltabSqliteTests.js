@@ -259,8 +259,17 @@ const aggTreeTest0 = () => {
         .then(res => {
           console.log('after opening path /Executive Management/General Manager:')
           util.logTable(res)
-          t.end()
+
+          // const openPaths = {'Executive Management': {'General Manager': {}}, 'Safety': {}}
+          const openPaths = {'Executive Management': {}}
+          const q4 = tree0.getTreeQuery(openPaths)
+          return rtc.evalQuery(q4)
         })
+        .then(res => {
+          console.log('evaluating query returned from getTreeQuery:')
+          util.logTable(res)
+        })
+        .then(() => t.end())
         .catch(util.mkAsyncErrHandler(t, 'aggtree queries chain'))
     }).catch(util.mkAsyncErrHandler(t, 'initial vpivot'))
   })

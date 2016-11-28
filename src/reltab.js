@@ -432,6 +432,14 @@ type SQLSelectAST = { selectCols: Array<SQLSelectColExp>, from: SQLQueryAST|stri
   where: string, groupBy: Array<string>, orderBy: Array<SQLSortColExp> }
 type SQLQueryAST = { selectStmts: Array<SQLSelectAST> } // all underliers combined via `union all`
 
+/**
+ * get Column Id from a SQLSelectColExp -- essential when hoisting column names from
+ * subquery
+ */
+const getColId = (cexp: SQLSelectColExp): string => {
+  return (typeof cexp === 'string') ? cexp : cexp.as
+}
+
 /*
  * not-so-pretty print a SQL query
  */
@@ -480,11 +488,7 @@ const quoteCol = (cid) => '"' + cid + '"'
 const selectColsMap = (selExp: SQLSelectAST): {[cid: string]: SQLSelectColExp} => {
   let ret = {}
   for (let cexp of selExp.selectCols) {
-    if (typeof cexp === 'string') {
-      ret[cexp] = cexp
-    } else {
-      ret[cexp.as] = cexp
-    }
+    ret[getColId(cexp)] = cexp
   }
   return ret
 }
@@ -569,7 +573,7 @@ const filterQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST 
       ) {
     retSel = _.defaults({ where: whereStr }, subSel)
   } else {
-    const selectCols = sqsql.selectStmts[0].selectCols
+    const selectCols = subSel.selectCols.map(getColId)
     retSel = { selectCols, from: sqsql, where: whereStr, groupBy: [], orderBy: [] }
   }
 
@@ -616,13 +620,13 @@ const sortQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST =>
   const orderBy = query.valArgs[0].map(([col, asc]) => ({ col, asc }))
 
   // If subquery just a single select with no orderBy clause, just add one:
+  const subSel = sqsql.selectStmts[0]
   let retSel
   if (sqsql.selectStmts.length === 1 &&
-      sqsql.selectStmts[0].orderBy.length === 0) {
-    const subSel = sqsql.selectStmts[0]
+      subSel.orderBy.length === 0) {
     retSel = _.defaults({ orderBy }, subSel)
   } else {
-    const selectCols = sqsql.selectStmts[0].selectCols
+    let selectCols = subSel.selectCols.map(getColId)
     retSel = { selectCols, from: sqsql, where: '', groupBy: [], orderBy }
   }
 
@@ -640,9 +644,6 @@ const extendQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST 
   const subSel = sqsql.selectStmts[0]
   // Note: We only want to extract the column ids from subquery for use at this level; we
   // want to skip any calculated expressions or aggregate functions
-  const getColId = (cexp: SQLSelectColExp): string => {
-    return (typeof cexp === 'string') ? cexp : cexp.as
-  }
 
   let selectCols = subSel.selectCols.map(getColId)
   selectCols.push({ colExp, as })

@@ -30,6 +30,7 @@ export const decodePath = (pathStr: string): Path => {
   pathStr = pathStr.slice(1) // drop leading PATHSEP
   const eps = (pathStr.length > 0) ? pathStr.split(PATHSEP) : []
   const path = eps.map(decodeURIComponent)
+  console.log('decodePath("' + pathStr + '") ==> ', path)
   return path
 }
 
@@ -103,8 +104,8 @@ export class VPivotTree {
      */
     // TODO: This is a naieve and unsafe way to perform the encoding
     // At the very least, need to nest this with an extra replace of % character itself
+
     const pathExp = `'${basePathStr}${pathDelim}' || replace("_pivot",'${PATHSEP}','${ENCPATHSEP}')`
-    console.log('applyPath: pathExp: ', pathExp)
 
     pathQuery = pathQuery
       .extend('_depth', { type: 'integer' }, path.length + 1)
@@ -160,12 +161,19 @@ pivotColumns: Array<string>): Promise<VPivotTree> => {
   // add a count column:
   rtBaseQuery = rtBaseQuery.extend('Rec', { type: 'integer' }, 1)
   // obtain schema for base query:
+
   // TODO:  Don't want to evaluate entire query just to get schema!
   // Need to change interface of RelTab to return a true TableDataSource that has calculated
   // Schema but not yet calculated rowdata...
-  const basep = rt.evalQuery(rtBaseQuery)
+
+  // For now we'll do the usual SQL where 1=0 trick:
+  const schemaQuery = rtBaseQuery.filter(reltab.and().eq(constVal(1), constVal(0)))
+
+  const basep = rt.evalQuery(schemaQuery)
   return basep.then(baseRes => {
     const baseSchema = baseRes.schema
+
+    console.log('aggtree.vpivot: baseSchema: ', baseSchema)
 
     let outCols = [ '_depth', '_pivot', '_path' ]
     outCols = outCols.concat(baseSchema.columns)
