@@ -8,23 +8,21 @@ import * as epslick from './epslick'
 // import { Grid, Data, Formatters } from 'slickgrid-es6'
 import PivotTreeModel from './PivotTreeModel'
 
-console.log('Hello EasyPivot!')
+const md: reltab.FileMetadata = require('electron').remote.getGlobal('md')
 
+console.log('Hello EasyPivot!')
+console.log('metadata: ', md)
+
+const baseQuery = reltab.tableQuery(md.tableName)
+const ptm = new PivotTreeModel(rtc, baseQuery, [])
+ptm.openPath([])
+
+/*
 const baseQuery = reltab.tableQuery('bart-comp-all')
   .project([ 'JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE' ])
 
-/*
-const {col, constVal} = reltab
-const q5 = baseQuery.filter(reltab.and().eq(col('JobFamily'), constVal('Executive Management')))
-rtc.evalQuery(q5)
-  .then(res => {
-    console.table(res.rowData)
-  })
-*/
-
-var ptm = new PivotTreeModel(rtc, baseQuery, [ 'JobFamily', 'Title' ])
+var ptm = new PivotTreeModel(rtc, baseQuery, [ 'Union', 'JobFamily', 'Title' ])
 ptm.openPath([])
-/*
 ptm.openPath(['Non-Represented', 'Audit'])
 ptm.openPath(['Non-Represented', 'Clerical'])
 ptm.openPath(['Non-Represented', 'Information Systems'])

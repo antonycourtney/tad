@@ -1,5 +1,6 @@
 const db = require('sqlite')
 import * as reltab from './src/reltab'
+import commandLineArgs from 'command-line-args'
 const reltabSqlite = require('./src/reltab-sqlite')
 const csvimport = require('./src/csvimport')
 
@@ -41,7 +42,7 @@ function createWindow () {
   })
 }
 
-const testPath = 'csv/bart-comp-all.csv'
+// const testPath = 'csv/bart-comp-all.csv'
 
 const runQuery = rtc => (queryStr, cb) => {
   try {
@@ -61,11 +62,14 @@ const runQuery = rtc => (queryStr, cb) => {
 }
 
 // App initialization:
-const appInit = () => {
+const appInit = (path: string) => {
   console.log('appInit: entry')
   db.open(':memory:')
-    .then(() => csvimport.importSqlite(testPath))
-    .then(md => reltabSqlite.init(db, md))
+    .then(() => csvimport.importSqlite(path))
+    .then(md => {
+      global.md = md
+      return reltabSqlite.init(db, md)
+    })
     .then(rtc => {
       console.log('completed reltab initalization.')
       // Now let's place a function in global so it can be run via remote:
@@ -75,10 +79,22 @@ const appInit = () => {
     .catch(err => console.error('appInit failed: ', err, err.stack))
 }
 
+// In this file you can include the rest of your app's specific main process
+// code. You can also put them in separate files and require them here.
+
+const optionDefinitions = [
+  { name: 'verbose', alias: 'v', type: Boolean },
+  { name: 'src', type: String, defaultOption: true }
+]
+
+const argv = process.argv.slice(1)
+const options = commandLineArgs(optionDefinitions, argv)
+global.options = options
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', appInit)
+app.on('ready', () => appInit(options.src))
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -96,6 +112,3 @@ app.on('activate', function () {
     createWindow()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
