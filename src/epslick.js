@@ -245,11 +245,3 @@ function SGView (container, ptmodel) {
 export function sgView (div, ptmodel) {
   return new SGView(div, ptmodel)
 }
-
-function SGController (sgview, ptmodel) {
-  // TODO
-}
-
-export function sgController (sgview, ptmodel) {
-  return new SGController(sgview, ptmodel)
-}

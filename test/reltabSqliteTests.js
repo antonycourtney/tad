@@ -27,7 +27,7 @@ const dbTest0 = () => {
       t.ok(true, 'basic table read')
       var schema = res.schema
       var expectedCols = ['Name', 'Title', 'Base', 'OT', 'Other', 'MDV', 'ER',
-                        'EE', 'DC', 'Misc', 'TCOE', 'Source', 'JobFamily', 'Union']
+        'EE', 'DC', 'Misc', 'TCOE', 'Source', 'JobFamily', 'Union']
 
       const columns = schema.columns // array of strings
       // console.log('columns: ', columns)

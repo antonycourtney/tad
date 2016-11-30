@@ -1,11 +1,12 @@
 /* @flow */
 
 import * as styles from '../less/easypivot.less'  // eslint-disable-line
+import * as React from 'react'
+import * as ReactDOM from 'react-dom'
+import AppPane from './components/AppPane'
 
 import * as reltab from './reltab' // eslint-disable-line
 import rtc from './reltab-electron'
-import * as epslick from './epslick'
-// import { Grid, Data, Formatters } from 'slickgrid-es6'
 import PivotTreeModel from './PivotTreeModel'
 
 const md: reltab.FileMetadata = require('electron').remote.getGlobal('md')
@@ -28,5 +29,8 @@ ptm.openPath(['Non-Represented', 'Clerical'])
 ptm.openPath(['Non-Represented', 'Information Systems'])
 ptm.openPath(['Non-Represented', 'Information Systems', 'Manager of Information Systems'])
 */
-const sgv = epslick.sgView('#epGrid', ptm)
-const sgc = epslick.sgController(sgv, ptm)  // eslint-disable-line
+
+ReactDOM.render(
+  <AppPane ptm={ptm} />,
+  document.getElementById('app')
+)
