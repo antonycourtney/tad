@@ -234,7 +234,7 @@ function SGView (container, ptmodel) {
 
     createGrid(gridColumnInfo.gridCols, dataView)
     // console.log( "loadInitialImage: setting container width to: ", gridColumnInfo.gridWidth )
-    $(container).css('width', gridColumnInfo.gridWidth + 'px')
+    // $(container).css('width', gridColumnInfo.gridWidth + 'px')
     grid.resizeCanvas()
   }
 
