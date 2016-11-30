@@ -95,14 +95,12 @@ function SGView (container, ptmodel) {
 
     registerLoadHandlers(grid)
 
-    /*
     $(window).resize(function () {
       console.log(' window.resize....')
       var w = $(container).width()
       console.log('container width: ', w)
       grid.resizeCanvas()
     })
-    */
     // load the first page
     grid.onViewportChanged.notify()
   }
