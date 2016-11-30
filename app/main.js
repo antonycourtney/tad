@@ -5,9 +5,7 @@ const reltabSqlite = require('../src/reltab-sqlite')
 const csvimport = require('../src/csvimport')
 
 const electron = require('electron')
-// Module to control application life.
 const app = electron.app
-// Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
 const path = require('path')
@@ -20,10 +18,8 @@ require('console.table')
 let mainWindow
 
 function createWindow () {
-  // Create the browser window.
   mainWindow = new BrowserWindow({width: 1150, height: 800})
 
-  // and load the index.html of the app.
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'index.html'),
     protocol: 'file:',
@@ -31,7 +27,8 @@ function createWindow () {
   }))
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools({mode: 'bottom'})
+  mainWindow.webContents.closeDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
@@ -41,8 +38,6 @@ function createWindow () {
     mainWindow = null
   })
 }
-
-// const testPath = 'csv/bart-comp-all.csv'
 
 const runQuery = rtc => (queryStr, cb) => {
   try {
@@ -78,9 +73,6 @@ const appInit = (path) => {
     })
     .catch(err => console.error('appInit failed: ', err, err.stack))
 }
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
 
 const optionDefinitions = [
   { name: 'verbose', alias: 'v', type: Boolean },
