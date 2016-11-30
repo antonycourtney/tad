@@ -1,7 +1,7 @@
 /* @flow */
 
-import jsesc from 'jsesc'
-import * as _ from 'lodash'
+const jsesc = require('jsesc')
+const _ = require('lodash')
 
 /**
  * AST for filter expressions, consisting of a tree of

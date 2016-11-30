@@ -2,14 +2,29 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>EasyPivot</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <title>tad</title>
+    <style>
+    #epGrid {
+      height: 800px;
+    }
+    </style>
   </head>
   <body>
-    <div style="width:100%;float:left;">
-      <div id="epGrid" style="width:100%;height:800px;" class="slickgrid-container"></div>
-    </div>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-xs-1"></div>
+          <div style="col-xs-10">
+            <div id="epGrid" class="slickgrid-container"></div>
+          </div>
+        <div class="col-xs-1"></div>
+      </div>
   </div>
-  <script>
-    require('./eprender.bundle.js')
-  </script>
+<!-- This errors out because importing this minified jQuery doesn't seem to
+     correctly set up jQuery globally, and then boostrap JS complains.
+     Let's leave out for now, since we just want Bootstrap's CSS....
+  <script src="js/jquery.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+-->
+  <script src="./eprender.bundle.js"></script>
 </html>

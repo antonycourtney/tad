@@ -1,8 +1,8 @@
 const db = require('sqlite')
-import * as reltab from './src/reltab'
-import commandLineArgs from 'command-line-args'
-const reltabSqlite = require('./src/reltab-sqlite')
-const csvimport = require('./src/csvimport')
+const reltab = require('../src/reltab')
+const commandLineArgs = require('command-line-args')
+const reltabSqlite = require('../src/reltab-sqlite')
+const csvimport = require('../src/csvimport')
 
 const electron = require('electron')
 // Module to control application life.
@@ -13,7 +13,7 @@ const BrowserWindow = electron.BrowserWindow
 const path = require('path')
 const url = require('url')
 
-import 'console.table'
+require('console.table')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -25,7 +25,7 @@ function createWindow () {
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'build/index.html'),
+    pathname: path.join(__dirname, 'index.html'),
     protocol: 'file:',
     slashes: true
   }))
@@ -62,7 +62,7 @@ const runQuery = rtc => (queryStr, cb) => {
 }
 
 // App initialization:
-const appInit = (path: string) => {
+const appInit = (path) => {
   console.log('appInit: entry')
   db.open(':memory:')
     .then(() => csvimport.importSqlite(path))

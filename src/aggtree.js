@@ -43,7 +43,6 @@ export const decodePath = (pathStr: string): Path => {
   pathStr = pathStr.slice(1) // drop leading PATHSEP
   const eps = (pathStr.length > 0) ? pathStr.split(PATHSEP) : []
   const path = eps.map(decodeURIComponent)
-  console.log('decodePath("' + pathStr + '") ==> ', path)
   return path
 }
 

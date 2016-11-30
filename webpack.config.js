@@ -1,21 +1,18 @@
 // webpack.config.js
 
 var webpack = require('webpack');
+var path = require('path');
+var fs = require('fs');
 
-
-module.exports = {
-    target: "electron",
-    entry: {
-      eprender: "./src/eprender.js"
+function config() {
+  return {
+    devtool: "source-map",
+    resolve: {
+        extensions: ["", ".webpack.js", ".web.js", ".js"]
     },
     output: {
         path: "./build/",
         filename: "[name].bundle.js"
-    },
-    // Enable sourcemaps for debugging webpack's output.
-    devtool: "source-map",
-    resolve: {
-        extensions: ["", ".webpack.js", ".web.js", ".js"]
     },
     module: {
         loaders: [
@@ -44,4 +41,41 @@ module.exports = {
           }
         ]
     }
-};
+  }
+}
+
+var render = {
+  target: "electron",
+  entry: {
+    eprender: "./src/eprender.js"
+  }
+}
+
+var nodeModules = {};
+fs.readdirSync('node_modules')
+  .filter(function(x) {
+    return ['.bin'].indexOf(x) === -1;
+  })
+  .forEach(function(mod) {
+    nodeModules[mod] = 'commonjs ' + mod;
+  });
+
+
+var app = {
+  target: "node",
+  entry: {
+    main: "./app/main.js"
+  },
+  externals: nodeModules,
+  node: {
+    __dirname: false,
+    __filename: false
+  }
+}
+
+function merge (config, env) {
+  var merged = Object.assign({}, env, config)
+  merged.plugins = (config.plugins || []).concat(env.plugins || [])
+  return merged
+}
+module.exports = [ merge(render, config()), merge(app, config()) ]
