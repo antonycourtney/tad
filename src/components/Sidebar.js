@@ -1,9 +1,9 @@
 /* @flow */
 
 import * as React from 'react'
+import ColumnSelector from './ColumnSelector'
 
 export default class Sidebar extends React.Component {
-
   render () {
     return (
       <div className='full-height sidebar sidebar-collapsed'>
@@ -13,8 +13,8 @@ export default class Sidebar extends React.Component {
           </div>
         </div>
         <div className='sidebar-content'>
-          <h4>Columns:</h4>
-          <p>Columns go here!</p>
+          <h5>Columns:</h5>
+          <ColumnSelector appState={this.props.appState} stateRefUpdater={this.props.stateRefUpdater} />
         </div>
       </div>
     )

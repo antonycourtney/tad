@@ -4,30 +4,77 @@
   display: inherit;
   width: 50px;
   min-width: 50px;
-  -webkit-transition-duration: 0.3s;
-  -moz-transition-duration: 0.3s;
-  -o-transition-duration: 0.3s;
   transition-duration: 0.3s;
+  overflow: none;
 }
-
+/*
 .sidebar-collapsed {
   width: 50px;
   min-width: 50px;
 }
+*/
 
-.sidebar:hover {
-  width: 270px;
-  min-width: 300px;
+// .sidebar:hover {
+.sidebar {
+  width: 350px;
+  min-width: 350px;
 }
 
 .sidebar-content {
-  visibility:hidden;
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin-left: 16px;
+  margin-top: 8px;
+  overflow: hidden;
+//  visibility:hidden;
 }
 
-.sidebar:hover .sidebar-placeholder {
+// .sidebar:hover
+.sidebar-placeholder {
+  position: absolute;
+  left: 0;
+  top: 0;
   visibility:hidden;
 }
 
 .sidebar:hover .sidebar-content {
   visibility:visible;
+}
+
+.column-selector {
+  border: 1px solid #c0c0c0;
+}
+
+.column-selector-table {
+  background-color: #ffffff;
+  table-layout: fixed;
+  width: 300px;
+  margin-bottom: 0;
+}
+
+.column-selector-body {
+  height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.column-selector .col-colName {
+  width: 195px;
+}
+
+.column-selector .col-check {
+  width: 35px;
+  text-align: center;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.column-selector td {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.column-selector th {
+  border-bottom: 0;
 }
