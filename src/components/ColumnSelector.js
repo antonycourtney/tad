@@ -1,31 +1,57 @@
 /* @flow */
 
 import * as React from 'react'
+import * as actions from '../actions'
 
 export default class ColumnSelector extends React.Component {
-  renderColumnRow (columnName: string) {
-    const isShown = true
+  renderColumnRow (cid: string) {
+    const appState = this.props.appState
+    const schema = appState.baseSchema
+    const displayName = schema.displayName(cid)
+    const isShown = appState.displayColumns.includes(cid)
+    const isPivot = appState.vpivots.includes(cid)
+    const isSort = appState.sortKey.includes(cid)
+    const refUpdater = this.props.stateRefUpdater
     return (
-      <tr key={columnName}>
-        <td className='col-colName'>{columnName}</td>
+      <tr key={cid}>
+        <td className='col-colName'>{displayName}</td>
         <td className='col-check'>
           <input
             className='colSel-check'
             type='checkbox'
             title='Show this column'
-            ref={'showCheckbox-' + columnName}
-            checked={isShown} /></td>
-        <td className='col-check' />
-        <td className='col-check' />
+            ref={'showCheckbox-' + cid}
+            onChange={() => actions.toggleShown(cid, refUpdater)}
+            checked={isShown} />
+        </td>
+        <td className='col-check'>
+          <input
+            className='colSel-check'
+            type='checkbox'
+            title='Pivot by column'
+            ref={'pivotCheckbox-' + cid}
+            onChange={() => actions.togglePivot(cid, refUpdater)}
+            checked={isPivot} />
+        </td>
+        <td className='col-check'>
+          <input
+            className='colSel-check'
+            type='checkbox'
+            title='Sort by column'
+            ref={'sortCheckbox-' + cid}
+            onChange={() => actions.toggleSort(cid, refUpdater)}
+            checked={isSort} />
+        </td>
       </tr>
     )
   }
 
   render () {
     const appState = this.props.appState
-    const columnNames = appState.baseSchema.columns.slice()
-    columnNames.sort((s1, s2) => s1.localeCompare(s2))
-    const columnRows = columnNames.map(colName => this.renderColumnRow(colName))
+    const schema = appState.baseSchema
+    const columnIds = schema.columns.slice()
+    columnIds.sort((cid1, cid2) => schema.displayName(cid1).localeCompare(schema.displayName(cid2)))
+    const columnRows = columnIds.map(cid => this.renderColumnRow(cid))
 
     return (
       <div className='column-selector'>
