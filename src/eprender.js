@@ -1,6 +1,7 @@
 /* @flow */
 
 import * as styles from '../less/easypivot.less'  // eslint-disable-line
+require('../less/sidebar.less')
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import AppPane from './components/AppPane'

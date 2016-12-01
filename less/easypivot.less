@@ -44,9 +44,7 @@
 }
 
 html, body {
-  margin-left: 8px;
-  margin-top: 2px;
-  margin-right: 0;
+  margin: 0;
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   font-weight: 400;
   font-size: 8pt;
@@ -55,6 +53,7 @@ html, body {
 }
 #epGrid {
   height: 100%;
+  border-left: 1px solid #c0c0c0;
 }
 
 .full-height {
@@ -62,5 +61,11 @@ html, body {
 }
 
 .no-pad {
+  padding: 0;
+}
+
+.main-container {
+  display: flex;
+  flex-wrap: nowrap;
   padding: 0;
 }

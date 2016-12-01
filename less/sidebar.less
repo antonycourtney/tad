@@ -1,0 +1,33 @@
+
+.sidebar {
+  background-color: #efefef;
+  display: inherit;
+  width: 50px;
+  min-width: 50px;
+  -webkit-transition-duration: 0.3s;
+  -moz-transition-duration: 0.3s;
+  -o-transition-duration: 0.3s;
+  transition-duration: 0.3s;
+}
+
+.sidebar-collapsed {
+  width: 50px;
+  min-width: 50px;
+}
+
+.sidebar:hover {
+  width: 270px;
+  min-width: 300px;
+}
+
+.sidebar-content {
+  visibility:hidden;
+}
+
+.sidebar:hover .sidebar-placeholder {
+  visibility:hidden;
+}
+
+.sidebar:hover .sidebar-content {
+  visibility:visible;
+}

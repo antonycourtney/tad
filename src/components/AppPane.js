@@ -1,6 +1,7 @@
 /* @flow */
 
 import * as React from 'react'
+import Sidebar from './Sidebar'
 import Grid from './Grid'
 
 /**
@@ -9,12 +10,9 @@ import Grid from './Grid'
 export default class AppPane extends React.Component {
   render () {
     return (
-      <div className='container-fluid full-height'>
-        <div className='row full-height'>
-            <div className='col-xs-12 full-height no-pad'>
-              <Grid ptm={this.props.ptm} />
-            </div>
-        </div>
+      <div className='container-fluid full-height main-container'>
+        <Sidebar ptm={this.props.ptm} />
+        <Grid ptm={this.props.ptm} />
       </div>
     )
   }
