@@ -6,8 +6,20 @@ import SimpleDataView from './SimpleDataView'
 import type { Connection } from './reltab' // eslint-disable-line
 import * as d3a from 'd3-array'
 
+// trim an open node map to given depth:
+const trimToDepth = (nodeMap: Object, depth: number): Object => {
+  if (depth === 0) {
+    return {}
+  }
+  let ret = {}
+  for (let elem in nodeMap) {
+    ret[elem] = trimToDepth(nodeMap[elem], depth - 1)
+  }
+  return ret
+}
+
 export default class PivotTreeModel {
-  openNodeMap: ?Object
+  openNodeMap: Object
   listeners: Array<any>
   treeQueryPromise: Promise<reltab.QueryExp>
   vpivotPromise: Promise<aggtree.VPivotTree>
@@ -18,7 +30,7 @@ export default class PivotTreeModel {
   pivots: Array<string>
 
   constructor (rt: Connection, baseQuery: reltab.QueryExp, pivots: Array<string>) {
-    this.openNodeMap = null
+    this.openNodeMap = {}
     this.listeners = []
     this.treeQueryPromise = null
     this.vpivotPromise = null
@@ -31,6 +43,7 @@ export default class PivotTreeModel {
 
   setPivots (inPivots: Array<string>): void {
     this.pivots = inPivots
+    this.openNodeMap = trimToDepth(this.openNodeMap, inPivots.length)
     this.needPivot = true
     return this.refresh()
   }

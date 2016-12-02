@@ -53,24 +53,36 @@ function defaultGroupCellFormatter (row, cell, value, columnDef, item) {
 }
 
 // scan table data to make best effort at initial column widths
-function getInitialColWidths (dataView: Object) {
-  // let's approximate the column width:
-  var MINCOLWIDTH = 80
-  var MAXCOLWIDTH = 300
-  var colWidths = {}
+const MINCOLWIDTH = 80
+const MAXCOLWIDTH = 300
+
+// get column width for specific column:
+const getColWidth = (dataView: Object, cnm: string) => {
+  let colWidth
   var nRows = dataView.getLength()
   for (var i = 0; i < nRows; i++) {
     var row = dataView.getItem(i)
-    var cnm
-    for (cnm in row) {
-      var cellVal = row[ cnm ]
-      var cellWidth = MINCOLWIDTH
-      if (cellVal) {
-        cellWidth = 8 + (6 * cellVal.toString().length) // TODO: measure!
-      }
-      colWidths[ cnm ] = Math.min(MAXCOLWIDTH,
-        Math.max(colWidths[ cnm ] || MINCOLWIDTH, cellWidth))
+    var cellVal = row[ cnm ]
+    var cellWidth = MINCOLWIDTH
+    if (cellVal) {
+      cellWidth = 8 + (6 * cellVal.toString().length) // TODO: measure!
     }
+    colWidth = Math.min(MAXCOLWIDTH,
+      Math.max(colWidth || MINCOLWIDTH, cellWidth))
+  }
+  return colWidth
+}
+
+function getInitialColWidths (dataView: Object): {[cid: string]: number} {
+  // let's approximate the column width:
+  var colWidths = {}
+  var nRows = dataView.getLength()
+  if (nRows === 0) {
+    return {}
+  }
+  const initRow = dataView.getItem(0)
+  for (let cnm in initRow) {
+    colWidths[cnm] = getColWidth(dataView, cnm)
   }
 
   return colWidths
@@ -170,6 +182,11 @@ export default class Grid extends React.Component {
   }
 
   refreshGrid (dataView: any) {
+    const gridCols = this.grid.getColumns()
+    const pivotColWidth = getColWidth(dataView, '_pivot')
+    gridCols[0].width = pivotColWidth
+    this.grid.setColumns(gridCols)
+
     this.grid.invalidateAllRows() // TODO: optimize
     this.grid.updateRowCount()
     this.grid.render()
