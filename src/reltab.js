@@ -768,7 +768,8 @@ export type FileMetadata = {
   columnNames: Array<string>,
   columnTypes: Array<?ColumnType>,
   rowCount: number,
-  tableName: string
+  tableName: string,
+  csvOptions: Object
 }
 
 export type TableInfo = { tableName: string, schema: Schema, md: FileMetadata }

@@ -131,10 +131,16 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
     var colTypes: Array<string>
     let rowCount = 0
     // extract table name from file path:
-    const tableName = path.basename(pathname, path.extname(pathname))
+    const extName = path.extname(pathname).slice(1)
+    const tableName = path.basename(pathname, extName)
 
+    let csvOptions = {}
+    if (extName === 'tsv') {
+      csvOptions.delimiter = '\t'
+      console.log('tsv file -- using tab as delimiter')
+    }
     csv
-      .fromPath(pathname)
+      .fromPath(pathname, csvOptions)
       .on('data', row => {
         if (firstRow) {
           colIdInfo = genColumnIds(row)
@@ -148,7 +154,7 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
       .on('end', () => {
         const columnIds = colIdInfo.map(p => p[0])
         const columnNames = colIdInfo.map(p => p[1])
-        resolve({columnIds, columnNames, columnTypes: colTypes, rowCount, tableName})
+        resolve({columnIds, columnNames, columnTypes: colTypes, rowCount, tableName, csvOptions})
       })
   })
 }
@@ -195,7 +201,7 @@ const consumeStream = (s: stream.Readable,
         // may have already written all read items
         resolve(writeCount)
       } else {
-        console.log('consumeStream: readCount: ', readCount, ', writeCount: ', writeCount)
+        // console.log('consumeStream: readCount: ', readCount, ', writeCount: ', writeCount)
       }
     }
 
@@ -234,7 +240,7 @@ const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> =
       .then(() => db.run('begin'))
       .then(() => db.prepare(insertStmtStr))
       .then(insertStmt => {
-        return consumeStream(csv.fromPath(pathname),
+        return consumeStream(csv.fromPath(pathname, md.csvOptions),
                   (row) => {
                     let typedRow = _.zip(md.columnTypes, row)
                     let rowVals = typedRow.map(([t, v]) => prepValue(t, v))

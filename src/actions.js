@@ -38,3 +38,7 @@ export const togglePivot = (cid: string, updater: RefUpdater): void => {
 export const toggleSort = (cid: string, updater: RefUpdater): void => {
   updater(appState => appState.toggleSort(cid))
 }
+
+export const toggleShowRoot = (updater: RefUpdater): void => {
+  updater(appState => appState.set('showRoot', !(appState.showRoot)))
+}

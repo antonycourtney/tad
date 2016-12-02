@@ -221,7 +221,7 @@ const aggTreeTest0 = () => {
   const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
   test('initial aggTree test', t => {
     const rtc = sharedRtc
-    const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'])
+    const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], true)
 
     p0.then(tree0 => {
       console.log('vpivot initial promise resolved...')

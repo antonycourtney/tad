@@ -52,13 +52,13 @@ export class VPivotTree {
   pivotColumns: Array<string>
   baseSchema: reltab.Schema
   outCols: Array<string>
-  rootQuery: reltab.QueryExp
+  rootQuery: ?reltab.QueryExp
 
   constructor (rt: Connection, rtBaseQuery: reltab.QueryExp,
     pivotColumns: Array<string>,
     baseSchema: reltab.Schema,
     outCols: Array<string>,
-    rootQuery: reltab.QueryExp) {
+    rootQuery: ?reltab.QueryExp) {
     this.rt = rt
     this.pivotColumns = pivotColumns
     this.rtBaseQuery = rtBaseQuery
@@ -158,8 +158,11 @@ export class VPivotTree {
       return treeQuery
     }
 
-    if (openPaths) {
-      resQuery = resQuery.concat(this.applyPath([])) // open root level!
+    const openRoot = this.applyPath([]) // immediate children of root
+    if (resQuery) {
+      resQuery = resQuery.concat(openRoot)
+    } else {
+      resQuery = openRoot
     }
     var tq = walkPath(this, resQuery, [], openPaths)
 
@@ -169,7 +172,7 @@ export class VPivotTree {
 }
 
 export const vpivot = (rt: reltab.Connection, rtBaseQuery: reltab.QueryExp,
-pivotColumns: Array<string>): Promise<VPivotTree> => {
+pivotColumns: Array<string>, showRoot: boolean): Promise<VPivotTree> => {
   // add a count column:
   rtBaseQuery = rtBaseQuery.extend('Rec', { type: 'integer' }, 1)
   // obtain schema for base query:
@@ -184,20 +187,20 @@ pivotColumns: Array<string>): Promise<VPivotTree> => {
   const basep = rt.evalQuery(schemaQuery)
   return basep.then(baseRes => {
     const baseSchema = baseRes.schema
-
-    console.log('aggtree.vpivot: baseSchema: ', baseSchema)
-
     let outCols = [ '_depth', '_pivot', '_path' ]
     outCols = outCols.concat(baseSchema.columns)
 
     const gbCols = baseSchema.columns.slice()
 
-    const rootQuery = rtBaseQuery
-      .groupBy([], gbCols)
-      .extend('_pivot', { type: 'text' }, null)
-      .extend('_depth', { type: 'integer' }, 0)
-      .extend('_path', {type: 'text'}, "''")
-      .project(outCols)
+    let rootQuery = null
+    if (showRoot) {
+      rootQuery = rtBaseQuery
+        .groupBy([], gbCols)
+        .extend('_pivot', { type: 'text' }, null)
+        .extend('_depth', { type: 'integer' }, 0)
+        .extend('_path', {type: 'text'}, "''")
+        .project(outCols)
+    }
 
     return new VPivotTree(rt, rtBaseQuery, pivotColumns, baseSchema, outCols, rootQuery)
   })

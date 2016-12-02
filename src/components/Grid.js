@@ -154,7 +154,7 @@ export default class Grid extends React.Component {
     const appState = this.props.appState
 
     // This should probably live in this.state...
-    this.ptm = new PivotTreeModel(appState.rtc, appState.baseQuery, [])
+    this.ptm = new PivotTreeModel(appState.rtc, appState.baseQuery, [], appState.showRoot)
     this.ptm.openPath([])
   }
 
@@ -238,9 +238,7 @@ export default class Grid extends React.Component {
     this.registerLoadHandlers(this.grid)
 
     $(window).resize(() => {
-      console.log(' window.resize....')
       var w = $(container).width()
-      console.log('container width: ', w)
       this.grid.resizeCanvas()
     })
 
@@ -288,11 +286,13 @@ export default class Grid extends React.Component {
     const prevPivots = this.ptm.getPivots()
     const pivots = props.appState.vpivots
 
-    console.log('Grid.componentWillReceiveProps: ', prevPivots, pivots)
-
     if (!(_.isEqual(prevPivots, pivots))) {
-      console.log('new pivots, pivoting...')
       this.ptm.setPivots(pivots)
+      this.refreshFromModel()
+    }
+
+    if (this.props.appState.showRoot !== props.appState.showRoot) {
+      this.ptm.setShowRoot(props.appState.showRoot)
       this.refreshFromModel()
     }
   }

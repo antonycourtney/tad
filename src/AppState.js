@@ -12,7 +12,7 @@ export default class AppState extends Immutable.Record({
   rtc: null,
   baseQuery: null,
   baseSchema: null,
-  showRoot: true,
+  showRoot: false,
   displayColumns: [],
   vpivots: [],
   sortKey: []
