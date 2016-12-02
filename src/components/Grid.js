@@ -1,17 +1,141 @@
 /* @flow */
 
 import * as React from 'react'
-import * as epslick from '../epslick'
 import PivotTreeModel from '../PivotTreeModel'
+import * as aggtree from '../aggtree'
+import $ from 'jquery'
 import * as _ from 'lodash'
+import { Slick } from 'slickgrid-es6'
+
+const container = '#epGrid' // for now
+
+/*
+const options = {
+  editable: false,
+  enableAddRow: false,
+  enableCellNavigation: false
+}
+*/
+
+var _defaults = {
+  groupCssClass: 'slick-group',
+  groupTitleCssClass: 'slick-group-title',
+  totalsCssClass: 'slick-group-totals',
+  groupFocusable: true,
+  totalsFocusable: false,
+  toggleCssClass: 'slick-group-toggle',
+  toggleExpandedCssClass: 'expanded',
+  toggleCollapsedCssClass: 'collapsed',
+  enableExpandCollapse: true,
+  groupFormatter: defaultGroupCellFormatter
+}
+
+// options = $.extend(true, {}, _defaults, options)
+const options = _defaults // for now
+
+function defaultGroupCellFormatter (row, cell, value, columnDef, item) {
+  if (!options.enableExpandCollapse) {
+    return item._pivot
+  }
+
+  var indentation = item._depth * 15 + 'px'
+
+  var pivotStr = item._pivot || ''
+
+  var ret = "<span class='" + options.toggleCssClass + ' ' +
+    ((!item.isLeaf) ? (item.isOpen ? options.toggleExpandedCssClass : options.toggleCollapsedCssClass) : '') +
+    "' style='margin-left:" + indentation + "'>" +
+    '</span>' +
+    "<span class='" + options.groupTitleCssClass + "' level='" + item._depth + "'>" +
+    pivotStr +
+    '</span>'
+  return ret
+}
+
+// scan table data to make best effort at initial column widths
+function getInitialColWidths (dataView: Object) {
+  // let's approximate the column width:
+  var MINCOLWIDTH = 80
+  var MAXCOLWIDTH = 300
+  var colWidths = {}
+  var nRows = dataView.getLength()
+  for (var i = 0; i < nRows; i++) {
+    var row = dataView.getItem(i)
+    var cnm
+    for (cnm in row) {
+      var cellVal = row[ cnm ]
+      var cellWidth = MINCOLWIDTH
+      if (cellVal) {
+        cellWidth = 8 + (6 * cellVal.toString().length) // TODO: measure!
+      }
+      colWidths[ cnm ] = Math.min(MAXCOLWIDTH,
+        Math.max(colWidths[ cnm ] || MINCOLWIDTH, cellWidth))
+    }
+  }
+
+  return colWidths
+}
+
+// construct SlickGrid column info from RelTab schema:
+function mkGridCols (schema, colWidths, showHiddenColumns) {
+  var gridWidth = 0 // initial padding amount
+  var GRIDWIDTHPAD = 16
+
+  var gridCols = []
+  if (showHiddenColumns) {
+    gridCols.push({ id: '_id', field: '_id', name: '_id' })
+    gridCols.push({ id: '_parentId', field: '_parentId', name: '_parentId' })
+  }
+  for (var i = 0; i < schema.columns.length; i++) {
+    var colId = schema.columns[ i ]
+    if (!showHiddenColumns) {
+      if (colId[0] === '_') {
+        if (colId !== '_pivot') {
+          continue
+        }
+      }
+    }
+    let cmd = schema.columnMetadata[ colId ]
+    let ci: any = { id: colId, field: colId, cssClass: '', name: '', formatter: null }
+    if (colId === '_pivot') {
+      ci.cssClass = 'pivot-column'
+      ci.name = ''
+      ci.formatter = options.groupFormatter
+    } else {
+      var displayName = cmd.displayName || colId
+      ci.name = displayName
+      ci.toolTip = displayName
+      ci.sortable = true
+    }
+    var colWidth = colWidths[ ci.field ]
+    if (i === schema.columns.length - 1) {
+      // pad out last column to allow for dynamic scrollbar
+      colWidth += GRIDWIDTHPAD
+    }
+    // console.log( "column ", i, "id: ", ci.id, ", name: '", ci.name, "', width: ", colWidth )
+    ci.width = colWidth
+    gridWidth += colWidth
+
+    gridCols.push(ci)
+  }
+
+  var columnInfo = { gridCols: gridCols, contentColWidths: colWidths, gridWidth: gridWidth }
+
+  return columnInfo
+}
 
 /**
- * A wrapper around SlickGrid
+ * React component wrapper around SlickGrid
  *
  */
 export default class Grid extends React.Component {
   sgv: Object
   ptm: PivotTreeModel
+  onDataLoading: Object
+  onDataLoaded: Object
+  grid: Object
+  gridColumnInfo: Object
+  loadingIndicator: any
 
   constructor (props: any) {
     super(props)
@@ -22,8 +146,125 @@ export default class Grid extends React.Component {
     this.ptm.openPath([])
   }
 
+  ensureData (from: number, to: number) {
+    // TODO: Should probably check for initial image not yet loaded
+    // onDataLoading.notify({from: from, to: to})
+    this.onDataLoaded.notify({from: from, to: to})
+  }
+
+  onGridClick (e: any, args: any) {
+    console.log('onGridClick: ', e, args)
+    var item = this.grid.getDataItem(args.row)
+    console.log('data item: ', item)
+    if (item.isLeaf) {
+      return
+    }
+    var path = aggtree.decodePath(item._path)
+    if (item.isOpen) {
+      this.ptm.closePath(path)
+    } else {
+      this.ptm.openPath(path)
+    }
+
+    this.refreshFromModel()
+  }
+
+  refreshGrid (dataView: any) {
+    this.grid.invalidateAllRows() // TODO: optimize
+    this.grid.updateRowCount()
+    this.grid.render()
+  }
+
+  refreshFromModel () {
+    this.ptm.refresh().then(dataView => this.refreshGrid(dataView))
+  }
+
+  /* handlers for data loading and completion */
+  registerLoadHandlers (grid: any) {
+    this.onDataLoading.subscribe(() => {
+      if (!this.loadingIndicator) {
+        this.loadingIndicator = $("<span class='loading-indicator'><label>Buffering...</label></span>").appendTo(document.body)
+        var $g = $(container)
+
+        if (!this.loadingIndicator || !($g)) {
+          return
+        }
+
+        this.loadingIndicator
+          .css('position', 'absolute')
+          .css('top', $g.position().top + $g.height() / 2 - this.loadingIndicator.height() / 2)
+          .css('left', $g.position().left + $g.width() / 2 - this.loadingIndicator.width() / 2)
+      }
+
+      this.loadingIndicator.show()
+    })
+  }
+
+  /* Create grid from the specified set of columns */
+  createGrid (columns: any, data: any) {
+    this.grid = new Slick.Grid(container, data, columns, options)
+
+    this.grid.onViewportChanged.subscribe((e, args) => {
+      const vp = this.grid.getViewport()
+      this.ensureData(vp.top, vp.bottom)
+    })
+
+    this.grid.onSort.subscribe((e, args) => {
+      this.grid.setSortColumn(args.sortCol.field, args.sortAsc)
+      this.ptm.setSort(args.sortCol.field, args.sortAsc ? 1 : -1)
+      const vp = this.grid.getViewport()
+      this.ensureData(vp.top, vp.bottom)
+    })
+
+    this.grid.onClick.subscribe((e, args) => this.onGridClick(e, args))
+
+    this.registerLoadHandlers(this.grid)
+
+    $(window).resize(() => {
+      console.log(' window.resize....')
+      var w = $(container).width()
+      console.log('container width: ', w)
+      this.grid.resizeCanvas()
+    })
+
+    // load the first page
+    this.grid.onViewportChanged.notify()
+  }
+
+  loadInitialImage (dataView: any) {
+    console.log('loadInitialImage: ', dataView)
+
+    var showHiddenColumns = false // Useful for debugging.  TODO: make configurable!
+
+    var colWidths = getInitialColWidths(dataView)
+    this.gridColumnInfo = mkGridCols(dataView.schema, colWidths, showHiddenColumns)
+
+    this.createGrid(this.gridColumnInfo.gridCols, dataView)
+    // console.log( "loadInitialImage: setting container width to: ", gridColumnInfo.gridWidth )
+    // $(container).css('width', gridColumnInfo.gridWidth + 'px')
+    this.grid.resizeCanvas()
+  }
+
   componentDidMount () {
-    this.sgv = epslick.sgView('#epGrid', this.ptm)
+    this.onDataLoading = new Slick.Event()
+    this.onDataLoaded = new Slick.Event()
+    this.loadingIndicator = null
+
+    this.onDataLoaded.subscribe((e, args) => {
+      for (let i = args.from; i <= args.to; i++) {
+        this.grid.invalidateRow(i)
+      }
+
+      this.grid.updateRowCount()
+      this.grid.render()
+
+      if (this.loadingIndicator) {
+        this.loadingIndicator.fadeOut()
+      }
+    })
+    this.ptm.refresh()
+      .then(dataView => this.loadInitialImage(dataView))
+      .catch(err => console.error('loadInitialImage: async error: ', err, err.stack))
   }
 
   componentWillReceiveProps (props: any) {
@@ -35,7 +276,7 @@ export default class Grid extends React.Component {
     if (!(_.isEqual(prevPivots, pivots))) {
       console.log('new pivots, pivoting...')
       this.ptm.setPivots(pivots)
-//      this.sgv.refreshFromModel()
+      this.refreshFromModel()
     }
   }
 
