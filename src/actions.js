@@ -7,16 +7,14 @@ const {constVal} = reltab
 
 export const createAppState = (rtc: reltab.Connection,
   title: string, baseQuery: reltab.QueryExp): Promise<AppState> => {
-  // add a count column:
-  baseQuery = baseQuery.extend('Rec', { type: 'integer' }, 1)
-  // obtain schema for base query:
+  // add a count column and do the usual SQL where 1=0 trick:
+  const schemaQuery = baseQuery
+    .extend('Rec', { type: 'integer' }, 1)
+    .filter(reltab.and().eq(constVal(1), constVal(0)))
 
-  // For now we'll do the usual SQL where 1=0 trick:
-  const schemaQuery = baseQuery.filter(reltab.and().eq(constVal(1), constVal(0)))
-
-  const basep = rtc.evalQuery(schemaQuery)
-  return basep.then(baseRes => {
-    const baseSchema = baseRes.schema
+  const schemap = rtc.evalQuery(schemaQuery)
+  return schemap.then(schemaRes => {
+    const baseSchema = schemaRes.schema
 
     // start off with all columns displayed:
     const displayColumns = baseSchema.columns.slice()

@@ -2,41 +2,42 @@
 .sidebar {
   background-color: #efefef;
   display: inherit;
-  width: 50px;
-  min-width: 50px;
+  // width: 50px;
+  // min-width: 50px;
+  width: 40px;
+  min-width: 40px;
   transition-duration: 0.3s;
   overflow: none;
 }
-/*
-.sidebar-collapsed {
-  width: 50px;
-  min-width: 50px;
-}
-*/
 
-.sidebar:hover {
-  width: 350px;
-  min-width: 350px;
+.sidebar-expanded {
+  width: 320px;
+  min-width: 320px;
 }
 
 .sidebar-content {
   position: absolute;
   left: 0;
   top: 0;
-  margin-left: 16px;
+  margin-left: 8px;
   margin-top: 8px;
   overflow: hidden;
   visibility:hidden;
 }
 
-.sidebar:hover .sidebar-placeholder {
+.sidebar-placeholder {
   position: absolute;
   left: 0;
   top: 0;
-  visibility:hidden;
+  margin-left: 8px;
+  margin-top: 8px;
 }
 
-.sidebar:hover .sidebar-content {
+.sidebar-expanded > .sidebar-placeholder {
+  visibility: hidden;
+}
+
+.sidebar-expanded > .sidebar-content {
   visibility:visible;
 }
 

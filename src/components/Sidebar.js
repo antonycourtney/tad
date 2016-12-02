@@ -5,18 +5,38 @@ import * as actions from '../actions'
 import ColumnSelector from './ColumnSelector'
 
 export default class Sidebar extends React.Component {
+  state: any
+
+  constructor (props: any) {
+    super(props)
+    this.state = {expanded: false}
+  }
+
+  onExpandClick () {
+    this.setState({expanded: !this.state.expanded})
+  }
+
   render () {
     const appState = this.props.appState
     const refUpdater = this.props.stateRefUpdater
+    const expandClass = this.state.expanded ? 'sidebar-expanded' : 'sidebar-collapsed'
     return (
-      <div className='full-height sidebar sidebar-collapsed'>
+      <div className={'full-height sidebar ' + expandClass}>
         <div className='sidebar-placeholder'>
-          <div className='btn-lg'>
-            <span className='glyphicon glyphicon-menu-hamburger' aria-hidden='true' />
-          </div>
+          <button type='button'
+            className='btn btn-xs btn-default'
+            onClick={e => this.onExpandClick(e)} >
+            <span className='glyphicon glyphicon-cog' aria-hidden='true' />
+          </button>
         </div>
         <div className='sidebar-content'>
           <div>
+            <button type='button'
+              className='btn btn-xs btn-default'
+              onClick={e => this.onExpandClick(e)} >
+              <span className='glyphicon glyphicon-chevron-left' aria-hidden='true' />
+            </button>
+
             <h5>General:</h5>
             <input
               type='checkbox'

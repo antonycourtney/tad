@@ -9,15 +9,7 @@ import { Slick } from 'slickgrid-es6'
 
 const container = '#epGrid' // for now
 
-/*
 const options = {
-  editable: false,
-  enableAddRow: false,
-  enableCellNavigation: false
-}
-*/
-
-var _defaults = {
   groupCssClass: 'slick-group',
   groupTitleCssClass: 'slick-group-title',
   totalsCssClass: 'slick-group-totals',
@@ -29,9 +21,6 @@ var _defaults = {
   enableExpandCollapse: true,
   groupFormatter: defaultGroupCellFormatter
 }
-
-// options = $.extend(true, {}, _defaults, options)
-const options = _defaults // for now
 
 function defaultGroupCellFormatter (row, cell, value, columnDef, item) {
   if (!options.enableExpandCollapse) {
@@ -65,7 +54,7 @@ const getColWidth = (dataView: Object, cnm: string) => {
     var cellVal = row[ cnm ]
     var cellWidth = MINCOLWIDTH
     if (cellVal) {
-      cellWidth = 8 + (6 * cellVal.toString().length) // TODO: measure!
+      cellWidth = 8 + (5.5 * cellVal.toString().length) // TODO: measure!
     }
     colWidth = Math.min(MAXCOLWIDTH,
       Math.max(colWidth || MINCOLWIDTH, cellWidth))
@@ -158,6 +147,10 @@ export default class Grid extends React.Component {
     this.ptm.openPath([])
   }
 
+  isPivoted () {
+    return (this.props.appState.vpivots.length > 0)
+  }
+
   ensureData (from: number, to: number) {
     // TODO: Should probably check for initial image not yet loaded
     // onDataLoading.notify({from: from, to: to})
@@ -181,11 +174,22 @@ export default class Grid extends React.Component {
     this.refreshFromModel()
   }
 
+  // Get grid columns based on current column visibility settings:
+  getGridCols (dataView: ?Object = null) {
+    let gridCols = this.gridColumnInfo.gridCols.slice()
+    if (this.isPivoted()) {
+      if (dataView !== null) {
+        const pivotColWidth = getColWidth(dataView, '_pivot')
+        gridCols[0].width = pivotColWidth
+      }
+    } else {
+      gridCols.shift()
+    }
+    return gridCols
+  }
+
   refreshGrid (dataView: any) {
-    const gridCols = this.grid.getColumns()
-    const pivotColWidth = getColWidth(dataView, '_pivot')
-    gridCols[0].width = pivotColWidth
-    this.grid.setColumns(gridCols)
+    this.grid.setColumns(this.getGridCols(dataView))
 
     this.grid.invalidateAllRows() // TODO: optimize
     this.grid.updateRowCount()
@@ -238,7 +242,6 @@ export default class Grid extends React.Component {
     this.registerLoadHandlers(this.grid)
 
     $(window).resize(() => {
-      var w = $(container).width()
       this.grid.resizeCanvas()
     })
 
@@ -254,7 +257,7 @@ export default class Grid extends React.Component {
     var colWidths = getInitialColWidths(dataView)
     this.gridColumnInfo = mkGridCols(dataView.schema, colWidths, showHiddenColumns)
 
-    this.createGrid(this.gridColumnInfo.gridCols, dataView)
+    this.createGrid(this.getGridCols(), dataView)
     // console.log( "loadInitialImage: setting container width to: ", gridColumnInfo.gridWidth )
     // $(container).css('width', gridColumnInfo.gridWidth + 'px')
     this.grid.resizeCanvas()
