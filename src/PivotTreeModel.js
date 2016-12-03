@@ -117,7 +117,6 @@ export default class PivotTreeModel {
   }
 
   loadDataView (tableData: reltab.TableRep) {
-    console.log('loadDataView: ', tableData)
     var nPivots = this.pivots.length
     var rowData = []
     var parentIdStack = []
@@ -160,8 +159,6 @@ export default class PivotTreeModel {
      * we actually propagate a true cancellation through RelTab so that it can actually send a cancellation
      * if there is a remote server / thread doing the work.
      */
-    console.log('in PivotTreeModel.refresh, ptm: ', this)
-
     if (this.needPivot) {
       this.vpivotPromise = aggtree.vpivot(this.rt, this.baseQuery, this.pivots, this.showRoot)
       this.needPivot = false

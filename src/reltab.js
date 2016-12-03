@@ -389,7 +389,7 @@ const extendGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   const [colId, columnMetadata] = query.valArgs
   const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
 
-  return inSchema.extend(colId,columnMetadata)
+  return inSchema.extend(colId, columnMetadata)
 }
 
 const getSchemaMap : GetSchemaMap = {
