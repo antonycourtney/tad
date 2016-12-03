@@ -174,7 +174,6 @@ export default class Grid extends React.Component {
     this.refreshFromModel()
   }
 
-
   // Get grid columns based on current column visibility settings:
   getGridCols (dataView: ?Object = null) {
     const displayCols = this.props.appState.displayColumns
@@ -290,28 +289,36 @@ export default class Grid extends React.Component {
       .catch(err => console.error('loadInitialImage: async error: ', err, err.stack))
   }
 
-  componentWillReceiveProps (props: any) {
+  shouldComponentUpdate (nextProps: any, nextState: any) {
     const prevPivots = this.ptm.getPivots()
-    const pivots = props.appState.vpivots
+    const newPivots = nextProps.appState.vpivots
 
-    if (!(_.isEqual(prevPivots, pivots))) {
-      this.ptm.setPivots(pivots)
-      this.refreshFromModel()
+    if (!(_.isEqual(prevPivots, newPivots))) {
+      return true
     }
 
-    if (this.props.appState.showRoot !== props.appState.showRoot) {
-      this.ptm.setShowRoot(props.appState.showRoot)
-      this.refreshFromModel()
+    if (this.props.appState.showRoot !== nextProps.appState.showRoot) {
+      return true
     }
-  }
 
-  shouldComponentUpdate () {
-    return false // slickgrid will handle it
+    if (!(_.isEqual(this.props.appState.displayColumns,
+                    nextProps.appState.displayColumns))) {
+      console.log('detected change in shown columns')
+      return true
+    }
+    return false
   }
 
   render () {
     return (
       <div id='epGrid' className='slickgrid-container full-height' />
     )
+  }
+
+  componentDidUpdate (prevProps: any, prevState: any) {
+    const appState = this.props.appState
+    this.ptm.setPivots(appState.vpivots)
+    this.ptm.setShowRoot(appState.showRoot)
+    this.refreshFromModel()
   }
  }
