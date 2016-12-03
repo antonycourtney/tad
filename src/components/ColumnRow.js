@@ -10,7 +10,7 @@ const colItemSource = {
     console.log('beginDrag: ', props)
     return {
       columnListType: props.columnListType,
-      columnId: props.columnId,
+      rowData: props.rowData,
       stateRefUpdater: props.stateRefUpdater
     }
   }

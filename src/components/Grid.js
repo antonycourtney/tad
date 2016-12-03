@@ -21,7 +21,8 @@ const options = {
   toggleExpandedCssClass: 'expanded',
   toggleCollapsedCssClass: 'collapsed',
   enableExpandCollapse: true,
-  groupFormatter: defaultGroupCellFormatter
+  groupFormatter: defaultGroupCellFormatter,
+  enableColumnReorder: false
   // Not yet:
   // multiColumnSort: true
 }

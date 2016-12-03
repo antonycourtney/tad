@@ -2,6 +2,7 @@
 
 import AppState from './AppState'
 import * as reltab from './reltab'
+import * as constants from './components/constants'
 
 const {constVal} = reltab
 
@@ -46,20 +47,28 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
     console.log('mismatched column list types, ignoring...')
     return
   }
+  // TODO: fix to deal with sort key column list:
+  if (dstProps.columnListType === constants.ColumnListType.SORT) {
+    console.error('drag and drop of sort key not supported')
+    return
+  }
   const fieldKey = dstProps.columnListType
   dstProps.stateRefUpdater(appState => {
     let colList = appState.get(fieldKey).slice()
-    const srcIndex = colList.indexOf(srcProps.columnId)
+    // TODO: FIX when we add sort key support:
+    const srcColumnId = srcProps.rowData
+    const srcIndex = colList.indexOf(srcColumnId)
     if (srcIndex === -1) {
       return appState
     }
     // remove source from its current position:
     colList.splice(srcIndex, 1)
-    const dstIndex = colList.indexOf(dstProps.columnId)
+    const dstColumnId = dstProps.rowData
+    const dstIndex = colList.indexOf(dstColumnId)
     if (dstIndex === -1) {
       return appState
     }
-    colList.splice(dstIndex, 0, srcProps.columnId)
+    colList.splice(dstIndex, 0, srcColumnId)
     return appState.set(fieldKey, colList)
   })
 }

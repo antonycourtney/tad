@@ -67,7 +67,6 @@ export default class AppState extends Immutable.Record({
     if (nextArr.length > 1) {
       nextArr.shift()
     }
-    console.log('toggleSort: setting sortKey to: ', nextArr)
     return this.set('sortKey', nextArr)
   }
 }
