@@ -154,7 +154,9 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
       .on('end', () => {
         const columnIds = colIdInfo.map(p => p[0])
         const columnNames = colIdInfo.map(p => p[1])
-        resolve({columnIds, columnNames, columnTypes: colTypes, rowCount, tableName, csvOptions})
+        // default any remaining null column types to text:
+        const columnTypes = colTypes.map(ct => (ct == null) ? 'text' : ct)
+        resolve({columnIds, columnNames, columnTypes, rowCount, tableName, csvOptions})
       })
   })
 }

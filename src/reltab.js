@@ -790,7 +790,14 @@ function assertDefined<A> (x: ?A): A {
 export const mkTableInfo = (md: FileMetadata): TableInfo => {
   const extendCMap = (cmm: ColumnMetaMap,
         cnm: string, idx: number): ColumnMetaMap => {
-    const cmd = { displayName: md.columnNames[idx], type: assertDefined(md.columnTypes[idx]) }
+    const cType = md.columnTypes[idx]
+    if (cType == null) {
+      console.error('mkTableInfo: No column type for "' + cnm + '", index: ' + idx)
+    }
+    const cmd = {
+      displayName: md.columnNames[idx],
+      type: assertDefined(cType)
+    }
     cmm[cnm] = cmd
     return cmm
   }
