@@ -27,7 +27,7 @@ export default class AppState extends Immutable.Record({
   vpivots: Array<string>  // array of columns to pivot
   sortKey: Array<[string, boolean]>
 
-  // toggle element membership in array this[propName]:
+  // toggle element membership in array:
   toggleArrElem (propName: string, cid: string): AppState {
     const arr = this.get(propName)
     const idx = arr.indexOf(cid)
@@ -52,6 +52,22 @@ export default class AppState extends Immutable.Record({
   }
 
   toggleSort (cid: string): AppState {
-    return this.toggleArrElem('sortKey', cid)
+    const arr = this.get('sortKey')
+    const idx = arr.findIndex(entry => entry[0] === cid)
+    let nextArr
+    if (idx === -1) {
+      // not shown, so add it:
+      nextArr = arr.concat([[cid, true]])
+    } else {
+      // otherwise remove it:
+      nextArr = arr.slice()
+      nextArr.splice(idx, 1)
+    }
+    // For now, while we don't support compound sort key:
+    if (nextArr.length > 1) {
+      nextArr.shift()
+    }
+    console.log('toggleSort: setting sortKey to: ', nextArr)
+    return this.set('sortKey', nextArr)
   }
 }

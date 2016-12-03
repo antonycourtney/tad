@@ -10,7 +10,7 @@ export default class ColumnSelector extends React.Component {
     const displayName = schema.displayName(cid)
     const isShown = appState.displayColumns.includes(cid)
     const isPivot = appState.vpivots.includes(cid)
-    const isSort = appState.sortKey.includes(cid)
+    const isSort = (appState.sortKey.findIndex(entry => entry[0] === cid) !== -1)
     const refUpdater = this.props.stateRefUpdater
     return (
       <tr key={cid}>

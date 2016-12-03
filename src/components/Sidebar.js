@@ -6,6 +6,16 @@ import ColumnSelector from './ColumnSelector'
 import ColumnList from './ColumnList'
 import { ColumnListType } from './constants'
 
+const sortKeyRowFormatter = (appState, row: [string, boolean]) => {
+  const [cid, asc] = row
+  const displayName = appState.baseSchema.displayName(cid)
+  const ascStr = asc ? 'asc' : 'desc'
+  return ([
+    <td key={cid} className='col-colName'>{displayName}</td>,
+    <td key={'sortDir-' + cid}>{ascStr}</td>
+  ])
+}
+
 export default class Sidebar extends React.Component {
   state: any
 
@@ -52,21 +62,23 @@ export default class Sidebar extends React.Component {
             <ColumnList
               columnListType={ColumnListType.PIVOT}
               appState={this.props.appState}
-              columns={this.props.appState.vpivots}
+              items={this.props.appState.vpivots}
               stateRefUpdater={this.props.stateRefUpdater} />
             <br />
             <h5>Display Order <small>(drag to reorder)</small></h5>
             <ColumnList
               columnListType={ColumnListType.DISPLAY}
               appState={this.props.appState}
-              columns={this.props.appState.displayColumns}
+              items={this.props.appState.displayColumns}
               stateRefUpdater={this.props.stateRefUpdater} />
             <br />
             <h5>Sort Order <small>(drag to reorder)</small></h5>
             <ColumnList
               columnListType={ColumnListType.SORT}
               appState={this.props.appState}
-              columns={this.props.appState.sortKey}
+              headerLabels={['Sort Dir']}
+              items={this.props.appState.sortKey}
+              rowFormatter={sortKeyRowFormatter}
               stateRefUpdater={this.props.stateRefUpdater} />
           </div>
         </div>

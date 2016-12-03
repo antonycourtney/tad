@@ -7,6 +7,7 @@ import $ from 'jquery'
 import * as _ from 'lodash'
 import { Slick } from 'slickgrid-es6'
 import * as reltab from '../reltab'
+import * as actions from '../actions'
 
 const container = '#epGrid' // for now
 
@@ -21,6 +22,8 @@ const options = {
   toggleCollapsedCssClass: 'collapsed',
   enableExpandCollapse: true,
   groupFormatter: defaultGroupCellFormatter
+  // Not yet:
+  // multiColumnSort: true
 }
 
 const INDENT_PER_LEVEL = 15 // pixels
@@ -152,6 +155,7 @@ export default class Grid extends React.Component {
   }
 
   ensureData (from: number, to: number) {
+    // console.log('ensureData: ', from, to)
     // TODO: Should probably check for initial image not yet loaded
     // onDataLoading.notify({from: from, to: to})
     this.onDataLoaded.notify({from: from, to: to})
@@ -232,10 +236,14 @@ export default class Grid extends React.Component {
     })
 
     this.grid.onSort.subscribe((e, args) => {
+      actions.setSortColumn(args.sortCol.field, args.sortAsc,
+        this.props.stateRefUpdater)
+      /*
       this.grid.setSortColumn(args.sortCol.field, args.sortAsc)
       this.ptm.setSort(args.sortCol.field, args.sortAsc ? 1 : -1)
       const vp = this.grid.getViewport()
       this.ensureData(vp.top, vp.bottom)
+      */
     })
 
     this.grid.onClick.subscribe((e, args) => this.onGridClick(e, args))
@@ -303,9 +311,13 @@ export default class Grid extends React.Component {
 
     if (!(_.isEqual(this.props.appState.displayColumns,
                     nextProps.appState.displayColumns))) {
-      console.log('detected change in shown columns')
       return true
     }
+    if (!(_.isEqual(this.props.appState.sortKey,
+                    nextProps.appState.sortKey))) {
+      return true
+    }
+
     return false
   }
 
@@ -319,6 +331,12 @@ export default class Grid extends React.Component {
     const appState = this.props.appState
     this.ptm.setPivots(appState.vpivots)
     this.ptm.setShowRoot(appState.showRoot)
+    const sortKey = appState.sortKey
+    if (sortKey.length > 0) {
+      const [sortCol, sortColAsc] = sortKey[0]
+      this.ptm.setSort(sortCol, sortColAsc ? 1 : -1)
+      this.grid.setSortColumn(sortCol, sortColAsc)
+    }
     this.refreshFromModel()
   }
  }

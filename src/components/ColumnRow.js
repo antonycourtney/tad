@@ -49,13 +49,19 @@ class ColumnRow extends React.Component {
     const {connectDragSource, connectDropTarget, isOver} = this.props
     const dragHoverClass = isOver ? '' : '' // TODO
     const appState = this.props.appState
-    const schema = appState.baseSchema
-    const columnId = this.props.columnId
-    const displayName = schema.displayName(columnId)
-    // const refUpdater = this.props.stateRefUpdater
+
+    let rowFmt
+    if (this.props.rowFormatter) {
+      rowFmt = this.props.rowFormatter(appState, this.props.rowData)
+    } else {
+      const schema = appState.baseSchema
+      const columnId = this.props.rowData
+      const displayName = schema.displayName(columnId)
+      rowFmt = (<td className='col-colName'>{displayName}</td>)
+    }
     return connectDropTarget(connectDragSource(
       <tr className={dragHoverClass}>
-        <td className='col-colName'>{displayName}</td>
+        {rowFmt}
       </tr>
     ))
   }
