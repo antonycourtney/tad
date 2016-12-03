@@ -125,8 +125,8 @@ export default class PivotTreeModel {
       var rowMap = tableData.schema.rowMapFromRow(tableData.rowData[ i ])
       var path = aggtree.decodePath(rowMap._path)
       var depth = rowMap._depth
-      rowMap.isOpen = this.pathIsOpen(path)
-      rowMap.isLeaf = depth > nPivots
+      rowMap._isOpen = this.pathIsOpen(path)
+      rowMap._isLeaf = depth > nPivots
       rowMap._id = i
       parentIdStack[ depth ] = i
       var parentId = (depth > 0) ? parentIdStack[ depth - 1 ] : null
@@ -135,7 +135,14 @@ export default class PivotTreeModel {
     }
 
     this.dataView.setItems(rowData)
-    this.dataView.schema = tableData.schema
+
+    const outSchema = tableData.schema
+      .extend('_id', {type: 'integer', displayName: '_id'})
+      .extend('_parentId', {type: 'integer', displayName: '_parentId'})
+      .extend('_isOpen', {type: 'integer', displayName: '_isOpen'})
+      .extend('_isLeaf', {type: 'integer', displayName: '_isLeaf'})
+
+    this.dataView.schema = outSchema
 
     return this.dataView
   }

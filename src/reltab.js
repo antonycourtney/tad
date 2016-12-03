@@ -389,13 +389,7 @@ const extendGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   const [colId, columnMetadata] = query.valArgs
   const inSchema: Schema = query.tableArgs[0].getSchema(tableMap)
 
-  var outCols = inSchema.columns.concat([colId])
-  let cMap = {}
-  cMap[colId] = columnMetadata
-  var outMetadata = _.extend(cMap, inSchema.columnMetadata)
-  var outSchema = new Schema(outCols, outMetadata)
-
-  return outSchema
+  return inSchema.extend(colId,columnMetadata)
 }
 
 const getSchemaMap : GetSchemaMap = {
@@ -751,6 +745,17 @@ export class Schema {
     }
 
     return rowMap
+  }
+
+  // calculate extension of this schema (as in extend query):
+  extend (colId: string, columnMetadata: ColumnMetadata): Schema {
+    var outCols = this.columns.concat([colId])
+    let cMap = {}
+    cMap[colId] = columnMetadata
+    var outMetadata = _.extend(cMap, this.columnMetadata)
+    var outSchema = new Schema(outCols, outMetadata)
+
+    return outSchema
   }
 }
 /*

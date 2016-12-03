@@ -6,6 +6,7 @@ import * as aggtree from '../aggtree'
 import $ from 'jquery'
 import * as _ from 'lodash'
 import { Slick } from 'slickgrid-es6'
+import * as reltab from '../reltab'
 
 const container = '#epGrid' // for now
 
@@ -22,17 +23,21 @@ const options = {
   groupFormatter: defaultGroupCellFormatter
 }
 
+const INDENT_PER_LEVEL = 15 // pixels
+
+const calcIndent = (depth: number): number => (INDENT_PER_LEVEL * depth)
+
 function defaultGroupCellFormatter (row, cell, value, columnDef, item) {
   if (!options.enableExpandCollapse) {
     return item._pivot
   }
 
-  var indentation = item._depth * 15 + 'px'
+  var indentation = calcIndent(item._depth) + 'px'
 
   var pivotStr = item._pivot || ''
 
   var ret = "<span class='" + options.toggleCssClass + ' ' +
-    ((!item.isLeaf) ? (item.isOpen ? options.toggleExpandedCssClass : options.toggleCollapsedCssClass) : '') +
+    ((!item._isLeaf) ? (item._isOpen ? options.toggleExpandedCssClass : options.toggleCollapsedCssClass) : '') +
     "' style='margin-left:" + indentation + "'>" +
     '</span>' +
     "<span class='" + options.groupTitleCssClass + "' level='" + item._depth + "'>" +
@@ -45,6 +50,9 @@ function defaultGroupCellFormatter (row, cell, value, columnDef, item) {
 const MINCOLWIDTH = 80
 const MAXCOLWIDTH = 300
 
+// TODO: use real font metrics:
+const measureStringWidth = (s: string): number => 8 + (5.5 * s.length)
+
 // get column width for specific column:
 const getColWidth = (dataView: Object, cnm: string) => {
   let colWidth
@@ -54,15 +62,23 @@ const getColWidth = (dataView: Object, cnm: string) => {
     var cellVal = row[ cnm ]
     var cellWidth = MINCOLWIDTH
     if (cellVal) {
-      cellWidth = 8 + (5.5 * cellVal.toString().length) // TODO: measure!
+      cellWidth = measureStringWidth(cellVal.toString())
+    }
+    if (cnm === '_pivot') {
+      cellWidth += calcIndent(row._depth + 2)
     }
     colWidth = Math.min(MAXCOLWIDTH,
       Math.max(colWidth || MINCOLWIDTH, cellWidth))
   }
+  const headerStrWidth = measureStringWidth(dataView.schema.displayName(cnm))
+  colWidth = Math.min(MAXCOLWIDTH,
+    Math.max(colWidth || MINCOLWIDTH, headerStrWidth))
   return colWidth
 }
 
-function getInitialColWidths (dataView: Object): {[cid: string]: number} {
+type ColWidthMap = {[cid: string]: number}
+
+function getInitialColWidthsMap (dataView: Object): ColWidthMap {
   // let's approximate the column width:
   var colWidths = {}
   var nRows = dataView.getLength()
@@ -77,25 +93,19 @@ function getInitialColWidths (dataView: Object): {[cid: string]: number} {
   return colWidths
 }
 
-// construct SlickGrid column info from RelTab schema:
-function mkGridCols (schema, colWidths, showHiddenColumns) {
-  var gridWidth = 0 // initial padding amount
-  var GRIDWIDTHPAD = 16
+/*
+ * Construct map of SlickGrid column descriptors from base schema
+ * and column width info
+ *
+ * Map should contain entries for all column ids
+ */
+const mkSlickColMap = (schema: reltab.Schema, colWidths: ColWidthMap) => {
+  let slickColMap = {}
 
-  var gridCols = []
-  if (showHiddenColumns) {
-    gridCols.push({ id: '_id', field: '_id', name: '_id' })
-    gridCols.push({ id: '_parentId', field: '_parentId', name: '_parentId' })
-  }
-  for (var i = 0; i < schema.columns.length; i++) {
-    var colId = schema.columns[ i ]
-    if (!showHiddenColumns) {
-      if (colId[0] === '_') {
-        if (colId !== '_pivot') {
-          continue
-        }
-      }
-    }
+  // hidden columns:
+  slickColMap['_id'] = { id: '_id', field: '_id', name: '_id' }
+  slickColMap['_parentId'] = { id: '_parentId', field: '_parentId', name: '_parentId' }
+  for (let colId of schema.columns) {
     let cmd = schema.columnMetadata[ colId ]
     let ci: any = { id: colId, field: colId, cssClass: '', name: '', formatter: null }
     if (colId === '_pivot') {
@@ -108,21 +118,10 @@ function mkGridCols (schema, colWidths, showHiddenColumns) {
       ci.toolTip = displayName
       ci.sortable = true
     }
-    var colWidth = colWidths[ ci.field ]
-    if (i === schema.columns.length - 1) {
-      // pad out last column to allow for dynamic scrollbar
-      colWidth += GRIDWIDTHPAD
-    }
-    // console.log( "column ", i, "id: ", ci.id, ", name: '", ci.name, "', width: ", colWidth )
-    ci.width = colWidth
-    gridWidth += colWidth
-
-    gridCols.push(ci)
+    ci.width = colWidths[ colId ]
+    slickColMap[ colId ] = ci
   }
-
-  var columnInfo = { gridCols: gridCols, contentColWidths: colWidths, gridWidth: gridWidth }
-
-  return columnInfo
+  return slickColMap
 }
 
 /**
@@ -135,7 +134,8 @@ export default class Grid extends React.Component {
   onDataLoading: Object
   onDataLoaded: Object
   grid: Object
-  gridColumnInfo: Object
+  colWidthsMap: ColWidthMap
+  slickColMap: Object
   loadingIndicator: any
 
   constructor (props: any) {
@@ -161,11 +161,11 @@ export default class Grid extends React.Component {
     console.log('onGridClick: ', e, args)
     var item = this.grid.getDataItem(args.row)
     console.log('data item: ', item)
-    if (item.isLeaf) {
+    if (item._isLeaf) {
       return
     }
     var path = aggtree.decodePath(item._path)
-    if (item.isOpen) {
+    if (item._isOpen) {
       this.ptm.closePath(path)
     } else {
       this.ptm.openPath(path)
@@ -174,16 +174,18 @@ export default class Grid extends React.Component {
     this.refreshFromModel()
   }
 
+
   // Get grid columns based on current column visibility settings:
   getGridCols (dataView: ?Object = null) {
-    let gridCols = this.gridColumnInfo.gridCols.slice()
+    const displayCols = this.props.appState.displayColumns
+
+    // TODO: For debugging could optionally append hidden column ids: _path, _pivot, etc.
+
+    let gridCols = displayCols.map(cid => this.slickColMap[cid])
     if (this.isPivoted()) {
-      if (dataView !== null) {
-        const pivotColWidth = getColWidth(dataView, '_pivot')
-        gridCols[0].width = pivotColWidth
-      }
-    } else {
-      gridCols.shift()
+      this.updateColWidth(dataView, '_pivot')
+      let pivotCol = this.slickColMap['_pivot']
+      gridCols.unshift(pivotCol)
     }
     return gridCols
   }
@@ -249,14 +251,17 @@ export default class Grid extends React.Component {
     this.grid.onViewportChanged.notify()
   }
 
+  updateColWidth (dataView: any, colId: string) {
+    const colWidth = getColWidth(dataView, colId)
+    this.colWidthsMap[ colId ] = colWidth
+    this.slickColMap[ colId ].width = colWidth
+  }
+
   loadInitialImage (dataView: any) {
     console.log('loadInitialImage: ', dataView)
 
-    var showHiddenColumns = false // Useful for debugging.  TODO: make configurable!
-
-    var colWidths = getInitialColWidths(dataView)
-    this.gridColumnInfo = mkGridCols(dataView.schema, colWidths, showHiddenColumns)
-
+    this.colWidthsMap = getInitialColWidthsMap(dataView)
+    this.slickColMap = mkSlickColMap(dataView.schema, this.colWidthsMap)
     this.createGrid(this.getGridCols(), dataView)
     // console.log( "loadInitialImage: setting container width to: ", gridColumnInfo.gridWidth )
     // $(container).css('width', gridColumnInfo.gridWidth + 'px')
