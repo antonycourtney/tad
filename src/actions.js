@@ -40,3 +40,26 @@ export const toggleSort = (cid: string, updater: RefUpdater): void => {
 export const toggleShowRoot = (updater: RefUpdater): void => {
   updater(appState => appState.set('showRoot', !(appState.showRoot)))
 }
+
+export const reorderColumnList = (dstProps: any, srcProps: any) => {
+  if (dstProps.columnListType !== srcProps.columnListType) {
+    console.log('mismatched column list types, ignoring...')
+    return
+  }
+  const fieldKey = dstProps.columnListType
+  dstProps.stateRefUpdater(appState => {
+    let colList = appState.get(fieldKey).slice()
+    const srcIndex = colList.indexOf(srcProps.columnId)
+    if (srcIndex === -1) {
+      return appState
+    }
+    // remove source from its current position:
+    colList.splice(srcIndex, 1)
+    const dstIndex = colList.indexOf(dstProps.columnId)
+    if (dstIndex === -1) {
+      return appState
+    }
+    colList.splice(dstIndex, 0, srcProps.columnId)
+    return appState.set(fieldKey, colList)
+  })
+}

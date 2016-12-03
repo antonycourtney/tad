@@ -4,6 +4,7 @@ import * as React from 'react'
 import * as actions from '../actions'
 import ColumnSelector from './ColumnSelector'
 import ColumnList from './ColumnList'
+import { ColumnListType } from './constants'
 
 export default class Sidebar extends React.Component {
   state: any
@@ -37,25 +38,34 @@ export default class Sidebar extends React.Component {
               onClick={e => this.onExpandClick(e)} >
               <span className='glyphicon glyphicon-chevron-left' aria-hidden='true' />
             </button>
-            <h5>General:</h5>
+            <h5>General</h5>
             <input
               type='checkbox'
               title='Show Root Row'
               onChange={() => actions.toggleShowRoot(refUpdater)}
               checked={appState.showRoot} />
             <label className='show-root-label'>Show Global Totals as First Row</label>
-            <h5>Columns:</h5>
+            <h5>Columns</h5>
             <ColumnSelector appState={this.props.appState} stateRefUpdater={this.props.stateRefUpdater} />
-            <h5>Pivots:</h5>
-            <ColumnList appState={this.props.appState}
+            <br />
+            <h5>Pivots <small>(drag to reorder)</small></h5>
+            <ColumnList
+              columnListType={ColumnListType.PIVOT}
+              appState={this.props.appState}
               columns={this.props.appState.vpivots}
               stateRefUpdater={this.props.stateRefUpdater} />
-            <h5>Display Order:</h5>
-            <ColumnList appState={this.props.appState}
+            <br />
+            <h5>Display Order <small>(drag to reorder)</small></h5>
+            <ColumnList
+              columnListType={ColumnListType.DISPLAY}
+              appState={this.props.appState}
               columns={this.props.appState.displayColumns}
               stateRefUpdater={this.props.stateRefUpdater} />
-            <h5>Sort Order:</h5>
-            <ColumnList appState={this.props.appState}
+            <br />
+            <h5>Sort Order <small>(drag to reorder)</small></h5>
+            <ColumnList
+              columnListType={ColumnListType.SORT}
+              appState={this.props.appState}
               columns={this.props.appState.sortKey}
               stateRefUpdater={this.props.stateRefUpdater} />
           </div>

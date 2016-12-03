@@ -20,6 +20,8 @@
     "lodash": "^4.17.2",
     "oneref": "^0.2.1",
     "react": "^15.4.1",
+    "react-dnd": "^2.1.4",
+    "react-dnd-html5-backend": "^2.1.2",
     "react-dom": "^15.4.1",
     "slickgrid-es6": "^0.4.2",
     "sqlite": "^2.2.3",

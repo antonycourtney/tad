@@ -1,20 +1,19 @@
 /* @flow */
 
 import * as React from 'react'
-
+import ColumnRow from './ColumnRow'
 /*
  * A simple ordered list of columns.  Supports re-ordering
  */
 export default class ColumnList extends React.Component {
   renderColumnRow (cid: string) {
-    const appState = this.props.appState
-    const schema = appState.baseSchema
-    const displayName = schema.displayName(cid)
-    // const refUpdater = this.props.stateRefUpdater
     return (
-      <tr key={cid}>
-        <td className='col-colName'>{displayName}</td>
-      </tr>
+      <ColumnRow
+        key={cid}
+        columnListType={this.props.columnListType}
+        appState={this.props.appState}
+        stateRefUpdater={this.props.stateRefUpdater}
+        columnId={cid} />
     )
   }
 
