@@ -18,7 +18,7 @@ require('console.table')
 let mainWindow
 
 function createWindow () {
-  mainWindow = new BrowserWindow({width: 1150, height: 850})
+  mainWindow = new BrowserWindow({width: 1150, height: 910})
 
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'index.html'),

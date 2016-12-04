@@ -1,5 +1,13 @@
 /* @flow */
 
+/**
+ *
+ * NOTE: This is dead code, not used in production.
+ *
+ * Kept here so we can quickly do a basic sanity test of tooling
+ * setup without touching most of the app code
+ */
+
 import * as styles from '../less/easypivot.less'
 
 import * as reltab from './reltab' // eslint-disable-line
@@ -29,7 +37,7 @@ let grid
 const init = (id) => {
   grid = new Grid(id, data, columns, options)
 }
-console.log('Hello EasyPivot!')
+console.log('renderTestData - entry')
 init('#epGrid')
 console.log('slickgrid initialized')
 console.log('grid: ', grid)

@@ -47,7 +47,7 @@ function config() {
 var render = {
   target: "electron",
   entry: {
-    eprender: "./src/eprender.js"
+    renderMain: "./src/renderMain.js"
   }
 }
 

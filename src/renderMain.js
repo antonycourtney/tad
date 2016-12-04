@@ -1,6 +1,10 @@
 /* @flow */
 
-import * as styles from '../less/easypivot.less'  // eslint-disable-line
+/*
+ * main module for render process
+ */
+
+import * as styles from '../less/app.less'  // eslint-disable-line
 require('../less/sidebar.less')
 require('../less/columnSelector.less')
 require('../less/columnList.less')
@@ -17,7 +21,7 @@ import * as actions from './actions'
 
 const md: reltab.FileMetadata = require('electron').remote.getGlobal('md')
 
-console.log('Hello EasyPivot!')
+console.log('renderMain started')
 console.log('metadata: ', md)
 
 const tableName = md.tableName
@@ -35,15 +39,3 @@ actions.createAppState(rtc, md.tableName, baseQuery)
       document.getElementById('app')
     )
   })
-
-/*
-const baseQuery = reltab.tableQuery('bart-comp-all')
-  .project([ 'JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE' ])
-
-var ptm = new PivotTreeModel(rtc, baseQuery, [ 'Union', 'JobFamily', 'Title' ])
-ptm.openPath([])
-ptm.openPath(['Non-Represented', 'Audit'])
-ptm.openPath(['Non-Represented', 'Clerical'])
-ptm.openPath(['Non-Represented', 'Information Systems'])
-ptm.openPath(['Non-Represented', 'Information Systems', 'Manager of Information Systems'])
-*/
