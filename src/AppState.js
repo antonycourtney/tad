@@ -15,6 +15,7 @@ export default class AppState extends Immutable.Record({
   showRoot: false,
   displayColumns: [],
   vpivots: [],
+  pivotLeafColumn: null,
   sortKey: []
 }) {
   // duplicated here to allow us to write flow types:
@@ -25,6 +26,7 @@ export default class AppState extends Immutable.Record({
   showRoot: boolean
   displayColumns: Array<string> // array of column ids to display, in order
   vpivots: Array<string>  // array of columns to pivot
+  pivotLeafColumn: ?string
   sortKey: Array<[string, boolean]>
 
   // toggle element membership in array:

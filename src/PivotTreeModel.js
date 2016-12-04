@@ -28,9 +28,10 @@ export default class PivotTreeModel {
   rt: Connection
   baseQuery: reltab.QueryExp
   pivots: Array<string>
+  pivotLeafColumn: ?string
   showRoot: boolean
 
-  constructor (rt: Connection, baseQuery: reltab.QueryExp, pivots: Array<string>, showRoot: boolean) {
+  constructor (rt: Connection, baseQuery: reltab.QueryExp, pivots: Array<string>, pivotLeafColumn: ?string, showRoot: boolean) {
     this.openNodeMap = {}
     this.listeners = []
     this.treeQueryPromise = null
@@ -40,7 +41,13 @@ export default class PivotTreeModel {
     this.rt = rt
     this.baseQuery = baseQuery
     this.pivots = pivots
+    this.pivotLeafColumn = pivotLeafColumn
     this.showRoot = showRoot
+  }
+
+  setPivotLeafColumn (pivotLeafColumn: ?string): void {
+    this.pivotLeafColumn = pivotLeafColumn
+    this.needPivot = true
   }
 
   setPivots (inPivots: Array<string>): void {
@@ -160,7 +167,7 @@ export default class PivotTreeModel {
      * if there is a remote server / thread doing the work.
      */
     if (this.needPivot) {
-      this.vpivotPromise = aggtree.vpivot(this.rt, this.baseQuery, this.pivots, this.showRoot)
+      this.vpivotPromise = aggtree.vpivot(this.rt, this.baseQuery, this.pivots, this.pivotLeafColumn, this.showRoot)
       this.needPivot = false
     }
 

@@ -4,6 +4,8 @@ import * as styles from '../less/easypivot.less'  // eslint-disable-line
 require('../less/sidebar.less')
 require('../less/columnSelector.less')
 require('../less/columnList.less')
+require('../less/singleColumnSelect.less')
+
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import OneRef from 'oneref'

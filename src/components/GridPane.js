@@ -140,7 +140,7 @@ export default class GridPane extends React.Component {
     const appState = this.props.appState
 
     // This should probably live in this.state...
-    this.ptm = new PivotTreeModel(appState.rtc, appState.baseQuery, [], appState.showRoot)
+    this.ptm = new PivotTreeModel(appState.rtc, appState.baseQuery, [], null, appState.showRoot)
     this.ptm.openPath([])
   }
 
@@ -321,6 +321,10 @@ export default class GridPane extends React.Component {
       return true
     }
 
+    if (this.props.appState.pivotLeafColumn !== nextProps.pivotLeafColumn) {
+      return true
+    }
+
     return false
   }
 
@@ -334,6 +338,7 @@ export default class GridPane extends React.Component {
     const appState = this.props.appState
     this.ptm.setPivots(appState.vpivots)
     this.ptm.setShowRoot(appState.showRoot)
+    this.ptm.setPivotLeafColumn(appState.pivotLeafColumn)
     const sortKey = appState.sortKey
     if (sortKey.length > 0) {
       const [sortCol, sortColAsc] = sortKey[0]

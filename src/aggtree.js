@@ -50,17 +50,20 @@ export class VPivotTree {
   rt: reltab.Connection
   rtBaseQuery: reltab.QueryExp
   pivotColumns: Array<string>
+  pivotLeafColumn: ?string
   baseSchema: reltab.Schema
   outCols: Array<string>
   rootQuery: ?reltab.QueryExp
 
   constructor (rt: Connection, rtBaseQuery: reltab.QueryExp,
     pivotColumns: Array<string>,
+    pivotLeafColumn: ?string,
     baseSchema: reltab.Schema,
     outCols: Array<string>,
     rootQuery: ?reltab.QueryExp) {
     this.rt = rt
     this.pivotColumns = pivotColumns
+    this.pivotLeafColumn = pivotLeafColumn
     this.rtBaseQuery = rtBaseQuery
     this.baseSchema = baseSchema
     this.outCols = outCols
@@ -97,8 +100,9 @@ export class VPivotTree {
         .mapColumnsByIndex({ '0': pivotColumnInfo })
     } else {
       // leaf level
+      const leafExp = (this.pivotLeafColumn == null) ? "''" : 'CAST("' + this.pivotLeafColumn + '" as TEXT)'
       pathQuery = pathQuery
-        .extend('_pivot', { type: 'text' }, "''")
+        .extend('_pivot', { type: 'text' }, leafExp)
     }
 
     // add _depth and _path column and project to get get column order correct:
@@ -171,8 +175,12 @@ export class VPivotTree {
   }
 }
 
-export const vpivot = (rt: reltab.Connection, rtBaseQuery: reltab.QueryExp,
-pivotColumns: Array<string>, showRoot: boolean): Promise<VPivotTree> => {
+export const vpivot = (rt: reltab.Connection,
+    rtBaseQuery: reltab.QueryExp,
+    pivotColumns: Array<string>,
+    pivotLeafColumn: ?string,
+    showRoot: boolean,
+  ): Promise<VPivotTree> => {
   // add a count column:
   rtBaseQuery = rtBaseQuery.extend('Rec', { type: 'integer' }, 1)
   // obtain schema for base query:
@@ -202,6 +210,6 @@ pivotColumns: Array<string>, showRoot: boolean): Promise<VPivotTree> => {
         .project(outCols)
     }
 
-    return new VPivotTree(rt, rtBaseQuery, pivotColumns, baseSchema, outCols, rootQuery)
+    return new VPivotTree(rt, rtBaseQuery, pivotColumns, pivotLeafColumn, baseSchema, outCols, rootQuery)
   })
 }

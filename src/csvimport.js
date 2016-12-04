@@ -131,11 +131,12 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
     var colTypes: Array<string>
     let rowCount = 0
     // extract table name from file path:
-    const extName = path.extname(pathname).slice(1)
+    const extName = path.extname(pathname)
+    const extension = extName.slice(1)
     const tableName = path.basename(pathname, extName)
 
     let csvOptions = {}
-    if (extName === 'tsv') {
+    if (extension === 'tsv') {
       csvOptions.delimiter = '\t'
       console.log('tsv file -- using tab as delimiter')
     }

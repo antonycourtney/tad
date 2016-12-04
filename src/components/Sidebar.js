@@ -4,6 +4,7 @@ import * as React from 'react'
 import * as actions from '../actions'
 import ColumnSelector from './ColumnSelector'
 import ColumnList from './ColumnList'
+import SingleColumnSelect from './SingleColumnSelect'
 import { ColumnListType } from './constants'
 
 const sortKeyRowFormatter = (appState, row: [string, boolean]) => {
@@ -26,6 +27,14 @@ export default class Sidebar extends React.Component {
 
   onExpandClick () {
     this.setState({expanded: !this.state.expanded})
+  }
+
+  onLeafColumnSelect (event: Object) {
+    const selStr = event.target.value
+    const cid = (selStr === '__none') ? null : selStr
+    console.log('onLeafColumnSelect: ', cid)
+    const refUpdater = this.props.stateRefUpdater
+    refUpdater(appState => appState.set('pivotLeafColumn', cid))
   }
 
   render () {
@@ -64,6 +73,14 @@ export default class Sidebar extends React.Component {
               appState={this.props.appState}
               items={this.props.appState.vpivots}
               stateRefUpdater={this.props.stateRefUpdater} />
+            <SingleColumnSelect
+              appState={this.props.appState}
+              stateRefUpdater={this.props.stateRefUpdater}
+              label='Pivot Tree Leaf Level'
+              value={appState.pivotLeafColumn}
+              disabled={(this.props.appState.vpivots.length === 0)}
+              onChange={e => this.onLeafColumnSelect(e)}
+            />
             <br />
             <h5>Display Order <small>(drag to reorder)</small></h5>
             <ColumnList
