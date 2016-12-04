@@ -22,7 +22,6 @@ const options = {
   toggleCollapsedCssClass: 'collapsed',
   enableExpandCollapse: true,
   groupFormatter: defaultGroupCellFormatter
-  // enableColumnReorder: false
   // Not yet:
   // multiColumnSort: true
 }
@@ -132,7 +131,7 @@ const mkSlickColMap = (schema: reltab.Schema, colWidths: ColWidthMap) => {
  * React component wrapper around SlickGrid
  *
  */
-export default class Grid extends React.Component {
+export default class GridPane extends React.Component {
   sgv: Object
   ptm: PivotTreeModel
   onDataLoading: Object
@@ -195,8 +194,15 @@ export default class Grid extends React.Component {
   }
 
   refreshGrid (dataView: any) {
-    this.grid.setColumns(this.getGridCols(dataView))
-
+    const gridCols = this.getGridCols(dataView)
+    this.grid.setColumns(gridCols)
+    /*
+     * FrozenGrid doesn't seem to work
+     * perhaps it's based on an out-of-date base version of slickgrid?
+    let frozenColCount = (gridCols[0].field === '_pivot') ? 1 : 0
+    console.log('refreshGrid: fcc: ', frozenColCount)
+    this.grid.setOptions({frozenColumn: frozenColCount})
+    */
     this.grid.invalidateAllRows() // TODO: optimize
     this.grid.updateRowCount()
     this.grid.render()
@@ -230,6 +236,8 @@ export default class Grid extends React.Component {
   /* Create grid from the specified set of columns */
   createGrid (columns: any, data: any) {
     this.grid = new Slick.Grid(container, data, columns, options)
+
+    console.log('createGrid: ', this.grid)
 
     this.grid.onViewportChanged.subscribe((e, args) => {
       const vp = this.grid.getViewport()

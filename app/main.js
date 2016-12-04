@@ -26,12 +26,9 @@ function createWindow () {
     slashes: true
   }))
 
-  console.log('main window created, opening DevTools')
   // Open the DevTools.
   mainWindow.webContents.openDevTools({mode: 'bottom'})
-  // mainWindow.webContents.closeDevTools()
-
-  console.log('DevTools done.')
+  mainWindow.webContents.closeDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
