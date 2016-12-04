@@ -11,18 +11,8 @@ import * as actions from '../actions'
 
 const container = '#epGrid' // for now
 
-const options = {
-  groupCssClass: 'slick-group',
-  groupTitleCssClass: 'slick-group-title',
-  totalsCssClass: 'slick-group-totals',
-  groupFocusable: true,
-  totalsFocusable: false,
-  toggleCssClass: 'slick-group-toggle',
-  toggleExpandedCssClass: 'expanded',
-  toggleCollapsedCssClass: 'collapsed',
-  enableExpandCollapse: true,
-  groupFormatter: defaultGroupCellFormatter
-  // Not yet:
+const gridOptions = {
+  // TODO -- need to tweak to PivotTreeModel sort code to accomodate
   // multiColumnSort: true
 }
 
@@ -30,20 +20,24 @@ const INDENT_PER_LEVEL = 15 // pixels
 
 const calcIndent = (depth: number): number => (INDENT_PER_LEVEL * depth)
 
-function defaultGroupCellFormatter (row, cell, value, columnDef, item) {
-  if (!options.enableExpandCollapse) {
-    return item._pivot
-  }
+/*
+ * Formatter for cells in pivot column
+ */
+const groupCellFormatter = (row, cell, value, columnDef, item) => {
+  const toggleCssClass = 'slick-group-toggle'
+  const toggleExpandedCssClass = 'expanded'
+  const toggleCollapsedCssClass = 'collapsed'
+  const groupTitleCssClass = 'slick-group-title'
 
   var indentation = calcIndent(item._depth) + 'px'
 
   var pivotStr = item._pivot || ''
 
-  var ret = "<span class='" + options.toggleCssClass + ' ' +
-    ((!item._isLeaf) ? (item._isOpen ? options.toggleExpandedCssClass : options.toggleCollapsedCssClass) : '') +
+  var ret = "<span class='" + toggleCssClass + ' ' +
+    ((!item._isLeaf) ? (item._isOpen ? toggleExpandedCssClass : toggleCollapsedCssClass) : '') +
     "' style='margin-left:" + indentation + "'>" +
     '</span>' +
-    "<span class='" + options.groupTitleCssClass + "' level='" + item._depth + "'>" +
+    "<span class='" + groupTitleCssClass + "' level='" + item._depth + "'>" +
     pivotStr +
     '</span>'
   return ret
@@ -114,7 +108,7 @@ const mkSlickColMap = (schema: reltab.Schema, colWidths: ColWidthMap) => {
     if (colId === '_pivot') {
       ci.cssClass = 'pivot-column'
       ci.name = ''
-      ci.formatter = options.groupFormatter
+      ci.formatter = groupCellFormatter
     } else {
       var displayName = cmd.displayName || colId
       ci.name = displayName
@@ -235,7 +229,7 @@ export default class GridPane extends React.Component {
 
   /* Create grid from the specified set of columns */
   createGrid (columns: any, data: any) {
-    this.grid = new Slick.Grid(container, data, columns, options)
+    this.grid = new Slick.Grid(container, data, columns, gridOptions)
 
     console.log('createGrid: ', this.grid)
 
