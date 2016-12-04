@@ -24,6 +24,15 @@ export default class SimpleDataView {
     return this.rawData[index]
   }
 
+  getItemMetadata (index: number): any {
+    let ret = {}
+    const item = this.getItem(index)
+    if (!item._isLeaf) {
+      ret.cssClasses = 'grid-aggregate-row'
+    }
+    return ret
+  }
+
   getItemById (id: number): any {
     return this.idMap[id]
   }
