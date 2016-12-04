@@ -80,3 +80,7 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
 export const setSortColumn = (colId: string, asc: boolean, updater: RefUpdater) => {
   updater(appState => appState.set('sortKey', [[colId, asc]]))
 }
+
+export const setColumnOrder = (displayColumns: Array<string>, updater: RefUpdater) => {
+  updater(appState => appState.set('displayColumns', displayColumns))
+}

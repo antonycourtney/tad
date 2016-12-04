@@ -21,8 +21,8 @@ const options = {
   toggleExpandedCssClass: 'expanded',
   toggleCollapsedCssClass: 'collapsed',
   enableExpandCollapse: true,
-  groupFormatter: defaultGroupCellFormatter,
-  enableColumnReorder: false
+  groupFormatter: defaultGroupCellFormatter
+  // enableColumnReorder: false
   // Not yet:
   // multiColumnSort: true
 }
@@ -239,15 +239,15 @@ export default class Grid extends React.Component {
     this.grid.onSort.subscribe((e, args) => {
       actions.setSortColumn(args.sortCol.field, args.sortAsc,
         this.props.stateRefUpdater)
-      /*
-      this.grid.setSortColumn(args.sortCol.field, args.sortAsc)
-      this.ptm.setSort(args.sortCol.field, args.sortAsc ? 1 : -1)
-      const vp = this.grid.getViewport()
-      this.ensureData(vp.top, vp.bottom)
-      */
     })
 
     this.grid.onClick.subscribe((e, args) => this.onGridClick(e, args))
+
+    this.grid.onColumnsReordered.subscribe((e, args) => {
+      const cols = this.grid.getColumns()
+      const displayColIds = cols.map(c => c.field).filter(cid => cid[0] !== '_')
+      actions.setColumnOrder(displayColIds, this.props.stateRefUpdater)
+    })
 
     this.registerLoadHandlers(this.grid)
 

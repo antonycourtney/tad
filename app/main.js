@@ -18,7 +18,7 @@ require('console.table')
 let mainWindow
 
 function createWindow () {
-  mainWindow = new BrowserWindow({width: 1150, height: 800})
+  mainWindow = new BrowserWindow({width: 1150, height: 850})
 
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'index.html'),
@@ -26,9 +26,12 @@ function createWindow () {
     slashes: true
   }))
 
+  console.log('main window created, opening DevTools')
   // Open the DevTools.
   mainWindow.webContents.openDevTools({mode: 'bottom'})
-  mainWindow.webContents.closeDevTools()
+  // mainWindow.webContents.closeDevTools()
+
+  console.log('DevTools done.')
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
