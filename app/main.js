@@ -1,6 +1,7 @@
 const db = require('sqlite')
 const reltab = require('../src/reltab')
 const commandLineArgs = require('command-line-args')
+const getUsage = require('command-line-usage')
 const reltabSqlite = require('../src/reltab-sqlite')
 const csvimport = require('../src/csvimport')
 
@@ -58,49 +59,102 @@ const runQuery = rtc => (queryStr, cb) => {
 
 // App initialization:
 const appInit = (path) => {
-  console.log('appInit: entry')
-  db.open(':memory:')
-    .then(() => csvimport.importSqlite(path))
-    .then(md => {
-      global.md = md
-      return reltabSqlite.init(db, md)
-    })
-    .then(rtc => {
-      console.log('completed reltab initalization.')
-      // Now let's place a function in global so it can be run via remote:
-      global.runQuery = runQuery(rtc)
-      createWindow()
-    })
-    .catch(err => console.error('appInit failed: ', err, err.stack))
+  try {
+    console.log('appInit: entry')
+    db.open(':memory:')
+      .then(() => csvimport.importSqlite(path))
+      .then(md => {
+        throw new Error('damnit')
+        global.md = md
+        return reltabSqlite.init(db, md)
+      })
+      .then(rtc => {
+        console.log('completed reltab initalization.')
+        // Now let's place a function in global so it can be run via remote:
+        global.runQuery = runQuery(rtc)
+        createWindow()
+      })
+      .catch(err => {
+        console.error('*** Error: ', err.message)
+        app.quit()
+      })
+  } catch (err) {
+    console.error('Error during app initialization: ', err)
+  }
 }
 
 const optionDefinitions = [
   { name: 'verbose', alias: 'v', type: Boolean },
-  { name: 'src', type: String, defaultOption: true }
+  { name: 'help', alias: 'h', type: Boolean },
+  { name: 'csvfile', type: String, defaultOption: true,
+    typeLabel: '[underline]{file}.csv',
+    description: 'CSV file to view, with header row'
+  }
 ]
 
-const argv = process.argv.slice(1)
-const options = commandLineArgs(optionDefinitions, argv)
-global.options = options
+const usageInfo = [
+  {
+    header: 'Tad',
+    content: 'A viewer for tabular data.'
+  },
+  {
+      header: 'Synopsis',
+      content: [
+        '$ tad [[italic]{options}] [underline]{file}.csv'
+      ]
+  },
+  {
+    header: 'Options',
+    optionList: optionDefinitions.filter(opt => opt.name != 'csvfile')
+  }
+]
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', () => appInit(options.src))
+const showUsage = () => {
+  const usage = getUsage(usageInfo)
+  console.log(usage)
+}
 
-// Quit when all windows are closed.
-app.on('window-all-closed', function () {
-  // On OS X it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
+const main = () => {
+  try {
+    process.on('uncaughtException', function (error) {
+      console.error('*** Error: ', error.message)
+      app.quit()
+    })
+    const argv = process.argv.slice(1)
+    const options = commandLineArgs(optionDefinitions, argv)
+    if (options.help) {
+      showUsage()
+      app.quit()
+    }
+
+    global.options = options
+
+    // This method will be called when Electron has finished
+    // initialization and is ready to create browser windows.
+    // Some APIs can only be used after this event occurs.
+    app.on('ready', () => appInit(options.csvfile))
+
+    // Quit when all windows are closed.
+    app.on('window-all-closed', function () {
+      // On OS X it is common for applications and their menu bar
+      // to stay active until the user quits explicitly with Cmd + Q
+      if (process.platform !== 'darwin') {
+        app.quit()
+      }
+    })
+
+    app.on('activate', function () {
+      // On OS X it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      if (mainWindow === null) {
+        createWindow()
+      }
+    })
+  } catch (err) {
+    console.error('Error: ', err.message )
+    showUsage()
     app.quit()
   }
-})
+}
 
-app.on('activate', function () {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) {
-    createWindow()
-  }
-})
+main()

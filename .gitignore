@@ -1,4 +1,6 @@
 build
+dist
+Tad-darwin-x64
 node_modules
 *.map
 .DS_Store
