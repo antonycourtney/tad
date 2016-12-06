@@ -80,7 +80,8 @@
     "electron-rebuild": "electron-rebuild",
     "packager": "electron-packager . --platform=darwin",
     "pack": "build --dir",
-    "dist": "build"
+    "dist": "build",
+    "webpack:watch": "webpack -d --watch"
   },
   "standard": {
     "ignore": [
