@@ -64,7 +64,6 @@ const appInit = (path) => {
     db.open(':memory:')
       .then(() => csvimport.importSqlite(path))
       .then(md => {
-        throw new Error('damnit')
         global.md = md
         return reltabSqlite.init(db, md)
       })
