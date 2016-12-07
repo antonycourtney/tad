@@ -1,12 +1,12 @@
 # Tad
 
-Tad is a desktop application for viewing and analyzing tabular data (such as CSV files).
+Tad is a desktop application for viewing and analyzing tabular data such as CSV files.
 
-Launching tad from the command line like this:
+Launch tad from the command line like this:
 
     $ tad movie_metadata.csv
 
-will open a new window with an interactive grid view of the file contents:
+This will open a new window with a scrollable view of the file contents:
 
 ![Tad screenshot](doc/screenshots/tad-movies-unpivoted.png "Unpivoted view of CSV file")
 
@@ -19,7 +19,7 @@ Tad's main grid component is actually a full featured
 
 ## Pre-requisites:  Npm and yarn
 
-To build Tad, you should have [node](https://nodejs.org/en/), `npm` and [yarn](https://yarnpkg.com/) installed locally.  The versions used for development are:
+To build Tad, you should have [node](https://nodejs.org/en/), `npm`(https://www.npmjs.com/get-npm) (included when you install Node.js) and [yarn](https://yarnpkg.com/) installed.  The versions of these tools used for development are:
 
     $ node --version
     v7.1.0
@@ -37,7 +37,7 @@ To build Tad, you should have [node](https://nodejs.org/en/), `npm` and [yarn](h
 
     $ yarn install
 
-This will install dependencies from `package.json` from NPM. This will take some time, particularly if this is the first time you are downloading many of the dependencies.
+This will install dependencies from `package.json` from npm(https://www.npmjs.com/). This will take some time, particularly if this is the first time you are downloading many of the dependencies.
 
 ## Build static assets
 
@@ -55,28 +55,29 @@ This will use [webpack](https://webpack.github.io/) and [Babel](https://babeljs.
 
 ## Rebuild binary libraries with electron-rebuild
 
-Tad depends on the sqlite npm package, which in turn depends on the SQLite library, implemented in C++.  For reasons I don't fully understand related to how libraries are
+Tad depends on the sqlite npm package, which in turn depends on the SQLite library, implemented in C++.  For reasons I don't fully understand related to how native libraries are
 loaded by node.js and Electron, it's necessary to recompile this code from source
 *every time a new package is installed in our application*.
 
-Immediately after performing a `yarn install` step, run:
+To perform this step, run:
 
     $ yarn run electron-rebuild
 
 This will take considerable time (around 70 seconds on my Late 2013 MacBook Pro).
 
-**Note**:  Every time a new dependency is added to the application (using `yarn add`), it is necessary to re-run `yarn install` and electron-rebuild, as follows:
+**Note**:  Every time a new dependency is added to the application (using `yarn add`), it is necessary to redo this step.
+It's also necessary to run `yarn install` explicitly first. So the sequence after adding a dependency is:
 
     $ yarn install
     $ yarn run electron-rebuild
 
 ## Run Tad
 
-Finally, to run the development version of Tad, try:
+Finally, to start the application, run:
 
     $ yarn start csv/bart-comp-all.csv
 
-This should start the application using the specified CSV file.
+This should start the application and open a window displaying the contents of the specified CSV file.
 
 # Packaging a Release
 
@@ -85,10 +86,11 @@ For the moment I'm using `electron-builder`, but I'm not currently using the gen
 
 Note that, due to an alleged bug in Yarn's handling of sub-processes, *one must use npm (not Yarn!) to run this build step*:
 
-    $ npm run build
+    $ npm run dist
 
 This should create a full application in `./dist/mac`.  I've been manually combining that with `tools/scripts/install.sh`
-in `./release` and tar'ing up the result to form a release; these latter steps should be automated.
+in a `./release` staging directory and tar'ing up the result to form a complete release for now.
+These latter steps should be automated.
 
 # Implementation / Architecture
 

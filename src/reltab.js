@@ -426,6 +426,11 @@ type SQLSelectAST = { selectCols: Array<SQLSelectColExp>, from: SQLQueryAST|stri
   where: string, groupBy: Array<string>, orderBy: Array<SQLSortColExp> }
 type SQLQueryAST = { selectStmts: Array<SQLSelectAST> } // all underliers combined via `union all`
 
+/* An array of strings that will be joined with Array.join('') to
+ * form a final result string
+ */
+type StringBuffer = Array<string>
+
 /**
  * get Column Id from a SQLSelectColExp -- essential when hoisting column names from
  * subquery
@@ -449,20 +454,55 @@ const ppSortColExp = (exp: SQLSortColExp): string => {
   return `${quoteCol(exp.col)}${optDescStr}`
 }
 
-const ppSQLSelect = (ss: SQLSelectAST): string => {
+const ppOut = (dst: StringBuffer, depth: number, str: string): void => {
+  const indentStr = '  '.repeat(depth)
+  dst.push(indentStr)
+  dst.push(str)
+}
+
+const ppSQLSelect = (dst: StringBuffer, depth: number, ss: SQLSelectAST) => {
   const selColStr = ss.selectCols.map(ppSelColExp).join(', ')
-  const fromStr = (typeof ss.from === 'string') ? `'${ss.from}'` : '(' + ppSQLQuery(ss.from) + ')'
-  const whereStr = (ss.where.length > 0) ? ` where ${ss.where}` : ''
-  const gbStr = (ss.groupBy.length > 0) ? ` group by ${ss.groupBy.map(quoteCol).join(', ')}` : ''
-  const obStr = (ss.orderBy.length > 0) ? ` order by ${ss.orderBy.map(ppSortColExp).join(', ')}` : ''
-
-  return `select ${selColStr} from ${fromStr}${whereStr}${gbStr}${obStr}`
+  ppOut(dst, depth, `SELECT ${selColStr}\n`)
+  ppOut(dst, depth, 'FROM ')
+  const fromVal = ss.from
+  if (typeof fromVal === 'string') {
+    dst.push('\'' + fromVal + '\'\n')
+  } else {
+    dst.push('(\n')
+    auxPPSQLQuery(dst, depth + 1, fromVal)
+    ppOut(dst, depth, ')\n')
+  }
+  if (ss.where.length > 0) {
+    ppOut(dst, depth, `WHERE ${ss.where}\n`)
+  }
+  if (ss.groupBy.length > 0) {
+    const gbStr = ss.groupBy.map(quoteCol).join(', ')
+    ppOut(dst, depth, `GROUP BY ${gbStr}\n`)
+  }
+  if (ss.orderBy.length > 0) {
+    const obStr = ss.orderBy.map(ppSortColExp).join(', ')
+    ppOut(dst, depth, `ORDER BY ${obStr}\n`)
+  }
 }
 
+// internal, recursive function:
+const auxPPSQLQuery = (dst: StringBuffer, depth: number, query: SQLQueryAST) => {
+  query.selectStmts.forEach((selStmt,idx) => {
+    ppSQLSelect(dst, depth, selStmt)
+    if (idx < (query.selectStmts.length - 1)) {
+      ppOut(dst, depth, 'UNION ALL\n')
+    }
+  })
+}
+
+// external (top-level) function:
 const ppSQLQuery = (query: SQLQueryAST): string => {
-  const selStrs = query.selectStmts.map(ppSQLSelect)
-  return selStrs.join('\nunion all\n')
+  let strBuf = []
+  auxPPSQLQuery(strBuf, 0, query)
+  const retStr = strBuf.join('')
+  return retStr
 }
+
 
 type GenSQLFunc = (tableMap: TableInfoMap, q: QueryExp) => SQLQueryAST
 type GenSQLMap = {[operator: string]: GenSQLFunc }

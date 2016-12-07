@@ -22,27 +22,32 @@ const mkTableRep = (schema: Schema, objRows: Array<Object>): TableRep => {
 class SqliteContext {
   db: any
   tableMap: TableInfoMap
+  showQueries: boolean
 
-  constructor (db: any, tableMap: TableInfoMap) {
+  constructor (db: any, tableMap: TableInfoMap, options: Object) {
     this.db = db
     this.tableMap = tableMap
+    this.showQueries = (options && options.showQueries)
   }
 
   evalQuery (query: QueryExp): Promise<TableRep> {
     const schema = query.getSchema(this.tableMap)
     const sqlQuery = query.toSql(this.tableMap)
-    // console.log('SqliteContext.evalQuery: evaluating:')
-    // console.log(sqlQuery)
+    if (this.showQueries) {
+      console.log('SqliteContext.evalQuery: evaluating:')
+      console.log(sqlQuery)
+    }
     const qp = this.db.all(sqlQuery)
     return qp.then(rows => mkTableRep(schema, rows))
   }
 }
 
-export const init = (db: any, md: FileMetadata): Promise<Connection> => {
+export const init = (db: any, md: FileMetadata,
+    options: Object = {}): Promise<Connection> => {
   return new Promise((resolve, reject) => {
     let tm = {}
     tm[md.tableName] = reltab.mkTableInfo(md)
-    const ctx = new SqliteContext(db, tm)
+    const ctx = new SqliteContext(db, tm, options)
     global.rtc = ctx
     resolve(ctx)
   })

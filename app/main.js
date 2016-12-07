@@ -58,14 +58,18 @@ const runQuery = rtc => (queryStr, cb) => {
 }
 
 // App initialization:
-const appInit = (path) => {
+const appInit = (options,path) => {
   try {
     console.log('appInit: entry')
     db.open(':memory:')
       .then(() => csvimport.importSqlite(path))
       .then(md => {
         global.md = md
-        return reltabSqlite.init(db, md)
+        let rtOptions = {}
+        if (options.showQueries) {
+          rtOptions.showQueries = true
+        }
+        return reltabSqlite.init(db, md, rtOptions)
       })
       .then(rtc => {
         console.log('completed reltab initalization.')
@@ -85,6 +89,8 @@ const appInit = (path) => {
 const optionDefinitions = [
   { name: 'verbose', alias: 'v', type: Boolean },
   { name: 'help', alias: 'h', type: Boolean },
+  { name: 'showQueries', alias: 'q', type: Boolean,
+    description: 'show SQL queries' },
   { name: 'csvfile', type: String, defaultOption: true,
     typeLabel: '[underline]{file}.csv',
     description: 'CSV file to view, with header row'
@@ -131,7 +137,7 @@ const main = () => {
     // This method will be called when Electron has finished
     // initialization and is ready to create browser windows.
     // Some APIs can only be used after this event occurs.
-    app.on('ready', () => appInit(options.csvfile))
+    app.on('ready', () => appInit(options, options.csvfile))
 
     // Quit when all windows are closed.
     app.on('window-all-closed', function () {
