@@ -52,7 +52,7 @@ export default class PivotTreeModel {
   }
 
   setPivots (inPivots: Array<string>): void {
-    const matchDepth = _.findIndex(_.zip(this.pivots,inPivots),([p1, p2]) => (p1 !== p2))
+    const matchDepth = _.findIndex(_.zip(this.pivots, inPivots), ([p1, p2]) => (p1 !== p2))
     this.pivots = inPivots
     this.openNodeMap = trimToDepth(this.openNodeMap, matchDepth)
     this.needPivot = true
@@ -232,6 +232,10 @@ export default class PivotTreeModel {
       }
 
       var ret = orderFn(ra[ sortcol ], rb[ sortcol ])
+      if (ret === 0) {
+        // no difference in sort column, revert to id order (order returned from query):
+        ret = orderFn(ra._id, rb._id)
+      }
       return ret
     }
 

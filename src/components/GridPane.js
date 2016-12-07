@@ -156,9 +156,7 @@ export default class GridPane extends React.Component {
   }
 
   onGridClick (e: any, args: any) {
-    console.log('onGridClick: ', e, args)
     var item = this.grid.getDataItem(args.row)
-    console.log('data item: ', item)
     if (item._isLeaf) {
       return
     }
@@ -174,6 +172,7 @@ export default class GridPane extends React.Component {
 
   // Get grid columns based on current column visibility settings:
   getGridCols (dataView: ?Object = null) {
+    const showHiddenCols = true // only for debugging
     const displayCols = this.props.appState.displayColumns
 
     // TODO: For debugging could optionally append hidden column ids: _path, _pivot, etc.
@@ -183,6 +182,12 @@ export default class GridPane extends React.Component {
       this.updateColWidth(dataView, '_pivot')
       let pivotCol = this.slickColMap['_pivot']
       gridCols.unshift(pivotCol)
+    }
+    if (showHiddenCols) {
+      const hiddenColIds = _.difference(_.keys(this.slickColMap), gridCols.map(gc => gc.field))
+      console.log('hidden column ids: ', hiddenColIds)
+      const hiddenCols = hiddenColIds.map(cid => this.slickColMap[cid])
+      gridCols = gridCols.concat(hiddenCols)
     }
     return gridCols
   }

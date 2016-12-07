@@ -8,7 +8,7 @@ import * as reltabSqlite from '../src/reltab-sqlite'
 import * as csvimport from '../src/csvimport'
 import * as util from './reltabTestUtils'
 import * as aggtree from '../src/aggtree'
-
+import PivotTreeModel from '../src/PivotTreeModel'
 const {col, constVal} = reltab
 
 var sharedRtc
@@ -275,6 +275,63 @@ const aggTreeTest0 = () => {
   })
 }
 
+const getRawColumn = (rawData: Array<any>, cid: string): Array<any> => {
+  return rawData.map(row => row[cid])
+}
+
+// expected pivot column when pivoted by JobFamily
+const expPivotCol = [
+  'Administrative & Management',
+  'Audit',
+  'Clerical',
+  'Engineering & Systems Engineering',
+  'Executive Management',
+  'Finance & Accounting',
+  'Human Resources & Labor Relations',
+  'Information Systems',
+  'Legal & Paralegal',
+  'Maintenance, Vehicle & Facilities',
+  'Planning',
+  'Police',
+  'Procurement',
+  'Public Affairs & Marketing',
+  'Real Estate',
+  'Safety',
+  'Technical Support',
+  'Training: Technical & Management',
+  'Transportation Operations'
+]
+
+// Test created for bug #3
+// Test: Sort by a text column while pivoted:
+
+const PivotSortTest0 = () => {
+  const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
+  test('Pivot Sort Test', t => {
+    const rtc = sharedRtc
+    const ptm = new PivotTreeModel(rtc, q0, ['JobFamily'], null, false)
+    const p0 = ptm.refresh()
+    p0.then(dv0 => {
+      console.log('ptm.refresh promise resolved...')
+      // console.log('dataView: ')
+      // console.table(dv0.rawData)
+      const pivotColumn = getRawColumn(dv0.rawData, '_pivot')
+      console.log('pivot column: ', pivotColumn)
+      t.deepEqual(pivotColumn, expPivotCol, 'initial pivot column matches expected')
+
+      // Now sort by Title:
+      ptm.setSort('Title', 1)
+      console.log('after sort: ')
+      console.table(dv0.rawData)
+      const sortedPivotCol = getRawColumn(dv0.rawData, '_pivot')
+      // For this data set, uniq agg on Title is null for all Job Family rows,
+      // so sorting by Title should not affect order of pivot col:
+      t.deepEqual(sortedPivotCol, expPivotCol, 'sorting by title does not affect pivot col')
+      t.end()
+    })
+  })
+}
+
 const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
@@ -316,6 +373,9 @@ const runTests = () => {
   dbTest10()
   dbTest11()
   aggTreeTest0()
+
+  PivotSortTest0()
+
   sqliteTestShutdown()
 }
 

@@ -487,7 +487,7 @@ const ppSQLSelect = (dst: StringBuffer, depth: number, ss: SQLSelectAST) => {
 
 // internal, recursive function:
 const auxPPSQLQuery = (dst: StringBuffer, depth: number, query: SQLQueryAST) => {
-  query.selectStmts.forEach((selStmt,idx) => {
+  query.selectStmts.forEach((selStmt, idx) => {
     ppSQLSelect(dst, depth, selStmt)
     if (idx < (query.selectStmts.length - 1)) {
       ppOut(dst, depth, 'UNION ALL\n')
@@ -502,7 +502,6 @@ const ppSQLQuery = (query: SQLQueryAST): string => {
   const retStr = strBuf.join('')
   return retStr
 }
-
 
 type GenSQLFunc = (tableMap: TableInfoMap, q: QueryExp) => SQLQueryAST
 type GenSQLMap = {[operator: string]: GenSQLFunc }
