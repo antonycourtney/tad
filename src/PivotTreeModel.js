@@ -4,6 +4,7 @@ import * as reltab from './reltab'
 import * as aggtree from './aggtree'
 import SimpleDataView from './SimpleDataView'
 import type { Connection } from './reltab' // eslint-disable-line
+import * as _ from 'lodash'
 import * as d3a from 'd3-array'
 
 // trim an open node map to given depth:
@@ -51,8 +52,9 @@ export default class PivotTreeModel {
   }
 
   setPivots (inPivots: Array<string>): void {
+    const matchDepth = _.findIndex(_.zip(this.pivots,inPivots),([p1, p2]) => (p1 !== p2))
     this.pivots = inPivots
-    this.openNodeMap = trimToDepth(this.openNodeMap, inPivots.length)
+    this.openNodeMap = trimToDepth(this.openNodeMap, matchDepth)
     this.needPivot = true
   }
 
