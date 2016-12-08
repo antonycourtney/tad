@@ -2,7 +2,7 @@
   "name": "tad",
   "productName": "Tad",
   "description": "Tabular data viewer",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "author": "Antony Courtney <antony@antonycourtney.com> (http://www.antonycourtney.com)",
   "dependencies": {
     "babel-runtime": "^6.18.0",
@@ -70,7 +70,7 @@
     "build:jquery": "mkdir -p build && cpx \"node_modules/jquery/dist/**/*\" build/js",
     "build:bootstrap": "mkdir -p build && cpx \"node_modules/bootstrap/dist/**/*\" build",
     "build:html": "mkdir -p build && cpx \"html/*\" build",
-    "build": "npm run build:bootstrap && npm run build:jquery && npm run build:html",
+    "build-assets": "npm run build:bootstrap && npm run build:jquery && npm run build:html",
     "lint": "eslint .",
     "test": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/runAllTests.js | tap-spec",
     "test:notap": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/runAllTests.js",
@@ -81,7 +81,8 @@
     "packager": "electron-packager . --platform=darwin",
     "pack": "build --dir",
     "dist": "build",
-    "webpack:watch": "webpack -d --watch"
+    "webpack:watch": "webpack -d --watch",
+    "build-release": "npm run dist && node ./tools/buildRelease.js"
   },
   "standard": {
     "ignore": [
@@ -98,6 +99,9 @@
     "files": [
       "build",
       "node_modules"
+    ],
+    "extraResources": [
+      "tad.sh"
     ]
   },
   "directories": {

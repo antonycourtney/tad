@@ -2,7 +2,7 @@
 echo "Copying Tad.app to ~/Applications"
 if [ -e ~/Applications/Tad.app ]
   then
-    TEMPNAME=`mktemp /tmp/Tad.App.BAK.XXX`
+    TEMPNAME=`mktemp -d /tmp/Tad.App.BAK.XXX`
     echo "~/Applications/Tad.app already exists -- removing (backup in $TEMPNAME)"
     mv ~/Applications/Tad.app $TEMPNAME
 fi
@@ -15,7 +15,7 @@ if [ -e /usr/local/bin/tad ]
     echo "/usr/local/bin/tad already exists -- removing (backup in $TEMPNAME)"
     mv /usr/local/bin/tad $TEMPNAME
 fi
-ln -s ~/Applications/Tad.app/Contents/MacOS/Tad /usr/local/bin/tad
+ln -s ~/Applications/Tad.app/Contents/Resources/tad.sh /usr/local/bin/tad
 echo "done."
 echo
 echo "Tad is now installed."

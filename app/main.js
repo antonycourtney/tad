@@ -58,7 +58,7 @@ const runQuery = rtc => (queryStr, cb) => {
 }
 
 // App initialization:
-const appInit = (options,path) => {
+const appInit = (options, path) => {
   try {
     console.log('appInit: entry')
     db.open(':memory:')
@@ -89,9 +89,13 @@ const appInit = (options,path) => {
 const optionDefinitions = [
   { name: 'verbose', alias: 'v', type: Boolean },
   { name: 'help', alias: 'h', type: Boolean },
-  { name: 'showQueries', alias: 'q', type: Boolean,
-    description: 'show SQL queries' },
-  { name: 'csvfile', type: String, defaultOption: true,
+  { name: 'showQueries', alias: 'q', type: Boolean, description: 'show SQL queries' },
+  { name: 'executed-from', type: String },
+  { name: 'foreground', alias: 'f', type: Boolean, description: 'keep in foreground' },
+  {
+    name: 'csvfile',
+    type: String,
+    defaultOption: true,
     typeLabel: '[underline]{file}.csv',
     description: 'CSV file to view, with header row'
   }
@@ -103,14 +107,14 @@ const usageInfo = [
     content: 'A viewer for tabular data.'
   },
   {
-      header: 'Synopsis',
-      content: [
-        '$ tad [[italic]{options}] [underline]{file}.csv'
-      ]
+    header: 'Synopsis',
+    content: [
+      '$ tad [[italic]{options}] [underline]{file}.csv'
+    ]
   },
   {
     header: 'Options',
-    optionList: optionDefinitions.filter(opt => opt.name != 'csvfile')
+    optionList: optionDefinitions.filter(opt => opt.name !== 'csvfile')
   }
 ]
 
@@ -131,13 +135,19 @@ const main = () => {
       showUsage()
       app.quit()
     }
-
+    let targetPath = null
+    if (options['executed-from']) {
+      console.log('executed from: ', options['executed-from'])
+      targetPath = path.join(options['executed-from'], options.csvfile)
+    } else {
+      targetPath = options.csvfile
+    }
     global.options = options
 
     // This method will be called when Electron has finished
     // initialization and is ready to create browser windows.
     // Some APIs can only be used after this event occurs.
-    app.on('ready', () => appInit(options, options.csvfile))
+    app.on('ready', () => appInit(options, targetPath))
 
     // Quit when all windows are closed.
     app.on('window-all-closed', function () {
@@ -156,7 +166,7 @@ const main = () => {
       }
     })
   } catch (err) {
-    console.error('Error: ', err.message )
+    console.error('Error: ', err.message)
     showUsage()
     app.quit()
   }

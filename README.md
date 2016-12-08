@@ -43,7 +43,7 @@ This will install dependencies from `package.json` from npm(https://www.npmjs.co
 
 This step will install various static assets (such as the Bootstrap CSS file) into a common build directory used by the application:
 
-    $ yarn run build
+    $ yarn run build-assets
 
 ## Run webpack
 
@@ -81,16 +81,15 @@ This should start the application and open a window displaying the contents of t
 
 # Packaging a Release
 
-I've explored both [electron-packager](https://github.com/electron-userland/electron-packager) and [electron-builder](https://github.com/electron-userland/electron-builder) for packaging.
-For the moment I'm using `electron-builder`, but I'm not currently using the generated install wizard (DMG).
+I'm using   [electron-builder](https://github.com/electron-userland/electron-builder) for packaging, which uses [electron-packager](https://github.com/electron-userland/electron-packager) for creating
+the App. I'm currently building my own `.tgz` file and install script to create the symbolic
+link in `/usr/local/bin/tad`; I'm not currently using the generated install wizard (DMG).
 
 Note that, due to an alleged bug in Yarn's handling of sub-processes, *one must use npm (not Yarn!) to run this build step*:
 
-    $ npm run dist
+    $ npm run build-release
 
-This should create a full application in `./dist/mac`.  I've been manually combining that with `tools/scripts/install.sh`
-in a `./release` staging directory and tar'ing up the result to form a complete release for now.
-These latter steps should be automated.
+This should create a full application in `./dist/mac`, and then will create a full release directory and a `.tgz` file in `./release/tad-X.Y.Z-preview.tgz`
 
 # Implementation / Architecture
 
