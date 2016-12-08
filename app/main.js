@@ -6,6 +6,7 @@ const reltabSqlite = require('../src/reltab-sqlite')
 const csvimport = require('../src/csvimport')
 
 const electron = require('electron')
+const dialog = electron.dialog
 const app = electron.app
 const BrowserWindow = electron.BrowserWindow
 
@@ -123,11 +124,15 @@ const showUsage = () => {
   console.log(usage)
 }
 
+const reportFatalError = (msg: string) => {
+  dialog.showErrorBox('Error starting Tad', msg)
+  app.quit()
+}
+
 const main = () => {
   try {
     process.on('uncaughtException', function (error) {
-      console.error('*** Error: ', error.message)
-      app.quit()
+      reportFatalError(error.message)
     })
     const argv = process.argv.slice(1)
     const options = commandLineArgs(optionDefinitions, argv)
@@ -166,6 +171,7 @@ const main = () => {
       }
     })
   } catch (err) {
+    reportFatalError(err.message)
     console.error('Error: ', err.message)
     showUsage()
     app.quit()
