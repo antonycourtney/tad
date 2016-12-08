@@ -143,7 +143,12 @@ const main = () => {
     let targetPath = null
     if (options['executed-from']) {
       console.log('executed from: ', options['executed-from'])
-      targetPath = path.join(options['executed-from'], options.csvfile)
+      if (options.csvfile && options.csvfile.startsWith('/')) {
+        // absolute pathname:
+        targetPath = options.csvfile
+      } else {
+        targetPath = path.join(options['executed-from'], options.csvfile)
+      }
     } else {
       targetPath = options.csvfile
     }
