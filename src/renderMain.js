@@ -21,6 +21,8 @@ import * as actions from './actions'
 
 const md: reltab.FileMetadata = require('electron').remote.getGlobal('md')
 
+global.cmdLineOptions = require('electron').remote.getGlobal('options')
+
 console.log('renderMain started')
 console.log('metadata: ', md)
 

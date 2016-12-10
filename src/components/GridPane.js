@@ -172,7 +172,7 @@ export default class GridPane extends React.Component {
 
   // Get grid columns based on current column visibility settings:
   getGridCols (dataView: ?Object = null) {
-    const showHiddenCols = true // only for debugging
+    const showHiddenCols = (global.cmdLineOptions['hidden-cols'] || false)
     const displayCols = this.props.appState.displayColumns
 
     // TODO: For debugging could optionally append hidden column ids: _path, _pivot, etc.

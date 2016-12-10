@@ -13,6 +13,8 @@ const BrowserWindow = electron.BrowserWindow
 const path = require('path')
 const url = require('url')
 
+const pkgInfo = require('../package.json')
+
 require('console.table')
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -88,17 +90,46 @@ const appInit = (options, path) => {
 }
 
 const optionDefinitions = [
-  { name: 'verbose', alias: 'v', type: Boolean },
-  { name: 'help', alias: 'h', type: Boolean },
-  { name: 'showQueries', alias: 'q', type: Boolean, description: 'show SQL queries' },
-  { name: 'executed-from', type: String },
-  { name: 'foreground', alias: 'f', type: Boolean, description: 'keep in foreground' },
   {
     name: 'csvfile',
     type: String,
     defaultOption: true,
     typeLabel: '[underline]{file}.csv',
     description: 'CSV file to view, with header row'
+  },
+  {
+    name: 'executed-from',
+    type: String,
+    description: 'pathname to working directory'
+  },
+  {
+    name: 'foreground',
+    alias: 'f',
+    type: Boolean,
+    description: 'keep in foreground'
+  },
+  {
+    name: 'help',
+    alias: 'h',
+    type: Boolean,
+    description: 'Show usage information'
+  },
+  {
+    name: 'hidden-cols',
+    type: Boolean,
+    description: 'Show hidden columns (for debugging)'
+  },
+  {
+    name: 'showQueries',
+    alias: 'q',
+    type: Boolean,
+    description: 'show generated SQL queries on console when in foreground'
+  },
+  {
+    name: 'version',
+    alias: 'v',
+    type: Boolean,
+    description: 'Print version number and exit'
   }
 ]
 
@@ -118,6 +149,11 @@ const usageInfo = [
     optionList: optionDefinitions.filter(opt => opt.name !== 'csvfile')
   }
 ]
+
+const showVersion = () => {
+  const version = pkgInfo.version
+  console.log(version)
+}
 
 const showUsage = () => {
   const usage = getUsage(usageInfo)
@@ -140,9 +176,12 @@ const main = () => {
       showUsage()
       app.quit()
     }
+    if (options.version) {
+      showVersion()
+      app.quit()
+    }
     let targetPath = null
     if (options['executed-from']) {
-      console.log('executed from: ', options['executed-from'])
       if (options.csvfile && options.csvfile.startsWith('/')) {
         // absolute pathname:
         targetPath = options.csvfile
