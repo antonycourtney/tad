@@ -236,8 +236,6 @@ export default class GridPane extends React.Component {
   createGrid (columns: any, data: any) {
     this.grid = new Slick.Grid(container, data, columns, gridOptions)
 
-    console.log('createGrid: ', this.grid)
-
     this.grid.onViewportChanged.subscribe((e, args) => {
       const vp = this.grid.getViewport()
       this.ensureData(vp.top, vp.bottom)
@@ -258,10 +256,12 @@ export default class GridPane extends React.Component {
 
     this.registerLoadHandlers(this.grid)
 
+    /*
     $(window).resize(() => {
+      console.log('window.resize: resizing grid...')
       this.grid.resizeCanvas()
     })
-
+    */
     // load the first page
     this.grid.onViewportChanged.notify()
   }
@@ -277,9 +277,12 @@ export default class GridPane extends React.Component {
 
     this.colWidthsMap = getInitialColWidthsMap(dataView)
     this.slickColMap = mkSlickColMap(dataView.schema, this.colWidthsMap)
-    this.createGrid(this.getGridCols(), dataView)
-    // console.log( "loadInitialImage: setting container width to: ", gridColumnInfo.gridWidth )
-    // $(container).css('width', gridColumnInfo.gridWidth + 'px')
+    const gridCols = this.getGridCols()
+    this.createGrid(gridCols, dataView)
+    /*const gridWidth = gridCols.reduce((width,col) => width + col.width, 0)
+    console.log( "loadInitialImage: setting container width to: ", gridWidth )
+    $(container).css('width', gridWidth + 'px')
+    */
     this.grid.resizeCanvas()
   }
 
@@ -335,7 +338,9 @@ export default class GridPane extends React.Component {
 
   render () {
     return (
-      <div id='epGrid' className='slickgrid-container full-height' />
+      <div className='gridPane'>
+        <div id='epGrid' className='slickgrid-container full-height' />
+      </div>
     )
   }
 
