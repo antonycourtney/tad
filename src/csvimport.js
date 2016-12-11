@@ -10,6 +10,7 @@ import * as path from 'path'
 import * as stream from 'stream'
 import through from 'through'
 import db from 'sqlite'
+import Gauge from 'gauge'
 
 /*
  * regex to match a float or int:
@@ -162,22 +163,33 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
   })
 }
 
+// maximum number of items outstanding before pause and commit:
+// Some studies of sqlite found this number about optimal
+const BATCHSIZE = 10000
+
 /*
  * consume a stream, sending all records to the Promise-returning write
  * function.
  *
  * returns: A Promise that resolves only when all recrords from readable
  * input stream have been written using wrf.
- * Promise value is number of recrords written
+ * Promise value is number of records written
  */
 const consumeStream = (s: stream.Readable,
                         wrf: (buf: any) => Promise<any>,
+                        wrBatch: (isFinal: boolean) => Promise<any>,
+                        totalItems: number,
                         skipFirst: boolean): Promise<number> => {
   return new Promise((resolve, reject) => {
     let firstItem = true
     let writeCount = 0
     let readCount = 0
     let inputDone = false
+    let paused = false
+    let gauge = new Gauge()
+
+    gauge.show('loading data...', 0)
+    const pctCount = Math.ceil(totalItems / 100)
 
     const onData = (row) => {
       if (firstItem) {
@@ -187,10 +199,30 @@ const consumeStream = (s: stream.Readable,
         }
       }
       readCount++
+      const numOutstanding = readCount - writeCount
+      if (numOutstanding >= BATCHSIZE) {
+        s.pause()
+        paused = true
+        wrBatch(inputDone)
+      }
       wrf(row)
         .then(() => {
           writeCount++
-          if (inputDone && writeCount === readCount) {
+          const numOutstanding = readCount - writeCount
+          // We may want to use a low water mark rather than zero here
+          if (paused && (numOutstanding === 0)) {
+            s.resume()
+            paused = false
+          }
+          if ((writeCount % pctCount) === 0) {
+            const pctComplete = writeCount / totalItems
+            const statusMsg = 'loaded ' + writeCount + '/' + totalItems +
+              ' rows ( ' + Math.round(pctComplete * 100) + '%)'
+            gauge.show(statusMsg, pctComplete)
+          }
+          if (inputDone && numOutstanding === 0) {
+            gauge.hide()
+            wrBatch(inputDone)
             resolve(writeCount)
           }
         })
@@ -202,6 +234,8 @@ const consumeStream = (s: stream.Readable,
       inputDone = true
       if (writeCount === readCount) {
         // may have already written all read items
+        gauge.hide()
+        wrBatch(inputDone)
         resolve(writeCount)
       } else {
         // console.log('consumeStream: readCount: ', readCount, ', writeCount: ', writeCount)
@@ -230,6 +264,17 @@ const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> =
 
     const qs = Array(md.columnNames.length).fill('?')
     const insertStmtStr = 'insert into ' + qTableName + ' values (' + qs.join(', ') + ')'
+    const insertRow = (insertStmt) => (row) => {
+      let typedRow = _.zip(md.columnTypes, row)
+      let rowVals = typedRow.map(([t, v]) => prepValue(t, v))
+      return insertStmt.run(rowVals)
+    }
+
+    const commitBatch = (isFinal) => {
+      const retp = db.run('commit')
+                    .then(() => (isFinal ? null : db.run('begin')))
+      return retp
+    }
 
     /*
      * TODO: multiple sources indicate wrapping inserts in a transaction is key to getting
@@ -244,18 +289,12 @@ const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> =
       .then(() => db.prepare(insertStmtStr))
       .then(insertStmt => {
         return consumeStream(csv.fromPath(pathname, md.csvOptions),
-                  (row) => {
-                    let typedRow = _.zip(md.columnTypes, row)
-                    let rowVals = typedRow.map(([t, v]) => prepValue(t, v))
-                    return insertStmt.run(rowVals)
-                  },
-                  true)
+                             insertRow(insertStmt), commitBatch, md.rowCount, true)
                 .then(rowCount => {
                   console.log('consumeStream completed, rowCount: ', rowCount)
                   return insertStmt.finalize()
                 })
       })
-      .then(() => db.run('commit'))
       .then(() => resolve(md))
       .catch(err => {
         console.error(err, err.stack)

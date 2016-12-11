@@ -69,7 +69,7 @@ const appInit = (options, path) => {
       .then(md => {
         global.md = md
         let rtOptions = {}
-        if (options.showQueries) {
+        if (options['show-queries']) {
           rtOptions.showQueries = true
         }
         return reltabSqlite.init(db, md, rtOptions)
@@ -120,10 +120,9 @@ const optionDefinitions = [
     description: 'Show hidden columns (for debugging)'
   },
   {
-    name: 'showQueries',
-    alias: 'q',
+    name: 'show-queries',
     type: Boolean,
-    description: 'show generated SQL queries on console when in foreground'
+    description: 'Show generated SQL queries on console when in foreground'
   },
   {
     name: 'version',

@@ -59,12 +59,13 @@ fs.readdirSync('node_modules')
   .forEach(function(mod) {
     nodeModules[mod] = 'commonjs ' + mod;
   });
-
+nodeModules['timer'] = 'timer'
 
 var app = {
   target: "node",
   entry: {
-    main: "./app/main.js"
+    main: "./app/main.js",
+    csvimport: "./src/csvimport-cli.js"
   },
   externals: nodeModules,
   node: {
