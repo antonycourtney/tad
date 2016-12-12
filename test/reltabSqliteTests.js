@@ -353,6 +353,7 @@ const sqliteTestShutdown = () => {
       .then(() => {
         t.ok(true, 'finished db.close')
         t.end()
+        process.exit(0)
       })
   })
 }

@@ -65,7 +65,8 @@ var app = {
   target: "node",
   entry: {
     main: "./app/main.js",
-    csvimport: "./src/csvimport-cli.js"
+    csvimport: "./src/csvimport-cli.js",
+    allTests: "./test/runAllTests.js"
   },
   externals: nodeModules,
   node: {

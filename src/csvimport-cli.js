@@ -1,10 +1,8 @@
 /* @flow */
 
 const db = require('sqlite')
-const reltab = require('../src/reltab')
 const commandLineArgs = require('command-line-args')
 const getUsage = require('command-line-usage')
-const reltabSqlite = require('../src/reltab-sqlite')
 const csvimport = require('../src/csvimport')
 const path = require('path')
 
