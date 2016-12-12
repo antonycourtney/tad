@@ -2,6 +2,7 @@
 
 const jsesc = require('jsesc')
 const _ = require('lodash')
+const sqliteParser = require('sqlite-parser')
 
 /**
  * AST for filter expressions, consisting of a tree of
@@ -666,22 +667,42 @@ const sortQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST =>
   return { selectStmts: [ retSel ] }
 }
 
+/*
+ * use sqliteParser to determine if extend expression is a constant expression, so that
+ * we can inline the extend expression.
+ *
+ * Conservative approximation -- true => constant expr, but false may or may not be constant
+ *
+ * Only returns true for simple literal exprs for now; should expand to handle binary ops
+ */
+const isConstantExpr = (expr: string): boolean => {
+  const selExp = `select (${expr})`
+  const selPtree = sqliteParser(selExp)
+  const expPtree = selPtree.statement[0].result[0]
+  return (expPtree.type === 'literal')
+}
+
 const extendQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
   const as = query.valArgs[0]
   const colExp = query.valArgs[2]
   const sqsql = queryToSql(tableMap, query.tableArgs[0])
 
-  // Unless we carefully analyze the expression used for the column extend
-  // value, it may refer to columns added in underlying select, so we
-  // always need an extra level of query
   const subSel = sqsql.selectStmts[0]
   // Note: We only want to extract the column ids from subquery for use at this level; we
   // want to skip any calculated expressions or aggregate functions
 
-  let selectCols = subSel.selectCols.map(getColId)
-  selectCols.push({ colExp, as })
-  const retSel = { selectCols, from: sqsql, where: '', groupBy: [], orderBy: [] }
-
+  const isConst = isConstantExpr(colExp)
+  let retSel
+  if (isConst && sqsql.selectStmts.length === 1) {
+    // just append our column to existing selectCols list:
+    const outSel = subSel.selectCols.slice()
+    outSel.push({ colExp, as })
+    retSel = _.defaults({ selectCols: outSel }, subSel)
+  } else {
+    let selectCols = subSel.selectCols.map(getColId)
+    selectCols.push({ colExp, as })
+    retSel = { selectCols, from: sqsql, where: '', groupBy: [], orderBy: [] }
+  }
   return { selectStmts: [ retSel ] }
 }
 

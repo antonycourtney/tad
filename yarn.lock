@@ -5809,6 +5809,10 @@ sqlite:
   dependencies:
     sqlite3 "^3.1.8"
 
+sqlite-parser@^1.0.0-rc3:
+  version "1.0.0-rc3"
+  resolved "https://registry.yarnpkg.com/sqlite-parser/-/sqlite-parser-1.0.0-rc3.tgz#617b087ac7963ed023a2a244c5f9da05c2d6aeab"
+
 sqlite3, sqlite3@^3.1.8:
   version "3.1.8"
   resolved "https://registry.yarnpkg.com/sqlite3/-/sqlite3-3.1.8.tgz#4cbcf965d8b901d1b1015cbc7fc415aae157dfaa"

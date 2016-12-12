@@ -29,6 +29,7 @@
     "react-dom": "^15.4.1",
     "slickgrid-es6": "^0.4.2",
     "sqlite": "^2.2.4",
+    "sqlite-parser": "^1.0.0-rc3",
     "sqlite3": "^3.1.8",
     "through": "^2.3.8"
   },
