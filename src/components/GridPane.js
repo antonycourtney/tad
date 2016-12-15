@@ -12,8 +12,7 @@ import * as actions from '../actions'
 const container = '#epGrid' // for now
 
 const gridOptions = {
-  // TODO -- need to tweak to PivotTreeModel sort code to accomodate
-  // multiColumnSort: true
+  multiColumnSort: true
 }
 
 const INDENT_PER_LEVEL = 15 // pixels
@@ -192,24 +191,6 @@ export default class GridPane extends React.Component {
     return gridCols
   }
 
-  refreshGrid (dataView: any) {
-    const gridCols = this.getGridCols(dataView)
-    this.grid.setColumns(gridCols)
-    /*
-     * FrozenGrid doesn't seem to work
-     * perhaps it's based on an out-of-date base version of slickgrid?
-    let frozenColCount = (gridCols[0].field === '_pivot') ? 1 : 0
-    console.log('refreshGrid: fcc: ', frozenColCount)
-    this.grid.setOptions({frozenColumn: frozenColCount})
-    */
-    this.grid.invalidateAllRows() // TODO: optimize
-    this.grid.updateRowCount()
-    this.grid.render()
-  }
-
-  refreshFromModel () {
-    this.ptm.refresh().then(dataView => this.refreshGrid(dataView))
-  }
 
   /* handlers for data loading and completion */
   registerLoadHandlers (grid: any) {
@@ -242,8 +223,9 @@ export default class GridPane extends React.Component {
     })
 
     this.grid.onSort.subscribe((e, args) => {
-      actions.setSortColumn(args.sortCol.field, args.sortAsc,
-        this.props.stateRefUpdater)
+      // convert back from slickGrid format: */
+      const sortKey = args.sortCols.map(sc => [sc.sortCol.field, sc.sortAsc])
+      actions.setSortKey(sortKey, this.props.stateRefUpdater)
     })
 
     this.grid.onClick.subscribe((e, args) => this.onGridClick(e, args))
@@ -285,6 +267,27 @@ export default class GridPane extends React.Component {
     */
     this.grid.resizeCanvas()
   }
+
+  refreshGrid (dataView: any) {
+    this.slickColMap = mkSlickColMap(dataView.schema, this.colWidthsMap)    
+    const gridCols = this.getGridCols(dataView)
+    this.grid.setColumns(gridCols)
+    /*
+     * FrozenGrid doesn't seem to work
+     * perhaps it's based on an out-of-date base version of slickgrid?
+    let frozenColCount = (gridCols[0].field === '_pivot') ? 1 : 0
+    console.log('refreshGrid: fcc: ', frozenColCount)
+    this.grid.setOptions({frozenColumn: frozenColCount})
+    */
+    this.grid.invalidateAllRows() // TODO: optimize
+    this.grid.updateRowCount()
+    this.grid.render()
+  }
+
+  refreshFromModel () {
+    this.ptm.refresh().then(dataView => this.refreshGrid(dataView))
+  }
+
 
   componentDidMount () {
     this.onDataLoading = new Slick.Event()
@@ -350,11 +353,9 @@ export default class GridPane extends React.Component {
     this.ptm.setShowRoot(appState.showRoot)
     this.ptm.setPivotLeafColumn(appState.pivotLeafColumn)
     const sortKey = appState.sortKey
-    if (sortKey.length > 0) {
-      const [sortCol, sortColAsc] = sortKey[0]
-      this.ptm.setSort(sortCol, sortColAsc ? 1 : -1)
-      this.grid.setSortColumn(sortCol, sortColAsc)
-    }
+    this.ptm.setSortKey(sortKey)
+    const sortObjs = sortKey.map(([col, asc]) => ({columnId: col, sortAsc: asc}))
+    this.grid.setSortColumns(sortObjs)
     this.refreshFromModel()
   }
  }

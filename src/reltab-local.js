@@ -157,7 +157,8 @@ class UniqAgg {
 const defaultAggs = {
   'integer': SumAgg,
   'real': SumAgg,
-  'text': UniqAgg
+  'text': UniqAgg,
+  'boolean': UniqAgg
 }
 
 /*
@@ -543,7 +544,8 @@ const compileSortFunc = (schema: Schema, keys: Array<[string, boolean]>): RowCmp
   var cmpFnMap = {
     'text': strcmp,
     'integer': numcmp,
-    'real': numcmp
+    'real': numcmp,
+    'boolean': numcmp
   }
 
   function mkRowCompFn (valCmpFn, idx, nextFunc) {

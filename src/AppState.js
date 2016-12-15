@@ -65,10 +65,6 @@ export default class AppState extends Immutable.Record({
       nextArr = arr.slice()
       nextArr.splice(idx, 1)
     }
-    // For now, while we don't support compound sort key:
-    if (nextArr.length > 1) {
-      nextArr.shift()
-    }
     return this.set('sortKey', nextArr)
   }
 }

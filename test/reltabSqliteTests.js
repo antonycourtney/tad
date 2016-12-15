@@ -221,7 +221,7 @@ const aggTreeTest0 = () => {
   const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
   test('initial aggTree test', t => {
     const rtc = sharedRtc
-    const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true)
+    const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true, [])
 
     p0.then(tree0 => {
       console.log('vpivot initial promise resolved...')
@@ -237,7 +237,7 @@ const aggTreeTest0 = () => {
         .then(res => {
           console.log('open root query: ')
           util.logTable(res)
-          const expCols = ['_depth', '_pivot', '_path', 'JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec']
+          const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec', '_depth', '_pivot', '_path', '_isRoot', '_path0', '_path1']
 
           t.deepEqual(res.schema.columns, expCols, 'Q1 schema columns')
           t.deepEqual(res.rowData.length, 19, 'Q1 rowData length')
@@ -267,6 +267,51 @@ const aggTreeTest0 = () => {
         })
         .then(res => {
           console.log('evaluating query returned from getTreeQuery:')
+          util.logTable(res)
+        })
+        .then(() => t.end())
+        .catch(util.mkAsyncErrHandler(t, 'aggtree queries chain'))
+    }).catch(util.mkAsyncErrHandler(t, 'initial vpivot'))
+  })
+}
+
+const aggTreeTest1 = () => {
+  const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
+  test('sorted aggTree test', t => {
+    const rtc = sharedRtc
+    const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
+                [['TCOE', false]])
+
+    p0.then(tree0 => {
+      console.log('vpivot initial promise resolved...')
+
+      const sq1 = tree0.getSortQuery(1)
+
+      rtc.evalQuery(sq1)
+        .then(res => {
+          console.log('sort query depth 1: ')
+          util.logTable(res)
+        })
+        .then(() => {
+          const sq2 = tree0.getSortQuery(2)
+
+          return rtc.evalQuery(sq2)
+        })
+        .then(res2 => {
+          console.log('sort query depth 2: ')
+          util.logTable(res2)
+        })
+        .then(() => {
+          const q1 = tree0.applyPath([])
+          const sq1 = tree0.getSortQuery(1)
+
+          console.log('got depth 1 query and sortQuery, joining...: ')
+          const jq1 = q1.join(sq1, '_path0')
+
+          return rtc.evalQuery(jq1)
+        })
+        .then(res => {
+          console.log('result of join query: ')
           util.logTable(res)
         })
         .then(() => t.end())
@@ -320,7 +365,7 @@ const PivotSortTest0 = () => {
       t.deepEqual(pivotColumn, expPivotCol, 'initial pivot column matches expected')
 
       // Now sort by Title:
-      ptm.setSort('Title', 1)
+      // ptm.setSort('Title', 1)
       console.log('after sort: ')
       console.table(dv0.rawData)
       const sortedPivotCol = getRawColumn(dv0.rawData, '_pivot')
@@ -336,7 +381,7 @@ const sqliteTestSetup = () => {
   test('sqlite test setup', t => {
     db.open(':memory:')
       .then(() => csvimport.importSqlite(testPath))
-      .then(md => reltabSqlite.init(db, md))
+      .then(md => reltabSqlite.init(db, md, {showQueries: true}))
       .then(rtc => {
         sharedRtc = rtc
         console.log('set rtc: ', sharedRtc)
@@ -358,24 +403,33 @@ const sqliteTestShutdown = () => {
   })
 }
 
+const doIt = true
+
 const runTests = () => {
   sqliteTestSetup()
-  dbTest0()
-  dbTest2()
-  dbTest3()
-  dbTest4()
-  dbTest5()
-  serTest0()
-  dbTest6()
-  dbTest7()
-  dbTest8()
-  dbTest9()
 
-  dbTest10()
-  dbTest11()
+  if (doIt) {
+    dbTest0()
+    dbTest2()
+    dbTest3()
+    dbTest4()
+    dbTest5()
+    serTest0()
+    dbTest6()
+    dbTest7()
+    dbTest8()
+    dbTest9()
+
+    dbTest10()
+    dbTest11()
+  }
   aggTreeTest0()
 
-  PivotSortTest0()
+  aggTreeTest1()
+
+  if (doIt) {
+    PivotSortTest0()
+  }
 
   sqliteTestShutdown()
 }

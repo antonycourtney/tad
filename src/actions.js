@@ -77,8 +77,9 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
  * single column version of setting sort key
  * (until we implement compound sort keys)
  */
-export const setSortColumn = (colId: string, asc: boolean, updater: RefUpdater) => {
-  updater(appState => appState.set('sortKey', [[colId, asc]]))
+export const setSortKey = (sortKey: Array<[string, boolean]>, updater: RefUpdater) => {
+  console.log('setSortKey: ', sortKey)
+  updater(appState => appState.set('sortKey', sortKey))
 }
 
 export const setColumnOrder = (displayColumns: Array<string>, updater: RefUpdater) => {

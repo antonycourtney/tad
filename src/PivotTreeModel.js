@@ -5,7 +5,6 @@ import * as aggtree from './aggtree'
 import SimpleDataView from './SimpleDataView'
 import type { Connection } from './reltab' // eslint-disable-line
 import * as _ from 'lodash'
-import * as d3a from 'd3-array'
 
 // trim an open node map to given depth:
 const trimToDepth = (nodeMap: Object, depth: number): Object => {
@@ -31,6 +30,7 @@ export default class PivotTreeModel {
   pivots: Array<string>
   pivotLeafColumn: ?string
   showRoot: boolean
+  sortKey: Array<[string, boolean]>
 
   constructor (rt: Connection, baseQuery: reltab.QueryExp, pivots: Array<string>, pivotLeafColumn: ?string, showRoot: boolean) {
     this.openNodeMap = {}
@@ -44,6 +44,12 @@ export default class PivotTreeModel {
     this.pivots = pivots
     this.pivotLeafColumn = pivotLeafColumn
     this.showRoot = showRoot
+    this.sortKey = []
+  }
+
+  setSortKey (sortKey: Array<[string, boolean]>): void {
+    this.sortKey = sortKey
+    this.needPivot = true
   }
 
   setPivotLeafColumn (pivotLeafColumn: ?string): void {
@@ -169,7 +175,8 @@ export default class PivotTreeModel {
      * if there is a remote server / thread doing the work.
      */
     if (this.needPivot) {
-      this.vpivotPromise = aggtree.vpivot(this.rt, this.baseQuery, this.pivots, this.pivotLeafColumn, this.showRoot)
+      this.vpivotPromise = aggtree.vpivot(this.rt, this.baseQuery, this.pivots,
+          this.pivotLeafColumn, this.showRoot, this.sortKey)
       this.needPivot = false
     }
 
@@ -194,51 +201,5 @@ export default class PivotTreeModel {
       row = this.dataView.getItemById(row._parentId)
     }
     return row
-  }
-
-  setSort (column: string, dir: number) {
-    const sortcol = column
-    const orderFn = (dir > 0) ? d3a.ascending : d3a.descending
-
-    const cmpFn = (ra, rb) => {
-      if (ra._depth === 0 || rb._depth === 0) {
-        return (ra._depth - rb._depth) // 0 always wins
-      }
-      if (ra._depth < rb._depth) {
-        // get ancestor of rb at depth ra._depth:
-        rb = this.getAncestor(rb, ra._depth)
-        if (rb._id === ra._id) {
-          // ra is itself an ancestor of rb, so comes first:
-          return -1
-        }
-      } else if (ra._depth > rb._depth) {
-        ra = this.getAncestor(ra, rb._depth)
-        if (ra._id === rb._id) {
-          // rb is itself an ancestor of ra, so must come first:
-          return 1
-        }
-      }
-
-      // ra and rb at same depth, but do they have the same parent??
-      while (ra._parentId !== rb._parentId) {
-        // walk up tree until we find a common parent
-
-        /*
-        console.log( "looking for common ancestor of ra: id:", ra._id, ", parent: ", ra._parentId, ", depth: ", ra._depth,
-                      " and rb: id: ", rb._id, ", parent: ", rb._parentId, ", depth: ", rb._depth )
-        */
-        ra = this.getAncestor(ra, ra._depth - 1)
-        rb = this.getAncestor(rb, rb._depth - 1)
-      }
-
-      var ret = orderFn(ra[ sortcol ], rb[ sortcol ])
-      if (ret === 0) {
-        // no difference in sort column, revert to id order (order returned from query):
-        ret = orderFn(ra._id, rb._id)
-      }
-      return ret
-    }
-
-    this.dataView.setSort(cmpFn)
   }
 }

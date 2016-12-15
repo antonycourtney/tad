@@ -142,7 +142,7 @@ export const and = () : FilterExp => new FilterExp('AND')
 export const or = () : FilterExp => new FilterExp('OR')
 
 type QueryOp = 'table' | 'project' | 'filter' | 'groupBy' |
-'mapColumns' | 'mapColumnsByIndex' | 'concat' | 'sort' | 'extend'
+'mapColumns' | 'mapColumnsByIndex' | 'concat' | 'sort' | 'extend' | 'join'
 
 export type AggStr = 'uniq' | 'sum' | 'avg'
 
@@ -152,7 +152,7 @@ export type AggStr = 'uniq' | 'sum' | 'avg'
 // For now we'll only handle string types (default agg):
 export type AggColSpec = string
 
-type Scalar = ?number | ?string
+type Scalar = ?number | ?string | ?boolean
 export type Row = Array<Scalar>
 
 // A RowObject uses column ids from schema as keys:
@@ -160,7 +160,7 @@ type RowObject ={[columnId: string]: Scalar}
 
 // metadata for a single column:
 // TODO: date, time, datetime, URL, ...
-export type ColumnType = 'integer' | 'real' | 'text'
+export type ColumnType = 'integer' | 'real' | 'text' | 'boolean'
 export type ColumnMetadata = { displayName: string, type: ColumnType }
 
 /*
@@ -175,6 +175,9 @@ export type ColumnExtendVal = Scalar | ExtendFunc // eslint-disable-line
  * properties are all optional here
  */
 export type ColumnMapInfo = {id?: string, type?: ColumnType, displayName?: string}
+
+// Join types:  For now: only left outer
+export type JoinType = 'LeftOuter'
 
 export class QueryExp {
   expType: 'QueryExp'
@@ -222,6 +225,11 @@ export class QueryExp {
   // extend by adding a single column
   extend (colId: string, columnMetadata: ColumnMapInfo, colVal: ColumnExtendVal): QueryExp {
     return new QueryExp('extend', [colId, columnMetadata, colVal], [this])
+  }
+
+  // join to another QueryExp
+  join (qexp: QueryExp, on: string, joinType: JoinType = 'LeftOuter'): QueryExp {
+    return new QueryExp('join', [joinType, on], [this, qexp])
   }
 
   toSql (tableMap: TableInfoMap, outer: boolean = true): string {
@@ -393,6 +401,28 @@ const extendGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   return inSchema.extend(colId, columnMetadata)
 }
 
+const joinGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+  const [joinType, on] = query.valArgs
+  const [lhs, rhs] = query.tableArgs
+
+  if (joinType !== 'LeftOuter') {
+    throw new Error('unsupported join type: ' + joinType)
+  }
+  const lhsSchema = lhs.getSchema(tableMap)
+  const rhsSchema = rhs.getSchema(tableMap)
+
+  const rhsCols = _.difference(rhsSchema.columns,
+      _.concat([on], lhsSchema.columns))
+  const rhsMeta = _.pick(rhsSchema.columnMetadata, rhsCols)
+
+  const joinCols = _.concat(lhsSchema.columns, rhsCols)
+  const joinMeta = _.defaults(lhsSchema.columnMetadata, rhsMeta)
+
+  const joinSchema = new Schema(joinCols, joinMeta)
+
+  return joinSchema
+}
+
 const getSchemaMap : GetSchemaMap = {
   'table': tableGetSchema,
   'project': projectGetSchema,
@@ -402,7 +432,8 @@ const getSchemaMap : GetSchemaMap = {
   'mapColumnsByIndex': mapColumnsByIndexGetSchema,
   'concat': concatGetSchema,
   'sort': filterGetSchema,
-  'extend': extendGetSchema
+  'extend': extendGetSchema,
+  'join': joinGetSchema
 }
 
 const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
@@ -423,8 +454,16 @@ const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
 type SQLSelectAsExp = { colExp: string, as: string }
 type SQLSelectColExp = string | SQLSelectAsExp
 type SQLSortColExp = { col: string, asc: boolean }
-type SQLSelectAST = { selectCols: Array<SQLSelectColExp>, from: SQLQueryAST|string,
-  where: string, groupBy: Array<string>, orderBy: Array<SQLSortColExp> }
+type SQLFromJoin = { kind: 'join', joinType: JoinType, lhs: SQLQueryAST, rhs: SQLQueryAST }
+type SQLFromQuery = { kind: 'query', query: SQLQueryAST }
+type SQLSelectAST = {
+  selectCols: Array<SQLSelectColExp>,
+  from: string|SQLFromQuery|SQLFromJoin,
+  on?: string,
+  where: string,
+  groupBy: Array<string>,
+  orderBy: Array<SQLSortColExp>
+}
 type SQLQueryAST = { selectStmts: Array<SQLSelectAST> } // all underliers combined via `union all`
 
 /* An array of strings that will be joined with Array.join('') to
@@ -468,9 +507,20 @@ const ppSQLSelect = (dst: StringBuffer, depth: number, ss: SQLSelectAST) => {
   const fromVal = ss.from
   if (typeof fromVal === 'string') {
     dst.push('\'' + fromVal + '\'\n')
+  } else if (fromVal.kind === 'join') {
+    // join condition:
+    const {lhs, rhs} = fromVal
+    dst.push('(\n')
+    auxPPSQLQuery(dst, depth + 1, lhs)
+    dst.push(') LEFT OUTER JOIN (\n')
+    auxPPSQLQuery(dst, depth + 1, rhs)
+    dst.push(')\n')
+    if (ss.on) {
+      dst.push('USING ("' + ss.on + '")\n')
+    }
   } else {
     dst.push('(\n')
-    auxPPSQLQuery(dst, depth + 1, fromVal)
+    auxPPSQLQuery(dst, depth + 1, fromVal.query)
     ppOut(dst, depth, ')\n')
   }
   if (ss.where.length > 0) {
@@ -550,7 +600,8 @@ const projectQueryToSql = (tableMap: TableInfoMap, pq: QueryExp): SQLQueryAST =>
 const defaultAggs = {
   'integer': 'sum',
   'real': 'sum',
-  'text': 'uniq'
+  'text': 'uniq',
+  'boolean': 'uniq'
 }
 
 const groupByQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
@@ -587,7 +638,8 @@ const groupByQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST
     ) {
     retSel = _.defaults({ selectCols, groupBy: cols }, subSel)
   } else {
-    retSel = { selectCols, from: sqsql, groupBy: cols, where: '', orderBy: [] }
+    const from = { kind: 'query', query: sqsql }
+    retSel = { selectCols, from, groupBy: cols, where: '', orderBy: [] }
   }
   return { selectStmts: [ retSel ] }
 }
@@ -608,7 +660,8 @@ const filterQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST 
     retSel = _.defaults({ where: whereStr }, subSel)
   } else {
     const selectCols = subSel.selectCols.map(getColId)
-    retSel = { selectCols, from: sqsql, where: whereStr, groupBy: [], orderBy: [] }
+    const from = { kind: 'query', query: sqsql }
+    retSel = { selectCols, from, where: whereStr, groupBy: [], orderBy: [] }
   }
 
   return { selectStmts: [ retSel ] }
@@ -661,7 +714,8 @@ const sortQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST =>
     retSel = _.defaults({ orderBy }, subSel)
   } else {
     let selectCols = subSel.selectCols.map(getColId)
-    retSel = { selectCols, from: sqsql, where: '', groupBy: [], orderBy }
+    const from = { kind: 'query', query: sqsql }
+    retSel = { selectCols, from, where: '', groupBy: [], orderBy }
   }
 
   return { selectStmts: [ retSel ] }
@@ -701,8 +755,24 @@ const extendQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST 
   } else {
     let selectCols = subSel.selectCols.map(getColId)
     selectCols.push({ colExp, as })
-    retSel = { selectCols, from: sqsql, where: '', groupBy: [], orderBy: [] }
+    const from = { kind: 'query', query: sqsql }
+    retSel = { selectCols, from, where: '', groupBy: [], orderBy: [] }
   }
+  return { selectStmts: [ retSel ] }
+}
+
+const joinQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
+  const [joinType, on] = query.valArgs
+  const [lhsQuery, rhsQuery] = query.tableArgs
+
+  const lhs = queryToSql(tableMap, lhsQuery)
+  const rhs = queryToSql(tableMap, rhsQuery)
+
+  const outSchema = query.getSchema(tableMap)
+  // any type here is flow bug workaround
+  const selectCols: Array<any> = outSchema.columns
+  const from = { kind: 'join', joinType, lhs, rhs }
+  const retSel = { selectCols, from, on, where: '', groupBy: [], orderBy: [] }
   return { selectStmts: [ retSel ] }
 }
 
@@ -715,7 +785,8 @@ const genSqlMap: GenSQLMap = {
   'mapColumnsByIndex': mapColumnsQueryToSql(true),
   'concat': concatQueryToSql,
   'sort': sortQueryToSql,
-  'extend': extendQueryToSql
+  'extend': extendQueryToSql,
+  'join': joinQueryToSql
 }
 
 const queryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
@@ -768,7 +839,8 @@ export class Schema {
   }
 
   displayName (colId: string): string {
-    const dn = this.columnMetadata[ colId ].displayName || colId
+    const md = this.columnMetadata[ colId ]
+    const dn = (md && md.displayName) || colId
     return dn
   }
 
