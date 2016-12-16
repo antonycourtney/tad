@@ -31,11 +31,16 @@ export const queryTest = (label: string, query: reltab.QueryExp,
   })
 }
 
-export const logTable = (table: reltab.TableRep): void => {
+type LogTableOptions = { maxRows?: number }
+
+export const logTable = (table: reltab.TableRep, options: ?LogTableOptions = null): void => {
   // Node's console-table package has slightly different synopsis
   // than browser version; accepts column names as first arg:
   const ctf : any = console.table
-  ctf(table.schema.columns, table.rowData)
+
+  const rowData = (options && options.maxRows) ? table.rowData.slice(0, options.maxRows) : table.rowData
+
+  ctf(table.schema.columns, rowData)
 }
 
 export const runSqliteTest = (label: string, f: (t: any) => Promise<any>): void => {

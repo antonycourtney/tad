@@ -132,12 +132,23 @@ export default class PivotTreeModel {
   }
 
   loadDataView (tableData: reltab.TableRep) {
+    const getPath = (rowMap, depth) => {
+      let path = []
+      for (let i = 0; i < depth; i++) {
+        let pathElem = rowMap['_path' + i]
+        if (pathElem) {
+          path.push(pathElem)
+        }
+      }
+      return path
+    }
+
     var nPivots = this.pivots.length
     var rowData = []
     var parentIdStack = []
     for (var i = 0; i < tableData.rowData.length; i++) {
       var rowMap = tableData.schema.rowMapFromRow(tableData.rowData[ i ])
-      var path = aggtree.decodePath(rowMap._path)
+      var path = getPath(rowMap, nPivots)
       var depth = rowMap._depth
       rowMap._isOpen = this.pathIsOpen(path)
       rowMap._isLeaf = depth > nPivots
@@ -181,7 +192,7 @@ export default class PivotTreeModel {
     }
 
     this.treeQueryPromise =
-      this.vpivotPromise.then(ptree => ptree.getTreeQuery(this.openNodeMap))
+      this.vpivotPromise.then(ptree => ptree.getSortedTreeQuery(this.openNodeMap))
 
     const dvPromise = this.treeQueryPromise
       .then(treeQuery => this.rt.evalQuery(treeQuery))

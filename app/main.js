@@ -48,9 +48,6 @@ const runQuery = rtc => (queryStr, cb) => {
     const query = reltab.deserializeQuery(queryStr)
     rtc.evalQuery(query)
       .then(res => {
-        // console.log('runQuery returning:')
-        // const ctf : any = console.table
-        // ctf(res.schema.columns, res.rowData)
         const serRes = JSON.stringify(res, null, 2)
         cb(serRes)
       })

@@ -2,6 +2,22 @@
 import * as fs from 'fs'
 
 import 'console.table'
+require('babel-polyfill')
+
+var test = require('tape')
+var tapSpec = require('tap-spec')
+
+/*
+ * very important to explicitly run our tape test output
+ * into tap-spec via node pipes rather than stdin / stdout.
+ *
+ * I found large auxiliary output (like console.log'ing a large table)
+ * would encounter buffering issues when using stdin / stdout.
+ * Never isolated exact cause, but this workaround is adequate:
+ */
+test.createStream()
+  .pipe(tapSpec())
+  .pipe(process.stdout)
 
 // A fetch polyfill using ReadFile that assumes url is relative:
 function readFileAsync (file, options) {

@@ -228,8 +228,9 @@ export class QueryExp {
   }
 
   // join to another QueryExp
-  join (qexp: QueryExp, on: string, joinType: JoinType = 'LeftOuter'): QueryExp {
-    return new QueryExp('join', [joinType, on], [this, qexp])
+  join (qexp: QueryExp, on: string|Array<string>, joinType: JoinType = 'LeftOuter'): QueryExp {
+    const onArg = (typeof on === 'string') ? [on] : on
+    return new QueryExp('join', [joinType, onArg], [this, qexp])
   }
 
   toSql (tableMap: TableInfoMap, outer: boolean = true): string {
@@ -412,7 +413,7 @@ const joinGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   const rhsSchema = rhs.getSchema(tableMap)
 
   const rhsCols = _.difference(rhsSchema.columns,
-      _.concat([on], lhsSchema.columns))
+      _.concat(on, lhsSchema.columns))
   const rhsMeta = _.pick(rhsSchema.columnMetadata, rhsCols)
 
   const joinCols = _.concat(lhsSchema.columns, rhsCols)
@@ -459,7 +460,7 @@ type SQLFromQuery = { kind: 'query', query: SQLQueryAST }
 type SQLSelectAST = {
   selectCols: Array<SQLSelectColExp>,
   from: string|SQLFromQuery|SQLFromJoin,
-  on?: string,
+  on?: Array<string>,
   where: string,
   groupBy: Array<string>,
   orderBy: Array<SQLSortColExp>
@@ -516,7 +517,8 @@ const ppSQLSelect = (dst: StringBuffer, depth: number, ss: SQLSelectAST) => {
     auxPPSQLQuery(dst, depth + 1, rhs)
     dst.push(')\n')
     if (ss.on) {
-      dst.push('USING ("' + ss.on + '")\n')
+      const qcols = ss.on.map(quoteCol)
+      dst.push('USING (' + qcols.join(', ') + ')\n')
     }
   } else {
     dst.push('(\n')

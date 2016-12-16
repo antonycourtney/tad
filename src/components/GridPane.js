@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import PivotTreeModel from '../PivotTreeModel'
-import * as aggtree from '../aggtree'
 import $ from 'jquery'
 import * as _ from 'lodash'
 import { Slick } from 'slickgrid-es6'
@@ -159,7 +158,10 @@ export default class GridPane extends React.Component {
     if (item._isLeaf) {
       return
     }
-    var path = aggtree.decodePath(item._path)
+    let path = []
+    for (let i = 0; i < this.props.appState.vpivots.length; i++) {
+      path.push(item['_path' + i])
+    }
     if (item._isOpen) {
       this.ptm.closePath(path)
     } else {
@@ -190,7 +192,6 @@ export default class GridPane extends React.Component {
     }
     return gridCols
   }
-
 
   /* handlers for data loading and completion */
   registerLoadHandlers (grid: any) {
@@ -261,7 +262,7 @@ export default class GridPane extends React.Component {
     this.slickColMap = mkSlickColMap(dataView.schema, this.colWidthsMap)
     const gridCols = this.getGridCols()
     this.createGrid(gridCols, dataView)
-    /*const gridWidth = gridCols.reduce((width,col) => width + col.width, 0)
+    /* const gridWidth = gridCols.reduce((width,col) => width + col.width, 0)
     console.log( "loadInitialImage: setting container width to: ", gridWidth )
     $(container).css('width', gridWidth + 'px')
     */
@@ -269,7 +270,7 @@ export default class GridPane extends React.Component {
   }
 
   refreshGrid (dataView: any) {
-    this.slickColMap = mkSlickColMap(dataView.schema, this.colWidthsMap)    
+    this.slickColMap = mkSlickColMap(dataView.schema, this.colWidthsMap)
     const gridCols = this.getGridCols(dataView)
     this.grid.setColumns(gridCols)
     /*
@@ -287,7 +288,6 @@ export default class GridPane extends React.Component {
   refreshFromModel () {
     this.ptm.refresh().then(dataView => this.refreshGrid(dataView))
   }
-
 
   componentDidMount () {
     this.onDataLoading = new Slick.Event()

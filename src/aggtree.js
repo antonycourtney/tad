@@ -2,6 +2,7 @@
 
 import * as reltab from './reltab'
 const {col, constVal} = reltab
+import * as _ from 'lodash'
 
 import type { Connection } from './reltab' // eslint-disable-line
 
@@ -47,9 +48,10 @@ export const decodePath = (pathStr: string): Path => {
 }
 
 const addPathCols = (baseQuery: reltab.QueryExp,
+                      baseDepth: number,
                       maxDepth: number): reltab.QueryExp => {
   let retQuery = baseQuery
-  for (let i = 0; i < (maxDepth - 1); i++) {
+  for (let i = baseDepth; i < (maxDepth - 1); i++) {
     retQuery = retQuery.extend('_path' + i,
         {type: 'text'}, null)
   }
@@ -118,26 +120,11 @@ export class VPivotTree {
         .extend('_pivot', { type: 'text' }, leafExp)
     }
 
-    // add _depth and _path column and project to get get column order correct:
-
-    const basePathStr = encodePath(path)
-    const pathDelim = (path.length > 0) ? PATHSEP : ''
-
-    // TODO (major!): use of encodeURIComponent() in function of extend() below means
-    // we most likely can't run this function directly in the database.
-    // Either need to arrange to support this in the db server (best) or find a way to
-    // do some local post-processing on results we get back from the db
-
-    // try to URIEncode the path in SQL:
-    const pathExp = `'${basePathStr}${pathDelim}' || replace(replace("_pivot",'%','%25'),'${PATHSEP}','${ENCPATHSEP}')`
-
     const depth = path.length + 1
 
     pathQuery = pathQuery
       .extend('_depth', { type: 'integer' }, depth)
       .extend('_isRoot', { type: 'boolean' }, 0)
-//      .extend('_path', {type: 'text'}, r => basePathStr + pathDelim + encodeURIComponent((r._pivot: any)))
-      .extend('_path', {type: 'text'}, pathExp)
       .project(this.outCols)
 
     for (let i = 0; i < this.pivotColumns.length; i++) {
@@ -152,10 +139,10 @@ export class VPivotTree {
             {type: 'text'}, pathElemExp)
     }
     // TODO: Should we optionally also insert _childCount and _leafCount ?
-    // _childCount would count next level of groupBy, _leafCount would do count() at point of calculating
+    // _childCount would count next level of groupBy,
+    // _leafCount would do count() at point of calculating
     // filter for current path (before doing groupBy).
     // These can certainly have non-trivial costs to calculate
-    // Probably also want to explicitly insert _path0..._pathN columns!
     return pathQuery
   }
 
@@ -174,17 +161,24 @@ export class VPivotTree {
     sortQuery = sortQuery
       .groupBy(gbCols, sortCols)
 
-    // Now rename each sort column:
     let colMap = {}
-    for (let i = 0; i < sortCols.length; i++) {
-      let colName = '_sortVal_' + depth.toString() + '_' + i.toString()
-      colMap[sortCols[i]] = { id: colName }
-    }
-
     for (let i = 0; i < gbCols.length; i++) {
-      colMap[gbCols[i]] = { id: '_path' + i }
+      const pathColName = '_path' + i
+      colMap[gbCols[i]] = { id: pathColName }
     }
     sortQuery = sortQuery.mapColumns(colMap)
+
+    const pathLevel = depth - 1
+
+    sortQuery = sortQuery.extend('_sortVal_' + pathLevel.toString(), {type: 'integer'}, 1)
+
+    let sortColMap = {}
+    for (let i = 0; i < sortCols.length; i++) {
+      let colIndex = gbCols.length + i
+      let colName = '_sortVal_' + pathLevel.toString() + '_' + i.toString()
+      sortColMap[colIndex.toString()] = { id: colName }
+    }
+    sortQuery = sortQuery.mapColumnsByIndex(sortColMap)
 
     return sortQuery
   }
@@ -194,7 +188,7 @@ export class VPivotTree {
    */
   getTreeQuery (openPaths: PathTree): reltab.QueryExp {
     const maxDepth = this.pivotColumns.length + 1
-    let resQuery = this.rootQuery ? addPathCols(this.rootQuery, maxDepth) : null
+    let resQuery = this.rootQuery ? addPathCols(this.rootQuery, 0, maxDepth) : null
 
     const walkPath = (treeQuery, prefix, pathMap) => {
       for (var component in pathMap) {
@@ -223,8 +217,46 @@ export class VPivotTree {
     }
     var tq = walkPath(resQuery, [], openPaths)
 
-    tq = tq.sort([ [ '_path', true ] ])
+    const sortArg = []
+    for (let i = 0; i < maxDepth - 1; i++) {
+      sortArg.push(['_path' + i, true])
+    }
+    tq = tq.sort(sortArg)
     return tq
+  }
+
+/*
+ * get query for full tree state from a set of openPaths, joined with
+ * relevant sort queries based on pivot depth, and with appropriate
+ * order by clause
+ */
+  getSortedTreeQuery (openPaths: PathTree): reltab.QueryExp {
+    const tq = this.getTreeQuery(openPaths)
+
+    let tsortKey = [['_isRoot', false]]
+
+    let jtq = tq
+    if (this.sortKey.length > 0) {
+      // add sort queries for each pivot depth and join to tree query
+      for (let i = 0; i < this.pivotColumns.length; i++) {
+        let depth = i + 1
+        let sq = this.getSortQuery(depth)
+        let joinKey = _.range(0, depth).map(j => '_path' + j)
+        jtq = jtq.join(sq, joinKey)
+        // sort keys for this depth:
+        let dsortKey = _.range(0, this.sortKey.length)
+                  .map(j => ['_sortVal_' + i + '_' + j, this.sortKey[j][1]])
+        // should be able to do a simple tsortKey.push for next line, but flow being lame
+        tsortKey = tsortKey.concat([['_sortVal_' + i.toString(), true]])
+        tsortKey = tsortKey.concat(dsortKey)
+      }
+    }
+    // finally add the _path elements to sort key:
+    let psortKey = _.range(0, this.pivotColumns.length)
+              .map(i => ['_path' + i, true])
+    tsortKey = tsortKey.concat(psortKey)
+    const stq = jtq.sort(tsortKey)
+    return stq
   }
 }
 
@@ -251,7 +283,7 @@ export const vpivot = (rt: reltab.Connection,
   const basep = rt.evalQuery(schemaQuery)
   return basep.then(baseRes => {
     const baseSchema = baseRes.schema
-    const hiddenCols = ['_depth', '_pivot', '_path', '_isRoot']
+    const hiddenCols = ['_depth', '_pivot', '_isRoot']
     const outCols = baseSchema.columns.concat(hiddenCols)
 
     const gbCols = baseSchema.columns.slice()
@@ -262,7 +294,6 @@ export const vpivot = (rt: reltab.Connection,
         .groupBy([], gbCols)
         .extend('_pivot', { type: 'text' }, null)
         .extend('_depth', { type: 'integer' }, 0)
-        .extend('_path', {type: 'text'}, "''")
         .extend('_isRoot', {type: 'boolean'}, 1)
         .project(outCols)
     }

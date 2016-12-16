@@ -18,6 +18,32 @@ const q1 = reltab.tableQuery('bart-comp-all')
 
 var tcoeSum
 
+const sqliteTestSetup = () => {
+  test('sqlite test setup', t => {
+    db.open(':memory:')
+      .then(() => csvimport.importSqlite(testPath))
+      .then(md => reltabSqlite.init(db, md, {showQueries: true}))
+      .then(rtc => {
+        sharedRtc = rtc
+        console.log('set rtc: ', sharedRtc)
+        t.ok(true, 'setup and import complete')
+        t.end()
+      })
+      .catch(err => console.error('sqliteTestSetup failure: ', err, err.stack))
+  })
+}
+
+const sqliteTestShutdown = () => {
+  test('sqlite test setup', t => {
+    db.close()
+      .then(() => {
+        t.ok(true, 'finished db.close')
+        t.end()
+        process.exit(0)
+      })
+  })
+}
+
 const dbTest0 = () => {
   test('basic table query', t => {
     const rtc = sharedRtc // Note: need to ensure we only read sharedRtc inside test()
@@ -50,6 +76,7 @@ const dbTest0 = () => {
 
       tcoeSum = util.columnSum(res, 'TCOE')
       console.log('TCOE sum: ', tcoeSum)
+
       t.end()
     })
   })
@@ -237,7 +264,7 @@ const aggTreeTest0 = () => {
         .then(res => {
           console.log('open root query: ')
           util.logTable(res)
-          const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec', '_depth', '_pivot', '_path', '_isRoot', '_path0', '_path1']
+          const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec', '_depth', '_pivot', '_isRoot', '_path0', '_path1']
 
           t.deepEqual(res.schema.columns, expCols, 'Q1 schema columns')
           t.deepEqual(res.rowData.length, 19, 'Q1 rowData length')
@@ -280,7 +307,7 @@ const aggTreeTest1 = () => {
   test('sorted aggTree test', t => {
     const rtc = sharedRtc
     const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
-                [['TCOE', false]])
+                [['TCOE', false], ['Base', true], ['Title', true]])
 
     p0.then(tree0 => {
       console.log('vpivot initial promise resolved...')
@@ -377,59 +404,115 @@ const PivotSortTest0 = () => {
   })
 }
 
-const sqliteTestSetup = () => {
-  test('sqlite test setup', t => {
-    db.open(':memory:')
-      .then(() => csvimport.importSqlite(testPath))
-      .then(md => reltabSqlite.init(db, md, {showQueries: true}))
-      .then(rtc => {
-        sharedRtc = rtc
-        console.log('set rtc: ', sharedRtc)
-        t.ok(true, 'setup and import complete')
-        t.end()
-      })
-      .catch(err => console.error('sqliteTestSetup failure: ', err, err.stack))
-  })
+// Let's try async / await:
+const asyncTest1 = () => {
+  const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
+
+  const tf = async (t) => {
+    const rtc = sharedRtc
+    const res0 = await rtc.evalQuery(q0)
+    console.log('tf: got result:')
+    console.log(res0.rowData[0], '\n...')
+    console.log('done logging table')
+    t.ok(true, 'handle async result')
+    t.end()
+  }
+
+  test('basic async test', t =>
+    tf(t).catch(util.mkAsyncErrHandler(t, 'basic async test')))
 }
 
-const sqliteTestShutdown = () => {
-  test('sqlite test setup', t => {
-    db.close()
-      .then(() => {
-        t.ok(true, 'finished db.close')
-        t.end()
-        process.exit(0)
-      })
-  })
-}
+const asyncAggTreeSortTest = () => {
+  const tf = async (t) => {
+    const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
+    const rtc = sharedRtc
+    const tree0 = await aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
+                    [['TCOE', false], ['Base', true], ['Title', true]])
+    console.log('vpivot initial promise resolved...')
 
-const doIt = true
+    const sq1 = tree0.getSortQuery(1)
+
+    const res1 = await rtc.evalQuery(sq1)
+    console.log('sort query depth 1: ')
+    util.logTable(res1)
+
+    const sq2 = tree0.getSortQuery(2)
+
+    const res2 = await rtc.evalQuery(sq2)
+
+    console.log('sort query depth 2: ')
+    util.logTable(res2, {maxRows: 25})
+
+    // take sq1 and join with query of depth 1:
+    const q1 = tree0.applyPath([])
+    const jq1 = q1.join(sq1, ['_path0'])
+
+    const jres1 = await rtc.evalQuery(jq1)
+
+    console.log('join result for depth 1: ')
+    util.logTable(jres1, {maxRows: 25})
+
+    const q2 = tree0.applyPath([ 'Executive Management' ])
+    const jq2 = q2.join(sq1, ['_path0']).join(sq2, ['_path0', '_path1'])
+
+    const jres2 = await rtc.evalQuery(jq2)
+
+    console.log('level 2 join result:')
+    util.logTable(jres2, {maxRows: 25})
+
+    const openPaths = {'Executive Management': {'General Manager': {}}, 'Safety': {}}
+    // const openPaths = {'Executive Management': {}}
+    const q4 = tree0.getTreeQuery(openPaths)
+    const res4 = await rtc.evalQuery(q4)
+
+    console.log('tree query after opening paths:')
+    util.logTable(res4, {maxRows: 50})
+
+    const jq4 = q4.join(sq1, ['_path0']).join(sq2, ['_path0', '_path1'])
+    const jres4 = await rtc.evalQuery(jq4)
+
+    console.log('tree query after sort joins:')
+    util.logTable(jres4, {maxRows: 50})
+
+    const stq = tree0.getSortedTreeQuery(openPaths)
+    const sres = await rtc.evalQuery(stq)
+
+    console.log('result of sorted tree query:')
+    util.logTable(sres, {maxRows: 50})
+
+    t.ok(true, 'finished getting sort tables')
+    t.end()
+  }
+
+  test('asyncAggTreeSortTest', t =>
+    tf(t).catch(util.mkAsyncErrHandler(t, 'async aggree sort test')))
+}
 
 const runTests = () => {
   sqliteTestSetup()
 
-  if (doIt) {
-    dbTest0()
-    dbTest2()
-    dbTest3()
-    dbTest4()
-    dbTest5()
-    serTest0()
-    dbTest6()
-    dbTest7()
-    dbTest8()
-    dbTest9()
+  dbTest0()
+  dbTest2()
+  dbTest3()
+  dbTest4()
+  dbTest5()
+  serTest0()
+  dbTest6()
+  dbTest7()
+  dbTest8()
+  dbTest9()
 
-    dbTest10()
-    dbTest11()
-  }
+  dbTest10()
+  dbTest11()
+
   aggTreeTest0()
 
   aggTreeTest1()
+  asyncTest1()
 
-  if (doIt) {
-    PivotSortTest0()
-  }
+  asyncAggTreeSortTest()
+
+  PivotSortTest0()
 
   sqliteTestShutdown()
 }
