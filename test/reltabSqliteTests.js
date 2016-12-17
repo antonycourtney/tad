@@ -2,6 +2,7 @@
 
 import db from 'sqlite'
 import test from 'tape'
+import deepEqualSnap from './tapeSnap'
 import * as _ from 'lodash'
 import * as reltab from '../src/reltab'
 import * as reltabSqlite from '../src/reltab-sqlite'
@@ -362,7 +363,7 @@ const expPivotCol = [
 // Test created for bug #3
 // Test: Sort by a text column while pivoted:
 
-const PivotSortTest0 = () => {
+const pivotSortTest0 = () => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
   test('Pivot Sort Test', t => {
     const rtc = sharedRtc
@@ -473,31 +474,124 @@ const asyncAggTreeSortTest = () => {
     tf(t).catch(util.mkAsyncErrHandler(t, 'async aggree sort test')))
 }
 
+const asyncTest = (testName, tf) => {
+  return test(testName, t =>
+      tf(t).catch(util.mkAsyncErrHandler(t, testName)))
+}
+
+/*
+ * A bad case we encountered interactively: Pivot by JobFamily, sort by Title
+ */
+const basicPivotSortTest = async (t) => {
+  const q0 = reltab.tableQuery('barttest').project(pcols)
+  const rtc = sharedRtc
+  const tree0 = await aggtree.vpivot(rtc, q0, ['JobFamily'], 'Name', true,
+                  [['Title', true]])
+  console.log('vpivot initial promise resolved...')
+
+  const openPaths = {'Legal & Paralegal': {}}
+
+  const stq = tree0.getSortedTreeQuery(openPaths)
+  const sres = await rtc.evalQuery(stq)
+
+  console.log('result of sorted tree query:')
+  util.logTable(sres, {maxRows: 50})
+
+  deepEqualSnap(t, sres, 'sorted tree query matches snapshot')
+
+  t.end()
+}
+
+/*
+ * Same as basicPivotSortTest, but title in descending order.
+ *
+ * Has shown issues with wrong sort order in the wild:
+ */
+const descPivotSortTest = async (t) => {
+  const q0 = reltab.tableQuery('barttest').project(pcols)
+  const rtc = sharedRtc
+  const tree0 = await aggtree.vpivot(rtc, q0, ['JobFamily'], 'Name', true,
+                 [['Title', false]])
+  console.log('vpivot initial promise resolved...')
+
+  const pq = tree0.applyPath([])
+
+  const baseRes = await rtc.evalQuery(pq)
+
+  console.log('baseRes:')
+  util.logTable(baseRes)
+
+  const openPaths = {'Legal & Paralegal': {}}
+
+  const stq = tree0.getSortedTreeQuery(openPaths)
+  const sres = await rtc.evalQuery(stq)
+
+  console.log('result of sorted tree query:')
+  util.logTable(sres, {maxRows: 50})
+
+  deepEqualSnap(t, sres, 'sorted tree query matches snapshot')
+
+  t.end()
+}
+
+/*
+ * Multiple levels of pivot, single sort column:
+ */
+const multiPivotSingleSortTest = async (t) => {
+  const q0 = reltab.tableQuery('barttest').project(pcols)
+  const rtc = sharedRtc
+  const tree0 = await aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
+                 [['Title', true]])
+  console.log('vpivot initial promise resolved...')
+
+  const openPaths = {'Legal & Paralegal': {}}
+
+  const stq = tree0.getSortedTreeQuery(openPaths)
+  const sres = await rtc.evalQuery(stq)
+
+  console.log('result of sorted tree query:')
+  util.logTable(sres, {maxRows: 50})
+
+  deepEqualSnap(t, sres, 'sorted tree query')
+
+  t.end()
+}
+
+const doit = false
+
 const runTests = () => {
   sqliteTestSetup()
 
-  dbTest0()
-  dbTest2()
-  dbTest3()
-  dbTest4()
-  dbTest5()
-  serTest0()
-  dbTest6()
-  dbTest7()
-  dbTest8()
-  dbTest9()
+  if (doit) {
+    dbTest0()
+    dbTest2()
+    dbTest3()
+    dbTest4()
+    dbTest5()
+    serTest0()
+    dbTest6()
+    dbTest7()
+    dbTest8()
+    dbTest9()
 
-  dbTest10()
-  dbTest11()
+    dbTest10()
+    dbTest11()
 
-  aggTreeTest0()
+    aggTreeTest0()
 
-  aggTreeTest1()
-  asyncTest1()
+    aggTreeTest1()
+    asyncTest1()
 
-  asyncAggTreeSortTest()
+    asyncAggTreeSortTest()
 
-  PivotSortTest0()
+    pivotSortTest0()
+  }
+
+  asyncTest('basicPivotSortTest', basicPivotSortTest)
+
+  asyncTest('descPivotSortTest', descPivotSortTest)
+
+  asyncTest('multiPivotSingleSortTest', multiPivotSingleSortTest)
 
   sqliteTestShutdown()
 }

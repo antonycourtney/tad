@@ -5,7 +5,25 @@ import 'console.table'
 require('babel-polyfill')
 
 var test = require('tape')
+var tapeSnap = require('./tapeSnap')
 var tapSpec = require('tap-spec')
+const commandLineArgs = require('command-line-args')
+
+const optionDefinitions = [
+  {
+    name: 'update',
+    type: Boolean,
+    alias: 'u',
+    description: 'update all snapshot tests (record-only mode)'
+  }
+]
+
+const argv = process.argv.slice(1)
+const options = commandLineArgs(optionDefinitions, argv)
+if (options.update) {
+  console.log('setting tapeSnap to record-only mode')
+  tapeSnap.recordAll(true)
+}
 
 /*
  * very important to explicitly run our tape test output

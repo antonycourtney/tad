@@ -127,6 +127,21 @@ export class VPivotTree {
       .extend('_isRoot', { type: 'boolean' }, 0)
       .project(this.outCols)
 
+      /*
+       * The point of the '_sortVal_<i>' column is that it will be 1 for all rows of
+       * depth >= depth after performing the join on this sort query, null for
+       * items higher in the hierarchy.  We do an ascending sort on this before
+       * adding the '_sortVal_<i>_<j>' cols to ensure that parents always come
+       * before their children; without this we'd end up putting parent row
+       * immediately after children when some sorted descending by some column
+       */
+      // sortQuery = sortQuery.extend('_sortVal_' + pathLevel.toString(), {type: 'integer'}, 1)
+    const maxDepth = this.pivotColumns.length + 1
+    for (let i = 0; i < maxDepth; i++) {
+      const depthVal = (depth > i) ? 1 : 0
+      pathQuery = pathQuery.extend('_sortVal_' + i, {type: 'integer'}, depthVal)
+    }
+
     for (let i = 0; i < this.pivotColumns.length; i++) {
       let pathElemExp = null
       if (i < path.length) {
@@ -168,16 +183,6 @@ export class VPivotTree {
 
     const pathLevel = depth - 1
 
-    /*
-     * The point of the '_sortVal_<i>' column is that it will be 1 for all rows of
-     * depth >= depth after performing the join on this sort query, null for
-     * items higher in the hierarchy.  We do an ascending sort on this before
-     * adding the '_sortVal_<i>_<j>' cols to ensure that parents always come
-     * before their children; without this we'd end up putting parent row
-     * immediately after children when some sorted descending by some column
-     */
-    sortQuery = sortQuery.extend('_sortVal_' + pathLevel.toString(), {type: 'integer'}, 1)
-
     let sortColMap = {}
     for (let i = 0; i < sortCols.length; i++) {
       let colIndex = gbCols.length + i
@@ -194,7 +199,15 @@ export class VPivotTree {
    */
   getTreeQuery (openPaths: PathTree): reltab.QueryExp {
     const maxDepth = this.pivotColumns.length + 1
-    let resQuery = this.rootQuery ? addPathCols(this.rootQuery, 0, maxDepth) : null
+    let resQuery = null
+
+    if (this.rootQuery) {
+      resQuery = this.rootQuery
+      for (let i = 0; i < maxDepth; i++) {
+        resQuery = resQuery.extend('_sortVal_' + i, {type: 'integer'}, 0)
+      }
+      resQuery = addPathCols(resQuery, 0, maxDepth)
+    }
 
     const walkPath = (treeQuery, prefix, pathMap) => {
       for (var component in pathMap) {
@@ -240,30 +253,37 @@ export class VPivotTree {
     console.log('getSortedTreeQuery: openPaths: ', openPaths)
     const tq = this.getTreeQuery(openPaths)
 
+    let jtq = tq
+    // add sort queries for each pivot depth and join to tree query
+    for (let i = 0; i < this.pivotColumns.length; i++) {
+      let depth = i + 1
+      let sq = this.getSortQuery(depth)
+      let joinKey = _.range(0, depth).map(j => '_path' + j)
+      jtq = jtq.join(sq, joinKey)
+    }
+
+    // Now let's work out the sort key:
+    // potential opt: Eliminate if root not shown
     let tsortKey = [['_isRoot', false]]
 
-    let jtq = tq
-    if (this.sortKey.length > 0) {
-      // add sort queries for each pivot depth and join to tree query
-      for (let i = 0; i < this.pivotColumns.length; i++) {
-        let depth = i + 1
-        let sq = this.getSortQuery(depth)
-        let joinKey = _.range(0, depth).map(j => '_path' + j)
-        jtq = jtq.join(sq, joinKey)
-        // sort keys for this depth:
-        let dsortKey = _.range(0, this.sortKey.length)
-                  .map(j => ['_sortVal_' + i + '_' + j, this.sortKey[j][1]])
-        // should be able to do a simple tsortKey.push for next line, but flow being lame
-        tsortKey = tsortKey.concat([['_sortVal_' + i.toString(), true]])
-        tsortKey = tsortKey.concat(dsortKey)
-      }
-      // Add the sort key columns itself for leaf level:
-      tsortKey = tsortKey.concat(this.sortKey)
+    for (let i = 0; i < this.pivotColumns.length; i++) {
+      // should be able to do a simple tsortKey.push for next line, but flow being lame
+      tsortKey = tsortKey.concat([['_sortVal_' + i.toString(), true]])
+      // sort keys for this depth:
+      let dsortKey = _.range(0, this.sortKey.length)
+                .map(j => ['_sortVal_' + i + '_' + j, this.sortKey[j][1]])
+      tsortKey = tsortKey.concat(dsortKey)
+      // splice in path at this depth:
+      tsortKey = tsortKey.concat([['_path' + i, true]])
     }
-    // finally add the _path elements to sort key:
-    let psortKey = _.range(0, this.pivotColumns.length)
-              .map(i => ['_path' + i, true])
-    tsortKey = tsortKey.concat(psortKey)
+
+    // Add the final _sortVal_i:
+    const maxDepth = this.pivotColumns.length
+    tsortKey = tsortKey.concat([['_sortVal_' + maxDepth.toString(), true]])
+
+    // Finally, add the sort key columns itself for leaf level:
+    tsortKey = tsortKey.concat(this.sortKey)
+
     const stq = jtq.sort(tsortKey)
     return stq
   }

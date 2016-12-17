@@ -1,0 +1,887 @@
+{
+  "snapshotFileFormat": 1,
+  "snapshotData": {
+    "basicPivotSortTest": {
+      "sorted tree query matches snapshot": {
+        "schema": {
+          "columns": [
+            "JobFamily",
+            "Title",
+            "Union",
+            "Name",
+            "Base",
+            "TCOE",
+            "Rec",
+            "_depth",
+            "_pivot",
+            "_isRoot",
+            "_sortVal_0",
+            "_sortVal_1",
+            "_path0",
+            "_sortVal_0_0"
+          ],
+          "columnMetadata": {
+            "_path0": {
+              "type": "text"
+            },
+            "_sortVal_1": {
+              "type": "integer"
+            },
+            "_sortVal_0": {
+              "type": "integer"
+            },
+            "JobFamily": {
+              "displayName": "Job Family",
+              "type": "text"
+            },
+            "Title": {
+              "displayName": "Title",
+              "type": "text"
+            },
+            "Union": {
+              "displayName": "Union",
+              "type": "text"
+            },
+            "Name": {
+              "displayName": "Name",
+              "type": "text"
+            },
+            "Base": {
+              "displayName": "Base",
+              "type": "integer"
+            },
+            "TCOE": {
+              "displayName": "TCOE",
+              "type": "integer"
+            },
+            "Rec": {
+              "type": "integer"
+            },
+            "_depth": {
+              "type": "integer"
+            },
+            "_pivot": {
+              "type": "text"
+            },
+            "_isRoot": {
+              "type": "boolean"
+            },
+            "_sortVal_0_0": {
+              "displayName": "Title",
+              "type": "text"
+            }
+          },
+          "columnIndices": {
+            "JobFamily": 0,
+            "Title": 1,
+            "Union": 2,
+            "Name": 3,
+            "Base": 4,
+            "TCOE": 5,
+            "Rec": 6,
+            "_depth": 7,
+            "_pivot": 8,
+            "_isRoot": 9,
+            "_sortVal_0": 10,
+            "_sortVal_1": 11,
+            "_path0": 12,
+            "_sortVal_0_0": 13
+          }
+        },
+        "rowData": [
+          [
+            null,
+            null,
+            null,
+            null,
+            3182149,
+            4638335,
+            23,
+            0,
+            null,
+            1,
+            0,
+            0,
+            null,
+            null
+          ],
+          [
+            "Engineering & Systems Engineering",
+            null,
+            "Non-Represented",
+            null,
+            309734,
+            422244,
+            2,
+            1,
+            "Engineering & Systems Engineering",
+            0,
+            1,
+            0,
+            "Engineering & Systems Engineering",
+            null
+          ],
+          [
+            "Executive Management",
+            null,
+            "Non-Represented",
+            null,
+            1030722,
+            1389290,
+            4,
+            1,
+            "Executive Management",
+            0,
+            1,
+            0,
+            "Executive Management",
+            null
+          ],
+          [
+            "Legal & Paralegal",
+            null,
+            "Non-Represented",
+            null,
+            564028,
+            766571,
+            3,
+            1,
+            "Legal & Paralegal",
+            0,
+            1,
+            0,
+            "Legal & Paralegal",
+            null
+          ],
+          [
+            "Legal & Paralegal",
+            "General Counsel",
+            "Non-Represented",
+            "Burrows, Matthew",
+            238269,
+            321543,
+            1,
+            2,
+            "Burrows, Matthew",
+            0,
+            1,
+            1,
+            "Legal & Paralegal",
+            null
+          ],
+          [
+            "Legal & Paralegal",
+            "Senior Attorney",
+            "Non-Represented",
+            "Lee, Thomas",
+            165470,
+            224345,
+            1,
+            2,
+            "Lee, Thomas",
+            0,
+            1,
+            1,
+            "Legal & Paralegal",
+            null
+          ],
+          [
+            "Legal & Paralegal",
+            "Senior Attorney",
+            "Non-Represented",
+            "Nuetzel, Victoria",
+            160289,
+            220683,
+            1,
+            2,
+            "Nuetzel, Victoria",
+            0,
+            1,
+            1,
+            "Legal & Paralegal",
+            null
+          ],
+          [
+            "Maintenance, Vehicle & Facilities",
+            null,
+            "SEIU",
+            null,
+            366223,
+            594761,
+            5,
+            1,
+            "Maintenance, Vehicle & Facilities",
+            0,
+            1,
+            0,
+            "Maintenance, Vehicle & Facilities",
+            null
+          ],
+          [
+            "Transportation Operations",
+            null,
+            null,
+            null,
+            474872,
+            838729,
+            6,
+            1,
+            "Transportation Operations",
+            0,
+            1,
+            0,
+            "Transportation Operations",
+            null
+          ],
+          [
+            "Safety",
+            "Chief Safety Officer",
+            "Non-Represented",
+            "Hardy, Leonard",
+            152125,
+            211941,
+            1,
+            1,
+            "Safety",
+            0,
+            1,
+            0,
+            "Safety",
+            "Chief Safety Officer"
+          ],
+          [
+            "Finance & Accounting",
+            "Controller-Treasurer",
+            "Non-Represented",
+            "Schroeder, Scott",
+            208744,
+            287139,
+            1,
+            1,
+            "Finance & Accounting",
+            0,
+            1,
+            0,
+            "Finance & Accounting",
+            "Controller-Treasurer"
+          ],
+          [
+            "Police",
+            "Revenue Protection Guard",
+            "BPOA",
+            "Ornellas, Robert",
+            75701,
+            127660,
+            1,
+            1,
+            "Police",
+            0,
+            1,
+            0,
+            "Police",
+            "Revenue Protection Guard"
+          ]
+        ]
+      }
+    },
+    "descPivotSortTest": {
+      "sorted tree query matches snapshot": {
+        "schema": {
+          "columns": [
+            "JobFamily",
+            "Title",
+            "Union",
+            "Name",
+            "Base",
+            "TCOE",
+            "Rec",
+            "_depth",
+            "_pivot",
+            "_isRoot",
+            "_sortVal_0",
+            "_sortVal_1",
+            "_path0",
+            "_sortVal_0_0"
+          ],
+          "columnMetadata": {
+            "_path0": {
+              "type": "text"
+            },
+            "_sortVal_1": {
+              "type": "integer"
+            },
+            "_sortVal_0": {
+              "type": "integer"
+            },
+            "JobFamily": {
+              "displayName": "Job Family",
+              "type": "text"
+            },
+            "Title": {
+              "displayName": "Title",
+              "type": "text"
+            },
+            "Union": {
+              "displayName": "Union",
+              "type": "text"
+            },
+            "Name": {
+              "displayName": "Name",
+              "type": "text"
+            },
+            "Base": {
+              "displayName": "Base",
+              "type": "integer"
+            },
+            "TCOE": {
+              "displayName": "TCOE",
+              "type": "integer"
+            },
+            "Rec": {
+              "type": "integer"
+            },
+            "_depth": {
+              "type": "integer"
+            },
+            "_pivot": {
+              "type": "text"
+            },
+            "_isRoot": {
+              "type": "boolean"
+            },
+            "_sortVal_0_0": {
+              "displayName": "Title",
+              "type": "text"
+            }
+          },
+          "columnIndices": {
+            "JobFamily": 0,
+            "Title": 1,
+            "Union": 2,
+            "Name": 3,
+            "Base": 4,
+            "TCOE": 5,
+            "Rec": 6,
+            "_depth": 7,
+            "_pivot": 8,
+            "_isRoot": 9,
+            "_sortVal_0": 10,
+            "_sortVal_1": 11,
+            "_path0": 12,
+            "_sortVal_0_0": 13
+          }
+        },
+        "rowData": [
+          [
+            null,
+            null,
+            null,
+            null,
+            3182149,
+            4638335,
+            23,
+            0,
+            null,
+            1,
+            0,
+            0,
+            null,
+            null
+          ],
+          [
+            "Police",
+            "Revenue Protection Guard",
+            "BPOA",
+            "Ornellas, Robert",
+            75701,
+            127660,
+            1,
+            1,
+            "Police",
+            0,
+            1,
+            0,
+            "Police",
+            "Revenue Protection Guard"
+          ],
+          [
+            "Finance & Accounting",
+            "Controller-Treasurer",
+            "Non-Represented",
+            "Schroeder, Scott",
+            208744,
+            287139,
+            1,
+            1,
+            "Finance & Accounting",
+            0,
+            1,
+            0,
+            "Finance & Accounting",
+            "Controller-Treasurer"
+          ],
+          [
+            "Safety",
+            "Chief Safety Officer",
+            "Non-Represented",
+            "Hardy, Leonard",
+            152125,
+            211941,
+            1,
+            1,
+            "Safety",
+            0,
+            1,
+            0,
+            "Safety",
+            "Chief Safety Officer"
+          ],
+          [
+            "Engineering & Systems Engineering",
+            null,
+            "Non-Represented",
+            null,
+            309734,
+            422244,
+            2,
+            1,
+            "Engineering & Systems Engineering",
+            0,
+            1,
+            0,
+            "Engineering & Systems Engineering",
+            null
+          ],
+          [
+            "Executive Management",
+            null,
+            "Non-Represented",
+            null,
+            1030722,
+            1389290,
+            4,
+            1,
+            "Executive Management",
+            0,
+            1,
+            0,
+            "Executive Management",
+            null
+          ],
+          [
+            "Legal & Paralegal",
+            null,
+            "Non-Represented",
+            null,
+            564028,
+            766571,
+            3,
+            1,
+            "Legal & Paralegal",
+            0,
+            1,
+            0,
+            "Legal & Paralegal",
+            null
+          ],
+          [
+            "Legal & Paralegal",
+            "Senior Attorney",
+            "Non-Represented",
+            "Lee, Thomas",
+            165470,
+            224345,
+            1,
+            2,
+            "Lee, Thomas",
+            0,
+            1,
+            1,
+            "Legal & Paralegal",
+            null
+          ],
+          [
+            "Legal & Paralegal",
+            "Senior Attorney",
+            "Non-Represented",
+            "Nuetzel, Victoria",
+            160289,
+            220683,
+            1,
+            2,
+            "Nuetzel, Victoria",
+            0,
+            1,
+            1,
+            "Legal & Paralegal",
+            null
+          ],
+          [
+            "Legal & Paralegal",
+            "General Counsel",
+            "Non-Represented",
+            "Burrows, Matthew",
+            238269,
+            321543,
+            1,
+            2,
+            "Burrows, Matthew",
+            0,
+            1,
+            1,
+            "Legal & Paralegal",
+            null
+          ],
+          [
+            "Maintenance, Vehicle & Facilities",
+            null,
+            "SEIU",
+            null,
+            366223,
+            594761,
+            5,
+            1,
+            "Maintenance, Vehicle & Facilities",
+            0,
+            1,
+            0,
+            "Maintenance, Vehicle & Facilities",
+            null
+          ],
+          [
+            "Transportation Operations",
+            null,
+            null,
+            null,
+            474872,
+            838729,
+            6,
+            1,
+            "Transportation Operations",
+            0,
+            1,
+            0,
+            "Transportation Operations",
+            null
+          ]
+        ]
+      }
+    },
+    "multiPivotSingleSortTest": {
+      "sorted tree query": {
+        "schema": {
+          "columns": [
+            "JobFamily",
+            "Title",
+            "Union",
+            "Name",
+            "Base",
+            "TCOE",
+            "Rec",
+            "_depth",
+            "_pivot",
+            "_isRoot",
+            "_sortVal_0",
+            "_sortVal_1",
+            "_sortVal_2",
+            "_path0",
+            "_path1",
+            "_sortVal_0_0",
+            "_sortVal_1_0"
+          ],
+          "columnMetadata": {
+            "_path1": {
+              "type": "text"
+            },
+            "_path0": {
+              "type": "text"
+            },
+            "_sortVal_2": {
+              "type": "integer"
+            },
+            "_sortVal_1": {
+              "type": "integer"
+            },
+            "_sortVal_0": {
+              "type": "integer"
+            },
+            "JobFamily": {
+              "displayName": "Job Family",
+              "type": "text"
+            },
+            "Title": {
+              "displayName": "Title",
+              "type": "text"
+            },
+            "Union": {
+              "displayName": "Union",
+              "type": "text"
+            },
+            "Name": {
+              "displayName": "Name",
+              "type": "text"
+            },
+            "Base": {
+              "displayName": "Base",
+              "type": "integer"
+            },
+            "TCOE": {
+              "displayName": "TCOE",
+              "type": "integer"
+            },
+            "Rec": {
+              "type": "integer"
+            },
+            "_depth": {
+              "type": "integer"
+            },
+            "_pivot": {
+              "type": "text"
+            },
+            "_isRoot": {
+              "type": "boolean"
+            },
+            "_sortVal_0_0": {
+              "displayName": "Title",
+              "type": "text"
+            },
+            "_sortVal_1_0": {
+              "displayName": "Title",
+              "type": "text"
+            }
+          },
+          "columnIndices": {
+            "JobFamily": 0,
+            "Title": 1,
+            "Union": 2,
+            "Name": 3,
+            "Base": 4,
+            "TCOE": 5,
+            "Rec": 6,
+            "_depth": 7,
+            "_pivot": 8,
+            "_isRoot": 9,
+            "_sortVal_0": 10,
+            "_sortVal_1": 11,
+            "_sortVal_2": 12,
+            "_path0": 13,
+            "_path1": 14,
+            "_sortVal_0_0": 15,
+            "_sortVal_1_0": 16
+          }
+        },
+        "rowData": [
+          [
+            null,
+            null,
+            null,
+            null,
+            3182149,
+            4638335,
+            23,
+            0,
+            null,
+            1,
+            0,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "Engineering & Systems Engineering",
+            null,
+            "Non-Represented",
+            null,
+            309734,
+            422244,
+            2,
+            1,
+            "Engineering & Systems Engineering",
+            0,
+            1,
+            0,
+            0,
+            "Engineering & Systems Engineering",
+            null,
+            null,
+            null
+          ],
+          [
+            "Executive Management",
+            null,
+            "Non-Represented",
+            null,
+            1030722,
+            1389290,
+            4,
+            1,
+            "Executive Management",
+            0,
+            1,
+            0,
+            0,
+            "Executive Management",
+            null,
+            null,
+            null
+          ],
+          [
+            "Legal & Paralegal",
+            null,
+            "Non-Represented",
+            null,
+            564028,
+            766571,
+            3,
+            1,
+            "Legal & Paralegal",
+            0,
+            1,
+            0,
+            0,
+            "Legal & Paralegal",
+            null,
+            null,
+            null
+          ],
+          [
+            "Legal & Paralegal",
+            "General Counsel",
+            "Non-Represented",
+            "Burrows, Matthew",
+            238269,
+            321543,
+            1,
+            2,
+            "General Counsel",
+            0,
+            1,
+            1,
+            0,
+            "Legal & Paralegal",
+            "General Counsel",
+            null,
+            "General Counsel"
+          ],
+          [
+            "Legal & Paralegal",
+            "Senior Attorney",
+            "Non-Represented",
+            null,
+            325759,
+            445028,
+            2,
+            2,
+            "Senior Attorney",
+            0,
+            1,
+            1,
+            0,
+            "Legal & Paralegal",
+            "Senior Attorney",
+            null,
+            "Senior Attorney"
+          ],
+          [
+            "Maintenance, Vehicle & Facilities",
+            null,
+            "SEIU",
+            null,
+            366223,
+            594761,
+            5,
+            1,
+            "Maintenance, Vehicle & Facilities",
+            0,
+            1,
+            0,
+            0,
+            "Maintenance, Vehicle & Facilities",
+            null,
+            null,
+            null
+          ],
+          [
+            "Transportation Operations",
+            null,
+            null,
+            null,
+            474872,
+            838729,
+            6,
+            1,
+            "Transportation Operations",
+            0,
+            1,
+            0,
+            0,
+            "Transportation Operations",
+            null,
+            null,
+            null
+          ],
+          [
+            "Safety",
+            "Chief Safety Officer",
+            "Non-Represented",
+            "Hardy, Leonard",
+            152125,
+            211941,
+            1,
+            1,
+            "Safety",
+            0,
+            1,
+            0,
+            0,
+            "Safety",
+            null,
+            "Chief Safety Officer",
+            null
+          ],
+          [
+            "Finance & Accounting",
+            "Controller-Treasurer",
+            "Non-Represented",
+            "Schroeder, Scott",
+            208744,
+            287139,
+            1,
+            1,
+            "Finance & Accounting",
+            0,
+            1,
+            0,
+            0,
+            "Finance & Accounting",
+            null,
+            "Controller-Treasurer",
+            null
+          ],
+          [
+            "Police",
+            "Revenue Protection Guard",
+            "BPOA",
+            "Ornellas, Robert",
+            75701,
+            127660,
+            1,
+            1,
+            "Police",
+            0,
+            1,
+            0,
+            0,
+            "Police",
+            null,
+            "Revenue Protection Guard",
+            null
+          ]
+        ]
+      }
+    }
+  }
+}
