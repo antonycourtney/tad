@@ -12,9 +12,9 @@ import PivotTreeModel from '../src/PivotTreeModel'
 const {col, constVal} = reltab
 
 var sharedRtc
-const testPath = 'csv/bart-comp-all.csv'
+const testPath = 'csv/barttest.csv'
 
-const q1 = reltab.tableQuery('bart-comp-all')
+const q1 = reltab.tableQuery('barttest')
 
 var tcoeSum
 
@@ -52,8 +52,7 @@ const dbTest0 = () => {
     .then(res => {
       t.ok(true, 'basic table read')
       var schema = res.schema
-      var expectedCols = ['Name', 'Title', 'Base', 'OT', 'Other', 'MDV', 'ER',
-        'EE', 'DC', 'Misc', 'TCOE', 'Source', 'JobFamily', 'Union']
+      var expectedCols = [ 'Name', 'Title', 'Base', 'TCOE', 'JobFamily', 'Union' ]
 
       const columns = schema.columns // array of strings
       // console.log('columns: ', columns)
@@ -61,17 +60,14 @@ const dbTest0 = () => {
       t.deepEqual(columns, expectedCols, 'getSchema column ids')
 
       const columnTypes = columns.map(colId => schema.columnType(colId))
-      var expectedColTypes = ['text', 'text', 'integer', 'integer', 'integer',
-        'integer', 'integer', 'integer', 'integer', 'integer', 'integer', 'text', 'text', 'text']
-
+      var expectedColTypes = [ 'text', 'text', 'integer', 'integer', 'text', 'text' ]
       t.deepEqual(columnTypes, expectedColTypes, 'getSchema column types')
 
       const rowData = res.rowData
-      t.equal(rowData.length, 2873, 'q1 rowData.length')
+      t.equal(rowData.length, 23, 'q1 rowData.length')
 
       // console.log(rowData[0])
-      var expRow0 = ['Crunican, Grace', 'General Manager', 312461, 0, 3846, 19141, 37513,
-        17500, 1869, 7591, 399921, 'MNP', 'Executive Management', 'Non-Represented']
+      var expRow0 = [ 'Crunican, Grace', 'General Manager', 312461, 399921, 'Executive Management', 'Non-Represented' ]
       t.deepEqual(rowData[0], expRow0, 'first row matches expected')
 
       tcoeSum = util.columnSum(res, 'TCOE')
@@ -115,7 +111,7 @@ const dbTest3 = () => {
       const expCols = ['Job', 'Title', 'TCOE']
       t.deepEqual(res.schema.columns, expCols, 'groupBy query schema')
 
-      t.deepEqual(res.rowData.length, 380, 'correct number of grouped rows')
+      t.deepEqual(res.rowData.length, 18, 'correct number of grouped rows')
 
       const groupSum = util.columnSum(res, 'TCOE')
       t.equal(groupSum, tcoeSum, 'grouped TCOE sum matches raw sum')
@@ -138,7 +134,7 @@ const dbTest4 = () => {
       const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
       t.deepEqual(rs.columns, expCols)
 
-      t.deepEqual(res.rowData.length, 19, 'number of grouped rows in q4 result')
+      t.deepEqual(res.rowData.length, 8, 'number of grouped rows in q4 result')
 
       const groupSum = util.columnSum(res, 'TCOE')
       t.deepEqual(groupSum, tcoeSum, 'tcoe sum after groupBy')
@@ -159,7 +155,7 @@ const q5 = q1.filter(reltab.and().eq(col('JobFamily'), constVal('Executive Manag
 
 const dbTest5 = () => {
   sqliteQueryTest('basic filter', q5, (t, res) => {
-    t.ok(res.rowData.length === 14, 'expected row count after filter')
+    t.equal(res.rowData.length, 4, 'expected row count after filter')
     util.logTable(res)
     t.end()
   })
@@ -178,7 +174,7 @@ const serTest0 = () => {
       .then(res => {
         console.log('got results of evaluating deserialized query')
         util.logTable(res)
-        t.ok(res.rowData.length === 14, 'expected row count after filter')
+        t.equal(res.rowData.length, 4, 'expected row count after filter')
         t.end()
       }, util.mkAsyncErrHandler(t, 'query deserialization'))
   })
@@ -192,7 +188,7 @@ const dbTest6 = () => {
     t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
     const em = rs.columnMetadata['EmpName']
     t.deepEqual(em, {type: 'text', displayName: 'Employee Name'}, 'EmpName metadata')
-    t.ok(res.rowData.length === 2873, 'expected row count after mapColumns')
+    t.equal(res.rowData.length, 23, 'expected row count after mapColumns')
     t.end()
   })
 }
@@ -203,7 +199,7 @@ const dbTest7 = () => {
   sqliteQueryTest('mapColumnsByIndex', q7, (t, res) => {
     const rs = res.schema
     t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
-    t.ok(res.rowData.length === 2873, 'expected row count after mapColumnsByIndex')
+    t.equal(res.rowData.length, 23, 'expected row count after mapColumnsByIndex')
     t.end()
   })
 }
@@ -212,7 +208,7 @@ const q8 = q5.concat(q1.filter(reltab.and().eq(col('JobFamily'), constVal('Safet
 
 const dbTest8 = () => {
   sqliteQueryTest('concat', q8, (t, res) => {
-    t.ok(res.rowData.length === 24, 'expected row count after filter and concat')
+    t.equal(res.rowData.length, 5, 'expected row count after filter and concat')
     const jobCol = res.getColumn('JobFamily')
     const jobs = _.sortedUniq(jobCol)
     t.deepEqual(jobs, ['Executive Management', 'Safety'], 'filter and concat column vals')
@@ -236,7 +232,7 @@ const dbTest10 = () => {
   })
 }
 
-const q11 = q8.extend('BaseAndOT', {type: 'integer'}, 'Base + OT')
+const q11 = q8.extend('ExtraComp', {type: 'integer'}, 'TCOE - Base')
 const dbTest11 = () => {
   sqliteQueryTest('extend with expression', q11, (t, res) => {
     util.logTable(res)
@@ -245,7 +241,7 @@ const dbTest11 = () => {
 }
 
 const aggTreeTest0 = () => {
-  const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
+  const q0 = reltab.tableQuery('barttest').project(pcols)
   test('initial aggTree test', t => {
     const rtc = sharedRtc
     const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true, [])
@@ -267,11 +263,11 @@ const aggTreeTest0 = () => {
           const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec', '_depth', '_pivot', '_isRoot', '_path0', '_path1']
 
           t.deepEqual(res.schema.columns, expCols, 'Q1 schema columns')
-          t.deepEqual(res.rowData.length, 19, 'Q1 rowData length')
+          t.deepEqual(res.rowData.length, 8, 'Q1 rowData length')
 
           const actSum = util.columnSum(res, 'TCOE')
 
-          t.deepEqual(actSum, 349816190, 'Q1 rowData sum(TCOE)')
+          t.deepEqual(actSum, 4638335, 'Q1 rowData sum(TCOE)')
 
           const q2 = tree0.applyPath([ 'Executive Management' ])
           return rtc.evalQuery(q2)
@@ -303,7 +299,7 @@ const aggTreeTest0 = () => {
 }
 
 const aggTreeTest1 = () => {
-  const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
+  const q0 = reltab.tableQuery('barttest').project(pcols)
   test('sorted aggTree test', t => {
     const rtc = sharedRtc
     const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
@@ -353,24 +349,13 @@ const getRawColumn = (rawData: Array<any>, cid: string): Array<any> => {
 
 // expected pivot column when pivoted by JobFamily
 const expPivotCol = [
-  'Administrative & Management',
-  'Audit',
-  'Clerical',
   'Engineering & Systems Engineering',
   'Executive Management',
   'Finance & Accounting',
-  'Human Resources & Labor Relations',
-  'Information Systems',
   'Legal & Paralegal',
   'Maintenance, Vehicle & Facilities',
-  'Planning',
   'Police',
-  'Procurement',
-  'Public Affairs & Marketing',
-  'Real Estate',
   'Safety',
-  'Technical Support',
-  'Training: Technical & Management',
   'Transportation Operations'
 ]
 
@@ -378,7 +363,7 @@ const expPivotCol = [
 // Test: Sort by a text column while pivoted:
 
 const PivotSortTest0 = () => {
-  const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
+  const q0 = reltab.tableQuery('barttest').project(pcols)
   test('Pivot Sort Test', t => {
     const rtc = sharedRtc
     const ptm = new PivotTreeModel(rtc, q0, ['JobFamily'], null, false)
@@ -406,7 +391,7 @@ const PivotSortTest0 = () => {
 
 // Let's try async / await:
 const asyncTest1 = () => {
-  const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
+  const q0 = reltab.tableQuery('barttest').project(pcols)
 
   const tf = async (t) => {
     const rtc = sharedRtc
@@ -424,7 +409,7 @@ const asyncTest1 = () => {
 
 const asyncAggTreeSortTest = () => {
   const tf = async (t) => {
-    const q0 = reltab.tableQuery('bart-comp-all').project(pcols)
+    const q0 = reltab.tableQuery('barttest').project(pcols)
     const rtc = sharedRtc
     const tree0 = await aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
                     [['TCOE', false], ['Base', true], ['Title', true]])

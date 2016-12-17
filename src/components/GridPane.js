@@ -155,6 +155,7 @@ export default class GridPane extends React.Component {
 
   onGridClick (e: any, args: any) {
     var item = this.grid.getDataItem(args.row)
+    console.log('onGridClick: item: ', item)
     if (item._isLeaf) {
       return
     }
@@ -162,6 +163,7 @@ export default class GridPane extends React.Component {
     for (let i = 0; i < this.props.appState.vpivots.length; i++) {
       path.push(item['_path' + i])
     }
+    console.log('item path: ', path)
     if (item._isOpen) {
       this.ptm.closePath(path)
     } else {

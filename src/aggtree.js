@@ -152,10 +152,8 @@ export class VPivotTree {
   getSortQuery (depth: number): reltab.QueryExp {
     let sortQuery = this.rtBaseQuery // recCountQuery
 
-    // TODO: use pivotColumns if sortKey not long enough
     let sortCols = this.sortKey.map(p => p[0])
 
-    // TODO: deal with depth other than 1!
     const gbCols = this.pivotColumns.slice(0, depth)
 
     sortQuery = sortQuery
@@ -170,6 +168,14 @@ export class VPivotTree {
 
     const pathLevel = depth - 1
 
+    /*
+     * The point of the '_sortVal_<i>' column is that it will be 1 for all rows of
+     * depth >= depth after performing the join on this sort query, null for
+     * items higher in the hierarchy.  We do an ascending sort on this before
+     * adding the '_sortVal_<i>_<j>' cols to ensure that parents always come
+     * before their children; without this we'd end up putting parent row
+     * immediately after children when some sorted descending by some column
+     */
     sortQuery = sortQuery.extend('_sortVal_' + pathLevel.toString(), {type: 'integer'}, 1)
 
     let sortColMap = {}
@@ -231,6 +237,7 @@ export class VPivotTree {
  * order by clause
  */
   getSortedTreeQuery (openPaths: PathTree): reltab.QueryExp {
+    console.log('getSortedTreeQuery: openPaths: ', openPaths)
     const tq = this.getTreeQuery(openPaths)
 
     let tsortKey = [['_isRoot', false]]
@@ -250,6 +257,8 @@ export class VPivotTree {
         tsortKey = tsortKey.concat([['_sortVal_' + i.toString(), true]])
         tsortKey = tsortKey.concat(dsortKey)
       }
+      // Add the sort key columns itself for leaf level:
+      tsortKey = tsortKey.concat(this.sortKey)
     }
     // finally add the _path elements to sort key:
     let psortKey = _.range(0, this.pivotColumns.length)
