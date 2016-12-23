@@ -3,24 +3,12 @@
 import * as reltab from './reltab'
 import * as aggtree from './aggtree'
 import SimpleDataView from './SimpleDataView'
+import PathTree from './PathTree'
 import type { Connection } from './reltab' // eslint-disable-line
 import * as _ from 'lodash'
 
-// trim an open node map to given depth:
-const trimToDepth = (nodeMap: Object, depth: number): Object => {
-  if (depth === 0) {
-    return {}
-  }
-  let ret = {}
-  for (let elem in nodeMap) {
-    ret[elem] = trimToDepth(nodeMap[elem], depth - 1)
-  }
-  return ret
-}
-
 export default class PivotTreeModel {
-  openNodeMap: Object
-  listeners: Array<any>
+  openPaths: PathTree
   treeQueryPromise: Promise<reltab.QueryExp>
   vpivotPromise: Promise<aggtree.VPivotTree>
   needPivot: boolean
@@ -33,8 +21,7 @@ export default class PivotTreeModel {
   sortKey: Array<[string, boolean]>
 
   constructor (rt: Connection, baseQuery: reltab.QueryExp, pivots: Array<string>, pivotLeafColumn: ?string, showRoot: boolean) {
-    this.openNodeMap = {}
-    this.listeners = []
+    this.openPaths = new PathTree()
     this.treeQueryPromise = null
     this.vpivotPromise = null
     this.needPivot = true // pivots have been set, need to call vpivot()
@@ -60,7 +47,8 @@ export default class PivotTreeModel {
   setPivots (inPivots: Array<string>): void {
     const matchDepth = _.findIndex(_.zip(this.pivots, inPivots), ([p1, p2]) => (p1 !== p2))
     this.pivots = inPivots
-    this.openNodeMap = trimToDepth(this.openNodeMap, matchDepth)
+    // TODO: this is redundant with AppState -- kill this one
+    this.openPaths = this.openPaths.trimToDepth(matchDepth)
     this.needPivot = true
   }
 
@@ -75,60 +63,16 @@ export default class PivotTreeModel {
     return this.pivots
   }
 
-  addPath (path: Array<string>) {
-    if (!this.openNodeMap) {
-      this.openNodeMap = {}
-    }
-    var nm = this.openNodeMap
-    for (var i = 0; i < path.length; i++) {
-      var subMap = nm[path[i]]
-      if (!subMap) {
-        subMap = {}
-        nm[path[i]] = subMap
-      }
-      nm = subMap
-    }
+  setOpenPaths (openPaths: PathTree): void {
+    this.openPaths = openPaths
+    this.needPivot = true
   }
 
-  removePath (nodeMap: ?Object, path: Array<string>) {
-    if (!nodeMap) {
-      return
-    }
-    var entry = path.shift()
-    if (path.length === 0) {
-      delete nodeMap[ entry ]
-    } else {
-      var subMap = nodeMap[ entry ]
-      if (subMap) {
-        this.removePath(subMap, path)
-      }
-    }
-  }
-
-  openPath (path: Array<string>) {
-    this.addPath(path)
-  }
-
-  closePath (path: Array<string>) {
-    this.removePath(this.openNodeMap, path)
-  }
-
-  // TODO: Subtle sync issue here! Note that calls to pathIsOpen between
-  // calling openPath and refresh() will return a value inconsisent with
-  // the current state of the UI.
   pathIsOpen (path: Array<string>): boolean {
-    if (!this.openNodeMap) {
+    if (!this.openPaths) {
       return false
     }
-    var nm = this.openNodeMap
-    for (var i = 0; i < path.length; i++) {
-      var subMap = nm[path[i]]
-      if (!subMap) {
-        return false
-      }
-      nm = subMap
-    }
-    return true
+    return this.openPaths.isOpen(path)
   }
 
   loadDataView (tableData: reltab.TableRep) {
@@ -191,8 +135,9 @@ export default class PivotTreeModel {
       this.needPivot = false
     }
 
+    console.log('ptm.refresh: openPaths: ', this.openPaths)
     this.treeQueryPromise =
-      this.vpivotPromise.then(ptree => ptree.getSortedTreeQuery(this.openNodeMap))
+      this.vpivotPromise.then(ptree => ptree.getSortedTreeQuery(this.openPaths))
 
     const dvPromise = this.treeQueryPromise
       .then(treeQuery => this.rt.evalQuery(treeQuery))
@@ -200,17 +145,5 @@ export default class PivotTreeModel {
       .catch(err => console.error('PivotTreeModel: error: ', err, err.stack))
 
     return dvPromise
-  }
-
-  // recursively get ancestor of specified row at the given depth:
-  getAncestor (row: Object, depth: number): Object {
-    if (depth > row._depth) {
-      throw new Error('getAncestor: depth ' + depth +
-        ' > row.depth of ' + row._depth + ' at row ' + row._id)
-    }
-    while (depth < row._depth) {
-      row = this.dataView.getItemById(row._parentId)
-    }
-    return row
   }
 }

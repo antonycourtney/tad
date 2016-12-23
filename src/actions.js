@@ -3,7 +3,8 @@
 import AppState from './AppState'
 import * as reltab from './reltab'
 import * as constants from './components/constants'
-
+import PathTree from './PathTree'
+import type {Path} from './PathTree'  // eslint-disable-line
 const {constVal} = reltab
 
 export const createAppState = (rtc: reltab.Connection,
@@ -13,6 +14,8 @@ export const createAppState = (rtc: reltab.Connection,
     .extend('Rec', { type: 'integer' }, 1)
     .filter(reltab.and().eq(constVal(1), constVal(0)))
 
+  const openPaths = new PathTree()
+
   const schemap = rtc.evalQuery(schemaQuery)
   return schemap.then(schemaRes => {
     const baseSchema = schemaRes.schema
@@ -20,7 +23,7 @@ export const createAppState = (rtc: reltab.Connection,
     // start off with all columns displayed:
     const displayColumns = baseSchema.columns.slice()
 
-    return new AppState({title, rtc, baseSchema, baseQuery, displayColumns})
+    return new AppState({title, rtc, baseSchema, baseQuery, displayColumns, openPaths})
   })
 }
 
@@ -84,4 +87,12 @@ export const setSortKey = (sortKey: Array<[string, boolean]>, updater: RefUpdate
 
 export const setColumnOrder = (displayColumns: Array<string>, updater: RefUpdater) => {
   updater(appState => appState.set('displayColumns', displayColumns))
+}
+
+export const openPath = (path: Path, updater: RefUpdater) => {
+  updater(appState => appState.openPath(path))
+}
+
+export const closePath = (path: Path, updater: RefUpdater) => {
+  updater(appState => appState.closePath(path))
 }

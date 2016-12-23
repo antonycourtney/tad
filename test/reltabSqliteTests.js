@@ -1,7 +1,6 @@
 /* @flow */
 
 import db from 'sqlite'
-import test from 'tape'
 import deepEqualSnap from './tapeSnap'
 import * as _ from 'lodash'
 import * as reltab from '../src/reltab'
@@ -10,8 +9,8 @@ import * as csvimport from '../src/csvimport'
 import * as util from './reltabTestUtils'
 import * as aggtree from '../src/aggtree'
 import PivotTreeModel from '../src/PivotTreeModel'
+import PathTree from '../src/PathTree'
 const {col, constVal} = reltab
-
 var sharedRtc
 const testPath = 'csv/barttest.csv'
 
@@ -19,8 +18,8 @@ const q1 = reltab.tableQuery('barttest')
 
 var tcoeSum
 
-const sqliteTestSetup = () => {
-  test('sqlite test setup', t => {
+const sqliteTestSetup = (htest) => {
+  htest('sqlite test setup', t => {
     db.open(':memory:')
       .then(() => csvimport.importSqlite(testPath))
       .then(md => reltabSqlite.init(db, md, {showQueries: true}))
@@ -34,19 +33,19 @@ const sqliteTestSetup = () => {
   })
 }
 
-const sqliteTestShutdown = () => {
-  test('sqlite test setup', t => {
+const sqliteTestShutdown = (htest) => {
+  htest('sqlite test shutdown', t => {
     db.close()
       .then(() => {
+        console.log('shut down sqlite')
         t.ok(true, 'finished db.close')
         t.end()
-        process.exit(0)
       })
   })
 }
 
-const dbTest0 = () => {
-  test('basic table query', t => {
+const dbTest0 = (htest) => {
+  htest('basic table query', t => {
     const rtc = sharedRtc // Note: need to ensure we only read sharedRtc inside test()
     console.log('dbTest0: test start: ', rtc)
     rtc.evalQuery(q1)
@@ -82,8 +81,8 @@ const dbTest0 = () => {
 const pcols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
 const q2 = q1.project(pcols)
 
-const dbTest2 = () => {
-  test('basic project operator', t => {
+const dbTest2 = (htest) => {
+  htest('basic project operator', t => {
     const rtc = sharedRtc
     t.plan(3)
     // console.log('q2: ', q2)
@@ -103,8 +102,8 @@ const dbTest2 = () => {
 
 const q3 = q1.groupBy(['Job', 'Title'], ['TCOE'])  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
 
-const dbTest3 = () => {
-  test('basic groupBy', t => {
+const dbTest3 = (htest) => {
+  htest('basic groupBy', t => {
     const rtc = sharedRtc
     rtc.evalQuery(q3).then(res => {
       // console.log('groupBy result: ', res)
@@ -123,8 +122,8 @@ const dbTest3 = () => {
 
 const q4 = q2.groupBy(['JobFamily'], ['Title', 'Union', 'Name', 'Base', 'TCOE'])
 
-const dbTest4 = () => {
-  test('groupBy aggs', t => {
+const dbTest4 = (htest) => {
+  htest('groupBy aggs', t => {
     const rtc = sharedRtc
     rtc.evalQuery(q4).then(res => {
       console.log('group by job family: ')
@@ -144,9 +143,9 @@ const dbTest4 = () => {
   })
 }
 
-const sqliteQueryTest = (label: string, query: reltab.QueryExp,
+const sqliteQueryTest = (htest, label: string, query: reltab.QueryExp,
                           cf: (t: any, res: reltab.TableRep) => void): void => {
-  test(label, t => {
+  htest(label, t => {
     const rtc = sharedRtc
     rtc.evalQuery(query).then(res => cf(t, res), util.mkAsyncErrHandler(t, label))
   })
@@ -154,17 +153,17 @@ const sqliteQueryTest = (label: string, query: reltab.QueryExp,
 
 const q5 = q1.filter(reltab.and().eq(col('JobFamily'), constVal('Executive Management')))
 
-const dbTest5 = () => {
-  sqliteQueryTest('basic filter', q5, (t, res) => {
+const dbTest5 = (htest) => {
+  sqliteQueryTest(htest, 'basic filter', q5, (t, res) => {
     t.equal(res.rowData.length, 4, 'expected row count after filter')
     util.logTable(res)
     t.end()
   })
 }
 
-const serTest0 = () => {
+const serTest0 = (htest) => {
   let dq5
-  test('query deserialization', t => {
+  htest('query deserialization', t => {
     const ser5 = JSON.stringify(q5, null, 2)
     console.log('serialized query')
     console.log(ser5)
@@ -183,8 +182,8 @@ const serTest0 = () => {
 
 const q6 = q1.mapColumns({Name: {id: 'EmpName', displayName: 'Employee Name'}})
 
-const dbTest6 = () => {
-  sqliteQueryTest('mapColumns', q6, (t, res) => {
+const dbTest6 = (htest) => {
+  sqliteQueryTest(htest, 'mapColumns', q6, (t, res) => {
     const rs = res.schema
     t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
     const em = rs.columnMetadata['EmpName']
@@ -196,8 +195,8 @@ const dbTest6 = () => {
 
 const q7 = q1.mapColumnsByIndex({'0': {id: 'EmpName'}})
 
-const dbTest7 = () => {
-  sqliteQueryTest('mapColumnsByIndex', q7, (t, res) => {
+const dbTest7 = (htest) => {
+  sqliteQueryTest(htest, 'mapColumnsByIndex', q7, (t, res) => {
     const rs = res.schema
     t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
     t.equal(res.rowData.length, 23, 'expected row count after mapColumnsByIndex')
@@ -207,8 +206,8 @@ const dbTest7 = () => {
 
 const q8 = q5.concat(q1.filter(reltab.and().eq(col('JobFamily'), constVal('Safety'))))
 
-const dbTest8 = () => {
-  sqliteQueryTest('concat', q8, (t, res) => {
+const dbTest8 = (htest) => {
+  sqliteQueryTest(htest, 'concat', q8, (t, res) => {
     t.equal(res.rowData.length, 5, 'expected row count after filter and concat')
     const jobCol = res.getColumn('JobFamily')
     const jobs = _.sortedUniq(jobCol)
@@ -218,32 +217,32 @@ const dbTest8 = () => {
 }
 
 const q9 = q8.sort([['Name', true]])
-const dbTest9 = () => {
-  sqliteQueryTest('basic sort', q9, (t, res) => {
+const dbTest9 = (htest) => {
+  sqliteQueryTest(htest, 'basic sort', q9, (t, res) => {
     util.logTable(res)
     t.end()
   })
 }
 
 const q10 = q8.sort([['JobFamily', true], ['TCOE', false]])
-const dbTest10 = () => {
-  sqliteQueryTest('compound key sort', q10, (t, res) => {
+const dbTest10 = (htest) => {
+  sqliteQueryTest(htest, 'compound key sort', q10, (t, res) => {
     util.logTable(res)
     t.end()
   })
 }
 
 const q11 = q8.extend('ExtraComp', {type: 'integer'}, 'TCOE - Base')
-const dbTest11 = () => {
-  sqliteQueryTest('extend with expression', q11, (t, res) => {
+const dbTest11 = (htest) => {
+  sqliteQueryTest(htest, 'extend with expression', q11, (t, res) => {
     util.logTable(res)
     t.end()
   })
 }
 
-const aggTreeTest0 = () => {
+const aggTreeTest0 = (htest) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
-  test('initial aggTree test', t => {
+  htest('initial aggTree test', t => {
     const rtc = sharedRtc
     const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true, [])
 
@@ -261,7 +260,7 @@ const aggTreeTest0 = () => {
         .then(res => {
           console.log('open root query: ')
           util.logTable(res)
-          const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec', '_depth', '_pivot', '_isRoot', '_path0', '_path1']
+          const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec', '_depth', '_pivot', '_isRoot', '_sortVal_0', '_sortVal_1', '_sortVal_2', '_path0', '_path1']
 
           t.deepEqual(res.schema.columns, expCols, 'Q1 schema columns')
           t.deepEqual(res.rowData.length, 8, 'Q1 rowData length')
@@ -285,7 +284,7 @@ const aggTreeTest0 = () => {
           util.logTable(res)
 
           // const openPaths = {'Executive Management': {'General Manager': {}}, 'Safety': {}}
-          const openPaths = {'Executive Management': {}}
+          const openPaths = new PathTree({'Executive Management': {}})
           const q4 = tree0.getTreeQuery(openPaths)
           return rtc.evalQuery(q4)
         })
@@ -299,9 +298,9 @@ const aggTreeTest0 = () => {
   })
 }
 
-const aggTreeTest1 = () => {
+const aggTreeTest1 = (htest) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
-  test('sorted aggTree test', t => {
+  htest('sorted aggTree test', t => {
     const rtc = sharedRtc
     const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
                 [['TCOE', false], ['Base', true], ['Title', true]])
@@ -363,9 +362,9 @@ const expPivotCol = [
 // Test created for bug #3
 // Test: Sort by a text column while pivoted:
 
-const pivotSortTest0 = () => {
+const pivotSortTest0 = (htest) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
-  test('Pivot Sort Test', t => {
+  htest('Pivot Sort Test', t => {
     const rtc = sharedRtc
     const ptm = new PivotTreeModel(rtc, q0, ['JobFamily'], null, false)
     const p0 = ptm.refresh()
@@ -391,7 +390,7 @@ const pivotSortTest0 = () => {
 }
 
 // Let's try async / await:
-const asyncTest1 = () => {
+const asyncTest1 = (htest) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
 
   const tf = async (t) => {
@@ -404,11 +403,11 @@ const asyncTest1 = () => {
     t.end()
   }
 
-  test('basic async test', t =>
+  htest('basic async test', t =>
     tf(t).catch(util.mkAsyncErrHandler(t, 'basic async test')))
 }
 
-const asyncAggTreeSortTest = () => {
+const asyncAggTreeSortTest = (htest) => {
   const tf = async (t) => {
     const q0 = reltab.tableQuery('barttest').project(pcols)
     const rtc = sharedRtc
@@ -446,7 +445,7 @@ const asyncAggTreeSortTest = () => {
     console.log('level 2 join result:')
     util.logTable(jres2, {maxRows: 25})
 
-    const openPaths = {'Executive Management': {'General Manager': {}}, 'Safety': {}}
+    const openPaths = new PathTree({'Executive Management': {'General Manager': {}}, 'Safety': {}})
     // const openPaths = {'Executive Management': {}}
     const q4 = tree0.getTreeQuery(openPaths)
     const res4 = await rtc.evalQuery(q4)
@@ -470,12 +469,12 @@ const asyncAggTreeSortTest = () => {
     t.end()
   }
 
-  test('asyncAggTreeSortTest', t =>
+  htest('asyncAggTreeSortTest', t =>
     tf(t).catch(util.mkAsyncErrHandler(t, 'async aggree sort test')))
 }
 
-const asyncTest = (testName, tf) => {
-  return test(testName, t =>
+const asyncTest = (htest, testName, tf) => {
+  return htest(testName, t =>
       tf(t).catch(util.mkAsyncErrHandler(t, testName)))
 }
 
@@ -489,7 +488,7 @@ const basicPivotSortTest = async (t) => {
                   [['Title', true]])
   console.log('vpivot initial promise resolved...')
 
-  const openPaths = {'Legal & Paralegal': {}}
+  const openPaths = new PathTree({'Legal & Paralegal': {}})
 
   const stq = tree0.getSortedTreeQuery(openPaths)
   const sres = await rtc.evalQuery(stq)
@@ -521,7 +520,7 @@ const descPivotSortTest = async (t) => {
   console.log('baseRes:')
   util.logTable(baseRes)
 
-  const openPaths = {'Legal & Paralegal': {}}
+  const openPaths = new PathTree({'Legal & Paralegal': {}})
 
   const stq = tree0.getSortedTreeQuery(openPaths)
   const sres = await rtc.evalQuery(stq)
@@ -540,11 +539,11 @@ const descPivotSortTest = async (t) => {
 const multiPivotSingleSortTest = async (t) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
   const rtc = sharedRtc
-  const tree0 = await aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
+  const tree0 : aggtree.VPivotTree = await aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
                  [['Title', true]])
   console.log('vpivot initial promise resolved...')
 
-  const openPaths = {'Legal & Paralegal': {}}
+  const openPaths = new PathTree({'Legal & Paralegal': {}})
 
   const stq = tree0.getSortedTreeQuery(openPaths)
   const sres = await rtc.evalQuery(stq)
@@ -557,43 +556,42 @@ const multiPivotSingleSortTest = async (t) => {
   t.end()
 }
 
-const doit = false
+const doit = true
 
-const runTests = () => {
-  sqliteTestSetup()
-
+const runTests = (htest: any) => {
   if (doit) {
-    dbTest0()
-    dbTest2()
-    dbTest3()
-    dbTest4()
-    dbTest5()
-    serTest0()
-    dbTest6()
-    dbTest7()
-    dbTest8()
-    dbTest9()
+    sqliteTestSetup(htest)
+    dbTest0(htest)
+    dbTest2(htest)
+    dbTest3(htest)
+    dbTest4(htest)
+    dbTest5(htest)
+    serTest0(htest)
+    dbTest6(htest)
+    dbTest7(htest)
+    dbTest8(htest)
+    dbTest9(htest)
 
-    dbTest10()
-    dbTest11()
+    dbTest10(htest)
+    dbTest11(htest)
 
-    aggTreeTest0()
+    aggTreeTest0(htest)
 
-    aggTreeTest1()
-    asyncTest1()
+    aggTreeTest1(htest)
+    asyncTest1(htest)
 
-    asyncAggTreeSortTest()
+    asyncAggTreeSortTest(htest)
 
-    pivotSortTest0()
+    pivotSortTest0(htest)
+
+    asyncTest(htest, 'basicPivotSortTest', basicPivotSortTest)
+
+    asyncTest(htest, 'descPivotSortTest', descPivotSortTest)
+
+    asyncTest(htest, 'multiPivotSingleSortTest', multiPivotSingleSortTest)
   }
 
-  asyncTest('basicPivotSortTest', basicPivotSortTest)
-
-  asyncTest('descPivotSortTest', descPivotSortTest)
-
-  asyncTest('multiPivotSingleSortTest', multiPivotSingleSortTest)
-
-  sqliteTestShutdown()
+  sqliteTestShutdown(htest)
 }
 
-runTests()
+module.exports = runTests

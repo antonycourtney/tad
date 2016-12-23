@@ -9,6 +9,9 @@ require('../less/sidebar.less')
 require('../less/columnSelector.less')
 require('../less/columnList.less')
 require('../less/singleColumnSelect.less')
+require('../less/modal.less')
+
+require('babel-polyfill')
 
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'

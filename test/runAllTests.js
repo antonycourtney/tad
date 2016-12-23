@@ -7,6 +7,7 @@ require('babel-polyfill')
 var test = require('tape')
 var tapeSnap = require('./tapeSnap')
 var tapSpec = require('tap-spec')
+// var summarize = require('tap-summary')
 const commandLineArgs = require('command-line-args')
 
 const optionDefinitions = [
@@ -31,9 +32,20 @@ if (options.update) {
  *
  * I found large auxiliary output (like console.log'ing a large table)
  * would encounter buffering issues when using stdin / stdout.
- * Never isolated exact cause, but this workaround is adequate:
+ *
+ * Never isolated exact cause, but creating and managing stream in
+ * Node explicitly seems to work.
+ *
+ * Unfortunately that tickles another issue: in-process streams
+ * wouldn't print summary information:
+ * See: https://github.com/scottcorgan/tap-spec/issues/37
+ * and https://github.com/scottcorgan/tap-spec/issues/37#issuecomment-268949364
+ * for my workaround.
  */
-test.createStream()
+
+let htest = test.createHarness()
+
+htest.createStream()
   .pipe(tapSpec())
   .pipe(process.stdout)
 
@@ -60,4 +72,5 @@ global.fetch = (url: string): Promise<any> => readFileAsync(url, 'utf-8').then(t
 // require('./reltabTests')
 // require('./aggtreeTests')
 // require('./csvImportTests')
-require('./reltabSqliteTests')
+require('./pathTreeTests')(htest)
+require('./reltabSqliteTests')(htest)

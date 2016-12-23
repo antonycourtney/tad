@@ -47,7 +47,7 @@ function config() {
 var render = {
   target: "electron",
   entry: {
-    renderMain: "./src/renderMain.js"
+    renderMain: ['babel-polyfill', './src/renderMain.js']
   }
 }
 

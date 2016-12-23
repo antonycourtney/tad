@@ -882,6 +882,79 @@
           ]
         ]
       }
+    },
+    "basic PathTree": {
+      "full path set from iterator": [
+        [
+          "foo"
+        ],
+        [
+          "foo",
+          "bar"
+        ],
+        [
+          "foo",
+          "bar",
+          "baz"
+        ],
+        [
+          "foo",
+          "bar",
+          "blech"
+        ],
+        [
+          "a"
+        ],
+        [
+          "a",
+          "b"
+        ],
+        [
+          "a",
+          "b",
+          "c"
+        ]
+      ],
+      "path set after closing one path": [
+        [
+          "a"
+        ],
+        [
+          "a",
+          "b"
+        ],
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          "foo"
+        ],
+        [
+          "foo",
+          "bar"
+        ],
+        [
+          "foo",
+          "bar",
+          "blech"
+        ]
+      ],
+      "path set after closing two paths with common prefix": [
+        [
+          "a"
+        ],
+        [
+          "a",
+          "b"
+        ],
+        [
+          "a",
+          "b",
+          "c"
+        ]
+      ]
     }
   }
 }

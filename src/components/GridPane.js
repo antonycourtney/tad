@@ -2,11 +2,11 @@
 
 import * as React from 'react'
 import PivotTreeModel from '../PivotTreeModel'
-import $ from 'jquery'
 import * as _ from 'lodash'
 import { Slick } from 'slickgrid-es6'
 import * as reltab from '../reltab'
 import * as actions from '../actions'
+import LoadingModal from './LoadingModal'
 
 const container = '#epGrid' // for now
 
@@ -124,7 +124,6 @@ const mkSlickColMap = (schema: reltab.Schema, colWidths: ColWidthMap) => {
  *
  */
 export default class GridPane extends React.Component {
-  sgv: Object
   ptm: PivotTreeModel
   onDataLoading: Object
   onDataLoaded: Object
@@ -132,14 +131,15 @@ export default class GridPane extends React.Component {
   colWidthsMap: ColWidthMap
   slickColMap: Object
   loadingIndicator: any
+  state: { loading: boolean }
 
   constructor (props: any) {
     super(props)
+    this.state = {loading: false}
     const appState = this.props.appState
 
     // This should probably live in this.state...
     this.ptm = new PivotTreeModel(appState.rtc, appState.baseQuery, [], null, appState.showRoot)
-    this.ptm.openPath([])
   }
 
   isPivoted () {
@@ -165,20 +165,16 @@ export default class GridPane extends React.Component {
     }
     console.log('item path: ', path)
     if (item._isOpen) {
-      this.ptm.closePath(path)
+      actions.closePath(path, this.props.stateRefUpdater)
     } else {
-      this.ptm.openPath(path)
+      actions.openPath(path, this.props.stateRefUpdater)
     }
-
-    this.refreshFromModel()
   }
 
   // Get grid columns based on current column visibility settings:
   getGridCols (dataView: ?Object = null) {
     const showHiddenCols = (global.cmdLineOptions['hidden-cols'] || false)
     const displayCols = this.props.appState.displayColumns
-
-    // TODO: For debugging could optionally append hidden column ids: _path, _pivot, etc.
 
     let gridCols = displayCols.map(cid => this.slickColMap[cid])
     if (this.isPivoted()) {
@@ -198,21 +194,8 @@ export default class GridPane extends React.Component {
   /* handlers for data loading and completion */
   registerLoadHandlers (grid: any) {
     this.onDataLoading.subscribe(() => {
-      if (!this.loadingIndicator) {
-        this.loadingIndicator = $("<span class='loading-indicator'><label>Buffering...</label></span>").appendTo(document.body)
-        var $g = $(container)
-
-        if (!this.loadingIndicator || !($g)) {
-          return
-        }
-
-        this.loadingIndicator
-          .css('position', 'absolute')
-          .css('top', $g.position().top + $g.height() / 2 - this.loadingIndicator.height() / 2)
-          .css('left', $g.position().left + $g.width() / 2 - this.loadingIndicator.width() / 2)
-      }
-
-      this.loadingIndicator.show()
+      console.log('onDataLoading...')
+      this.setState({loading: true})
     })
   }
 
@@ -297,6 +280,7 @@ export default class GridPane extends React.Component {
     this.loadingIndicator = null
 
     this.onDataLoaded.subscribe((e, args) => {
+      console.log('onDataLoaded.')
       for (let i = args.from; i <= args.to; i++) {
         this.grid.invalidateRow(i)
       }
@@ -304,9 +288,7 @@ export default class GridPane extends React.Component {
       this.grid.updateRowCount()
       this.grid.render()
 
-      if (this.loadingIndicator) {
-        this.loadingIndicator.fadeOut()
-      }
+      // this.setState({loading: false})
     })
     this.ptm.refresh()
       .then(dataView => this.loadInitialImage(dataView))
@@ -317,34 +299,46 @@ export default class GridPane extends React.Component {
     const prevPivots = this.ptm.getPivots()
     const newPivots = nextProps.appState.vpivots
 
+    let ret = false
+
+    // TODO: We should be able to just do a shallow equality compare on appState
+
     if (!(_.isEqual(prevPivots, newPivots))) {
-      return true
+      ret = true
     }
 
     if (this.props.appState.showRoot !== nextProps.appState.showRoot) {
-      return true
+      ret = true
     }
 
     if (!(_.isEqual(this.props.appState.displayColumns,
                     nextProps.appState.displayColumns))) {
-      return true
+      ret = true
     }
     if (!(_.isEqual(this.props.appState.sortKey,
                     nextProps.appState.sortKey))) {
-      return true
+      ret = true
     }
 
     if (this.props.appState.pivotLeafColumn !== nextProps.pivotLeafColumn) {
-      return true
+      ret = true
     }
 
-    return false
+    if (this.props.appState.openPaths !== nextProps.appState.openPaths) {
+      ret = true
+    }
+    console.log('GridPane.shouldComponentUpdate returning: ', ret)
+    return ret
   }
 
   render () {
+    const lm = this.state.loading ? <LoadingModal /> : null
     return (
-      <div className='gridPane'>
-        <div id='epGrid' className='slickgrid-container full-height' />
+      <div>
+        <div className='gridPane'>
+          <div id='epGrid' className='slickgrid-container full-height' />
+        </div>
+        {lm}
       </div>
     )
   }
@@ -354,6 +348,7 @@ export default class GridPane extends React.Component {
     this.ptm.setPivots(appState.vpivots)
     this.ptm.setShowRoot(appState.showRoot)
     this.ptm.setPivotLeafColumn(appState.pivotLeafColumn)
+    this.ptm.setOpenPaths(appState.openPaths)
     const sortKey = appState.sortKey
     this.ptm.setSortKey(sortKey)
     const sortObjs = sortKey.map(([col, asc]) => ({columnId: col, sortAsc: asc}))

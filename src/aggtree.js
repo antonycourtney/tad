@@ -3,23 +3,11 @@
 import * as reltab from './reltab'
 const {col, constVal} = reltab
 import * as _ from 'lodash'
-
-import type { Connection } from './reltab' // eslint-disable-line
-
+import PathTree from './PathTree'
+import type { Connection, QueryExp } from './reltab' // eslint-disable-line
+import type { Path } from './PathTree'  // eslint-disable-line
 const PATHSEP = '#'
 const ENCPATHSEP = '%23'
-
-export type Path = Array<string>
-
-/*
- * A PathTree is a set of paths encoded in an object using keys as path components.
- * For example:
- * { "Executive Management": { "General Manager": {} }, "Safety": {},  }
- * represents the two paths:
- *    'Executive Management'/'General Manager'
- *     'Executive Management'/'Safety'
- */
-export type PathTree = Object
 
 /*
  *  We used to use encodeURIComponent, but this isn't readily available on
@@ -47,9 +35,9 @@ export const decodePath = (pathStr: string): Path => {
   return path
 }
 
-const addPathCols = (baseQuery: reltab.QueryExp,
+const addPathCols = (baseQuery: QueryExp,
                       baseDepth: number,
-                      maxDepth: number): reltab.QueryExp => {
+                      maxDepth: number): QueryExp => {
   let retQuery = baseQuery
   for (let i = baseDepth; i < (maxDepth - 1); i++) {
     retQuery = retQuery.extend('_path' + i,
@@ -60,20 +48,20 @@ const addPathCols = (baseQuery: reltab.QueryExp,
 
 export class VPivotTree {
   rt: reltab.Connection
-  rtBaseQuery: reltab.QueryExp
+  rtBaseQuery: QueryExp
   pivotColumns: Array<string>
   pivotLeafColumn: ?string
   baseSchema: reltab.Schema
   outCols: Array<string>
-  rootQuery: ?reltab.QueryExp
+  rootQuery: ?QueryExp
   sortKey: Array<[string, boolean]>
 
-  constructor (rt: Connection, rtBaseQuery: reltab.QueryExp,
+  constructor (rt: Connection, rtBaseQuery: QueryExp,
     pivotColumns: Array<string>,
     pivotLeafColumn: ?string,
     baseSchema: reltab.Schema,
     outCols: Array<string>,
-    rootQuery: ?reltab.QueryExp,
+    rootQuery: ?QueryExp,
     sortKey: Array<[string, boolean]>) {
     this.rt = rt
     this.pivotColumns = pivotColumns
@@ -87,7 +75,7 @@ export class VPivotTree {
   /*
    * returns a query for the children of the specified path:
    */
-  applyPath (path: Path): reltab.QueryExp {
+  applyPath (path: Path): QueryExp {
     // TODO: Think about how to use rollupBy or a smaller number of groupBys that get chopped up
     // and cache result for efficiency
 
@@ -164,7 +152,7 @@ export class VPivotTree {
   /*
    * get query for joining with pathQuery to sort to specified depth
    */
-  getSortQuery (depth: number): reltab.QueryExp {
+  getSortQuery (depth: number): QueryExp {
     let sortQuery = this.rtBaseQuery // recCountQuery
 
     let sortCols = this.sortKey.map(p => p[0])
@@ -197,7 +185,7 @@ export class VPivotTree {
   /*
    * get query for full tree state from a set of openPaths
    */
-  getTreeQuery (openPaths: PathTree): reltab.QueryExp {
+  getTreeQuery (openPaths: PathTree): QueryExp {
     const maxDepth = this.pivotColumns.length + 1
     let resQuery = null
 
@@ -209,39 +197,24 @@ export class VPivotTree {
       resQuery = addPathCols(resQuery, 0, maxDepth)
     }
 
-    const walkPath = (treeQuery, prefix, pathMap) => {
-      for (var component in pathMap) {
-        if (pathMap.hasOwnProperty(component)) {
-          // add this component to our query:
-          var subPath = prefix.slice()
-          subPath.push(component)
-          var subQuery = this.applyPath(subPath)
-          treeQuery = treeQuery.concat(subQuery)
-
-          // and recurse, if appropriate:
-          var cval = pathMap[ component ]
-          if (typeof cval === 'object') {
-            treeQuery = walkPath(treeQuery, subPath, cval)
-          }
-        }
-      }
-      return treeQuery
-    }
-
     const openRoot = this.applyPath([]) // immediate children of root
     if (resQuery) {
       resQuery = resQuery.concat(openRoot)
     } else {
       resQuery = openRoot
     }
-    var tq = walkPath(resQuery, [], openPaths)
+
+    for (let path of openPaths.iter()) {
+      let subQuery = this.applyPath(path)
+      resQuery = resQuery.concat(subQuery)
+    }
 
     const sortArg = []
     for (let i = 0; i < maxDepth - 1; i++) {
       sortArg.push(['_path' + i, true])
     }
-    tq = tq.sort(sortArg)
-    return tq
+    resQuery = resQuery.sort(sortArg)
+    return resQuery
   }
 
 /*
@@ -249,7 +222,7 @@ export class VPivotTree {
  * relevant sort queries based on pivot depth, and with appropriate
  * order by clause
  */
-  getSortedTreeQuery (openPaths: PathTree): reltab.QueryExp {
+  getSortedTreeQuery (openPaths: PathTree): QueryExp {
     console.log('getSortedTreeQuery: openPaths: ', openPaths)
     const tq = this.getTreeQuery(openPaths)
 
@@ -290,14 +263,12 @@ export class VPivotTree {
 }
 
 export const vpivot = (rt: reltab.Connection,
-    rtBaseQuery: reltab.QueryExp,
+    rtBaseQuery: QueryExp,
     pivotColumns: Array<string>,
     pivotLeafColumn: ?string,
     showRoot: boolean,
     sortKey: Array<[string, boolean]>
   ): Promise<VPivotTree> => {
-  console.log('vpivot: sortKey: ', sortKey)
-
   // add a count column:
   rtBaseQuery = rtBaseQuery.extend('Rec', { type: 'integer' }, 1)
   // obtain schema for base query:
