@@ -31,13 +31,11 @@ const groupCellFormatter = (row, cell, value, columnDef, item) => {
 
   var pivotStr = item._pivot || ''
 
-  var ret = "<span class='" + toggleCssClass + ' ' +
-    ((!item._isLeaf) ? (item._isOpen ? toggleExpandedCssClass : toggleCollapsedCssClass) : '') +
-    "' style='margin-left:" + indentation + "'>" +
-    '</span>' +
-    "<span class='" + groupTitleCssClass + "' level='" + item._depth + "'>" +
-    pivotStr +
-    '</span>'
+  const expandClass = ((!item._isLeaf) ? (item._isOpen ? toggleExpandedCssClass : toggleCollapsedCssClass) : '')
+  const ret = `
+<span class='${toggleCssClass} ${expandClass}' style='margin-left: ${indentation}'>
+</span>
+<span class='${groupTitleCssClass}' level='${item._depth}'>${pivotStr}</span>`
   return ret
 }
 
@@ -142,10 +140,10 @@ export default class GridPane extends React.Component {
   }
 
   ensureData (from: number, to: number) {
-    // console.log('ensureData: ', from, to)
+    console.log('ensureData: ', from, to)
     // TODO: Should probably check for initial image not yet loaded
     // onDataLoading.notify({from: from, to: to})
-    this.onDataLoaded.notify({from: from, to: to})
+    // this.onDataLoaded.notify({from: from, to: to})
   }
 
   onGridClick (e: any, args: any) {
@@ -186,14 +184,6 @@ export default class GridPane extends React.Component {
     return gridCols
   }
 
-  /* handlers for data loading and completion */
-  registerLoadHandlers (grid: any) {
-    this.onDataLoading.subscribe(() => {
-      console.log('onDataLoading...')
-      this.setState({loading: true})
-    })
-  }
-
   /* Create grid from the specified set of columns */
   createGrid (columns: any, data: any) {
     this.grid = new Slick.Grid(container, data, columns, gridOptions)
@@ -217,14 +207,6 @@ export default class GridPane extends React.Component {
       actions.setColumnOrder(displayColIds, this.props.stateRefUpdater)
     })
 
-    this.registerLoadHandlers(this.grid)
-
-    /*
-    $(window).resize(() => {
-      console.log('window.resize: resizing grid...')
-      this.grid.resizeCanvas()
-    })
-    */
     // load the first page
     this.grid.onViewportChanged.notify()
   }
@@ -252,7 +234,7 @@ export default class GridPane extends React.Component {
       this.grid.setColumns(gridCols)
       this.grid.setData(dataView)
     }
-    this.grid.invalidateAllRows() // TODO: optimize
+    this.grid.invalidateAllRows()
     this.grid.updateRowCount()
     this.grid.render()
   }
@@ -274,58 +256,12 @@ export default class GridPane extends React.Component {
   }
 
   componentDidMount () {
-    this.onDataLoading = new Slick.Event()
-    this.onDataLoaded = new Slick.Event()
     this.loadingIndicator = null
-
-    // ??? This event handler seems questionable -- where does this
-    // fit in to the overall flow?
-    this.onDataLoaded.subscribe((e, args) => {
-      console.log('onDataLoaded.')
-      for (let i = args.from; i <= args.to; i++) {
-        this.grid.invalidateRow(i)
-      }
-
-      this.grid.updateRowCount()
-      this.grid.render()
-
-      // this.setState({loading: false})
-    })
     this.fullRefresh()
   }
 
   shouldComponentUpdate (nextProps: any, nextState: any) {
-    const prevPivots = this.props.appState.vpivots
-    const newPivots = nextProps.appState.vpivots
-
-    let ret = false
-
-    // TODO: We should be able to just do a shallow equality compare on appState
-
-    if (!(_.isEqual(prevPivots, newPivots))) {
-      ret = true
-    }
-
-    if (this.props.appState.showRoot !== nextProps.appState.showRoot) {
-      ret = true
-    }
-
-    if (!(_.isEqual(this.props.appState.displayColumns,
-                    nextProps.appState.displayColumns))) {
-      ret = true
-    }
-    if (!(_.isEqual(this.props.appState.sortKey,
-                    nextProps.appState.sortKey))) {
-      ret = true
-    }
-
-    if (this.props.appState.pivotLeafColumn !== nextProps.pivotLeafColumn) {
-      ret = true
-    }
-
-    if (this.props.appState.openPaths !== nextProps.appState.openPaths) {
-      ret = true
-    }
+    const ret = this.props.appState !== nextProps.appState
     console.log('GridPane.shouldComponentUpdate returning: ', ret)
     return ret
   }
