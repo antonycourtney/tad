@@ -6,7 +6,7 @@ import * as _ from 'lodash'
 import { Slick } from 'slickgrid-es6'
 import * as reltab from '../reltab'
 import * as actions from '../actions'
-import LoadingModal from './LoadingModal'
+// import LoadingModal from './LoadingModal'
 
 const container = '#epGrid' // for now
 
@@ -267,13 +267,12 @@ export default class GridPane extends React.Component {
   }
 
   render () {
-    const lm = this.state.loading ? <LoadingModal /> : null
+    // const lm = this.state.loading ? <LoadingModal /> : null
     return (
-      <div>
-        <div className='gridPane'>
+      <div className='gridPaneOuter'>
+        <div className='gridPaneInner'>
           <div id='epGrid' className='slickgrid-container full-height' />
         </div>
-        {lm}
       </div>
     )
   }
