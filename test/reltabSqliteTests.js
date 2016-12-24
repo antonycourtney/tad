@@ -8,7 +8,6 @@ import * as reltabSqlite from '../src/reltab-sqlite'
 import * as csvimport from '../src/csvimport'
 import * as util from './reltabTestUtils'
 import * as aggtree from '../src/aggtree'
-import PivotTreeModel from '../src/PivotTreeModel'
 import PathTree from '../src/PathTree'
 const {col, constVal} = reltab
 var sharedRtc
@@ -343,52 +342,6 @@ const aggTreeTest1 = (htest) => {
   })
 }
 
-const getRawColumn = (rawData: Array<any>, cid: string): Array<any> => {
-  return rawData.map(row => row[cid])
-}
-
-// expected pivot column when pivoted by JobFamily
-const expPivotCol = [
-  'Engineering & Systems Engineering',
-  'Executive Management',
-  'Finance & Accounting',
-  'Legal & Paralegal',
-  'Maintenance, Vehicle & Facilities',
-  'Police',
-  'Safety',
-  'Transportation Operations'
-]
-
-// Test created for bug #3
-// Test: Sort by a text column while pivoted:
-
-const pivotSortTest0 = (htest) => {
-  const q0 = reltab.tableQuery('barttest').project(pcols)
-  htest('Pivot Sort Test', t => {
-    const rtc = sharedRtc
-    const ptm = new PivotTreeModel(rtc, q0, ['JobFamily'], null, false)
-    const p0 = ptm.refresh()
-    p0.then(dv0 => {
-      console.log('ptm.refresh promise resolved...')
-      // console.log('dataView: ')
-      // console.table(dv0.rawData)
-      const pivotColumn = getRawColumn(dv0.rawData, '_pivot')
-      console.log('pivot column: ', pivotColumn)
-      t.deepEqual(pivotColumn, expPivotCol, 'initial pivot column matches expected')
-
-      // Now sort by Title:
-      // ptm.setSort('Title', 1)
-      console.log('after sort: ')
-      console.table(dv0.rawData)
-      const sortedPivotCol = getRawColumn(dv0.rawData, '_pivot')
-      // For this data set, uniq agg on Title is null for all Job Family rows,
-      // so sorting by Title should not affect order of pivot col:
-      t.deepEqual(sortedPivotCol, expPivotCol, 'sorting by title does not affect pivot col')
-      t.end()
-    })
-  })
-}
-
 // Let's try async / await:
 const asyncTest1 = (htest) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
@@ -581,8 +534,6 @@ const runTests = (htest: any) => {
     asyncTest1(htest)
 
     asyncAggTreeSortTest(htest)
-
-    pivotSortTest0(htest)
 
     asyncTest(htest, 'basicPivotSortTest', basicPivotSortTest)
 

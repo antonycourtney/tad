@@ -1,7 +1,7 @@
 /* @flow */
 
 import * as React from 'react'
-import PivotTreeModel from '../PivotTreeModel'
+import * as pivotRequest from '../pivotRequest'
 import * as _ from 'lodash'
 import { Slick } from 'slickgrid-es6'
 import * as reltab from '../reltab'
@@ -124,7 +124,6 @@ const mkSlickColMap = (schema: reltab.Schema, colWidths: ColWidthMap) => {
  *
  */
 export default class GridPane extends React.Component {
-  ptm: PivotTreeModel
   onDataLoading: Object
   onDataLoaded: Object
   grid: Object
@@ -136,10 +135,6 @@ export default class GridPane extends React.Component {
   constructor (props: any) {
     super(props)
     this.state = {loading: false}
-    const appState = this.props.appState
-
-    // This should probably live in this.state...
-    this.ptm = new PivotTreeModel(appState.rtc, appState.baseQuery, [], null, appState.showRoot)
   }
 
   isPivoted () {
@@ -240,38 +235,42 @@ export default class GridPane extends React.Component {
     this.slickColMap[ colId ].width = colWidth
   }
 
-  loadInitialImage (dataView: any) {
-    console.log('loadInitialImage: ', dataView)
-
-    this.colWidthsMap = getInitialColWidthsMap(dataView)
-    this.slickColMap = mkSlickColMap(dataView.schema, this.colWidthsMap)
-    const gridCols = this.getGridCols()
-    this.createGrid(gridCols, dataView)
-    /* const gridWidth = gridCols.reduce((width,col) => width + col.width, 0)
-    console.log( "loadInitialImage: setting container width to: ", gridWidth )
-    $(container).css('width', gridWidth + 'px')
-    */
-    this.grid.resizeCanvas()
-  }
-
-  refreshGrid (dataView: any) {
+  /*
+   * update grid from dataView
+   */
+  updateGrid (dataView: any) {
+    if (!this.colWidthsMap) {
+      this.colWidthsMap = getInitialColWidthsMap(dataView)
+    }
     this.slickColMap = mkSlickColMap(dataView.schema, this.colWidthsMap)
     const gridCols = this.getGridCols(dataView)
-    this.grid.setColumns(gridCols)
-    /*
-     * FrozenGrid doesn't seem to work
-     * perhaps it's based on an out-of-date base version of slickgrid?
-    let frozenColCount = (gridCols[0].field === '_pivot') ? 1 : 0
-    console.log('refreshGrid: fcc: ', frozenColCount)
-    this.grid.setOptions({frozenColumn: frozenColCount})
-    */
+    if (!this.grid) {
+      console.log('updateGrid: initial update, creating grid...')
+      this.createGrid(gridCols, dataView)
+      this.grid.resizeCanvas()
+    } else {
+      this.grid.setColumns(gridCols)
+      this.grid.setData(dataView)
+    }
     this.grid.invalidateAllRows() // TODO: optimize
     this.grid.updateRowCount()
     this.grid.render()
   }
 
-  refreshFromModel () {
-    this.ptm.refresh().then(dataView => this.refreshGrid(dataView))
+  /*
+   * Generate a request based on current appState and refresh grid
+   * from resulting dataView
+   */
+  fullRefresh () {
+    const appState = this.props.appState
+    pivotRequest.requestView(appState.rtc, appState)
+      .then(dataView => {
+        console.log('requestView completed: ', dataView)
+        this.updateGrid(dataView)
+      })
+      .catch(err => {
+        console.error('requestView error: ', err, err.stack)
+      })
   }
 
   componentDidMount () {
@@ -279,6 +278,8 @@ export default class GridPane extends React.Component {
     this.onDataLoaded = new Slick.Event()
     this.loadingIndicator = null
 
+    // ??? This event handler seems questionable -- where does this
+    // fit in to the overall flow?
     this.onDataLoaded.subscribe((e, args) => {
       console.log('onDataLoaded.')
       for (let i = args.from; i <= args.to; i++) {
@@ -290,13 +291,11 @@ export default class GridPane extends React.Component {
 
       // this.setState({loading: false})
     })
-    this.ptm.refresh()
-      .then(dataView => this.loadInitialImage(dataView))
-      .catch(err => console.error('loadInitialImage: async error: ', err, err.stack))
+    this.fullRefresh()
   }
 
   shouldComponentUpdate (nextProps: any, nextState: any) {
-    const prevPivots = this.ptm.getPivots()
+    const prevPivots = this.props.appState.vpivots
     const newPivots = nextProps.appState.vpivots
 
     let ret = false
@@ -344,15 +343,6 @@ export default class GridPane extends React.Component {
   }
 
   componentDidUpdate (prevProps: any, prevState: any) {
-    const appState = this.props.appState
-    this.ptm.setPivots(appState.vpivots)
-    this.ptm.setShowRoot(appState.showRoot)
-    this.ptm.setPivotLeafColumn(appState.pivotLeafColumn)
-    this.ptm.setOpenPaths(appState.openPaths)
-    const sortKey = appState.sortKey
-    this.ptm.setSortKey(sortKey)
-    const sortObjs = sortKey.map(([col, asc]) => ({columnId: col, sortAsc: asc}))
-    this.grid.setSortColumns(sortObjs)
-    this.refreshFromModel()
+    this.fullRefresh()
   }
  }
