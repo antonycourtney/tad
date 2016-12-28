@@ -17,6 +17,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import OneRef from 'oneref'
 import AppPane from './components/AppPane'
+import PivotRequester from './PivotRequester'
 
 import * as reltab from './reltab' // eslint-disable-line
 import rtc from './reltab-electron'
@@ -33,11 +34,16 @@ const tableName = md.tableName
 
 const baseQuery = reltab.tableQuery(tableName)
 
+// module local to keep alive:
+var pivotRequester: ?PivotRequester = null  // eslint-disable-line
+
 actions.createAppState(rtc, md.tableName, baseQuery)
   .then(appState => {
     console.log('got initial app state: ', appState.toJS())
 
     const stateRef = new OneRef.Ref(appState)
+
+    pivotRequester = new PivotRequester(stateRef) // eslint-disable-line
 
     ReactDOM.render(
       <OneRef.AppContainer appClass={AppPane} stateRef={stateRef} />,

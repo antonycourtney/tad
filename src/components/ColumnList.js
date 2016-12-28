@@ -15,7 +15,7 @@ export default class ColumnList extends React.Component {
       <ColumnRow
         key={key}
         columnListType={this.props.columnListType}
-        appState={this.props.appState}
+        schema={this.props.schema}
         rowFormatter={this.props.rowFormatter}
         stateRefUpdater={this.props.stateRefUpdater}
         rowData={row} />

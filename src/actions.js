@@ -1,5 +1,7 @@
 /* @flow */
 
+import ViewParams from './ViewParams'
+import ViewState from './ViewState'
 import AppState from './AppState'
 import * as reltab from './reltab'
 import * as constants from './components/constants'
@@ -23,26 +25,33 @@ export const createAppState = (rtc: reltab.Connection,
     // start off with all columns displayed:
     const displayColumns = baseSchema.columns.slice()
 
-    return new AppState({title, rtc, baseSchema, baseQuery, displayColumns, openPaths})
+    const viewParams = new ViewParams({displayColumns, openPaths})
+    const viewState = new ViewState({viewParams})
+
+    return new AppState({title, rtc, baseSchema, baseQuery, viewState})
   })
 }
 
 type RefUpdater = (f: ((s: AppState) => AppState)) => void
 
+// helper to hoist a ViewParams => ViewParams fn to an AppState => AppState
+const vpUpdate = (f: ((vp: ViewParams) => ViewParams)) =>
+  (s: AppState) => s.updateIn(['viewState', 'viewParams'], f)
+
 export const toggleShown = (cid: string, updater: RefUpdater): void => {
-  updater(appState => appState.toggleShown(cid))
+  updater(vpUpdate(viewParams => viewParams.toggleShown(cid)))
 }
 
 export const togglePivot = (cid: string, updater: RefUpdater): void => {
-  updater(appState => appState.togglePivot(cid))
+  updater(vpUpdate(viewParams => viewParams.togglePivot(cid)))
 }
 
 export const toggleSort = (cid: string, updater: RefUpdater): void => {
-  updater(appState => appState.toggleSort(cid))
+  updater(vpUpdate(viewParams => viewParams.toggleSort(cid)))
 }
 
 export const toggleShowRoot = (updater: RefUpdater): void => {
-  updater(appState => appState.set('showRoot', !(appState.showRoot)))
+  updater(vpUpdate(viewParams => viewParams.set('showRoot', !(viewParams.showRoot))))
 }
 
 export const reorderColumnList = (dstProps: any, srcProps: any) => {
@@ -56,23 +65,23 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
     return
   }
   const fieldKey = dstProps.columnListType
-  dstProps.stateRefUpdater(appState => {
-    let colList = appState.get(fieldKey).slice()
+  dstProps.stateRefUpdater(viewParams => {
+    let colList = viewParams.get(fieldKey).slice()
     // TODO: FIX when we add sort key support:
     const srcColumnId = srcProps.rowData
     const srcIndex = colList.indexOf(srcColumnId)
     if (srcIndex === -1) {
-      return appState
+      return viewParams
     }
     // remove source from its current position:
     colList.splice(srcIndex, 1)
     const dstColumnId = dstProps.rowData
     const dstIndex = colList.indexOf(dstColumnId)
     if (dstIndex === -1) {
-      return appState
+      return viewParams
     }
     colList.splice(dstIndex, 0, srcColumnId)
-    return appState.set(fieldKey, colList)
+    return viewParams.set(fieldKey, colList)
   })
 }
 
@@ -82,17 +91,17 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
  */
 export const setSortKey = (sortKey: Array<[string, boolean]>, updater: RefUpdater) => {
   console.log('setSortKey: ', sortKey)
-  updater(appState => appState.set('sortKey', sortKey))
+  updater(vpUpdate(viewParams => viewParams.set('sortKey', sortKey)))
 }
 
 export const setColumnOrder = (displayColumns: Array<string>, updater: RefUpdater) => {
-  updater(appState => appState.set('displayColumns', displayColumns))
+  updater(vpUpdate(viewParams => viewParams.set('displayColumns', displayColumns)))
 }
 
 export const openPath = (path: Path, updater: RefUpdater) => {
-  updater(appState => appState.openPath(path))
+  updater(vpUpdate(viewParams => viewParams.openPath(path)))
 }
 
 export const closePath = (path: Path, updater: RefUpdater) => {
-  updater(appState => appState.closePath(path))
+  updater(vpUpdate(viewParams => viewParams.closePath(path)))
 }

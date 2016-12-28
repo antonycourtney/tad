@@ -9,12 +9,23 @@ import HTML5Backend from 'react-dnd-html5-backend'
 /**
  * top level application pane
  */
+
 class AppPane extends React.Component {
   render () {
+    const appState = this.props.appState
+    const viewState = appState.viewState
+    const viewParams = viewState.viewParams
+
     return (
       <div className='container-fluid full-height main-container'>
-        <Sidebar appState={this.props.appState} stateRefUpdater={this.props.stateRefUpdater} />
-        <GridPane appState={this.props.appState} stateRefUpdater={this.props.stateRefUpdater} />
+        <Sidebar
+          baseSchema={appState.baseSchema}
+          viewParams={viewParams}
+          stateRefUpdater={this.props.stateRefUpdater} />
+        <GridPane
+          appState={appState}
+          viewState={viewState}
+          stateRefUpdater={this.props.stateRefUpdater} />
       </div>
     )
   }

@@ -45,21 +45,27 @@ function createWindow () {
 
 // Can insert delay in promise chain by:
 // delay(amount).then(() => ...)
-// let delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+let delay = ms => {
+  console.log('injecting delay of ', ms, ' ms')
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 const runQuery = rtc => (queryStr, cb) => {
   try {
     console.info('\n%s: runQuery: got query', new Date().toLocaleTimeString())
     const query = reltab.deserializeQuery(queryStr)
     const hrstart = process.hrtime()
-    rtc.evalQuery(query)
-      .then(res => {
-        const [es, ens] = process.hrtime(hrstart)
-        console.info('runQuery: evaluated query in %ds %dms', es, ens/1e6)
-        const serRes = JSON.stringify(res, null, 2)
-        cb(serRes)
-      })
-      .catch(err => console.error('error running query: ', err, err.stack))
+    delay(0)
+    .then(() => {
+      rtc.evalQuery(query)
+        .then(res => {
+          const [es, ens] = process.hrtime(hrstart)
+          console.info('runQuery: evaluated query in %ds %dms', es, ens / 1e6)
+          const serRes = JSON.stringify(res, null, 2)
+          cb(serRes)
+        })
+        .catch(err => console.error('error running query: ', err, err.stack))
+    })
   } catch (err) {
     console.error('runQuery: ', err, err.stack)
   }

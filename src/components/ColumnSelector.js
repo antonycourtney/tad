@@ -5,12 +5,12 @@ import * as actions from '../actions'
 
 export default class ColumnSelector extends React.Component {
   renderColumnRow (cid: string) {
-    const appState = this.props.appState
-    const schema = appState.baseSchema
+    const schema = this.props.schema
+    const viewParams = this.props.viewParams
     const displayName = schema.displayName(cid)
-    const isShown = appState.displayColumns.includes(cid)
-    const isPivot = appState.vpivots.includes(cid)
-    const isSort = (appState.sortKey.findIndex(entry => entry[0] === cid) !== -1)
+    const isShown = viewParams.displayColumns.includes(cid)
+    const isPivot = viewParams.vpivots.includes(cid)
+    const isSort = (viewParams.sortKey.findIndex(entry => entry[0] === cid) !== -1)
     const refUpdater = this.props.stateRefUpdater
     return (
       <tr key={cid}>
@@ -47,8 +47,7 @@ export default class ColumnSelector extends React.Component {
   }
 
   render () {
-    const appState = this.props.appState
-    const schema = appState.baseSchema
+    const schema = this.props.schema
     const columnIds = schema.columns.slice()
     columnIds.sort((cid1, cid2) => schema.displayName(cid1).localeCompare(schema.displayName(cid2)))
     const columnRows = columnIds.map(cid => this.renderColumnRow(cid))

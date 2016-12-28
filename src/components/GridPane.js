@@ -1,12 +1,11 @@
 /* @flow */
 
 import * as React from 'react'
-import * as pivotRequest from '../pivotRequest'
 import * as _ from 'lodash'
 import { Slick } from 'slickgrid-es6'
 import * as reltab from '../reltab'
 import * as actions from '../actions'
-// import LoadingModal from './LoadingModal'
+import LoadingModal from './LoadingModal'
 
 const container = '#epGrid' // for now
 
@@ -122,21 +121,13 @@ const mkSlickColMap = (schema: reltab.Schema, colWidths: ColWidthMap) => {
  *
  */
 export default class GridPane extends React.Component {
-  onDataLoading: Object
-  onDataLoaded: Object
   grid: Object
   colWidthsMap: ColWidthMap
   slickColMap: Object
-  loadingIndicator: any
-  state: { loading: boolean }
-
-  constructor (props: any) {
-    super(props)
-    this.state = {loading: false}
-  }
 
   isPivoted () {
-    return (this.props.appState.vpivots.length > 0)
+    const viewParams = this.props.viewState.viewParams
+    return (viewParams.vpivots.length > 0)
   }
 
   ensureData (from: number, to: number) {
@@ -147,13 +138,14 @@ export default class GridPane extends React.Component {
   }
 
   onGridClick (e: any, args: any) {
+    const viewParams = this.props.viewState.viewParams
     var item = this.grid.getDataItem(args.row)
     console.log('onGridClick: item: ', item)
     if (item._isLeaf) {
       return
     }
     let path = []
-    for (let i = 0; i < this.props.appState.vpivots.length; i++) {
+    for (let i = 0; i < viewParams.vpivots.length; i++) {
       path.push(item['_path' + i])
     }
     console.log('item path: ', path)
@@ -166,8 +158,9 @@ export default class GridPane extends React.Component {
 
   // Get grid columns based on current column visibility settings:
   getGridCols (dataView: ?Object = null) {
+    const viewParams = this.props.viewState.viewParams
     const showHiddenCols = (global.cmdLineOptions['hidden-cols'] || false)
-    const displayCols = this.props.appState.displayColumns
+    const displayCols = viewParams.displayColumns
 
     let gridCols = displayCols.map(cid => this.slickColMap[cid])
     if (this.isPivoted()) {
@@ -239,45 +232,29 @@ export default class GridPane extends React.Component {
     this.grid.render()
   }
 
-  /*
-   * Generate a request based on current appState and refresh grid
-   * from resulting dataView
-   */
-  fullRefresh () {
-    const appState = this.props.appState
-    pivotRequest.requestView(appState.rtc, appState)
-      .then(dataView => {
-        console.log('requestView completed: ', dataView)
-        this.updateGrid(dataView)
-      })
-      .catch(err => {
-        console.error('requestView error: ', err, err.stack)
-      })
-  }
-
-  componentDidMount () {
-    this.loadingIndicator = null
-    this.fullRefresh()
-  }
-
   shouldComponentUpdate (nextProps: any, nextState: any) {
-    const ret = this.props.appState !== nextProps.appState
+    const ret = (this.props.viewState !== nextProps.viewState)
     console.log('GridPane.shouldComponentUpdate returning: ', ret)
     return ret
   }
 
   render () {
-    // const lm = this.state.loading ? <LoadingModal /> : null
+    const viewState = this.props.viewState
+    const lm = viewState.loading ? <LoadingModal /> : null
     return (
       <div className='gridPaneOuter'>
         <div className='gridPaneInner'>
           <div id='epGrid' className='slickgrid-container full-height' />
         </div>
+        {lm}
       </div>
     )
   }
 
   componentDidUpdate (prevProps: any, prevState: any) {
-    this.fullRefresh()
+    const dataView = this.props.viewState.dataView
+    if ((dataView !== prevProps.viewState.dataView) && dataView != null) {
+      this.updateGrid(dataView)
+    }
   }
  }

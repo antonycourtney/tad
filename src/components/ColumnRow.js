@@ -48,13 +48,12 @@ class ColumnRow extends React.Component {
   render () {
     const {connectDragSource, connectDropTarget, isOver} = this.props
     const dragHoverClass = isOver ? '' : '' // TODO
-    const appState = this.props.appState
+    const schema = this.props.schema
 
     let rowFmt
     if (this.props.rowFormatter) {
-      rowFmt = this.props.rowFormatter(appState, this.props.rowData)
+      rowFmt = this.props.rowFormatter(schema, this.props.rowData)
     } else {
-      const schema = appState.baseSchema
       const columnId = this.props.rowData
       const displayName = schema.displayName(columnId)
       rowFmt = (<td className='col-colName'>{displayName}</td>)

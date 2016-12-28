@@ -5,8 +5,7 @@ import * as React from 'react'
 export default class SingleColumnSelect extends React.Component {
 
   renderColOption (cid: string) {
-    const appState = this.props.appState
-    const schema = appState.baseSchema
+    const schema = this.props.schema
     const displayName = schema.displayName(cid)
     return (
       <option key={cid} value={cid}>{displayName}</option>
@@ -14,8 +13,7 @@ export default class SingleColumnSelect extends React.Component {
   }
 
   render () {
-    const appState = this.props.appState
-    const schema = appState.baseSchema
+    const schema = this.props.schema
 
     const columnIds = schema.columns.slice()
     columnIds.sort((cid1, cid2) => schema.displayName(cid1).localeCompare(schema.displayName(cid2)))

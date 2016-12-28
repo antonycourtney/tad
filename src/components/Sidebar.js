@@ -6,10 +6,11 @@ import ColumnSelector from './ColumnSelector'
 import ColumnList from './ColumnList'
 import SingleColumnSelect from './SingleColumnSelect'
 import { ColumnListType } from './constants'
+import { Schema } from '../reltab'
 
-const sortKeyRowFormatter = (appState, row: [string, boolean]) => {
+const sortKeyRowFormatter = (schema: Schema, row: [string, boolean]) => {
   const [cid, asc] = row
-  const displayName = appState.baseSchema.displayName(cid)
+  const displayName = schema.displayName(cid)
   const ascStr = asc ? 'asc' : 'desc'
   return ([
     <td key={cid} className='col-colName'>{displayName}</td>,
@@ -34,11 +35,12 @@ export default class Sidebar extends React.Component {
     const cid = (selStr === '__none') ? null : selStr
     console.log('onLeafColumnSelect: ', cid)
     const refUpdater = this.props.stateRefUpdater
-    refUpdater(appState => appState.set('pivotLeafColumn', cid))
+    refUpdater(appState => appState.setIn(['viewState', 'viewParams',
+      'pivotLeafColumn'], cid))
   }
 
   render () {
-    const appState = this.props.appState
+    const viewParams = this.props.viewParams
     const refUpdater = this.props.stateRefUpdater
     const expandClass = this.state.expanded ? 'sidebar-expanded' : 'sidebar-collapsed'
     return (
@@ -62,39 +64,42 @@ export default class Sidebar extends React.Component {
               type='checkbox'
               title='Show Root Row'
               onChange={() => actions.toggleShowRoot(refUpdater)}
-              checked={appState.showRoot} />
+              checked={viewParams.showRoot} />
             <label className='show-root-label'>Show Global Totals as First Row</label>
             <h5>Columns</h5>
-            <ColumnSelector appState={this.props.appState} stateRefUpdater={this.props.stateRefUpdater} />
+            <ColumnSelector
+              schema={this.props.baseSchema}
+              viewParams={viewParams}
+              stateRefUpdater={this.props.stateRefUpdater} />
             <br />
             <h5>Pivots <small>(drag to reorder)</small></h5>
             <ColumnList
+              schema={this.props.baseSchema}
               columnListType={ColumnListType.PIVOT}
-              appState={this.props.appState}
-              items={this.props.appState.vpivots}
+              items={viewParams.vpivots}
               stateRefUpdater={this.props.stateRefUpdater} />
             <SingleColumnSelect
-              appState={this.props.appState}
+              schema={this.props.baseSchema}
               stateRefUpdater={this.props.stateRefUpdater}
               label='Pivot Tree Leaf Level'
-              value={appState.pivotLeafColumn}
-              disabled={(this.props.appState.vpivots.length === 0)}
+              value={viewParams.pivotLeafColumn}
+              disabled={(this.props.viewParams.vpivots.length === 0)}
               onChange={e => this.onLeafColumnSelect(e)}
             />
             <br />
             <h5>Display Order <small>(drag to reorder)</small></h5>
             <ColumnList
+              schema={this.props.baseSchema}
               columnListType={ColumnListType.DISPLAY}
-              appState={this.props.appState}
-              items={this.props.appState.displayColumns}
+              items={viewParams.displayColumns}
               stateRefUpdater={this.props.stateRefUpdater} />
             <br />
             <h5>Sort Order <small>(drag to reorder)</small></h5>
             <ColumnList
+              schema={this.props.baseSchema}
               columnListType={ColumnListType.SORT}
-              appState={this.props.appState}
               headerLabels={['Sort Dir']}
-              items={this.props.appState.sortKey}
+              items={viewParams.sortKey}
               rowFormatter={sortKeyRowFormatter}
               stateRefUpdater={this.props.stateRefUpdater} />
           </div>
