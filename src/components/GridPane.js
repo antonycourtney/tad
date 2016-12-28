@@ -233,14 +233,21 @@ export default class GridPane extends React.Component {
   }
 
   shouldComponentUpdate (nextProps: any, nextState: any) {
-    const ret = (this.props.viewState !== nextProps.viewState)
-    console.log('GridPane.shouldComponentUpdate returning: ', ret)
+    const viewState = this.props.viewState
+    const nextViewState = nextProps.viewState
+    /*
+     * We'll update any time viewState is updated.
+     * This is somewhat conservative, but render() itself should be fairly cheap;
+     * it's updateGrid() that is expensive.
+     */
+    const ret = (viewState !== nextViewState)
     return ret
   }
 
   render () {
     const viewState = this.props.viewState
-    const lm = viewState.loading ? <LoadingModal /> : null
+    // Only show loading modal if we've been loading more than 500 ms
+    const lm = (viewState.loading && (viewState.loadingElapsed > 500)) ? <LoadingModal /> : null
     return (
       <div className='gridPaneOuter'>
         <div className='gridPaneInner'>

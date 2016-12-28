@@ -14,9 +14,15 @@ import SimpleDataView from './SimpleDataView'
 export default class ViewState extends Immutable.Record({
   viewParams: new ViewParams(),
   loading: false,
+  loadingStart: 0,
+  loadingElapsed: 0,
+  loadingTimerId: 0,
   dataView: null
 }) {
   viewParams: ViewParams
   loading: boolean
+  loadingStart: number
+  loadingElapsed: number // time, in milliseconds
+  loadingTimerId: number
   dataView: ?SimpleDataView
 }

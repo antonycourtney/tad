@@ -7,29 +7,20 @@ import * as reltab from './reltab'
 import * as constants from './components/constants'
 import PathTree from './PathTree'
 import type {Path} from './PathTree'  // eslint-disable-line
-const {constVal} = reltab
+import * as aggtree from './aggtree'
 
 export const createAppState = (rtc: reltab.Connection,
-  title: string, baseQuery: reltab.QueryExp): Promise<AppState> => {
-  // add a count column and do the usual SQL where 1=0 trick:
-  const schemaQuery = baseQuery
-    .extend('Rec', { type: 'integer' }, 1)
-    .filter(reltab.and().eq(constVal(1), constVal(0)))
+    title: string, baseQuery: reltab.QueryExp): Promise<AppState> => {
+  return aggtree.getBaseSchema(rtc, baseQuery)
+    .then(baseSchema => {
+      // start off with all columns displayed:
+      const displayColumns = baseSchema.columns.slice()
+      const openPaths = new PathTree()
+      const viewParams = new ViewParams({displayColumns, openPaths})
+      const viewState = new ViewState({viewParams})
 
-  const openPaths = new PathTree()
-
-  const schemap = rtc.evalQuery(schemaQuery)
-  return schemap.then(schemaRes => {
-    const baseSchema = schemaRes.schema
-
-    // start off with all columns displayed:
-    const displayColumns = baseSchema.columns.slice()
-
-    const viewParams = new ViewParams({displayColumns, openPaths})
-    const viewState = new ViewState({viewParams})
-
-    return new AppState({title, rtc, baseSchema, baseQuery, viewState})
-  })
+      return new AppState({title, rtc, baseSchema, baseQuery, viewState})
+    })
 }
 
 type RefUpdater = (f: ((s: AppState) => AppState)) => void

@@ -61,9 +61,11 @@ const mkDataView = (viewParams: ViewParams, tableData: reltab.TableRep): SimpleD
  * Map the resulting TableRep from the query into a SimpleDataView for
  * use with SlickGrid
  */
-const requestView = async (rt: Connection, baseQuery: reltab.QueryExp,
+const requestView = async (rt: Connection,
+    baseQuery: reltab.QueryExp,
+    baseSchema: reltab.Schema,
     viewParams: ViewParams): Promise<SimpleDataView> => {
-  const ptree = await aggtree.vpivot(rt, baseQuery, viewParams.vpivots,
+  const ptree = await aggtree.vpivot(rt, baseQuery, baseSchema, viewParams.vpivots,
       viewParams.pivotLeafColumn, viewParams.showRoot, viewParams.sortKey)
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths)
   const tableData = await rt.evalQuery(treeQuery)
@@ -94,17 +96,42 @@ export default class PivotRequester {
       // Would be nice to cancel any pending request here...
       this.pendingViewParams = appState.viewState.viewParams
       const req = requestView(appState.rtc, appState.baseQuery,
-        this.pendingViewParams)
+        appState.baseSchema, this.pendingViewParams)
       this.pendingRequest = req.then(dataView => {
-        console.log('PivotRequester: got result, updating state:')
+        const appState = stateRef.getValue()
         const nextSt = appState.update('viewState', vs => {
-          return vs.set('loading', false).set('dataView', dataView)
+          window.clearInterval(vs.loadingTimerId)
+          return (vs
+            .remove('loading')
+            .remove('loadingStart')
+            .remove('loadingElapsed')
+            .remove('loadingTimerId')
+            .set('dataView', dataView))
         })
         stateRef.setValue(nextSt)
         return dataView
       })
-      const nextAppState = appState.updateIn(['viewState', 'loading'], () => true)
+      const loadingStart = (new Date()).getTime()
+      const timerId = window.setInterval(() => this.onTick(stateRef), 200)
+      const nextAppState = appState.update('viewState', vs => {
+        return (vs
+          .set('loading', true)
+          .set('loadingStart', loadingStart)
+          .set('loadingElapsed', 0)
+          .set('loadingTimerId', timerId))
+      })
       stateRef.setValue(nextAppState)
     }
+  }
+
+  onTick (stateRef: oneref.Ref<AppState>) {
+    const appState = stateRef.getValue()
+    const nextAppState = appState.update('viewState', vs => {
+      const curTime = (new Date()).getTime()
+      const elapsed = curTime - vs.loadingStart
+      return (vs
+        .set('loadingElapsed', elapsed))
+    })
+    stateRef.setValue(nextAppState)
   }
 }

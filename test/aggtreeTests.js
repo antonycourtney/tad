@@ -8,7 +8,9 @@ import * as util from './reltabTestUtils'
 const pcols = ['Job', 'Title', 'Union', 'Name', 'Base', 'TCOE']
 const q0 = reltab.tableQuery('test-data/bart-comp-all.json').project(pcols)
 
-const p0 = aggtree.vpivot(rtc, q0, ['Job', 'Title'], null, true, [])
+const sp0 = aggtree.getBaseSchema(rtc, q0)
+
+const p0 = sp0.then(schema => aggtree.vpivot(rtc, q0, schema, ['Job', 'Title'], null, true, []))
 
 p0.then(tree0 => {
   console.log('vpivot initial promise resolved...')

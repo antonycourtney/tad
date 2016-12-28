@@ -54,7 +54,7 @@ export default class ViewParams extends Immutable.Record({
    * after updating vpivots, trim openPaths
    */
   trimOpenPaths (oldPivots: Array<string>): ViewParams {
-    const matchDepth = _.findIndex(_.zip(this.pivots, oldPivots), ([p1, p2]) => (p1 !== p2))
+    const matchDepth = _.findIndex(_.zip(this.vpivots, oldPivots), ([p1, p2]) => (p1 !== p2))
     return this.set('openPaths', this.openPaths.trimToDepth(matchDepth))
   }
 

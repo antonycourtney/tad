@@ -243,11 +243,16 @@ const aggTreeTest0 = (htest) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
   htest('initial aggTree test', t => {
     const rtc = sharedRtc
-    const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true, [])
+    const sp0 = aggtree.getBaseSchema(rtc, q0)
+    const p0 = sp0.then(schema => {
+      console.log('got schema: ', schema)
+      return aggtree.vpivot(rtc, q0, schema, ['JobFamily', 'Title'], 'Name', true, [])
+    })
 
     p0.then(tree0 => {
       console.log('vpivot initial promise resolved...')
       const rq0 = tree0.rootQuery
+      console.log('root query exp: ', rq0)
       rtc.evalQuery(rq0)
         .then(res => {
           console.log('root query: ')
@@ -301,8 +306,11 @@ const aggTreeTest1 = (htest) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
   htest('sorted aggTree test', t => {
     const rtc = sharedRtc
-    const p0 = aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
-                [['TCOE', false], ['Base', true], ['Title', true]])
+    const sp0 = aggtree.getBaseSchema(rtc, q0)
+    const p0 = sp0
+      .then(schema => aggtree.vpivot(rtc, q0, schema,
+          ['JobFamily', 'Title'], 'Name', true,
+          [['TCOE', false], ['Base', true], ['Title', true]]))
 
     p0.then(tree0 => {
       console.log('vpivot initial promise resolved...')
@@ -364,8 +372,10 @@ const asyncAggTreeSortTest = (htest) => {
   const tf = async (t) => {
     const q0 = reltab.tableQuery('barttest').project(pcols)
     const rtc = sharedRtc
-    const tree0 = await aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
-                    [['TCOE', false], ['Base', true], ['Title', true]])
+    const schema0 = await aggtree.getBaseSchema(rtc, q0)
+    const tree0 = await aggtree.vpivot(rtc, q0, schema0,
+      ['JobFamily', 'Title'], 'Name', true,
+      [['TCOE', false], ['Base', true], ['Title', true]])
     console.log('vpivot initial promise resolved...')
 
     const sq1 = tree0.getSortQuery(1)
@@ -437,8 +447,10 @@ const asyncTest = (htest, testName, tf) => {
 const basicPivotSortTest = async (t) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
   const rtc = sharedRtc
-  const tree0 = await aggtree.vpivot(rtc, q0, ['JobFamily'], 'Name', true,
-                  [['Title', true]])
+  const schema0 = await aggtree.getBaseSchema(rtc, q0)
+  const tree0 = await aggtree.vpivot(rtc, q0, schema0,
+      ['JobFamily'], 'Name', true,
+      [['Title', true]])
   console.log('vpivot initial promise resolved...')
 
   const openPaths = new PathTree({'Legal & Paralegal': {}})
@@ -462,8 +474,10 @@ const basicPivotSortTest = async (t) => {
 const descPivotSortTest = async (t) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
   const rtc = sharedRtc
-  const tree0 = await aggtree.vpivot(rtc, q0, ['JobFamily'], 'Name', true,
-                 [['Title', false]])
+  const schema0 = await aggtree.getBaseSchema(rtc, q0)
+  const tree0 = await aggtree.vpivot(rtc, q0, schema0,
+    ['JobFamily'], 'Name', true,
+    [['Title', false]])
   console.log('vpivot initial promise resolved...')
 
   const pq = tree0.applyPath([])
@@ -492,8 +506,10 @@ const descPivotSortTest = async (t) => {
 const multiPivotSingleSortTest = async (t) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
   const rtc = sharedRtc
-  const tree0 : aggtree.VPivotTree = await aggtree.vpivot(rtc, q0, ['JobFamily', 'Title'], 'Name', true,
-                 [['Title', true]])
+  const schema0 = await aggtree.getBaseSchema(rtc, q0)
+  const tree0 = await aggtree.vpivot(rtc, q0, schema0,
+      ['JobFamily', 'Title'], 'Name', true,
+      [['Title', true]])
   console.log('vpivot initial promise resolved...')
 
   const openPaths = new PathTree({'Legal & Paralegal': {}})

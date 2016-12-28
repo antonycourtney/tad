@@ -4,7 +4,7 @@ import * as reltab from './reltab'
 const {col, constVal} = reltab
 import * as _ from 'lodash'
 import PathTree from './PathTree'
-import type { Connection, QueryExp } from './reltab' // eslint-disable-line
+import type { Connection, QueryExp, Schema } from './reltab' // eslint-disable-line
 import type { Path } from './PathTree'  // eslint-disable-line
 const PATHSEP = '#'
 const ENCPATHSEP = '%23'
@@ -48,7 +48,7 @@ const addPathCols = (baseQuery: QueryExp,
 
 export class VPivotTree {
   rt: reltab.Connection
-  rtBaseQuery: QueryExp
+  baseQuery: QueryExp
   pivotColumns: Array<string>
   pivotLeafColumn: ?string
   baseSchema: reltab.Schema
@@ -56,17 +56,18 @@ export class VPivotTree {
   rootQuery: ?QueryExp
   sortKey: Array<[string, boolean]>
 
-  constructor (rt: Connection, rtBaseQuery: QueryExp,
+  constructor (rt: Connection,
+    baseQuery: QueryExp,
+    baseSchema: reltab.Schema,
     pivotColumns: Array<string>,
     pivotLeafColumn: ?string,
-    baseSchema: reltab.Schema,
     outCols: Array<string>,
     rootQuery: ?QueryExp,
     sortKey: Array<[string, boolean]>) {
     this.rt = rt
     this.pivotColumns = pivotColumns
     this.pivotLeafColumn = pivotLeafColumn
-    this.rtBaseQuery = rtBaseQuery
+    this.baseQuery = baseQuery
     this.baseSchema = baseSchema
     this.outCols = outCols
     this.rootQuery = rootQuery
@@ -80,7 +81,7 @@ export class VPivotTree {
     // and cache result for efficiency
 
     // queries are immutable so no need to clone:
-    var pathQuery = this.rtBaseQuery // recCountQuery
+    var pathQuery = this.baseQuery // recCountQuery
 
     // We will filter by all path components, and then group by the next pivot Column:
     if (path.length > this.pivotColumns.length) {
@@ -117,13 +118,12 @@ export class VPivotTree {
 
       /*
        * The point of the '_sortVal_<i>' column is that it will be 1 for all rows of
-       * depth >= depth after performing the join on this sort query, null for
-       * items higher in the hierarchy.  We do an ascending sort on this before
+       * depth >= i, 0 for rows where depth < i (which are higher in the pivot tree).
+       * We do an ascending sort on this before
        * adding the '_sortVal_<i>_<j>' cols to ensure that parents always come
        * before their children; without this we'd end up putting parent row
-       * immediately after children when some sorted descending by some column
+       * immediately after children when sorted descending by some column
        */
-      // sortQuery = sortQuery.extend('_sortVal_' + pathLevel.toString(), {type: 'integer'}, 1)
     const maxDepth = this.pivotColumns.length + 1
     for (let i = 0; i < maxDepth; i++) {
       const depthVal = (depth > i) ? 1 : 0
@@ -153,7 +153,7 @@ export class VPivotTree {
    * get query for joining with pathQuery to sort to specified depth
    */
   getSortQuery (depth: number): QueryExp {
-    let sortQuery = this.rtBaseQuery // recCountQuery
+    let sortQuery = this.baseQuery // recCountQuery
 
     let sortCols = this.sortKey.map(p => p[0])
 
@@ -223,7 +223,6 @@ export class VPivotTree {
  * order by clause
  */
   getSortedTreeQuery (openPaths: PathTree): QueryExp {
-    console.log('getSortedTreeQuery: openPaths: ', openPaths)
     const tq = this.getTreeQuery(openPaths)
 
     let jtq = tq
@@ -262,42 +261,41 @@ export class VPivotTree {
   }
 }
 
+export const getBaseSchema = (rt: reltab.Connection,
+    baseQuery: QueryExp): Promise<Schema> => {
+  // add a count column and do the usual SQL where 1=0 trick:
+  const schemaQuery = baseQuery
+    .extend('Rec', { type: 'integer' }, 1)
+    .filter(reltab.and().eq(constVal(1), constVal(0)))
+
+  const schemap = rt.evalQuery(schemaQuery)
+  return schemap.then(schemaRes => schemaRes.schema)
+}
+
 export const vpivot = (rt: reltab.Connection,
-    rtBaseQuery: QueryExp,
+    baseQuery: QueryExp,
+    baseSchema: Schema,
     pivotColumns: Array<string>,
     pivotLeafColumn: ?string,
     showRoot: boolean,
     sortKey: Array<[string, boolean]>
-  ): Promise<VPivotTree> => {
-  // add a count column:
-  rtBaseQuery = rtBaseQuery.extend('Rec', { type: 'integer' }, 1)
-  // obtain schema for base query:
+  ): VPivotTree => {
+  baseQuery = baseQuery.extend('Rec', { type: 'integer' }, 1)
+  const hiddenCols = ['_depth', '_pivot', '_isRoot']
+  const outCols = baseSchema.columns.concat(hiddenCols)
 
-  // TODO:  Don't want to evaluate entire query just to get schema!
-  // Need to change interface of RelTab to return a true TableDataSource that has calculated
-  // Schema but not yet calculated rowdata...
+  const gbCols = baseSchema.columns.slice()
 
-  // For now we'll do the usual SQL where 1=0 trick:
-  const schemaQuery = rtBaseQuery.filter(reltab.and().eq(constVal(1), constVal(0)))
+  let rootQuery = null
+  if (showRoot) {
+    rootQuery = baseQuery
+      .groupBy([], gbCols)
+      .extend('_pivot', { type: 'text' }, null)
+      .extend('_depth', { type: 'integer' }, 0)
+      .extend('_isRoot', {type: 'boolean'}, 1)
+      .project(outCols)
+  }
 
-  const basep = rt.evalQuery(schemaQuery)
-  return basep.then(baseRes => {
-    const baseSchema = baseRes.schema
-    const hiddenCols = ['_depth', '_pivot', '_isRoot']
-    const outCols = baseSchema.columns.concat(hiddenCols)
-
-    const gbCols = baseSchema.columns.slice()
-
-    let rootQuery = null
-    if (showRoot) {
-      rootQuery = rtBaseQuery
-        .groupBy([], gbCols)
-        .extend('_pivot', { type: 'text' }, null)
-        .extend('_depth', { type: 'integer' }, 0)
-        .extend('_isRoot', {type: 'boolean'}, 1)
-        .project(outCols)
-    }
-
-    return new VPivotTree(rt, rtBaseQuery, pivotColumns, pivotLeafColumn, baseSchema, outCols, rootQuery, sortKey)
-  })
+  return new VPivotTree(rt, baseQuery, baseSchema, pivotColumns,
+    pivotLeafColumn, outCols, rootQuery, sortKey)
 }
