@@ -7,6 +7,7 @@ import ViewParams from './ViewParams'
 import AppState from './AppState'
 import type { Connection } from './reltab' // eslint-disable-line
 import * as oneref from 'oneref'  // eslint-disable-line
+import * as util from './util'
 
 /**
  * Use ViewParams to construct a SimpleDataView for use with
@@ -100,38 +101,17 @@ export default class PivotRequester {
       this.pendingRequest = req.then(dataView => {
         const appState = stateRef.getValue()
         const nextSt = appState.update('viewState', vs => {
-          window.clearInterval(vs.loadingTimerId)
           return (vs
-            .remove('loading')
-            .remove('loadingStart')
-            .remove('loadingElapsed')
-            .remove('loadingTimerId')
+            .update('loadingTimer', lt => lt.stop())
             .set('dataView', dataView))
         })
         stateRef.setValue(nextSt)
         return dataView
       })
-      const loadingStart = (new Date()).getTime()
-      const timerId = window.setInterval(() => this.onTick(stateRef), 200)
-      const nextAppState = appState.update('viewState', vs => {
-        return (vs
-          .set('loading', true)
-          .set('loadingStart', loadingStart)
-          .set('loadingElapsed', 0)
-          .set('loadingTimerId', timerId))
-      })
+      const ltUpdater = util.pathUpdater(stateRef, ['viewState', 'loadingTimer'])
+      const nextAppState = appState.updateIn(['viewState', 'loadingTimer'],
+        lt => lt.run(200, ltUpdater))
       stateRef.setValue(nextAppState)
     }
-  }
-
-  onTick (stateRef: oneref.Ref<AppState>) {
-    const appState = stateRef.getValue()
-    const nextAppState = appState.update('viewState', vs => {
-      const curTime = (new Date()).getTime()
-      const elapsed = curTime - vs.loadingStart
-      return (vs
-        .set('loadingElapsed', elapsed))
-    })
-    stateRef.setValue(nextAppState)
   }
 }

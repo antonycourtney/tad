@@ -46,6 +46,7 @@ export const toggleShowRoot = (updater: RefUpdater): void => {
 }
 
 export const reorderColumnList = (dstProps: any, srcProps: any) => {
+  console.log('reorderColumnList: ', dstProps, srcProps)
   if (dstProps.columnListType !== srcProps.columnListType) {
     console.log('mismatched column list types, ignoring...')
     return
@@ -56,7 +57,7 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
     return
   }
   const fieldKey = dstProps.columnListType
-  dstProps.stateRefUpdater(viewParams => {
+  dstProps.stateRefUpdater(vpUpdate(viewParams => {
     let colList = viewParams.get(fieldKey).slice()
     // TODO: FIX when we add sort key support:
     const srcColumnId = srcProps.rowData
@@ -73,7 +74,7 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
     }
     colList.splice(dstIndex, 0, srcColumnId)
     return viewParams.set(fieldKey, colList)
-  })
+  }))
 }
 
 /*

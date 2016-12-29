@@ -7,6 +7,7 @@ declare module 'oneref' {
     getValue(): T;
     setValue(v: T): void;
   }
+  declare function refUpdater<A>(r: Ref<A>): (uf: (a: A) => A) => void
 }
 
 /**

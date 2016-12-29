@@ -3,6 +3,7 @@
 import * as Immutable from 'immutable'
 import ViewParams from './ViewParams'
 import SimpleDataView from './SimpleDataView'
+import Timer from './Timer'
 
 /**
  * Immutable representation of all state associated
@@ -13,16 +14,16 @@ import SimpleDataView from './SimpleDataView'
  */
 export default class ViewState extends Immutable.Record({
   viewParams: new ViewParams(),
-  loading: false,
-  loadingStart: 0,
-  loadingElapsed: 0,
-  loadingTimerId: 0,
+  loadingTimer: new Timer(),
+  scrolling: false,
+  scrollingStart: 0,
+  scrollingElapsed: 0,
+  scrollingTimerId: 0,
+  scrollFrom: 0,
+  scrollTo: 0,
   dataView: null
 }) {
   viewParams: ViewParams
-  loading: boolean
-  loadingStart: number
-  loadingElapsed: number // time, in milliseconds
-  loadingTimerId: number
+  loadingTimer: Timer
   dataView: ?SimpleDataView
 }
