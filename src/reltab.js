@@ -2,7 +2,6 @@
 
 const jsesc = require('jsesc')
 const _ = require('lodash')
-const sqliteParser = require('sqlite-parser')
 
 /**
  * AST for filter expressions, consisting of a tree of
@@ -233,8 +232,9 @@ export class QueryExp {
     return new QueryExp('join', [joinType, onArg], [this, qexp])
   }
 
-  toSql (tableMap: TableInfoMap, outer: boolean = true): string {
-    return ppSQLQuery(queryToSql(tableMap, this))
+  toSql (tableMap: TableInfoMap, offset: number = -1,
+        limit: number = -1): string {
+    return ppSQLQuery(queryToSql(tableMap, this), offset, limit)
   }
 
   getSchema (tableMap: TableInfoMap): Schema {
@@ -268,7 +268,9 @@ const queryReviver = (key:string, val: any): any => {
   return retVal
 }
 
-export const deserializeQuery = (jsonStr: string): QueryExp => {
+type QueryReq = { query: QueryExp, offset?: number, limit?: number }
+
+export const deserializeQueryReq = (jsonStr: string): QueryReq => {
   const rq = JSON.parse(jsonStr, queryReviver)
 
   return rq
@@ -549,9 +551,16 @@ const auxPPSQLQuery = (dst: StringBuffer, depth: number, query: SQLQueryAST) => 
 }
 
 // external (top-level) function:
-const ppSQLQuery = (query: SQLQueryAST): string => {
+const ppSQLQuery = (query: SQLQueryAST, offset: number, limit: number): string => {
   let strBuf = []
   auxPPSQLQuery(strBuf, 0, query)
+  if (offset !== -1) {
+    ppOut(strBuf, 0, 'LIMIT ')
+    ppOut(strBuf, 0, limit.toString())
+    ppOut(strBuf, 0, ' OFFSET ')
+    ppOut(strBuf, 0, offset.toString())
+    ppOut(strBuf, 0, '\n')
+  }
   const retStr = strBuf.join('')
   return retStr
 }
@@ -589,7 +598,7 @@ const projectQueryToSql = (tableMap: TableInfoMap, pq: QueryExp): SQLQueryAST =>
     const outCols = projectCols.map(cid => {
       let outCol = colsMap[cid]
       if (outCol === undefined) {
-        const sqStr = ppSQLQuery(sqsql)
+        const sqStr = ppSQLQuery(sqsql, -1, -1)
         throw new Error('projectQueryToSql: no such column ' + quoteCol(cid) + ' in subquery:  ' + sqStr)
       }
       return outCol
@@ -724,7 +733,13 @@ const sortQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST =>
 }
 
 /*
- * use sqliteParser to determine if extend expression is a constant expression, so that
+const intRE = /^[-+]?[$]?[0-9,]+$/
+const strLitRE = /^'[^']*'$/
+const nullRE = /^null$/
+*/
+const litRE = /^[-+]?[$]?[0-9,]+$|^'[^']*'$|^null$/
+/*
+ * determine if extend expression is a constant expression, so that
  * we can inline the extend expression.
  *
  * Conservative approximation -- true => constant expr, but false may or may not be constant
@@ -732,10 +747,14 @@ const sortQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST =>
  * Only returns true for simple literal exprs for now; should expand to handle binary ops
  */
 const isConstantExpr = (expr: string): boolean => {
+  const ret = litRE.test(expr)
+/*
   const selExp = `select (${expr})`
   const selPtree = sqliteParser(selExp)
   const expPtree = selPtree.statement[0].result[0]
-  return (expPtree.type === 'literal')
+  const ret = (expPtree.type === 'literal')
+*/
+  return ret
 }
 
 const extendQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
@@ -963,5 +982,5 @@ export class TableRep {
 }
 
 export interface Connection { // eslint-disable-line
-  evalQuery (query: QueryExp): Promise<TableRep>
+  evalQuery (query: QueryExp, offset?: number, limit?: number): Promise<TableRep>
 }
