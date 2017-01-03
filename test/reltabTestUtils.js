@@ -1,16 +1,14 @@
 /* @flow */
 
 import * as reltab from '../src/reltab' // eslint-disable-line
-import rtc from '../src/reltab-local'
 import db from 'sqlite'
 import test from 'tape'
 
 export const columnSum = (tableData: reltab.TableRep, columnId: string): number => {
   var sum: number = 0
 
-  var colIndex = tableData.schema.columnIndex(columnId)
   for (var i = 0; i < tableData.rowData.length; i++) {
-    sum += ((tableData.rowData[i][colIndex] : any): number)
+    sum += ((tableData.rowData[i][columnId] : any): number)
   }
   return sum
 }
@@ -22,13 +20,6 @@ export const mkAsyncErrHandler = (t: any, msg: string): Handler => {
     console.error('caught async promise exception: ', err.stack)
     t.fail(msg + ': ' + err)
   }
-}
-
-export const queryTest = (label: string, query: reltab.QueryExp,
-                          cf: (t: any, res: reltab.TableRep) => void): void => {
-  test(label, t => {
-    rtc.evalQuery(query).then(res => cf(t, res), mkAsyncErrHandler(t, label))
-  })
 }
 
 type LogTableOptions = { maxRows?: number }

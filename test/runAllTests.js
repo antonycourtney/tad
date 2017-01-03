@@ -5,7 +5,7 @@ import 'console.table'
 require('babel-polyfill')
 
 var test = require('tape')
-var tapeSnap = require('./tapeSnap')
+var tapeSnapInit = require('./tapeSnap')
 var tapSpec = require('tap-spec')
 // var summarize = require('tap-summary')
 const commandLineArgs = require('command-line-args')
@@ -18,13 +18,6 @@ const optionDefinitions = [
     description: 'update all snapshot tests (record-only mode)'
   }
 ]
-
-const argv = process.argv.slice(1)
-const options = commandLineArgs(optionDefinitions, argv)
-if (options.update) {
-  console.log('setting tapeSnap to record-only mode')
-  tapeSnap.recordAll(true)
-}
 
 /*
  * very important to explicitly run our tape test output
@@ -63,6 +56,15 @@ function readFileAsync (file, options) {
 }
 
 global.fetch = (url: string): Promise<any> => readFileAsync(url, 'utf-8').then(txt => ({ text: () => txt }))
+
+let tapeSnap = tapeSnapInit(htest)
+
+const argv = process.argv.slice(1)
+const options = commandLineArgs(optionDefinitions, argv)
+if (options.update) {
+  console.log('setting tapeSnap to record-only mode')
+  tapeSnap.recordAll(true)
+}
 
 /*
  * Note (!): We have to pull these in via require() rather than ES6 import because

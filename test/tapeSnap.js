@@ -1,7 +1,6 @@
 /*
  * Basic snapshot testing for tape
  */
-import test from 'tape'
 import * as fs from 'fs'
 import * as path from 'path'
 import mkdirp from 'mkdirp'
@@ -12,6 +11,7 @@ import mkdirp from 'mkdirp'
 let initialized = false
 let recordOnlyMode = false  // record snapshots and pass all comparisons
 let dirty = false
+let testHarness = null
 
 // For each test, we map messages to snapshot values:
 type SnapMap = {[msg: string]: any}
@@ -23,24 +23,28 @@ let savedSnaps : TestMap = {}
 const snapshotPath = './test/__snapshots__/tapeSnapData.json'
 
 // read saved snapshots and install exit handler to update if needed
-const init = (t) => {
+const init = (htest) => {
+  if (initialized) {
+    if (testHarness !== htest) {
+      throw new Error('attempt to re-(init)ialize tape-snap with different tape harness. Not supported.')
+    }
+    return deepEqualSnap
+  }
   if (fs.existsSync(snapshotPath)) {
     const savedContentsStr = fs.readFileSync(snapshotPath, {encoding: 'utf-8'})
     const savedContents = JSON.parse(savedContentsStr)
     savedSnaps = savedContents.snapshotData
   } else {
-    t.comment('snapshot file "' + snapshotPath + '" not found, running in record-only mode...')
+    console.log('snapshot file "' + snapshotPath + '" not found, running in record-only mode...')
     recordOnlyMode = true
   }
-  const tx : any = test
-  tx.onFinish(() => {
-    t.comment('in onFinish handler')
+  htest.onFinish(() => {
     if (dirty) {
-      t.comment('updating snapshot file')
+      console.log('updating snapshot file')
       const snapshotDir = path.dirname(snapshotPath)
       const made = mkdirp.sync(snapshotDir)
       if (made) {
-        t.comment('created directory "' + snapshotDir + '"')
+        console.log('created directory "' + snapshotDir + '"')
       }
       const snapFileData = {
         snapshotFileFormat: 1,
@@ -49,16 +53,12 @@ const init = (t) => {
       const snapFileStr = JSON.stringify(snapFileData, null, 2)
 
       fs.writeFileSync(snapshotPath, snapFileStr, {encoding: 'utf-8'})
-      t.comment('wrote "' + snapshotPath + '"')
+      console.log('wrote "' + snapshotPath + '"')
     }
   })
   initialized = true
-}
-
-const ensureInitialized = (t: any) => {
-  if (!initialized) {
-    init(t)
-  }
+  testHarness = htest
+  return deepEqualSnap
 }
 
 /*
@@ -92,9 +92,7 @@ const recordSnapshot = (testName: string, msg: string, val: any) => {
  *
  */
 // TODO: don't use any type here, add name to Flow-typed declarations
-export default function deepEqualSnap (t: any, val: any, msg: string) {
-  ensureInitialized(t)
-
+function deepEqualSnap (t: any, val: any, msg: string) {
   const prevSnap = findSnapshot(t.name, msg)
 
   if (prevSnap && !recordOnlyMode) {
@@ -117,3 +115,9 @@ deepEqualSnap.recordAll = function (doIt: boolean) {
     recordOnlyMode = true
   }
 }
+
+// Note: The hacky exporting of recordAll as an auxiliary interface to
+// deepEqualSnap requires an old-style module.exports.
+// TODO: Just update to new, ES6-style exports and export both entry
+// points directly
+module.exports = init

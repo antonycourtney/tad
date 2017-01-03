@@ -4,21 +4,6 @@ import * as reltab from './reltab'
 import {  TableRep, Schema, RelExp, FilterExp, QueryExp } from './reltab'  // eslint-disable-line
 import type { FileMetadata, TableInfoMap, ValExp, Row, AggColSpec, SubExp, ColumnMetaMap, ColumnMapInfo, ColumnExtendVal, Connection } from './reltab' // eslint-disable-line
 
-/**
- * Map the rows of objects into TableRep array representation.
- *
- * TODO: Since Sqlite only gives us rows represented in this format and
- * SlickGrid wants the same representation, we should probably capitulate
- * and just use this format for TableRep, and add the conversion code
- * in reltab-local to conform to this styles
- */
-const mkTableRep = (schema: Schema, objRows: Array<Object>): TableRep => {
-  const mkArrayRow = (rowObj: Object) => schema.columns.map(cid => rowObj[cid])
-  const arrayRows = objRows.map(mkArrayRow)
-
-  return new TableRep(schema, arrayRows)
-}
-
 class SqliteContext {
   db: any
   tableMap: TableInfoMap
@@ -43,11 +28,11 @@ class SqliteContext {
     }
     const t2 = process.hrtime()
     const qp = this.db.all(sqlQuery)
-    const t3 = process.hrtime(t2)
-    const [t3s, t3ns] = t3
-    const t4pre = process.hrtime()
     return qp.then(rows => {
-      const ret = mkTableRep(schema, rows)
+      const t3 = process.hrtime(t2)
+      const [t3s, t3ns] = t3
+      const t4pre = process.hrtime()
+      const ret = new TableRep(schema, rows)
       const t4 = process.hrtime(t4pre)
       const [t4s, t4ns] = t4
       console.info('time to run query: %ds %dms', t3s, t3ns / 1e6)

@@ -18,7 +18,8 @@ const mkDataView = (viewParams: ViewParams, tableData: reltab.TableRep): SimpleD
   const getPath = (rowMap, depth) => {
     let path = []
     for (let i = 0; i < depth; i++) {
-      let pathElem = rowMap['_path' + i]
+      let pathElemAny: any = rowMap['_path' + i]
+      let pathElem: string = pathElemAny
       if (pathElem) {
         path.push(pathElem)
       }
@@ -31,9 +32,9 @@ const mkDataView = (viewParams: ViewParams, tableData: reltab.TableRep): SimpleD
   var parentIdStack = []
   for (var i = 0; i < tableData.rowData.length; i++) {
     // ?? shouldn't we just be constructing the rowMap once and re-use it for every row??
-    var rowMap = tableData.schema.rowMapFromRow(tableData.rowData[ i ])
+    var rowMap: Object = tableData.rowData[ i ]
     var path = getPath(rowMap, nPivots)
-    var depth = rowMap._depth
+    var depth: number = rowMap._depth
     rowMap._isOpen = viewParams.openPaths.isOpen(path)
     rowMap._isLeaf = depth > nPivots
     rowMap._id = i

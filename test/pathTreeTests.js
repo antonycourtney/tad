@@ -1,9 +1,10 @@
 /* @flow */
 
-import deepEqualSnap from './tapeSnap'
+import tapeSnapInit from './tapeSnap'
 import PathTree from '../src/PathTree'
 
 module.exports = (htest: any) => {
+  const deepEqualSnap = tapeSnapInit(htest)
   htest('basic PathTree', t => {
     const pt0 = new PathTree()
 

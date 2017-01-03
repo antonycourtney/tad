@@ -152,10 +152,7 @@ export type AggStr = 'uniq' | 'sum' | 'avg'
 export type AggColSpec = string
 
 type Scalar = ?number | ?string | ?boolean
-export type Row = Array<Scalar>
-
-// A RowObject uses column ids from schema as keys:
-type RowObject ={[columnId: string]: Scalar}
+export type Row = {[columnId: string]: Scalar}
 
 // metadata for a single column:
 // TODO: date, time, datetime, URL, ...
@@ -166,7 +163,7 @@ export type ColumnMetadata = { displayName: string, type: ColumnType }
  * A ColumnExtendVal is either a simple scalar or a function from a row object
  * to a scalar.
  */
-type ExtendFunc = (row: RowObject) => Scalar // eslint-disable-line
+type ExtendFunc = (row: Row) => Scalar // eslint-disable-line
 export type ColumnExtendVal = Scalar | ExtendFunc // eslint-disable-line
 
 /*
@@ -977,7 +974,7 @@ export class TableRep {
     if (idx === undefined) {
       throw new Error('TableRep.getColumn: no such column "' + columnId + '"')
     }
-    return this.rowData.map(r => r[idx])
+    return this.rowData.map(r => r[columnId])
   }
 }
 

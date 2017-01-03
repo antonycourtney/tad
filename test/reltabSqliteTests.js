@@ -1,7 +1,7 @@
 /* @flow */
 
 import db from 'sqlite'
-import deepEqualSnap from './tapeSnap'
+import tapeSnapInit from './tapeSnap'
 import * as _ from 'lodash'
 import * as reltab from '../src/reltab'
 import * as reltabSqlite from '../src/reltab-sqlite'
@@ -39,6 +39,8 @@ const sqliteTestShutdown = (htest) => {
         console.log('shut down sqlite')
         t.ok(true, 'finished db.close')
         t.end()
+        // And exit on next tick:
+        setImmediate(() => { process.exit(0) })
       })
   })
 }
@@ -66,7 +68,14 @@ const dbTest0 = (htest) => {
       t.equal(rowData.length, 23, 'q1 rowData.length')
 
       // console.log(rowData[0])
-      var expRow0 = [ 'Crunican, Grace', 'General Manager', 312461, 399921, 'Executive Management', 'Non-Represented' ]
+      var expRow0 = {
+        'Name': 'Crunican, Grace',
+        'Title': 'General Manager',
+        'Base': 312461,
+        'TCOE': 399921,
+        'JobFamily': 'Executive Management',
+        'Union': 'Non-Represented'
+      }
       t.deepEqual(rowData[0], expRow0, 'first row matches expected')
 
       tcoeSum = util.columnSum(res, 'TCOE')
@@ -91,8 +100,16 @@ const dbTest2 = (htest) => {
       t.deepEqual(res.schema.columns, pcols, 'result schema from project')
 
       // console.log(res.rowData[0])
-      var expRow0 = ['Executive Management', 'General Manager', 'Non-Represented', 'Crunican, Grace', 312461, 399921]
-
+      // Note: object is actually identical under projection using
+      // object rep of row data
+      var expRow0 = {
+        'Name': 'Crunican, Grace',
+        'Title': 'General Manager',
+        'Base': 312461,
+        'TCOE': 399921,
+        'JobFamily': 'Executive Management',
+        'Union': 'Non-Represented'
+      }
       t.deepEqual(res.rowData[0], expRow0, 'project result row 0')
       t.end()
     })
@@ -439,13 +456,14 @@ const asyncAggTreeSortTest = (htest) => {
 
 const asyncTest = (htest, testName, tf) => {
   return htest(testName, t =>
-      tf(t).catch(util.mkAsyncErrHandler(t, testName)))
+      tf(t, htest).catch(util.mkAsyncErrHandler(t, testName)))
 }
 
 /*
  * A bad case we encountered interactively: Pivot by JobFamily, sort by Title
  */
-const basicPivotSortTest = async (t) => {
+const basicPivotSortTest = async (t, htest) => {
+  const deepEqualSnap = tapeSnapInit(htest)
   const q0 = reltab.tableQuery('barttest').project(pcols)
   const rtc = sharedRtc
   const schema0 = await aggtree.getBaseSchema(rtc, q0)
@@ -472,7 +490,8 @@ const basicPivotSortTest = async (t) => {
  *
  * Has shown issues with wrong sort order in the wild:
  */
-const descPivotSortTest = async (t) => {
+const descPivotSortTest = async (t, htest) => {
+  const deepEqualSnap = tapeSnapInit(htest)
   const q0 = reltab.tableQuery('barttest').project(pcols)
   const rtc = sharedRtc
   const schema0 = await aggtree.getBaseSchema(rtc, q0)
@@ -504,7 +523,8 @@ const descPivotSortTest = async (t) => {
 /*
  * Multiple levels of pivot, single sort column:
  */
-const multiPivotSingleSortTest = async (t) => {
+const multiPivotSingleSortTest = async (t, htest) => {
+  const deepEqualSnap = tapeSnapInit(htest)
   const q0 = reltab.tableQuery('barttest').project(pcols)
   const rtc = sharedRtc
   const schema0 = await aggtree.getBaseSchema(rtc, q0)
