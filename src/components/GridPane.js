@@ -131,13 +131,6 @@ export default class GridPane extends React.Component {
     return (viewParams.vpivots.length > 0)
   }
 
-  ensureData (from: number, to: number) {
-    console.log('ensureData: ', from, to)
-    // TODO: Should probably check for initial image not yet loaded
-    // onDataLoading.notify({from: from, to: to})
-    // this.onDataLoaded.notify({from: from, to: to})
-  }
-
   onGridClick (e: any, args: any) {
     const viewParams = this.props.viewState.viewParams
     var item = this.grid.getDataItem(args.row)
@@ -184,7 +177,7 @@ export default class GridPane extends React.Component {
 
     this.grid.onViewportChanged.subscribe((e, args) => {
       const vp = this.grid.getViewport()
-      this.ensureData(vp.top, vp.bottom)
+      actions.updateViewport(vp.top, vp.bottom, this.props.stateRefUpdater)
     })
 
     this.grid.onSort.subscribe((e, args) => {
@@ -236,7 +229,7 @@ export default class GridPane extends React.Component {
   shouldComponentUpdate (nextProps: any, nextState: any) {
     const viewState = this.props.viewState
     const nextViewState = nextProps.viewState
-    const omitPred = (val: any, key: string, obj: Object) => key.startsWith('scroll')
+    const omitPred = (val: any, key: string, obj: Object) => key.startsWith('viewport')
     // N.B.: We use toObject rather than toJS because we only want a
     // shallow conversion
     const vs = _.omitBy(viewState.toObject(), omitPred)

@@ -163,13 +163,14 @@ const dbTest5 = (htest) => {
 const serTest0 = (htest) => {
   let dq5
   htest('query deserialization', t => {
-    const ser5 = JSON.stringify(q5, null, 2)
+    let req : Object = { query: q5 }
+    const ser5 = JSON.stringify(req, null, 2)
     console.log('serialized query')
     console.log(ser5)
-    dq5 = reltab.deserializeQuery(ser5)
+    dq5 = reltab.deserializeQueryReq(ser5)
     console.log('deserialized query: ', dq5)
     const rtc = sharedRtc
-    rtc.evalQuery(dq5)
+    rtc.evalQuery(dq5.query)
       .then(res => {
         console.log('got results of evaluating deserialized query')
         util.logTable(res)
@@ -525,11 +526,37 @@ const multiPivotSingleSortTest = async (t) => {
   t.end()
 }
 
+// queryGenPerfTest
+const queryGenPerfTest = async (t) => {
+  const q0 = reltab.tableQuery('barttest').project(pcols)
+  const rtc = sharedRtc
+  const schema0 = await aggtree.getBaseSchema(rtc, q0)
+  const tree0 = await aggtree.vpivot(rtc, q0, schema0,
+      ['JobFamily', 'Title'], 'Name', true,
+      [['Title', true]])
+  console.log('vpivot initial promise resolved...')
+
+  const openPaths = new PathTree({'Executive Management': {'General Manager': {}}, 'Safety': {}})
+
+  const stq = tree0.getSortedTreeQuery(openPaths)
+
+  let count = 50
+  while (count > 0) {
+    console.log('queryGenPerfTest: count: ', count)
+    const sres = await rtc.evalQuery(stq) // eslint-disable-line
+    console.log('executed query')
+    count--
+  }
+
+  t.end()
+}
+
 const doit = true
 
 const runTests = (htest: any) => {
+  sqliteTestSetup(htest)
+
   if (doit) {
-    sqliteTestSetup(htest)
     dbTest0(htest)
     dbTest2(htest)
     dbTest3(htest)
@@ -554,8 +581,8 @@ const runTests = (htest: any) => {
     asyncTest(htest, 'basicPivotSortTest', basicPivotSortTest)
 
     asyncTest(htest, 'descPivotSortTest', descPivotSortTest)
-
     asyncTest(htest, 'multiPivotSingleSortTest', multiPivotSingleSortTest)
+    asyncTest(htest, 'queryGenPerfTest', queryGenPerfTest)
   }
 
   sqliteTestShutdown(htest)

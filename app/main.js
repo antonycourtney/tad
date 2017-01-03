@@ -53,11 +53,12 @@ let delay = ms => {
 const runQuery = rtc => (queryStr, cb) => {
   try {
     console.info('\n%s: runQuery: got query', new Date().toLocaleTimeString())
-    const query = reltab.deserializeQuery(queryStr)
+    const req = reltab.deserializeQueryReq(queryStr)
     const hrstart = process.hrtime()
     delay(0)
     .then(() => {
-      rtc.evalQuery(query)
+      const qp = (req.offset !== undefined) ? rtc.evalQuery(req.query, req.offset, req.limit) : rtc.evalQuery(req.query)
+      qp
         .then(res => {
           const [es, ens] = process.hrtime(hrstart)
           console.info('runQuery: evaluated query in %ds %dms', es, ens / 1e6)

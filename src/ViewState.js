@@ -15,15 +15,13 @@ import Timer from './Timer'
 export default class ViewState extends Immutable.Record({
   viewParams: new ViewParams(),
   loadingTimer: new Timer(),
-  scrolling: false,
-  scrollingStart: 0,
-  scrollingElapsed: 0,
-  scrollingTimerId: 0,
-  scrollFrom: 0,
-  scrollTo: 0,
+  viewportTop: 0,
+  viewportBottom: 0,
   dataView: null
 }) {
   viewParams: ViewParams
   loadingTimer: Timer
+  viewportTop: number
+  viewportBottom: number
   dataView: ?SimpleDataView
 }

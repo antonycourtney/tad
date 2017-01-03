@@ -8,6 +8,7 @@ import AppState from './AppState'
 import type { Connection } from './reltab' // eslint-disable-line
 import * as oneref from 'oneref'  // eslint-disable-line
 import * as util from './util'
+import * as paging from './paging'
 
 /**
  * Use ViewParams to construct a SimpleDataView for use with
@@ -65,11 +66,14 @@ const mkDataView = (viewParams: ViewParams, tableData: reltab.TableRep): SimpleD
 const requestView = async (rt: Connection,
     baseQuery: reltab.QueryExp,
     baseSchema: reltab.Schema,
-    viewParams: ViewParams): Promise<SimpleDataView> => {
+    viewParams: ViewParams,
+    offset: number,
+    limit: number): Promise<SimpleDataView> => {
   const ptree = await aggtree.vpivot(rt, baseQuery, baseSchema, viewParams.vpivots,
       viewParams.pivotLeafColumn, viewParams.showRoot, viewParams.sortKey)
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths)
-  const tableData = await rt.evalQuery(treeQuery)
+  console.log('requestView: ', offset, limit)
+  const tableData = await rt.evalQuery(treeQuery, offset, limit)
   const dataView = mkDataView(viewParams, tableData)
   return dataView
 }
@@ -81,6 +85,8 @@ const requestView = async (rt: Connection,
 export default class PivotRequester {
   pendingRequest: ?Promise<SimpleDataView>
   pendingViewParams: ?ViewParams
+  pendingOffset: number
+  pendingLimit: number
 
   constructor (stateRef: oneref.Ref<AppState>) {
     this.pendingRequest = null
@@ -91,14 +97,31 @@ export default class PivotRequester {
     this.onStateChange(stateRef)
   }
 
+/*
+((this.pendingRequest !== null) &&
+!paging.contains(this.pendingOffset, this.pendingLimit,
+  viewState.viewportTop, viewState.viewportBottom)))
+*/
+
   onStateChange (stateRef: oneref.Ref<AppState>) {
     const appState : AppState = stateRef.getValue()
-    if (appState.viewState.viewParams !== this.pendingViewParams) {
-      // Would be nice to cancel any pending request here...
-      this.pendingViewParams = appState.viewState.viewParams
+    const viewState = appState.viewState
+    console.log('onStateChange: ', viewState, this.pendingViewParams)
+    if (viewState.viewParams !== this.pendingViewParams) {
+      // Might be nice to cancel any pending request here...
+      // failing that we could calculate additional pages we need
+      // if viewParams are same and only page range differs.
+      const [offset, limit] =
+        paging.fetchParams(viewState.viewportTop, viewState.viewportBottom)
+      console.log('fetchParams: ', offset, limit)
+      this.pendingViewParams = viewState.viewParams
+      this.pendingOffset = offset
+      this.pendingLimit = limit
       const req = requestView(appState.rtc, appState.baseQuery,
-        appState.baseSchema, this.pendingViewParams)
+        appState.baseSchema, this.pendingViewParams, offset, limit)
       this.pendingRequest = req.then(dataView => {
+        this.pendingRequest = null
+        // this.pendingViewParams = null
         const appState = stateRef.getValue()
         const nextSt = appState.update('viewState', vs => {
           return (vs
