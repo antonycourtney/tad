@@ -6,6 +6,7 @@
 import * as reltab from './reltab'
 
 const remoteQuery = require('electron').remote.getGlobal('runQuery')
+const remoteRowCount = require('electron').remote.getGlobal('getRowCount')
 
 const rtc = {
   evalQuery (query: reltab.QueryExp,
@@ -24,6 +25,19 @@ const rtc = {
         // console.log('columns: ', res.schema.columns)
         // console.table(res.rowData)
         resolve(res)
+      })
+    })
+  },
+  rowCount (query: reltab.QueryExp): Promise<number> {
+    return new Promise((resolve, reject) => {
+      let req : Object = { query }
+      const sq = JSON.stringify(req, null, 2)
+      remoteRowCount(sq, resStr => {
+        const res = JSON.parse(resStr)
+        console.log('reltab-electron got row count result: ', res)
+        // console.log('columns: ', res.schema.columns)
+        // console.table(res.rowData)
+        resolve(res.rowCount)
       })
     })
   }

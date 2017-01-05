@@ -72,6 +72,29 @@ const runQuery = rtc => (queryStr, cb) => {
   }
 }
 
+const getRowCount = rtc => (queryStr, cb) => {
+  try {
+    console.info('\n%s: getRowCount: got query', new Date().toLocaleTimeString())
+    const req = reltab.deserializeQueryReq(queryStr)
+    const hrstart = process.hrtime()
+    delay(0)
+    .then(() => {
+      const qp = rtc.rowCount(req.query)
+      qp
+        .then(rowCount => {
+          const [es, ens] = process.hrtime(hrstart)
+          console.info('getRowCount: evaluated query in %ds %dms', es, ens / 1e6)
+          const resObj = { rowCount }
+          const serRes = JSON.stringify(resObj, null, 2)
+          cb(serRes)
+        })
+        .catch(err => console.error('error running query: ', err, err.stack))
+    })
+  } catch (err) {
+    console.error('runQuery: ', err, err.stack)
+  }
+}
+
 // App initialization:
 const appInit = (options, path) => {
   try {
@@ -90,6 +113,7 @@ const appInit = (options, path) => {
         console.log('completed reltab initalization.')
         // Now let's place a function in global so it can be run via remote:
         global.runQuery = runQuery(rtc)
+        global.getRowCount = getRowCount(rtc)
         createWindow()
       })
       .catch(err => {

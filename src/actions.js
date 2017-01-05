@@ -99,7 +99,6 @@ export const closePath = (path: Path, updater: RefUpdater) => {
 }
 
 export const updateViewport = (top: number, bottom: number, updater: RefUpdater) => {
-  console.log('updateViewport: ', top, bottom)
   updater(st => st.update('viewState', vs => vs
     .set('viewportTop', top)
     .set('viewportBottom', bottom)))

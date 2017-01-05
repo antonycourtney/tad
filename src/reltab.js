@@ -234,6 +234,10 @@ export class QueryExp {
     return ppSQLQuery(queryToSql(tableMap, this), offset, limit)
   }
 
+  toCountSql (tableMap: TableInfoMap): string {
+    return ppSQLQuery(queryToCountSql(tableMap, this), -1, -1)
+  }
+
   getSchema (tableMap: TableInfoMap): Schema {
     return getQuerySchema(tableMap, this)
   }
@@ -816,6 +820,17 @@ const queryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
   return ret
 }
 
+// Generate a count(*) as rowCount wrapper around a query:
+const queryToCountSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
+  const sqsql = queryToSql(tableMap, query)
+  const colExp = 'count(*)'
+  const as = 'rowCount'
+  const selectCols = [{ colExp, as }]
+  const from = { kind: 'query', query: sqsql }
+  const retSel = { selectCols, from, where: '', groupBy: [], orderBy: [] }
+  return { selectStmts: [ retSel ] }
+}
+
 // Create base of a query expression chain by starting with "table":
 export const tableQuery = (tableName: string): QueryExp => {
   return new QueryExp('table', [tableName])
@@ -979,5 +994,6 @@ export class TableRep {
 }
 
 export interface Connection { // eslint-disable-line
-  evalQuery (query: QueryExp, offset?: number, limit?: number): Promise<TableRep>
+  evalQuery (query: QueryExp, offset?: number, limit?: number): Promise<TableRep>;
+  rowCount (query: QueryExp): Promise<number>
 }

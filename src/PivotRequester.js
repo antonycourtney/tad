@@ -2,19 +2,23 @@
 
 import * as reltab from './reltab'
 import * as aggtree from './aggtree'
-import SimpleDataView from './SimpleDataView'
+import PagedDataView from './PagedDataView'
 import ViewParams from './ViewParams'
 import AppState from './AppState'
+import QueryView from './QueryView'
 import type { Connection } from './reltab' // eslint-disable-line
 import * as oneref from 'oneref'  // eslint-disable-line
-import * as util from './util'
 import * as paging from './paging'
+import * as util from './util'
 
 /**
- * Use ViewParams to construct a SimpleDataView for use with
+ * Use ViewParams to construct a PagedDataView for use with
  * SlickGrid from reltab.TableRep
  */
-const mkDataView = (viewParams: ViewParams, tableData: reltab.TableRep): SimpleDataView => {
+const mkDataView = (viewParams: ViewParams,
+  rowCount: number,
+  offset: number,
+  tableData: reltab.TableRep): PagedDataView => {
   const getPath = (rowMap, depth) => {
     let path = []
     for (let i = 0; i < depth; i++) {
@@ -44,38 +48,42 @@ const mkDataView = (viewParams: ViewParams, tableData: reltab.TableRep): SimpleD
     rowData.push(rowMap)
   }
 
-  const dataView = new SimpleDataView()
-  dataView.setItems(rowData)
-
   const outSchema = tableData.schema
     .extend('_id', {type: 'integer', displayName: '_id'})
     .extend('_parentId', {type: 'integer', displayName: '_parentId'})
     .extend('_isOpen', {type: 'integer', displayName: '_isOpen'})
     .extend('_isLeaf', {type: 'integer', displayName: '_isLeaf'})
-
-  dataView.schema = outSchema
-
+  const dataView = new PagedDataView(outSchema, rowCount, offset, rowData)
   return dataView
 }
 
 /**
  * Use the current ViewParams to construct a QueryExp to send to
  * reltab using aggtree.
- * Map the resulting TableRep from the query into a SimpleDataView for
+ * Map the resulting TableRep from the query into a PagedDataView for
  * use with SlickGrid
  */
-const requestView = async (rt: Connection,
+const requestQueryView = async (rt: Connection,
     baseQuery: reltab.QueryExp,
     baseSchema: reltab.Schema,
-    viewParams: ViewParams,
-    offset: number,
-    limit: number): Promise<SimpleDataView> => {
+    viewParams: ViewParams): Promise<QueryView> => {
   const ptree = await aggtree.vpivot(rt, baseQuery, baseSchema, viewParams.vpivots,
       viewParams.pivotLeafColumn, viewParams.showRoot, viewParams.sortKey)
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths)
-  console.log('requestView: ', offset, limit)
-  const tableData = await rt.evalQuery(treeQuery, offset, limit)
-  const dataView = mkDataView(viewParams, tableData)
+  const rowCount = await rt.rowCount(treeQuery)
+  const ret = new QueryView({query: treeQuery, rowCount})
+  console.log('requestQueryView: got row count, returning: ', ret)
+  return ret
+}
+
+const requestDataView = async (rt: Connection,
+    viewParams: ViewParams,
+    queryView: QueryView,
+    offset: number,
+    limit: number): Promise<PagedDataView> => {
+  console.log('requestDataView: ', offset, limit, queryView)
+  const tableData = await rt.evalQuery(queryView.query, offset, limit)
+  const dataView = mkDataView(viewParams, queryView.rowCount, offset, tableData)
   return dataView
 }
 
@@ -84,13 +92,25 @@ const requestView = async (rt: Connection,
  * manages issuing of query requests
  */
 export default class PivotRequester {
-  pendingRequest: ?Promise<SimpleDataView>
+  /*
+   * 'pending' is really misnomer here -- for viewParams, offset and limit,
+   * which are the parameters observed by PivotRequester, they are really
+   * the 'most recent previous' parameters used to make an asynchronous request,
+   * which may or may not have already completed.  We want this because we
+   * need to compare application state changes with either what's currently
+   * displayed OR a pending request.
+   */
   pendingViewParams: ?ViewParams
+  pendingQueryRequest: ?Promise<QueryView>
+  pendingDataRequest: ?Promise<PagedDataView>
+  currentQueryView: ?QueryView  // set when resolved
   pendingOffset: number
   pendingLimit: number
 
   constructor (stateRef: oneref.Ref<AppState>) {
-    this.pendingRequest = null
+    this.pendingQueryRequest = null
+    this.currentQueryView = null
+    this.pendingDataRequest = null
     this.pendingViewParams = null
     stateRef.on('change', () => this.onStateChange(stateRef))
     console.log('PivotRequester: registered change listener')
@@ -104,38 +124,77 @@ export default class PivotRequester {
   viewState.viewportTop, viewState.viewportBottom)))
 */
 
+  // issue a data request from current QueryView and
+  // offset, limit:
+  requestData (stateRef: oneref.Ref<AppState>, queryView: QueryView,
+      offset: number, limit: number): Promise<PagedDataView> {
+    const appState : AppState = stateRef.getValue()
+    const viewState = appState.viewState
+    const viewParams = viewState.viewParams
+    this.pendingOffset = offset
+    this.pendingLimit = limit
+    const dreq = requestDataView(appState.rtc, viewParams,
+      queryView, offset, limit)
+    this.pendingDataRequest = dreq
+    dreq.then(dataView => {
+      console.log('got dataView')
+      this.pendingDataRequest = null
+      const appState = stateRef.getValue()
+      const nextSt = appState.update('viewState', vs => {
+        return (vs
+          .update('loadingTimer', lt => lt.stop())
+          .set('dataView', dataView))
+      })
+      stateRef.setValue(nextSt)
+      return dataView
+    })
+    return dreq
+  }
+
   onStateChange (stateRef: oneref.Ref<AppState>) {
     const appState : AppState = stateRef.getValue()
     const viewState = appState.viewState
-    console.log('onStateChange: ', viewState, this.pendingViewParams)
-    if (viewState.viewParams !== this.pendingViewParams) {
+    const viewParams = viewState.viewParams
+    if (viewParams !== this.pendingViewParams) {
+      console.log('onStateChange: requesting new query: ', viewState, this.pendingViewParams)
       // Might be nice to cancel any pending request here...
       // failing that we could calculate additional pages we need
       // if viewParams are same and only page range differs.
       const [offset, limit] =
         paging.fetchParams(viewState.viewportTop, viewState.viewportBottom)
-      console.log('fetchParams: ', offset, limit)
-      this.pendingViewParams = viewState.viewParams
-      this.pendingOffset = offset
-      this.pendingLimit = limit
-      const req = requestView(appState.rtc, appState.baseQuery,
-        appState.baseSchema, this.pendingViewParams, offset, limit)
-      this.pendingRequest = req.then(dataView => {
-        this.pendingRequest = null
-        // this.pendingViewParams = null
-        const appState = stateRef.getValue()
-        const nextSt = appState.update('viewState', vs => {
-          return (vs
-            .update('loadingTimer', lt => lt.stop())
-            .set('dataView', dataView))
+      console.log('new query fetchParams: ', offset, limit)
+      this.pendingViewParams = viewParams
+      const qreq = requestQueryView(appState.rtc, appState.baseQuery,
+        appState.baseSchema, this.pendingViewParams)
+      this.pendingQueryRequest = qreq
+      this.pendingDataRequest =
+        qreq.then(queryView => {
+          console.log('got queryView: ', queryView)
+          this.currentQueryView = queryView
+          const appState = stateRef.getValue()
+          const nextSt = appState.update('viewState', vs => {
+            return (vs
+              .set('queryView', queryView))
+          })
+          stateRef.setValue(nextSt)
+          return this.requestData(stateRef, queryView, offset, limit)
         })
-        stateRef.setValue(nextSt)
-        return dataView
-      })
       const ltUpdater = util.pathUpdater(stateRef, ['viewState', 'loadingTimer'])
       const nextAppState = appState.updateIn(['viewState', 'loadingTimer'],
         lt => lt.run(200, ltUpdater))
       stateRef.setValue(nextAppState)
+    } else {
+      if (this.currentQueryView !== null &&
+        !paging.contains(this.pendingOffset, this.pendingLimit, viewState.viewportTop, viewState.viewportBottom)) {
+        console.log('viewport outside bounds: pending: [' + this.pendingOffset +
+        ', ' + (this.pendingOffset + this.pendingLimit) + ') ',
+        ', viewport: ', viewState.viewportTop, viewState.viewportBottom)
+        // no change in view parameters, but what about offset / limit?
+        const [offset, limit] =
+          paging.fetchParams(viewState.viewportTop, viewState.viewportBottom)
+        const qv : QueryView = (this.currentQueryView : any)  // Flow misses null check above!
+        this.requestData(stateRef, qv, offset, limit)
+      }
     }
   }
 }

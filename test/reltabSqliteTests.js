@@ -86,6 +86,20 @@ const dbTest0 = (htest) => {
   })
 }
 
+const dbTestRowCount0 = (htest) => {
+  htest('basic row count', t => {
+    const rtc = sharedRtc // Note: need to ensure we only read sharedRtc inside test()
+    console.log('dbTestRowCount0: test start: ', rtc)
+    rtc.rowCount(q1)
+    .then(rowCount => {
+      t.ok(true, 'got row count!')
+      console.log('rowCount: ', rowCount)
+      t.equal(rowCount, 23, 'row count matches expected')
+      t.end()
+    })
+  })
+}
+
 const pcols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
 const q2 = q1.project(pcols)
 
@@ -578,6 +592,7 @@ const runTests = (htest: any) => {
 
   if (doit) {
     dbTest0(htest)
+    dbTestRowCount0(htest)
     dbTest2(htest)
     dbTest3(htest)
     dbTest4(htest)

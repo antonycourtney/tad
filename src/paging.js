@@ -5,7 +5,7 @@
  *
  */
 
-export const PAGESIZE = 50
+export const PAGESIZE = 1024
 
 export const pageNum = (rowNum: number) => Math.floor(rowNum / PAGESIZE)
 

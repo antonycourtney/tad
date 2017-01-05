@@ -2,7 +2,8 @@
 
 import * as Immutable from 'immutable'
 import ViewParams from './ViewParams'
-import SimpleDataView from './SimpleDataView'
+import QueryView from './QueryView'
+import PagedDataView from './PagedDataView'
 import Timer from './Timer'
 
 /**
@@ -17,11 +18,13 @@ export default class ViewState extends Immutable.Record({
   loadingTimer: new Timer(),
   viewportTop: 0,
   viewportBottom: 0,
+  queryView: null,
   dataView: null
 }) {
   viewParams: ViewParams
   loadingTimer: Timer
   viewportTop: number
   viewportBottom: number
-  dataView: ?SimpleDataView
+  queryView: ?QueryView
+  dataView: ?PagedDataView
 }

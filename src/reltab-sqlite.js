@@ -40,6 +40,28 @@ class SqliteContext {
       return ret
     })
   }
+
+  rowCount (query: QueryExp): Promise<number> {
+    let t0 = process.hrtime()
+    const countSql = query.toCountSql(this.tableMap)
+    let t1 = process.hrtime(t0)
+    const [t1s, t1ns] = t1
+    console.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6)
+    if (this.showQueries) {
+      console.log('SqliteContext.evalQuery: evaluating:')
+      console.log(countSql)
+    }
+    const t2 = process.hrtime()
+    const qp = this.db.all(countSql)
+    return qp.then(rows => {
+      const t3 = process.hrtime(t2)
+      const [t3s, t3ns] = t3
+      console.info('time to run query: %ds %dms', t3s, t3ns / 1e6)
+      console.log('result of count query: ', rows)
+      const ret = Number.parseInt(rows[0].rowCount)
+      return ret
+    })
+  }
 }
 
 export const init = (db: any, md: FileMetadata,

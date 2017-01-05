@@ -6,6 +6,7 @@ import { Slick } from 'slickgrid-es6'
 import * as reltab from '../reltab'
 import * as actions from '../actions'
 import LoadingModal from './LoadingModal'
+import PagedDataView from '../PagedDataView'
 import * as util from '../util'
 
 const container = '#epGrid' // for now
@@ -47,10 +48,11 @@ const MAXCOLWIDTH = 300
 const measureStringWidth = (s: string): number => 8 + (5.5 * s.length)
 
 // get column width for specific column:
-const getColWidth = (dataView: Object, cnm: string) => {
+const getColWidth = (dataView: PagedDataView, cnm: string) => {
   let colWidth
-  var nRows = dataView.getLength()
-  for (var i = 0; i < nRows; i++) {
+  const offset = dataView.getOffset()
+  const limit = offset + dataView.getItemCount()
+  for (var i = offset; i < limit; i++) {
     var row = dataView.getItem(i)
     var cellVal = row[ cnm ]
     var cellWidth = MINCOLWIDTH
@@ -235,7 +237,6 @@ export default class GridPane extends React.Component {
     const vs = _.omitBy(viewState.toObject(), omitPred)
     const nvs = _.omitBy(nextViewState.toObject(), omitPred)
     const ret = !util.shallowEqual(vs, nvs)
-    console.log('shouldComponentUpdate: returning ', ret)
     return ret
   }
 
