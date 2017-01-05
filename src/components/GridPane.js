@@ -177,9 +177,13 @@ export default class GridPane extends React.Component {
   createGrid (columns: any, data: any) {
     this.grid = new Slick.Grid(container, data, columns, gridOptions)
 
-    this.grid.onViewportChanged.subscribe((e, args) => {
+    const updateViewportDebounced = _.debounce(() => {
       const vp = this.grid.getViewport()
       actions.updateViewport(vp.top, vp.bottom, this.props.stateRefUpdater)
+    }, 100)
+
+    this.grid.onViewportChanged.subscribe((e, args) => {
+      updateViewportDebounced()
     })
 
     this.grid.onSort.subscribe((e, args) => {
