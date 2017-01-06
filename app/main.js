@@ -98,10 +98,13 @@ const getRowCount = rtc => (queryStr, cb) => {
 // App initialization:
 const appInit = (options, path) => {
   try {
+    const hrProcStart = process.hrtime()
     console.log('appInit: entry')
     db.open(':memory:')
       .then(() => csvimport.importSqlite(path))
       .then(md => {
+        const [es, ens] = process.hrtime(hrProcStart)
+        console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
         global.md = md
         let rtOptions = {}
         if (options['show-queries']) {

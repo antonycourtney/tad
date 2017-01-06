@@ -7,7 +7,8 @@ import 'console.table'
 import db from 'sqlite'
 import * as csvimport from '../src/csvimport'
 
-const testPath = 'csv/bart-comp-all.csv'
+// const testPath = 'csv/bart-comp-all.csv'
+const testPath = '/Users/antony/data/uber-raw-data-apr14.csv'
 
 // const tq = 'select * from \'bart-comp-all\' limit 10'
 
@@ -54,23 +55,33 @@ LIMIT 50 OFFSET 0
 `
 */
 
+/*
 const tq = `
 SELECT "Name", "Title", "Base", "OT", "Other", "MDV", "ER", "EE", "DC", "Misc", "TCOE", "Source", "JobFamily", "Union", 1 as "Rec", 2 as "_depth", '' as "_pivot", 0 as "_isRoot", 1 as "_sortVal_0", 1 as "_sortVal_1"
         FROM 'bart-comp-all'
         WHERE "Title"='Department Manager Gov''t & Comm Rel'`
+*/
+
+const tq = `
+  SELECT *
+  FROM 'uber-raw-data-apr14'
+  LIMIT 10`
 
 const main = () => {
-  let hrstart = 0
+  const hrProcStart = process.hrtime()
+  let hrQueryStart = 0
   db.open(':memory:')
     .then(() => csvimport.importSqlite(testPath))
     .then(md => {
+      const [es, ens] = process.hrtime(hrProcStart)
+      console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
       console.log('table import complete: ', md.tableName)
       console.log('running query:\n', tq)
-      hrstart = process.hrtime()
+      hrQueryStart = process.hrtime()
       return db.all(tq)
     })
     .then(rows => {
-      const [es, ens] = process.hrtime(hrstart)
+      const [es, ens] = process.hrtime(hrQueryStart)
       console.log('read rows from sqlite table.')
       console.table(rows)
       console.info('runQuery: evaluated query in %ds %dms', es, ens / 1e6)

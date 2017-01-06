@@ -9,6 +9,7 @@ import * as _ from 'lodash'
 import * as path from 'path'
 import * as stream from 'stream'
 import through from 'through'
+import * as fs from 'fs'
 import db from 'sqlite'
 import Gauge from 'gauge'
 
@@ -127,6 +128,10 @@ const genColumnIds = (headerRow: Array<string>): Array<[string, string]> => {
 /* scanTypes will read a CSV file and return a Promise<FileMetadata> */
 const metaScan = (pathname: string): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
+    console.log('starting metascan...')
+    const pathStats = fs.statSync(pathname)
+    console.log('file size: ', pathStats.size)
+    const msStart = process.hrtime()
     let firstRow = true
     var colIdInfo: Array<[string, string]>
     var colTypes: Array<string>
@@ -141,8 +146,27 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
       csvOptions.delimiter = '\t'
       console.log('tsv file -- using tab as delimiter')
     }
-    csv
-      .fromPath(pathname, csvOptions)
+
+    const pathStream = fs.ReadStream(pathname)
+
+    let gauge = new Gauge()
+
+    gauge.show('scanning...', 0)
+    let bytesRead = 0
+    const countStream = through(function write (buf) {
+      bytesRead += buf.length
+      const pctComplete = bytesRead / pathStats.size
+      const msg = 'scanning... ( ' + Math.round(pctComplete * 100) + '%)'
+      gauge.show(msg, pctComplete)
+      this.emit('data', buf)
+    }, function end () {
+      gauge.hide()
+      console.log('countStream: bytesRead: ', bytesRead)
+      this.emit('end')
+    })
+
+    const csvStream =
+      csv(csvOptions)
       .on('data', row => {
         if (firstRow) {
           colIdInfo = genColumnIds(row)
@@ -158,8 +182,12 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
         const columnNames = colIdInfo.map(p => p[1])
         // default any remaining null column types to text:
         const columnTypes = colTypes.map(ct => (ct == null) ? 'text' : ct)
+        const [es, ens] = process.hrtime(msStart)
+        console.info('metascan completed in %ds %dms', es, ens / 1e6)
         resolve({columnIds, columnNames, columnTypes, rowCount, tableName, csvOptions})
       })
+
+    pathStream.pipe(countStream).pipe(csvStream)
   })
 }
 
@@ -171,7 +199,7 @@ const BATCHSIZE = 10000
  * consume a stream, sending all records to the Promise-returning write
  * function.
  *
- * returns: A Promise that resolves only when all recrords from readable
+ * returns: A Promise that resolves only when all records from readable
  * input stream have been written using wrf.
  * Promise value is number of records written
  */
