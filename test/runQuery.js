@@ -11,6 +11,7 @@ const testPath = 'csv/bart-comp-all.csv'
 
 // const tq = 'select * from \'bart-comp-all\' limit 10'
 
+/*
 const tq = `
 SELECT "Name", "Title", "Base", "OT", "Other", "MDV", "ER", "EE", "DC", "Misc", "TCOE", "Source", "JobFamily", "Union", "Rec", "_depth", "_pivot", "_isRoot", "_sortVal_0", "_sortVal_1", "_path0"
 FROM (
@@ -51,6 +52,12 @@ USING ("_path0")
 ORDER BY "_isRoot" desc, "_sortVal_0", "_path0", "_sortVal_1"
 LIMIT 50 OFFSET 0
 `
+*/
+
+const tq = `
+SELECT "Name", "Title", "Base", "OT", "Other", "MDV", "ER", "EE", "DC", "Misc", "TCOE", "Source", "JobFamily", "Union", 1 as "Rec", 2 as "_depth", '' as "_pivot", 0 as "_isRoot", 1 as "_sortVal_0", 1 as "_sortVal_1"
+        FROM 'bart-comp-all'
+        WHERE "Title"='Department Manager Gov''t & Comm Rel'`
 
 const main = () => {
   let hrstart = 0
@@ -58,6 +65,7 @@ const main = () => {
     .then(() => csvimport.importSqlite(testPath))
     .then(md => {
       console.log('table import complete: ', md.tableName)
+      console.log('running query:\n', tq)
       hrstart = process.hrtime()
       return db.all(tq)
     })

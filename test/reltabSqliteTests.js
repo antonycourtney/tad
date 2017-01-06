@@ -19,9 +19,10 @@ var tcoeSum
 
 const sqliteTestSetup = (htest) => {
   htest('sqlite test setup', t => {
+    const showQueries = global.showQueries
     db.open(':memory:')
       .then(() => csvimport.importSqlite(testPath))
-      .then(md => reltabSqlite.init(db, md, {showQueries: true}))
+      .then(md => reltabSqlite.init(db, md, {showQueries}))
       .then(rtc => {
         sharedRtc = rtc
         console.log('set rtc: ', sharedRtc)
@@ -141,7 +142,7 @@ const dbTest3 = (htest) => {
       const expCols = ['Job', 'Title', 'TCOE']
       t.deepEqual(res.schema.columns, expCols, 'groupBy query schema')
 
-      t.deepEqual(res.rowData.length, 18, 'correct number of grouped rows')
+      t.deepEqual(res.rowData.length, 19, 'correct number of grouped rows')
 
       const groupSum = util.columnSum(res, 'TCOE')
       t.equal(groupSum, tcoeSum, 'grouped TCOE sum matches raw sum')
@@ -164,7 +165,7 @@ const dbTest4 = (htest) => {
       const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
       t.deepEqual(rs.columns, expCols)
 
-      t.deepEqual(res.rowData.length, 8, 'number of grouped rows in q4 result')
+      t.deepEqual(res.rowData.length, 9, 'number of grouped rows in q4 result')
 
       const groupSum = util.columnSum(res, 'TCOE')
       t.deepEqual(groupSum, tcoeSum, 'tcoe sum after groupBy')
@@ -186,6 +187,17 @@ const q5 = q1.filter(reltab.and().eq(col('JobFamily'), constVal('Executive Manag
 const dbTest5 = (htest) => {
   sqliteQueryTest(htest, 'basic filter', q5, (t, res) => {
     t.equal(res.rowData.length, 4, 'expected row count after filter')
+    util.logTable(res)
+    t.end()
+  })
+}
+
+// Test for literal string with single quote (which must be escaped):
+const q5b = q1.filter(reltab.and().eq(col('Title'), constVal('Department Manager Gov\'t & Comm Rel')))
+
+const dbTest5b = (htest) => {
+  sqliteQueryTest(htest, 'escaped literal string filter', q5b, (t, res) => {
+    t.equal(res.rowData.length, 1, 'expected row count after filter')
     util.logTable(res)
     t.end()
   })
@@ -299,11 +311,11 @@ const aggTreeTest0 = (htest) => {
           const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec', '_depth', '_pivot', '_isRoot', '_sortVal_0', '_sortVal_1', '_sortVal_2', '_path0', '_path1']
 
           t.deepEqual(res.schema.columns, expCols, 'Q1 schema columns')
-          t.deepEqual(res.rowData.length, 8, 'Q1 rowData length')
+          t.deepEqual(res.rowData.length, 9, 'Q1 rowData length')
 
           const actSum = util.columnSum(res, 'TCOE')
 
-          t.deepEqual(actSum, 4638335, 'Q1 rowData sum(TCOE)')
+          t.deepEqual(actSum, 4691559, 'Q1 rowData sum(TCOE)')
 
           const q2 = tree0.applyPath([ 'Executive Management' ])
           return rtc.evalQuery(q2)
@@ -576,12 +588,10 @@ const queryGenPerfTest = async (t) => {
 
   let count = 50
   while (count > 0) {
-    console.log('queryGenPerfTest: count: ', count)
     const sres = await rtc.evalQuery(stq) // eslint-disable-line
-    console.log('executed query')
     count--
   }
-
+  t.pass('executed all queries')
   t.end()
 }
 
@@ -597,6 +607,7 @@ const runTests = (htest: any) => {
     dbTest3(htest)
     dbTest4(htest)
     dbTest5(htest)
+    dbTest5b(htest)
     serTest0(htest)
     dbTest6(htest)
     dbTest7(htest)

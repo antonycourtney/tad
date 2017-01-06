@@ -21,8 +21,8 @@ class SqliteContext {
     const sqlQuery = query.toSql(this.tableMap, offset, limit)
     let t1 = process.hrtime(t0)
     const [t1s, t1ns] = t1
-    console.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6)
     if (this.showQueries) {
+      console.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6)
       console.log('SqliteContext.evalQuery: evaluating:')
       console.log(sqlQuery)
     }
@@ -35,8 +35,10 @@ class SqliteContext {
       const ret = new TableRep(schema, rows)
       const t4 = process.hrtime(t4pre)
       const [t4s, t4ns] = t4
-      console.info('time to run query: %ds %dms', t3s, t3ns / 1e6)
-      console.info('time to mk table rep: %ds %dms', t4s, t4ns / 1e6)
+      if (this.showQueries) {
+        console.info('time to run query: %ds %dms', t3s, t3ns / 1e6)
+        console.info('time to mk table rep: %ds %dms', t4s, t4ns / 1e6)
+      }
       return ret
     })
   }

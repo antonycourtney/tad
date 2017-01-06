@@ -214,6 +214,7 @@ export default class GridPane extends React.Component {
    * update grid from dataView
    */
   updateGrid (dataView: any) {
+    console.log('updateGrid: dataView: offset: ', dataView.getOffset(), 'length: ', dataView.getLength())
     if (!this.colWidthsMap) {
       this.colWidthsMap = getInitialColWidthsMap(dataView)
     }

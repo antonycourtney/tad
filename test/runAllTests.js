@@ -16,7 +16,14 @@ const optionDefinitions = [
     type: Boolean,
     alias: 'u',
     description: 'update all snapshot tests (record-only mode)'
+  },
+  {
+    name: 'verbose',
+    type: Boolean,
+    alias: 'v',
+    description: 'verbose mode (show queries)'
   }
+
 ]
 
 /*
@@ -57,6 +64,8 @@ function readFileAsync (file, options) {
 
 global.fetch = (url: string): Promise<any> => readFileAsync(url, 'utf-8').then(txt => ({ text: () => txt }))
 
+global.showQueries = false // default; -v will override
+
 let tapeSnap = tapeSnapInit(htest)
 
 const argv = process.argv.slice(1)
@@ -64,6 +73,9 @@ const options = commandLineArgs(optionDefinitions, argv)
 if (options.update) {
   console.log('setting tapeSnap to record-only mode')
   tapeSnap.recordAll(true)
+}
+if (options.verbose) {
+  global.showQueries = true
 }
 
 /*

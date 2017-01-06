@@ -26,8 +26,11 @@ export const createAppState = (rtc: reltab.Connection,
 type RefUpdater = (f: ((s: AppState) => AppState)) => void
 
 // helper to hoist a ViewParams => ViewParams fn to an AppState => AppState
+// Always resets the viewport
 const vpUpdate = (f: ((vp: ViewParams) => ViewParams)) =>
-  (s: AppState) => s.updateIn(['viewState', 'viewParams'], f)
+  (s: AppState) => (s
+    .updateIn(['viewState', 'viewParams'], f)
+    .update('viewState', vs => vs.remove('viewportTop').remove('viewportBottom')))
 
 export const toggleShown = (cid: string, updater: RefUpdater): void => {
   updater(vpUpdate(viewParams => viewParams.toggleShown(cid)))
