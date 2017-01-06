@@ -140,8 +140,13 @@ export default class GridPane extends React.Component {
     if (item._isLeaf) {
       return
     }
+    const vpivots = viewParams.vpivots
     let path = []
-    for (let i = 0; i < viewParams.vpivots.length; i++) {
+    for (let i = 0; i < vpivots.length; i++) {
+      let pathItem = item['_path' + i]
+      if (pathItem == null) {
+        break
+      }
       path.push(item['_path' + i])
     }
     console.log('item path: ', path)
