@@ -49,7 +49,7 @@ html, body {
   font-weight: 400;
   font-size: 8pt;
   height: 100%;
-  overflow: none;
+  overflow: hidden;
 }
 
 .full-height {
@@ -73,7 +73,9 @@ html, body {
 .gridPaneOuter {
   flex: 1 1 auto;
   height: 100%;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* overflow: auto; */
 }
 .gridPaneInner {
   width: 100%;
