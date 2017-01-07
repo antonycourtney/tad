@@ -126,11 +126,13 @@ export default class PivotRequester {
 
   // issue a data request from current QueryView and
   // offset, limit:
-  requestData (stateRef: oneref.Ref<AppState>, queryView: QueryView,
-      offset: number, limit: number): Promise<PagedDataView> {
+  requestData (stateRef: oneref.Ref<AppState>,
+               queryView: QueryView): Promise<PagedDataView> {
     const appState : AppState = stateRef.getValue()
     const viewState = appState.viewState
     const viewParams = viewState.viewParams
+    const [offset, limit] =
+      paging.fetchParams(viewState.viewportTop, viewState.viewportBottom)
     this.pendingOffset = offset
     this.pendingLimit = limit
     const dreq = requestDataView(appState.rtc, viewParams,
@@ -160,9 +162,6 @@ export default class PivotRequester {
       // Might be nice to cancel any pending request here...
       // failing that we could calculate additional pages we need
       // if viewParams are same and only page range differs.
-      const [offset, limit] =
-        paging.fetchParams(viewState.viewportTop, viewState.viewportBottom)
-      console.log('new query fetchParams: ', offset, limit)
       this.pendingViewParams = viewParams
       const qreq = requestQueryView(appState.rtc, appState.baseQuery,
         appState.baseSchema, this.pendingViewParams)
@@ -173,27 +172,34 @@ export default class PivotRequester {
           this.currentQueryView = queryView
           const appState = stateRef.getValue()
           const nextSt = appState.update('viewState', vs => {
+            /*
+             * queryView.rowCount may have changed since last data request;
+             * trim viewport to ensure its in range
+             */
+            const [viewportTop, viewportBottom] =
+              paging.clampViewport(queryView.rowCount, vs.viewportTop, vs.viewportBottom)
             return (vs
+              .set('viewportTop', viewportTop)
+              .set('viewportBottom', viewportBottom)
               .set('queryView', queryView))
           })
           stateRef.setValue(nextSt)
-          return this.requestData(stateRef, queryView, offset, limit)
+          return this.requestData(stateRef, queryView)
         })
       const ltUpdater = util.pathUpdater(stateRef, ['viewState', 'loadingTimer'])
       const nextAppState = appState.updateIn(['viewState', 'loadingTimer'],
         lt => lt.run(200, ltUpdater))
       stateRef.setValue(nextAppState)
     } else {
+      // No change in view parameters, but check for viewport out of range of
+      // pendingOffset, pendingLimit:
       if (this.currentQueryView !== null &&
         !paging.contains(this.pendingOffset, this.pendingLimit, viewState.viewportTop, viewState.viewportBottom)) {
         console.log('viewport outside bounds: pending: [' + this.pendingOffset +
         ', ' + (this.pendingOffset + this.pendingLimit) + ') ',
         ', viewport: ', viewState.viewportTop, viewState.viewportBottom)
-        // no change in view parameters, but what about offset / limit?
-        const [offset, limit] =
-          paging.fetchParams(viewState.viewportTop, viewState.viewportBottom)
         const qv : QueryView = (this.currentQueryView : any)  // Flow misses null check above!
-        this.requestData(stateRef, qv, offset, limit)
+        this.requestData(stateRef, qv)
       }
     }
   }
