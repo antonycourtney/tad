@@ -1,6 +1,8 @@
 // flow-typed signature: d4453e0ed538df680434853e4dccb10f
 // flow-typed version: <<STUB>>/oneref_v0.2.1/flow_v0.36.0
 
+const EventEmitter = require('events')
+
 declare module 'oneref' {
   declare class Ref<T> extends EventEmitter {
     constructor(v: T): void;  // eslint-disable-line

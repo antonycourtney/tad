@@ -94,18 +94,15 @@ const mkColId = (words: Array<string>): string => {
  * Tries to use the first word of each description to generate a human-friendly
  * column name,  but falls back to simpler 'col'N if that fails.
  *
- * TODO: Would probably be better to just remove spaces and combine words
- * instead of just using first word
  * TODO: Place some limit on id length
  *
  * TODO: Can fail if given columns with the dastardly column name 'col<N>'
  *
- * returns: Array of [columnId, origHeader] for each column, where
- * origHeader is the original column header string
+ * returns: Array<string> of column ids for each column
  */
 const identRE = /[a-zA-Z]\w*/g
-const genColumnIds = (headerRow: Array<string>): Array<[string, string]> => {
-  let colInfo: Array<[string, string]> = []
+const genColumnIds = (headerRow: Array<string>): Array<string> => {
+  let columnIds: Array<string> = []
   let colIdMap = {}
   for (var i = 0; i < headerRow.length; i++) {
     let origHeader = headerRow[i]
@@ -119,10 +116,10 @@ const genColumnIds = (headerRow: Array<string>): Array<[string, string]> => {
         colId = baseColId + '_' + j.toString()
       }
     }
-    colInfo.push([colId, origHeader])
+    columnIds.push(colId)
     colIdMap[colId] = i
   }
-  return colInfo
+  return columnIds
 }
 
 /* scanTypes will read a CSV file and return a Promise<FileMetadata> */
@@ -133,7 +130,6 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
     console.log('file size: ', pathStats.size)
     const msStart = process.hrtime()
     let firstRow = true
-    var colIdInfo: Array<[string, string]>
     var colTypes: Array<string>
     let rowCount = 0
     // extract table name from file path:
@@ -165,12 +161,16 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
       this.emit('end')
     })
 
+    let columnNames
+    let columnIds
+
     const csvStream =
       csv(csvOptions)
       .on('data', row => {
         if (firstRow) {
-          colIdInfo = genColumnIds(row)
-          colTypes = Array(colIdInfo.length).fill(null)
+          columnNames = row
+          columnIds = genColumnIds(columnNames)
+          colTypes = Array(columnIds.length).fill(null)
           firstRow = false
         } else {
           colTypes = _.zipWith(colTypes, row, guessColumnType)
@@ -178,8 +178,6 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
         }
       })
       .on('end', () => {
-        const columnIds = colIdInfo.map(p => p[0])
-        const columnNames = colIdInfo.map(p => p[1])
         // default any remaining null column types to text:
         const columnTypes = colTypes.map(ct => (ct == null) ? 'text' : ct)
         const [es, ens] = process.hrtime(msStart)
@@ -293,8 +291,12 @@ const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> =
     const qs = Array(md.columnNames.length).fill('?')
     const insertStmtStr = 'insert into ' + qTableName + ' values (' + qs.join(', ') + ')'
     const insertRow = (insertStmt) => (row) => {
-      let typedRow = _.zip(md.columnTypes, row)
-      let rowVals = typedRow.map(([t, v]) => prepValue(t, v))
+      let rowVals = []
+      for (let i = 0; i < row.length; i++) {
+        const t = md.columnTypes[i]
+        const v = row[i]
+        rowVals.push(prepValue(t, v))
+      }
       return insertStmt.run(rowVals)
     }
 
@@ -341,5 +343,71 @@ export const importSqlite = (pathname: string): Promise<FileMetadata> => {
   return metaScan(pathname).then(md => {
     console.log('metascan complete. rows to import: ', md.rowCount)
     return importData(md, pathname)
+  })
+}
+
+const BUFSIZE = 1024
+
+/*
+ * Reader header row from specified path
+ */
+const readHeaderRow = (path: string): Promise<Array<string>> => {
+  return new Promise((resolve, reject) => {
+    fs.open(path, 'r', 0, (err, fd) => {
+      if (err) {
+        console.error('error opening file: ', err, err.stack)
+        reject(err)
+      }
+      var buf = Buffer.alloc(BUFSIZE)
+      fs.read(fd, buf, 0, BUFSIZE, null, (err, bytesRead, buf) => {
+        if (err) {
+          console.error('error reading file: ', err, err.stack)
+          reject(err)
+        }
+        var eolIndex = buf.indexOf('\n')
+        if (eolIndex < 0) {
+          reject(new Error('no NEWLINE found in initial read'))
+        }
+        var s = buf.toString('utf8', 0, eolIndex)
+        csv
+          .fromString(s, {headers: false})
+          .on('data', data => {
+            fs.close(fd, err => {
+              if (err) {
+                console.error('error closing file: ', err)
+                reject(err)
+              }
+              resolve(data)
+            })
+          })
+      })
+    })
+  })
+}
+
+export const fastImportTest = (pathname: string): Promise<FileMetadata> => {
+  return new Promise((resolve, reject) => {
+    const importStart = process.hrtime()
+    readHeaderRow(pathname)
+      .then(columnNames => {
+        const columnIds = genColumnIds(columnNames)
+        db.driver.import(pathname, 'staging', {columnIds}, (err, res) => {
+          const [es, ens] = process.hrtime(importStart)
+          if (err) {
+            reject(err)
+            return
+          }
+          console.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
+          const fileMetadata = {
+            columnIds: res.columnIds,
+            columnNames: columnNames,
+            columnTypes: res.columnTypes,
+            rowCount: res.rowCount,
+            tableName: res.tableName,
+            csvOptions: {}
+          }
+          resolve(fileMetadata)
+        })
+      })
   })
 }

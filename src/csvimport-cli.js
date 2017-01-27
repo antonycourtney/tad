@@ -81,10 +81,13 @@ const main = () => {
       targetPath = options.csvfile
     }
     global.options = options
+    const hrProcStart = process.hrtime()
 
     db.open(':memory:')
       .then(() => csvimport.importSqlite(targetPath))
       .then(md => {
+        const [es, ens] = process.hrtime(hrProcStart)
+        console.info('import completed in %ds %dms', es, ens / 1e6)
         console.log('Import complete. Imported ' + md.rowCount +
           ' rows into table "' + md.tableName + '"')
         process.exit(0)

@@ -95,17 +95,25 @@ const getRowCount = rtc => (queryStr, cb) => {
   }
 }
 
-// App initialization:
-const appInit = (options, path) => {
+/*
+ * main process initialization
+ *
+ * invoked via electron remote
+ */
+const mkInitMain = (options, path) => cb => {
+  console.log('initMain')
+
+  let md
   try {
     const hrProcStart = process.hrtime()
     console.log('appInit: entry')
     db.open(':memory:')
-      .then(() => csvimport.importSqlite(path))
-      .then(md => {
+      // .then(() => csvimport.importSqlite(path))
+      .then(() => csvimport.fastImportTest(path))
+      .then(importMd => {
         const [es, ens] = process.hrtime(hrProcStart)
         console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
-        global.md = md
+        md = importMd
         let rtOptions = {}
         if (options['show-queries']) {
           rtOptions.showQueries = true
@@ -117,15 +125,23 @@ const appInit = (options, path) => {
         // Now let's place a function in global so it can be run via remote:
         global.runQuery = runQuery(rtc)
         global.getRowCount = getRowCount(rtc)
-        createWindow()
+        const mdStr = JSON.stringify(md, null, 2)
+        cb(null, mdStr)
       })
       .catch(err => {
         console.error('*** Error: ', err.message)
-        app.quit()
+        cb(err, null)
       })
   } catch (err) {
     console.error('Error during app initialization: ', err)
+    cb(err, null)
   }
+}
+
+// App initialization:
+const appInit = (options, path) => {
+  global.initMain = mkInitMain(options, path)
+  createWindow()
 }
 
 const optionDefinitions = [

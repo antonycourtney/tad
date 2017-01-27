@@ -3,6 +3,7 @@
 .*/node_modules/npm/test/fixtures/config/*
 .*/node_modules/typechecker/es2015/*
 .*/node_modules/electron-packager/test/fixtures/*
+.*/node_modules/fbjs/lib/*
 less/*.less
 
 [include]
