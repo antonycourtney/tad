@@ -10,6 +10,7 @@ import * as reltab from './reltab'
  * Just a single view in a single untabbed window for now.
  */
 export default class AppState extends Immutable.Record({
+  initialized: false,
   windowTitle: '',
   rtc: null,
   baseQuery: null,
@@ -17,6 +18,7 @@ export default class AppState extends Immutable.Record({
   viewState: new ViewState()
 }) {
   // duplicated here to allow us to write flow types:
+  initialized: boolean    // Has main process initialization completed?
   windowTitle: string     // Usually just the table name or file name
   rtc : reltab.Connection
   baseQuery: reltab.QueryExp

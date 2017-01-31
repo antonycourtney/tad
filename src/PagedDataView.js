@@ -18,7 +18,7 @@ export default class PagedDataView {
     this.totalRowCount = totalRowCount
     this.offset = offset
     this.rawData = items
-    console.log('PagedDataView: trc: ', totalRowCount, ', offset: ', offset)
+    // console.log('PagedDataView: trc: ', totalRowCount, ', offset: ', offset)
   }
 
   // Unfortunately ambiguous method name comes from SlickGrid

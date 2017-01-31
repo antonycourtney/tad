@@ -18,6 +18,7 @@ import * as ReactDOM from 'react-dom'
 import OneRef from 'oneref'
 import AppPane from './components/AppPane'
 import PivotRequester from './PivotRequester'
+import AppState from './AppState'
 
 import * as reltab from './reltab' // eslint-disable-line
 import * as reltabElectron from './reltab-electron'
@@ -27,8 +28,6 @@ global.cmdLineOptions = require('electron').remote.getGlobal('options')
 
 const remoteInitMain = require('electron').remote.getGlobal('initMain')
 
-console.log('renderMain started')
-
 const initMainProcess = (): Promise<reltab.FileMetadata> => {
   return new Promise((resolve, reject) => {
     remoteInitMain((err, mdStr) => {
@@ -36,7 +35,6 @@ const initMainProcess = (): Promise<reltab.FileMetadata> => {
         console.error('initMain error: ', err)
         reject(err)
       } else {
-        console.log('initMain result: ', mdStr)
         const md = JSON.parse(mdStr)
         resolve(md)
       }
@@ -44,32 +42,35 @@ const initMainProcess = (): Promise<reltab.FileMetadata> => {
   })
 }
 
-initMainProcess()
-  .then(md => {
-    console.log('metadata: ', md)
+const init = () => {
+  const appState = new AppState()
+  const stateRef = new OneRef.Ref(appState)
+  const updater = OneRef.refUpdater(stateRef)
 
-    const tableName = md.tableName
-    const baseQuery = reltab.tableQuery(tableName)
+  ReactDOM.render(
+    <OneRef.AppContainer appClass={AppPane} stateRef={stateRef} />,
+    document.getElementById('app')
+  )
 
-    const rtc = reltabElectron.init()
+  // and kick off main process initialization:
+  initMainProcess()
+    .then(md => {
+      const tableName = md.tableName
+      const baseQuery = reltab.tableQuery(tableName)
 
-    // module local to keep alive:
-    var pivotRequester: ?PivotRequester = null  // eslint-disable-line
+      const rtc = reltabElectron.init()
 
-    actions.createAppState(rtc, md.tableName, baseQuery)
-      .then(appState => {
-        console.log('got initial app state: ', appState.toJS())
+      // module local to keep alive:
+      var pivotRequester: ?PivotRequester = null  // eslint-disable-line
 
-        const stateRef = new OneRef.Ref(appState)
+      actions.initAppState(rtc, md.tableName, baseQuery, updater)
+        .then(() => {
+          pivotRequester = new PivotRequester(stateRef) // eslint-disable-line
+        })
+    })
+    .catch(err => {
+      console.error('error initializing main process: ', err)
+    })
+}
 
-        pivotRequester = new PivotRequester(stateRef) // eslint-disable-line
-
-        ReactDOM.render(
-          <OneRef.AppContainer appClass={AppPane} stateRef={stateRef} />,
-          document.getElementById('app')
-        )
-      })
-  })
-  .catch(err => {
-    console.error('error initializing main process: ', err)
-  })
+init()

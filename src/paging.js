@@ -22,9 +22,11 @@ export const clampViewport = (rowCount: number, inTop: number, inBottom: number)
   const inSize = inBottom - inTop
   const outBottom = Math.min(rowCount, inBottom)
   const outTop = Math.max(0, outBottom - inSize)
+/*
   if ((outTop !== inTop) || (outBottom !== inBottom)) {
     console.log('clamped viewport: [%d,%d] --> [%d,%d]', inTop, inBottom, outTop, outBottom)
   }
+*/
   return [outTop, outBottom]
 }
 

@@ -171,7 +171,6 @@ export default class GridPane extends React.Component {
     }
     if (showHiddenCols) {
       const hiddenColIds = _.difference(_.keys(this.slickColMap), gridCols.map(gc => gc.field))
-      console.log('hidden column ids: ', hiddenColIds)
       const hiddenCols = hiddenColIds.map(cid => this.slickColMap[cid])
       gridCols = gridCols.concat(hiddenCols)
     }
@@ -219,14 +218,14 @@ export default class GridPane extends React.Component {
    * update grid from dataView
    */
   updateGrid (dataView: any) {
-    console.log('updateGrid: dataView: offset: ', dataView.getOffset(), 'length: ', dataView.getLength())
+    // console.log('updateGrid: dataView: offset: ', dataView.getOffset(), 'length: ', dataView.getLength())
     if (!this.colWidthsMap) {
       this.colWidthsMap = getInitialColWidthsMap(dataView)
     }
     this.slickColMap = mkSlickColMap(dataView.schema, this.colWidthsMap)
     const gridCols = this.getGridCols(dataView)
     if (!this.grid) {
-      console.log('updateGrid: initial update, creating grid...')
+      // console.log('updateGrid: initial update, creating grid...')
       this.createGrid(gridCols, dataView)
       this.grid.resizeCanvas()
     } else {

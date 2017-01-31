@@ -18,7 +18,6 @@ export const init = (): reltab.Connection => {
           req['offset'] = offset
           req['limit'] = limit
         }
-        console.log('rtc.evalQuery: ', req)
         const sq = JSON.stringify(req, null, 2)
         remoteQuery(sq, resStr => {
           const res = reltab.deserializeTableRep(resStr)
@@ -35,7 +34,6 @@ export const init = (): reltab.Connection => {
         const sq = JSON.stringify(req, null, 2)
         remoteRowCount(sq, resStr => {
           const res = JSON.parse(resStr)
-          console.log('reltab-electron got row count result: ', res)
           // console.log('columns: ', res.schema.columns)
           // console.table(res.rowData)
           resolve(res.rowCount)

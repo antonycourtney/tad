@@ -9,8 +9,12 @@ import PathTree from './PathTree'
 import type {Path} from './PathTree'  // eslint-disable-line
 import * as aggtree from './aggtree'
 
-export const createAppState = (rtc: reltab.Connection,
-    title: string, baseQuery: reltab.QueryExp): Promise<AppState> => {
+
+type RefUpdater = (f: ((s: AppState) => AppState)) => void
+
+// called after main process initialization completes:
+export const initAppState = (rtc: reltab.Connection,
+    windowTitle: string, baseQuery: reltab.QueryExp, updater: RefUpdater): Promise<void> => {
   return aggtree.getBaseSchema(rtc, baseQuery)
     .then(baseSchema => {
       // start off with all columns displayed:
@@ -18,12 +22,17 @@ export const createAppState = (rtc: reltab.Connection,
       const openPaths = new PathTree()
       const viewParams = new ViewParams({displayColumns, openPaths})
       const viewState = new ViewState({viewParams})
-
-      return new AppState({title, rtc, baseSchema, baseQuery, viewState})
+      // We explicitly set rather than merge() because merge
+      // will attempt to deep convert JS objects to Immutables
+      updater(st =>
+        st.set('windowTitle', windowTitle)
+          .set('rtc', rtc)
+          .set('baseSchema', baseSchema)
+          .set('baseQuery', baseQuery)
+          .set('viewState', viewState)
+          .set('initialized', true))
     })
 }
-
-type RefUpdater = (f: ((s: AppState) => AppState)) => void
 
 // helper to hoist a ViewParams => ViewParams fn to an AppState => AppState
 // Always resets the viewport

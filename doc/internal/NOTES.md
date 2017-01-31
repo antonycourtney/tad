@@ -156,5 +156,6 @@ TODO before next release:
   X row count in C++
   X error signalling from C++ addon
   - UI for import errors in a dialog
-  - Open window immediately on Tad start
+  X Open window immediately on Tad start
+  X Loading indicator during initial import
   - Electron auto-update

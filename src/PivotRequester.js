@@ -72,7 +72,6 @@ const requestQueryView = async (rt: Connection,
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths)
   const rowCount = await rt.rowCount(treeQuery)
   const ret = new QueryView({query: treeQuery, rowCount})
-  console.log('requestQueryView: got row count, returning: ', ret)
   return ret
 }
 
@@ -81,7 +80,6 @@ const requestDataView = async (rt: Connection,
     queryView: QueryView,
     offset: number,
     limit: number): Promise<PagedDataView> => {
-  console.log('requestDataView: ', offset, limit, queryView)
   const tableData = await rt.evalQuery(queryView.query, offset, limit)
   const dataView = mkDataView(viewParams, queryView.rowCount, offset, tableData)
   return dataView
@@ -113,22 +111,16 @@ export default class PivotRequester {
     this.pendingDataRequest = null
     this.pendingViewParams = null
     stateRef.on('change', () => this.onStateChange(stateRef))
-    console.log('PivotRequester: registered change listener')
     // And invoke onStateChange initially to get things started:
     this.onStateChange(stateRef)
   }
-
-/*
-((this.pendingRequest !== null) &&
-!paging.contains(this.pendingOffset, this.pendingLimit,
-  viewState.viewportTop, viewState.viewportBottom)))
-*/
 
   // issue a data request from current QueryView and
   // offset, limit:
   requestData (stateRef: oneref.Ref<AppState>,
                queryView: QueryView): Promise<PagedDataView> {
     const appState : AppState = stateRef.getValue()
+
     const viewState = appState.viewState
     const viewParams = viewState.viewParams
     const [offset, limit] =
@@ -139,7 +131,6 @@ export default class PivotRequester {
       queryView, offset, limit)
     this.pendingDataRequest = dreq
     dreq.then(dataView => {
-      console.log('got dataView')
       this.pendingDataRequest = null
       const appState = stateRef.getValue()
       const nextSt = appState.update('viewState', vs => {
@@ -155,10 +146,11 @@ export default class PivotRequester {
 
   onStateChange (stateRef: oneref.Ref<AppState>) {
     const appState : AppState = stateRef.getValue()
+
     const viewState = appState.viewState
     const viewParams = viewState.viewParams
     if (viewParams !== this.pendingViewParams) {
-      console.log('onStateChange: requesting new query: ', viewState, this.pendingViewParams)
+      // console.log('onStateChange: requesting new query: ', viewState, this.pendingViewParams)
       // Might be nice to cancel any pending request here...
       // failing that we could calculate additional pages we need
       // if viewParams are same and only page range differs.
@@ -168,7 +160,6 @@ export default class PivotRequester {
       this.pendingQueryRequest = qreq
       this.pendingDataRequest =
         qreq.then(queryView => {
-          console.log('got queryView: ', queryView)
           this.currentQueryView = queryView
           const appState = stateRef.getValue()
           const nextSt = appState.update('viewState', vs => {
@@ -195,9 +186,11 @@ export default class PivotRequester {
       // pendingOffset, pendingLimit:
       if (this.currentQueryView !== null &&
         !paging.contains(this.pendingOffset, this.pendingLimit, viewState.viewportTop, viewState.viewportBottom)) {
+/*
         console.log('viewport outside bounds: pending: [' + this.pendingOffset +
         ', ' + (this.pendingOffset + this.pendingLimit) + ') ',
         ', viewport: ', viewState.viewportTop, viewState.viewportBottom)
+*/
         const qv : QueryView = (this.currentQueryView : any)  // Flow misses null check above!
         this.requestData(stateRef, qv)
       }
