@@ -9,7 +9,6 @@ import PathTree from './PathTree'
 import type {Path} from './PathTree'  // eslint-disable-line
 import * as aggtree from './aggtree'
 
-
 type RefUpdater = (f: ((s: AppState) => AppState)) => void
 
 // called after main process initialization completes:

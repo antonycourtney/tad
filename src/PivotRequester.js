@@ -11,6 +11,8 @@ import * as oneref from 'oneref'  // eslint-disable-line
 import * as paging from './paging'
 import * as util from './util'
 
+const remoteErrorDialog = require('electron').remote.getGlobal('errorDialog')
+
 /**
  * Use ViewParams to construct a PagedDataView for use with
  * SlickGrid from reltab.TableRep
@@ -154,6 +156,7 @@ export default class PivotRequester {
       // Might be nice to cancel any pending request here...
       // failing that we could calculate additional pages we need
       // if viewParams are same and only page range differs.
+      const prevViewParams = this.pendingViewParams
       this.pendingViewParams = viewParams
       const qreq = requestQueryView(appState.rtc, appState.baseQuery,
         appState.baseSchema, this.pendingViewParams)
@@ -176,6 +179,18 @@ export default class PivotRequester {
           })
           stateRef.setValue(nextSt)
           return this.requestData(stateRef, queryView)
+        })
+        .catch(err => {
+          console.error('PivotRequester: caught error updating view: ', err.message)
+          remoteErrorDialog('Error constructing view', err.message)
+          // Now let's try and restore to previous view params:
+          const appState = stateRef.getValue()
+          const nextSt = appState.update('viewState', vs => {
+            return (vs
+              .update('loadingTimer', lt => lt.stop())
+              .set('viewParams', prevViewParams))
+          })
+          stateRef.setValue(nextSt)
         })
       const ltUpdater = util.pathUpdater(stateRef, ['viewState', 'loadingTimer'])
       const nextAppState = appState.updateIn(['viewState', 'loadingTimer'],

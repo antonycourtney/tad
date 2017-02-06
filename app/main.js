@@ -63,9 +63,12 @@ const runQuery = rtc => (queryStr, cb) => {
           const [es, ens] = process.hrtime(hrstart)
           console.info('runQuery: evaluated query in %ds %dms', es, ens / 1e6)
           const serRes = JSON.stringify(res, null, 2)
-          cb(serRes)
+          cb(null, serRes)
         })
-        .catch(err => console.error('error running query: ', err, err.stack))
+        .catch(err => {
+          console.error('runQuery: error running query: ', err, err.stack)
+          cb(err, null)
+        })
     })
   } catch (err) {
     console.error('runQuery: ', err, err.stack)
@@ -86,9 +89,13 @@ const getRowCount = rtc => (queryStr, cb) => {
           console.info('getRowCount: evaluated query in %ds %dms', es, ens / 1e6)
           const resObj = { rowCount }
           const serRes = JSON.stringify(resObj, null, 2)
-          cb(serRes)
+          cb(null,serRes)
         })
-        .catch(err => console.error('error running query: ', err, err.stack))
+        .catch(err => {
+          console.error('getRowCount: error running query: ', err.message)
+          cb(err, null)
+        }
+      )
     })
   } catch (err) {
     console.error('runQuery: ', err, err.stack)
@@ -109,7 +116,7 @@ const mkInitMain = (options, path) => cb => {
     console.log('appInit: entry')
     db.open(':memory:')
       // .then(() => csvimport.importSqlite(path))
-      .then(() => csvimport.fastImportTest(path))
+      .then(() => csvimport.fastImport(path))
       .then(importMd => {
         const [es, ens] = process.hrtime(hrProcStart)
         console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
@@ -129,7 +136,6 @@ const mkInitMain = (options, path) => cb => {
         cb(null, mdStr)
       })
       .catch(err => {
-        console.error('*** Error: ', err.message)
         cb(err, null)
       })
   } catch (err) {
@@ -141,6 +147,7 @@ const mkInitMain = (options, path) => cb => {
 // App initialization:
 const appInit = (options, path) => {
   global.initMain = mkInitMain(options, path)
+  global.errorDialog = errorDialog
   createWindow()
 }
 
@@ -217,6 +224,13 @@ const showUsage = () => {
 const reportFatalError = (msg: string) => {
   dialog.showErrorBox('Error starting Tad', msg)
   app.quit()
+}
+
+const errorDialog = (title: string, msg: string, fatal = false) => {
+  dialog.showErrorBox(title, msg)
+  if (fatal) {
+    app.quit()
+  }
 }
 
 const main = () => {

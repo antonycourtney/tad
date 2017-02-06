@@ -19,7 +19,11 @@ export const init = (): reltab.Connection => {
           req['limit'] = limit
         }
         const sq = JSON.stringify(req, null, 2)
-        remoteQuery(sq, resStr => {
+        remoteQuery(sq, (err, resStr) => {
+          if (err) {
+            reject(err)
+            return
+          }
           const res = reltab.deserializeTableRep(resStr)
           // console.log('reltab-electron got query result: ')
           // console.log('columns: ', res.schema.columns)
@@ -32,7 +36,11 @@ export const init = (): reltab.Connection => {
       return new Promise((resolve, reject) => {
         let req : Object = { query }
         const sq = JSON.stringify(req, null, 2)
-        remoteRowCount(sq, resStr => {
+        remoteRowCount(sq, (err, resStr) => {
+          if (err) {
+            reject(err)
+            return
+          }
           const res = JSON.parse(resStr)
           // console.log('columns: ', res.schema.columns)
           // console.table(res.rowData)

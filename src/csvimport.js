@@ -355,18 +355,17 @@ const readHeaderRow = (path: string): Promise<Array<string>> => {
   return new Promise((resolve, reject) => {
     fs.open(path, 'r', 0, (err, fd) => {
       if (err) {
-        console.error('error opening file: ', err, err.stack)
         reject(err)
       }
       var buf = Buffer.alloc(BUFSIZE)
       fs.read(fd, buf, 0, BUFSIZE, null, (err, bytesRead, buf) => {
         if (err) {
-          console.error('error reading file: ', err, err.stack)
           reject(err)
         }
         var eolIndex = buf.indexOf('\n')
         if (eolIndex < 0) {
-          reject(new Error('no NEWLINE found in initial read'))
+          const msg = "'" + path + "' does not appear to be a CSV file - no newline found in file"
+          reject(new Error(msg))
         }
         var s = buf.toString('utf8', 0, eolIndex)
         csv
@@ -374,7 +373,6 @@ const readHeaderRow = (path: string): Promise<Array<string>> => {
           .on('data', data => {
             fs.close(fd, err => {
               if (err) {
-                console.error('error closing file: ', err)
                 reject(err)
               }
               resolve(data)
@@ -385,7 +383,7 @@ const readHeaderRow = (path: string): Promise<Array<string>> => {
   })
 }
 
-export const fastImportTest = (pathname: string): Promise<FileMetadata> => {
+export const fastImport = (pathname: string): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
     const importStart = process.hrtime()
     readHeaderRow(pathname)
@@ -398,6 +396,7 @@ export const fastImportTest = (pathname: string): Promise<FileMetadata> => {
             return
           }
           console.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
+          console.log('import info: ', res)
           const fileMetadata = {
             columnIds: res.columnIds,
             columnNames: columnNames,
@@ -408,6 +407,9 @@ export const fastImportTest = (pathname: string): Promise<FileMetadata> => {
           }
           resolve(fileMetadata)
         })
+      })
+      .catch(err => {
+        reject(err)
       })
   })
 }

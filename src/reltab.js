@@ -640,7 +640,8 @@ const defaultAggs = {
   'integer': 'sum',
   'real': 'sum',
   'text': 'uniq',
-  'boolean': 'uniq'
+  'boolean': 'uniq',
+  'null': 'uniq'
 }
 
 const groupByQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {

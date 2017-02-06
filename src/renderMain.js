@@ -27,6 +27,7 @@ import * as actions from './actions'
 global.cmdLineOptions = require('electron').remote.getGlobal('options')
 
 const remoteInitMain = require('electron').remote.getGlobal('initMain')
+const remoteErrorDialog = require('electron').remote.getGlobal('errorDialog')
 
 const initMainProcess = (): Promise<reltab.FileMetadata> => {
   return new Promise((resolve, reject) => {
@@ -69,7 +70,7 @@ const init = () => {
         })
     })
     .catch(err => {
-      console.error('error initializing main process: ', err)
+      remoteErrorDialog('Error initializing Tad', err.message, true)
     })
 }
 
