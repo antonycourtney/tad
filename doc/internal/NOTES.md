@@ -161,3 +161,25 @@ TODO before next release:
   X Open window immediately on Tad start
   X Loading indicator during initial import
   - Electron auto-update
+
+======
+3/22/17:
+
+To get auto-update working want to package Tad as DMG with electron-builder and follow the auto-update model of ~/src/js/electron-updater-example
+
+---
+I've upgraded all deps to use latest webpack, etc.
+Note:
+Because of dependency on git URL for my fork of sqlite3, need to install
+Need to install deps with npm (not yarn):
+$ npm install
+
+To build app:
+$ npm run build-app
+
+To build release (as DMG):
+for now:
+$ node_modules/.bin/build --mac
+
+...but will need to work out publishing step to push releases to github.
+  See README.md and publish.sh in electron-updater-example

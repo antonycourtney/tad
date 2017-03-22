@@ -6,24 +6,23 @@ var fs = require('fs');
 var env = process.env.NODE_ENV === 'production' ? 'production'
   : (process.env.NODE_ENV === 'test' ? 'test' : 'development');
 
+process.traceDeprecation = true
+
 function config() {
   return {
     devtool: "source-map",
     resolve: {
-        extensions: ["", ".webpack.js", ".web.js", ".js"]
+        extensions: [".webpack.js", ".web.js", ".js"]
     },
     output: {
-        path: "./build/",
+        path: __dirname + '/build/',
         filename: "[name].bundle.js"
     },
     module: {
         loaders: [
           { test: /\.(js|jsx)$/,
             exclude: /node_modules/,
-            loader: "babel-loader",
-            query: {
-              presets:['es2015','react', 'stage-3']
-            }
+            loader: "babel-loader?presets[]=es2015,presets[]=react,presets[]=stage-3"
           },
           { test: /\.(json)$/, loader: "json-loader" },
           {
@@ -37,8 +36,8 @@ function config() {
           {
             test: /\.(jpe?g|png|gif|svg)$/i,
             loaders: [
-                'file?hash=sha512&digest=hex&name=[hash].[ext]',
-                'image-webpack?bypassOnDebug&optipng.optimizationLevel=7&gifsicle.interlaced=false'
+                'file-loader?hash=sha512&digest=hex&name=[hash].[ext]',
+                'image-webpack-loader?bypassOnDebug&optipng.optimizationLevel=7&gifsicle.interlaced=false'
             ]
           }
         ]
@@ -61,7 +60,6 @@ function development() {
 
 function production () {
   var prod = config()
-  prod.plugins.push(new webpack.optimize.DedupePlugin())
   prod.plugins.push(new webpack.optimize.OccurrenceOrderPlugin(true))
   prod.plugins.push(new webpack.optimize.UglifyJsPlugin({
     compress: {

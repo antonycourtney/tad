@@ -235,7 +235,7 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
 }
 
 const main = () => {
-  const logPath = log.findLogPath()
+  const logPath = log.transports.file.findLogPath()
   console.log('log path: ', logPath)
   console.log('app userData path: ', app.getPath('userData'))
   console.log('exe path: ', app.getPath('exe'))
