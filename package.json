@@ -12,6 +12,7 @@
     "console.table": "^0.7.0",
     "d3-array": "^1.0.2",
     "d3-fetch": "0.0.2",
+    "electron-log": "^1.3.0",
     "es6-promise": "^4.0.5",
     "eslint-plugin-react": "^6.8.0",
     "fast-csv": "^2.3.0",
@@ -74,26 +75,27 @@
   },
   "main": "./build/main.bundle.js",
   "scripts": {
-    "clean": "rm -rf build/*",
     "build:jquery": "mkdir -p build && cpx \"node_modules/jquery/dist/**/*\" build/js",
     "build:bootstrap": "mkdir -p build && cpx \"node_modules/bootstrap/dist/**/*\" build",
     "build:html": "mkdir -p build && cpx \"html/*\" build",
     "build-assets": "npm run build:bootstrap && npm run build:jquery && npm run build:html",
+    "build-app": "npm run clean && npm run build-assets && node ./tools/buildApp.js",
+    "build-release": "npm run dist && node ./tools/buildRelease.js",
+    "clean": "rm -rf build/*",
+    "csvimport": "electron build/csvimport.bundle.js",
+    "dist": "build",
+    "electron-rebuild": "electron-rebuild -l -p -f -w sqlite3",
     "lint": "eslint .",
-    "test-babel": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/runAllTests.js",
-    "test-prof": "babel-node --prof --presets es2015,react ./test/runAllTests.js",
-    "test": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && ELECTRON_RUN_AS_NODE=true && electron build/allTests.bundle.js",
-    "test-node": "node build/allTests.bundle.js",
-    "test-node-prof": "node --prof build/allTests.bundle.js",
+    "pack": "build --dir",
+    "packager": "electron-packager . --platform=darwin",
     "runQuery": "babel-node --presets es2015,react ./test/runQuery.js",
     "start": "electron .",
-    "electron-rebuild": "electron-rebuild -l -p -f -w sqlite3",
-    "packager": "electron-packager . --platform=darwin",
-    "pack": "build --dir",
-    "dist": "build",
-    "webpack:watch": "webpack -d --watch",
-    "build-release": "npm run dist && node ./tools/buildRelease.js",
-    "csvimport": "electron build/csvimport.bundle.js"
+    "test": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && ELECTRON_RUN_AS_NODE=true && electron build/allTests.bundle.js",
+    "test-babel": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/runAllTests.js",
+    "test-node": "node build/allTests.bundle.js",
+    "test-node-prof": "node --prof build/allTests.bundle.js",
+    "test-prof": "babel-node --prof --presets es2015,react ./test/runAllTests.js",
+    "webpack:watch": "webpack -d --watch"
   },
   "standard": {
     "ignore": [
@@ -113,7 +115,18 @@
     ],
     "extraResources": [
       "tad.sh"
-    ]
+    ],
+    "mac": {
+      "category": "DataVisualization",
+      "target": [
+        "zip",
+        "dmg"
+      ]
+    },
+    "nodeGypRebuild": true,
+    "nsis": {
+      "perMachine": true
+    }
   },
   "directories": {
     "buildResources": "buildRes"

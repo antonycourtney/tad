@@ -4,6 +4,7 @@ const commandLineArgs = require('command-line-args')
 const getUsage = require('command-line-usage')
 const reltabSqlite = require('../src/reltab-sqlite')
 const csvimport = require('../src/csvimport')
+const log = require('electron-log')
 
 const electron = require('electron')
 const dialog = electron.dialog
@@ -234,6 +235,12 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
 }
 
 const main = () => {
+  const logPath = log.findLogPath()
+  console.log('log path: ', logPath)
+  console.log('app userData path: ', app.getPath('userData'))
+  console.log('exe path: ', app.getPath('exe'))
+  console.log('app path: ', app.getAppPath())
+  console.log('current version: ', app.getVersion())
   try {
     process.on('uncaughtException', function (error) {
       reportFatalError(error.message)
