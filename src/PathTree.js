@@ -76,7 +76,7 @@ const trimNodeMapToDepth = (nodeMap: Object, depth: number): Object => {
   return ret
 }
 
-function *walkNodeMap (prefix: Path,
+function * walkNodeMap (prefix: Path,
                       nodeMap: NodeMap): Generator<Path, void, void> { // eslint-disable-line
   for (var component in nodeMap) {
     if (nodeMap.hasOwnProperty(component)) {

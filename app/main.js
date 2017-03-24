@@ -5,6 +5,7 @@ const getUsage = require('command-line-usage')
 const reltabSqlite = require('../src/reltab-sqlite')
 const csvimport = require('../src/csvimport')
 const log = require('electron-log')
+const setup = require('./setup')
 
 const electron = require('electron')
 const dialog = electron.dialog
@@ -47,7 +48,9 @@ function createWindow () {
 // Can insert delay in promise chain by:
 // delay(amount).then(() => ...)
 let delay = ms => {
-  console.log('injecting delay of ', ms, ' ms')
+  if (ms > 0) {
+    console.log('injecting delay of ', ms, ' ms')
+  }
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
@@ -90,7 +93,7 @@ const getRowCount = rtc => (queryStr, cb) => {
           console.info('getRowCount: evaluated query in %ds %dms', es, ens / 1e6)
           const resObj = { rowCount }
           const serRes = JSON.stringify(resObj, null, 2)
-          cb(null,serRes)
+          cb(null, serRes)
         })
         .catch(err => {
           console.error('getRowCount: error running query: ', err.message)
@@ -109,12 +112,10 @@ const getRowCount = rtc => (queryStr, cb) => {
  * invoked via electron remote
  */
 const mkInitMain = (options, path) => cb => {
-  console.log('initMain')
 
   let md
   try {
     const hrProcStart = process.hrtime()
-    console.log('appInit: entry')
     db.open(':memory:')
       // .then(() => csvimport.importSqlite(path))
       .then(() => csvimport.fastImport(path))
@@ -235,63 +236,73 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
 }
 
 const main = () => {
-  const logPath = log.transports.file.findLogPath()
-  console.log('log path: ', logPath)
-  console.log('app userData path: ', app.getPath('userData'))
-  console.log('exe path: ', app.getPath('exe'))
-  console.log('app path: ', app.getAppPath())
-  console.log('current version: ', app.getVersion())
+  setup.postInstallCheck()
+  log.info('starting Tad, version ', app.getVersion())
   try {
     process.on('uncaughtException', function (error) {
+      log.error(error.message)
+      log.error(error.stack)
       reportFatalError(error.message)
     })
     const argv = process.argv.slice(1)
-    const options = commandLineArgs(optionDefinitions, argv)
+    // deal with weird difference between starting from npm and starting
+    // from packaged shell wrapper:
+    if (!argv[0].startsWith('--executed-from')) {
+      // npm / electron start -- passes '.' as first argument
+      argv.unshift('--executed-from')
+    }
+    const options = commandLineArgs(optionDefinitions, {argv})
+    let quickExit = false
     if (options.help) {
       showUsage()
-      app.quit()
+      quickExit = true
     }
     if (options.version) {
       showVersion()
+      quickExit = true
+    }
+    if (quickExit) {
       app.quit()
-    }
-    let targetPath = null
-    if (options['executed-from']) {
-      if (options.csvfile && options.csvfile.startsWith('/')) {
-        // absolute pathname:
-        targetPath = options.csvfile
-      } else {
-        targetPath = path.join(options['executed-from'], options.csvfile)
-      }
     } else {
-      targetPath = options.csvfile
+      let targetPath = null
+      if (options['executed-from']) {
+        if (options.csvfile && options.csvfile.startsWith('/')) {
+          // absolute pathname:
+          targetPath = options.csvfile
+        } else {
+          targetPath = path.join(options['executed-from'], options.csvfile)
+        }
+      } else {
+        targetPath = options.csvfile
+      }
+      global.options = options
+
+      // This method will be called when Electron has finished
+      // initialization and is ready to create browser windows.
+      // Some APIs can only be used after this event occurs.
+      app.on('ready', () => appInit(options, targetPath))
+
+      // Quit when all windows are closed.
+      app.on('window-all-closed', function () {
+        // On OS X it is common for applications and their menu bar
+        // to stay active until the user quits explicitly with Cmd + Q
+        if (process.platform !== 'darwin') {
+          app.quit()
+        }
+      })
+
+      app.on('activate', function () {
+        // On OS X it's common to re-create a window in the app when the
+        // dock icon is clicked and there are no other windows open.
+        if (mainWindow === null) {
+          createWindow()
+        }
+      })
     }
-    global.options = options
-
-    // This method will be called when Electron has finished
-    // initialization and is ready to create browser windows.
-    // Some APIs can only be used after this event occurs.
-    app.on('ready', () => appInit(options, targetPath))
-
-    // Quit when all windows are closed.
-    app.on('window-all-closed', function () {
-      // On OS X it is common for applications and their menu bar
-      // to stay active until the user quits explicitly with Cmd + Q
-      if (process.platform !== 'darwin') {
-        app.quit()
-      }
-    })
-
-    app.on('activate', function () {
-      // On OS X it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) {
-        createWindow()
-      }
-    })
   } catch (err) {
     reportFatalError(err.message)
-    console.error('Error: ', err.message)
+    log.error('Error: ', err.message)
+    log.error(err.stack)
     showUsage()
     app.quit()
   }

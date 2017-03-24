@@ -35,7 +35,9 @@ To build Tad, you should have [node](https://nodejs.org/en/), `npm`(https://www.
 
 ## Install JavaScript package Dependencies
 
-    $ yarn install
+    $ npm install
+
+( **Note**: Because Tad uses a fork of node-sqlite3 accessed via a `git://` URL, you must use npm rather than yarn to install dependencies. Sorry.)
 
 This will install dependencies from `package.json` from npm(https://www.npmjs.com/). This will take some time, particularly if this is the first time you are downloading many of the dependencies.
 
@@ -49,7 +51,7 @@ This step will install various static assets (such as the Bootstrap CSS file) in
 
 Open a new terminal window in the same directory, and run
 
-    $ yarn start webpack:watch
+    $ yarn run webpack:watch
 
 This will use [webpack](https://webpack.github.io/) and [Babel](https://babeljs.io/) to compile and bundle the ES2015 sources into older versions of JavaScript supported by node.js and Chromium.
 
@@ -79,17 +81,32 @@ Finally, to start the application, run:
 
 This should start the application and open a window displaying the contents of the specified CSV file.
 
+Use the `--` form to pass additional dashed arguments to the application (instead of yarn / npm).
+For example:
+
+    $ yarn start -- --show-queries csv/bart-comp-all.csv
+
+if you want to see the generated SQL queries.
+
+
 # Packaging a Release
 
-I'm using   [electron-builder](https://github.com/electron-userland/electron-builder) for packaging, which uses [electron-packager](https://github.com/electron-userland/electron-packager) for creating
-the App. I'm currently building my own `.tgz` file and install script to create the symbolic
-link in `/usr/local/bin/tad`; I'm not currently using the generated install wizard (DMG).
+## Clean and Build JavaScript for Production
 
-Note that, due to an alleged bug in Yarn's handling of sub-processes, *one must use npm (not Yarn!) to run this build step*:
+Before building the DMG file, we must first use webpack and Babel to generate the compiled, minified JavaScript bundle.  To ensure a clean build and that we generate an optimized, production build, do the following:
 
-    $ npm run build-release
+    $ npm run clean
+    $ npm run build-prod
 
-This should create a full application in `./dist/mac`, and then will create a full release directory and a `.tgz` file in `./release/tad-X.Y.Z-preview.tgz`
+## Build the packaged distribution file
+
+I'm using   [electron-builder](https://github.com/electron-userland/electron-builder) for packaging, which uses [electron-packager](https://github.com/electron-userland/electron-packager) for creating the App.
+
+Note that, due to an alleged bug in Yarn's handling of sub-processes, *one must use npm (not Yarn!) to run this build step*.  To build a packaged DMG for distribution, run:
+
+    $ npm run dist
+
+This should create a full application in `./dist/mac`, and a packaged DMG for distribution in `./dist/Tad-X.Y.Z.dmg`.
 
 # Implementation / Architecture
 

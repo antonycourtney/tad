@@ -7,7 +7,7 @@ import * as Immutable from 'immutable'
  *
  */
 
-export type TimerUpdater = (f: (ts: Timer) => Timer) => void
+export type TimerUpdater = (f: (ts: Timer) => Timer) => void  // eslint-disable-line
 
 export default class Timer extends Immutable.Record({
   running: false,   // true iff timer is running

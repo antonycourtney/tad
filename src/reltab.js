@@ -2,6 +2,8 @@
 
 const _ = require('lodash')
 
+/* eslint-disable no-use-before-define */
+
 /**
  * AST for filter expressions, consisting of a tree of
  * nested conjuncts or disjuncts, with relational expressions
@@ -105,7 +107,6 @@ export class RelExp {
   toSqlWhere (): string {
     return this.lhs.toSqlWhere() + ppOpMap[this.op] + this.rhs.toSqlWhere()
   }
-
 }
 
 export type SubExp = RelExp | FilterExp

@@ -3,12 +3,10 @@
 var webpack = require('webpack');
 var path = require('path');
 var fs = require('fs');
-var env = process.env.NODE_ENV === 'production' ? 'production'
-  : (process.env.NODE_ENV === 'test' ? 'test' : 'development');
 
 process.traceDeprecation = true
 
-function config() {
+function config(nodeEnv) {
   return {
     devtool: "source-map",
     resolve: {
@@ -46,7 +44,7 @@ function config() {
       new webpack.IgnorePlugin(/^\.\/stores\/appStore$/),
       new webpack.DefinePlugin({
         'process.env': {
-          NODE_ENV: JSON.stringify(env)
+          NODE_ENV: JSON.stringify(nodeEnv)
         }
       })
     ]
@@ -54,12 +52,12 @@ function config() {
 }
 
 function development() {
-  var dev = config()
+  var dev = config('development')
   return dev;
 }
 
 function production () {
-  var prod = config()
+  var prod = config('production')
   prod.plugins.push(new webpack.optimize.OccurrenceOrderPlugin(true))
   prod.plugins.push(new webpack.optimize.UglifyJsPlugin({
     compress: {
@@ -110,13 +108,20 @@ function merge (config, env) {
   return merged
 }
 
-module.exports = {
-  development: [
+const configMap = {
+  dev: [
     merge(render, development()),
     merge(app, development())
   ],
-  production: [
+  prod: [
     merge(render, production()),
     merge(app, production())
   ]
-}[env]
+}
+
+module.exports = function (env) {
+  if (!env) {
+    env = 'dev'
+  }
+  return configMap[env]
+}

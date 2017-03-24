@@ -79,15 +79,14 @@
     "build:bootstrap": "mkdir -p build && cpx \"node_modules/bootstrap/dist/**/*\" build",
     "build:html": "mkdir -p build && cpx \"html/*\" build",
     "build-assets": "npm run build:bootstrap && npm run build:jquery && npm run build:html",
-    "build-app": "npm run clean && npm run build-assets && node ./tools/buildApp.js",
-    "build-release": "npm run dist && node ./tools/buildRelease.js",
+    "build-dev": "npm run build-assets && webpack --env=dev",
+    "build-prod": "npm run build-assets && webpack --env=prod",
     "clean": "rm -rf build/*",
     "csvimport": "electron build/csvimport.bundle.js",
     "dist": "build",
     "electron-rebuild": "electron-rebuild -l -p -f -w sqlite3",
     "lint": "eslint .",
     "pack": "build --dir",
-    "packager": "electron-packager . --platform=darwin",
     "runQuery": "babel-node --presets es2015,react ./test/runQuery.js",
     "start": "electron .",
     "test": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && ELECTRON_RUN_AS_NODE=true && electron build/allTests.bundle.js",
@@ -95,7 +94,7 @@
     "test-node": "node build/allTests.bundle.js",
     "test-node-prof": "node --prof build/allTests.bundle.js",
     "test-prof": "babel-node --prof --presets es2015,react ./test/runAllTests.js",
-    "webpack:watch": "webpack -d --watch"
+    "webpack:watch": "webpack --watch"
   },
   "standard": {
     "ignore": [
