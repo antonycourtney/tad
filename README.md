@@ -1,5 +1,7 @@
 # Tad
 
+**Note: This is unannounced, unstable, pre-release software. Repository is public only to enable collaboration and testing by the project developers. Please do not publicize or link to this repository yet.  Thank You!**
+
 Tad is a desktop application for viewing and analyzing tabular data such as CSV files.
 
 Launch tad from the command line like this:
