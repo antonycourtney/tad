@@ -6,6 +6,7 @@ const reltabSqlite = require('../src/reltab-sqlite')
 const csvimport = require('../src/csvimport')
 const log = require('electron-log')
 const setup = require('./setup')
+const appMenu = require('./appMenu')
 
 const electron = require('electron')
 const dialog = electron.dialog
@@ -112,7 +113,6 @@ const getRowCount = rtc => (queryStr, cb) => {
  * invoked via electron remote
  */
 const mkInitMain = (options, path) => cb => {
-
   let md
   try {
     const hrProcStart = process.hrtime()
@@ -146,10 +146,12 @@ const mkInitMain = (options, path) => cb => {
   }
 }
 
+
 // App initialization:
 const appInit = (options, path) => {
   global.initMain = mkInitMain(options, path)
   global.errorDialog = errorDialog
+  appMenu.createMenu()
   createWindow()
 }
 
