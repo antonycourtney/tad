@@ -120,9 +120,11 @@ const mkInitMain = (options) => (path, cb) => {
 
 // App initialization:
 const appInit = (options) => {
+  console.log('appInit: ', options)
   global.initMain = mkInitMain(options)
   global.errorDialog = errorDialog
   appMenu.createMenu()
+  console.log('appInit: done')
 }
 
 const optionDefinitions = [
@@ -207,16 +209,19 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
   }
 }
 
-const main = () => {
-  setup.postInstallCheck()
-  log.info('starting Tad, version ', app.getVersion())
+// callback for app.makeSingleInstance:
+const openInstance = firstInstance => (instanceArgv, workingDirectory) => {
+  console.log('openInstance: ', instanceArgv, workingDirectory)
   try {
-    process.on('uncaughtException', function (error) {
-      log.error(error.message)
-      log.error(error.stack)
-      reportFatalError(error.message)
-    })
-    const argv = process.argv.slice(1)
+    if (firstInstance) {
+      setup.postInstallCheck()
+      process.on('uncaughtException', function (error) {
+        log.error(error.message)
+        log.error(error.stack)
+        reportFatalError(error.message)
+      })
+    }
+    const argv = instanceArgv.slice(1)
     // deal with weird difference between starting from npm and starting
     // from packaged shell wrapper:
     if (!argv[0].startsWith('--executed-from')) {
@@ -250,28 +255,34 @@ const main = () => {
       // This method will be called when Electron has finished
       // initialization and is ready to create browser windows.
       // Some APIs can only be used after this event occurs.
-      app.on('ready', () => {
-        appInit(options)
-        console.log('app.ready handler: done with appInit')
+      if (firstInstance) {
+        // Quit when all windows are closed.
+        app.on('window-all-closed', function () {
+          // On OS X it is common for applications and their menu bar
+          // to stay active until the user quits explicitly with Cmd + Q
+          if (process.platform !== 'darwin') {
+            app.quit()
+          }
+        })
+        app.on('activate', function () {
+          // On OS X it's common to re-create a window in the app when the
+          // dock icon is clicked and there are no other windows open.
+        })
+        app.on('ready', () => {
+          appInit(options)
+          if (targetPath) {
+            appWindow.create(targetPath)
+          } else {
+            appWindow.openDialog()
+          }
+        })
+      } else {
         if (targetPath) {
           appWindow.create(targetPath)
         } else {
           appWindow.openDialog()
         }
-      })
-      // Quit when all windows are closed.
-      app.on('window-all-closed', function () {
-        // On OS X it is common for applications and their menu bar
-        // to stay active until the user quits explicitly with Cmd + Q
-        if (process.platform !== 'darwin') {
-          app.quit()
-        }
-      })
-
-      app.on('activate', function () {
-        // On OS X it's common to re-create a window in the app when the
-        // dock icon is clicked and there are no other windows open.
-      })
+      }
     }
   } catch (err) {
     reportFatalError(err.message)
@@ -279,6 +290,16 @@ const main = () => {
     log.error(err.stack)
     showUsage()
     app.quit()
+  }
+}
+
+const main = () => {
+  const shouldQuit = app.makeSingleInstance(openInstance(false))
+  if (shouldQuit) {
+    app.quit()
+  } else {
+    // first instance:
+    openInstance(true)(process.argv, null)
   }
 }
 
