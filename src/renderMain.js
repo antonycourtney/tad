@@ -24,14 +24,16 @@ import * as reltab from './reltab' // eslint-disable-line
 import * as reltabElectron from './reltab-electron'
 import * as actions from './actions'
 
-global.cmdLineOptions = require('electron').remote.getGlobal('options')
+const remote = require('electron').remote
 
-const remoteInitMain = require('electron').remote.getGlobal('initMain')
-const remoteErrorDialog = require('electron').remote.getGlobal('errorDialog')
+global.cmdLineOptions = remote.getGlobal('options')
 
-const initMainProcess = (): Promise<reltab.FileMetadata> => {
+const remoteInitMain = remote.getGlobal('initMain')
+const remoteErrorDialog = remote.getGlobal('errorDialog')
+
+const initMainProcess = (targetPath): Promise<reltab.FileMetadata> => {
   return new Promise((resolve, reject) => {
-    remoteInitMain((err, mdStr) => {
+    remoteInitMain(targetPath, (err, mdStr) => {
       if (err) {
         console.error('initMain error: ', err)
         reject(err)
@@ -44,6 +46,9 @@ const initMainProcess = (): Promise<reltab.FileMetadata> => {
 }
 
 const init = () => {
+  const targetPath = remote.getCurrentWindow().targetPath
+  console.log('renderMain: target path: ', targetPath)
+
   const appState = new AppState()
   const stateRef = new OneRef.Ref(appState)
   const updater = OneRef.refUpdater(stateRef)
@@ -54,7 +59,7 @@ const init = () => {
   )
 
   // and kick off main process initialization:
-  initMainProcess()
+  initMainProcess(targetPath)
     .then(md => {
       const tableName = md.tableName
       const baseQuery = reltab.tableQuery(tableName)

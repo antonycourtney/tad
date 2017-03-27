@@ -177,7 +177,7 @@ $ npm install
 To build app:
 $ npm run build-app
 
-To build release (as DMG):
+To build release as DMG:
 for now:
 $ node_modules/.bin/build --mac
 

@@ -7,44 +7,16 @@ const csvimport = require('../src/csvimport')
 const log = require('electron-log')
 const setup = require('./setup')
 const appMenu = require('./appMenu')
-
+const appWindow = require('./appWindow')
 const electron = require('electron')
 const dialog = electron.dialog
 const app = electron.app
-const BrowserWindow = electron.BrowserWindow
 
 const path = require('path')
-const url = require('url')
 
 const pkgInfo = require('../package.json')
 
 require('console.table')
-
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
-
-function createWindow () {
-  mainWindow = new BrowserWindow({width: 1150, height: 910})
-
-  mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
-    protocol: 'file:',
-    slashes: true
-  }))
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools({mode: 'bottom'})
-  mainWindow.webContents.closeDevTools()
-
-  // Emitted when the window is closed.
-  mainWindow.on('closed', function () {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null
-  })
-}
 
 // Can insert delay in promise chain by:
 // delay(amount).then(() => ...)
@@ -112,7 +84,7 @@ const getRowCount = rtc => (queryStr, cb) => {
  *
  * invoked via electron remote
  */
-const mkInitMain = (options, path) => cb => {
+const mkInitMain = (options) => (path, cb) => {
   let md
   try {
     const hrProcStart = process.hrtime()
@@ -146,13 +118,11 @@ const mkInitMain = (options, path) => cb => {
   }
 }
 
-
 // App initialization:
-const appInit = (options, path) => {
-  global.initMain = mkInitMain(options, path)
+const appInit = (options) => {
+  global.initMain = mkInitMain(options)
   global.errorDialog = errorDialog
   appMenu.createMenu()
-  createWindow()
 }
 
 const optionDefinitions = [
@@ -267,14 +237,12 @@ const main = () => {
       app.quit()
     } else {
       let targetPath = null
-      if (options['executed-from']) {
-        if (options.csvfile && options.csvfile.startsWith('/')) {
-          // absolute pathname:
-          targetPath = options.csvfile
-        } else {
-          targetPath = path.join(options['executed-from'], options.csvfile)
-        }
+      const srcDir = options['executed-from']
+      if (srcDir && options.csvfile && !(options.csvfile.startsWith('/'))) {
+        // relative path -- prepend executed-from
+        targetPath = path.join(srcDir, options.csvfile)
       } else {
+        // absolute pathname or no srcDir:
         targetPath = options.csvfile
       }
       global.options = options
@@ -282,8 +250,15 @@ const main = () => {
       // This method will be called when Electron has finished
       // initialization and is ready to create browser windows.
       // Some APIs can only be used after this event occurs.
-      app.on('ready', () => appInit(options, targetPath))
-
+      app.on('ready', () => {
+        appInit(options)
+        console.log('app.ready handler: done with appInit')
+        if (targetPath) {
+          appWindow.create(targetPath)
+        } else {
+          appWindow.openDialog()
+        }
+      })
       // Quit when all windows are closed.
       app.on('window-all-closed', function () {
         // On OS X it is common for applications and their menu bar
@@ -296,9 +271,6 @@ const main = () => {
       app.on('activate', function () {
         // On OS X it's common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
-        if (mainWindow === null) {
-          createWindow()
-        }
       })
     }
   } catch (err) {

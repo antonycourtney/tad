@@ -2,7 +2,7 @@
   "name": "tad",
   "productName": "Tad",
   "description": "Tabular data viewer",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "author": "Antony Courtney <antony@antonycourtney.com> (http://www.antonycourtney.com)",
   "dependencies": {
     "babel-runtime": "^6.23.0",
@@ -86,6 +86,7 @@
     "clean": "rm -rf build/*",
     "csvimport": "electron build/csvimport.bundle.js",
     "dist": "build",
+    "publish": "./tools/publish.sh",
     "electron-rebuild": "electron-rebuild -l -p -f -w sqlite3",
     "lint": "eslint .",
     "pack": "build --dir",

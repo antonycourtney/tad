@@ -1,10 +1,8 @@
 
 import * as updater from './updater'
-
+import * as appWindow from './appWindow'
 const electron = require('electron')
-const dialog = electron.dialog
-const app = electron.app
-const BrowserWindow = electron.BrowserWindow
+
 const Menu = electron.Menu
 
 const isDarwin = process.platform === 'darwin'
@@ -17,9 +15,6 @@ const aboutTadMenuItem = () => {
   return {
     label: 'About Tad',
     role: 'about'
-/* ,
-    click: (item, focusedWindow) => {}
-*/
   }
 }
 const checkForUpdateMenuItem = () => {
@@ -29,8 +24,27 @@ const checkForUpdateMenuItem = () => {
   }
 }
 export const createMenu = () => {
-  const template = [
+  const fileSubmenu = [
+    {
+      label: 'Open...',
+      accelerator: 'CmdOrCtrl+O',
+      click: (item, focusedWindow) => {
+        appWindow.openDialog()
+      }
+    }
   ]
+  const debugSubmenu = [
+    { role: 'toggledevtools' }
+  ]
+  const template = [
+    { label: 'File', submenu: fileSubmenu }
+  ]
+  if (process.env.NODE_ENV === 'development') {
+    template.push({
+      label: 'Debug',
+      submenu: debugSubmenu
+    })
+  }
   if (isDarwin) {
     template.unshift({
       label: 'Tad', // ignored on Mac OS; comes from plist
