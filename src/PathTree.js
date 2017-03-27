@@ -51,11 +51,10 @@ const removeNodeMap = (nodeMap: ?NodeMap, path: Array<string>): NodeMap => {
   } else {
     let subMap = nodeMap[head]
     if (subMap) {
-      let nextSub = removeNodeMap(subMap, rest)
-      let ret = _.omit(nodeMap, [head])
-      if (_.keys(nextSub).length > 0) {
-        ret[head] = nextSub
-      }
+      const nextSub = removeNodeMap(subMap, rest)
+      // immutable replacement of nodeMap[head]:
+      const ret = Object.assign({}, nodeMap)
+      ret[head] = nextSub
       return ret
     } else {
       // head not in nodeMap?
@@ -111,7 +110,8 @@ export default class PathTree {
   }
   // remove the given path from PathTree:
   close (path: Path): PathTree {
-    return new PathTree(removeNodeMap(this._rep, path))
+    const nextMap = removeNodeMap(this._rep, path)
+    return new PathTree(nextMap)
   }
 
   isOpen (path: Path): boolean {
