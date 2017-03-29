@@ -26,8 +26,6 @@ import * as actions from './actions'
 
 const remote = require('electron').remote
 
-global.cmdLineOptions = remote.getGlobal('options')
-
 const remoteInitMain = remote.getGlobal('initMain')
 const remoteErrorDialog = remote.getGlobal('errorDialog')
 

@@ -120,11 +120,11 @@ const mkInitMain = (options) => (path, cb) => {
 
 // App initialization:
 const appInit = (options) => {
-  console.log('appInit: ', options)
+  // console.log('appInit: ', options)
   global.initMain = mkInitMain(options)
   global.errorDialog = errorDialog
   appMenu.createMenu()
-  console.log('appInit: done')
+  // console.log('appInit: done')
 }
 
 const optionDefinitions = [
@@ -209,22 +209,30 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
   }
 }
 
+// construct targetPath based on options:
+const getTargetPath = (options, filePath) => {
+  let targetPath = null
+  const srcDir = options['executed-from']
+  if (srcDir && filePath && !(filePath.startsWith('/'))) {
+    // relative path -- prepend executed-from
+    targetPath = path.join(srcDir, filePath)
+  } else {
+    // absolute pathname or no srcDir:
+    targetPath = filePath
+  }
+  return targetPath
+}
+
+let openFilePath = null
+
 // callback for app.makeSingleInstance:
-const openInstance = firstInstance => (instanceArgv, workingDirectory) => {
-  console.log('openInstance: ', instanceArgv, workingDirectory)
+const openWindow = firstInstance => (instanceArgv, workingDirectory) => {
+  log.warn('openWindow: ', firstInstance, instanceArgv, workingDirectory)
   try {
-    if (firstInstance) {
-      setup.postInstallCheck()
-      process.on('uncaughtException', function (error) {
-        log.error(error.message)
-        log.error(error.stack)
-        reportFatalError(error.message)
-      })
-    }
     const argv = instanceArgv.slice(1)
     // deal with weird difference between starting from npm and starting
     // from packaged shell wrapper:
-    if (!argv[0].startsWith('--executed-from')) {
+    if (argv && (argv.length > 0) && !(argv[0].startsWith('--executed-from'))) {
       // npm / electron start -- passes '.' as first argument
       argv.unshift('--executed-from')
     }
@@ -241,21 +249,34 @@ const openInstance = firstInstance => (instanceArgv, workingDirectory) => {
     if (quickExit) {
       app.quit()
     } else {
-      let targetPath = null
-      const srcDir = options['executed-from']
-      if (srcDir && options.csvfile && !(options.csvfile.startsWith('/'))) {
-        // relative path -- prepend executed-from
-        targetPath = path.join(srcDir, options.csvfile)
-      } else {
-        // absolute pathname or no srcDir:
-        targetPath = options.csvfile
-      }
-      global.options = options
+      const targetPath = getTargetPath(options, options.csvfile)
 
       // This method will be called when Electron has finished
       // initialization and is ready to create browser windows.
       // Some APIs can only be used after this event occurs.
       if (firstInstance) {
+        const handleOpen = (event, filePath) => {
+          console.log('handleOpen called!')
+          log.warn('got open-file event: ', event, filePath)
+          event.preventDefault()
+          const targetPath = getTargetPath(options, filePath)
+          // appWindow.create(targetPath)
+          log.warn('open-file: opened ' + targetPath)
+          openFilePath = targetPath
+        }
+
+        app.on('open-file', handleOpen)
+        app.on('open-url', (event, url) => {
+          log.warn('got open-url: ', event, url)
+          handleOpen(event, url)
+        })
+        setup.postInstallCheck()
+        process.on('uncaughtException', function (error) {
+          log.error(error.message)
+          log.error(error.stack)
+          reportFatalError(error.message)
+        })
+
         // Quit when all windows are closed.
         app.on('window-all-closed', function () {
           // On OS X it is common for applications and their menu bar
@@ -269,6 +290,15 @@ const openInstance = firstInstance => (instanceArgv, workingDirectory) => {
           // dock icon is clicked and there are no other windows open.
         })
         app.on('ready', () => {
+          // const startMsg = `pid ${process.pid}: Tad started, version: ${app.getVersion()}`
+          // console.log(startMsg)
+          // dialog.showMessageBox({ message: startMsg })
+          /*
+          if (openFilePath) {
+            const openMsg = `pid ${process.pid}: Got open-file for ${openFilePath}`
+            dialog.showMessageBox({ message: openMsg })
+          }
+          */
           appInit(options)
           if (targetPath) {
             appWindow.create(targetPath)
@@ -280,7 +310,9 @@ const openInstance = firstInstance => (instanceArgv, workingDirectory) => {
         if (targetPath) {
           appWindow.create(targetPath)
         } else {
-          appWindow.openDialog()
+          log.warn('openWindow called with no targetPath')
+          app.focus()
+          // appWindow.openDialog()
         }
       }
     }
@@ -294,12 +326,14 @@ const openInstance = firstInstance => (instanceArgv, workingDirectory) => {
 }
 
 const main = () => {
-  const shouldQuit = app.makeSingleInstance(openInstance(false))
+  log.warn('Tad started, argv: ', process.argv)
+  const shouldQuit = app.makeSingleInstance(openWindow(false))
+  log.warn('After call to makeSingleInstance: ', shouldQuit)
   if (shouldQuit) {
     app.quit()
   } else {
     // first instance:
-    openInstance(true)(process.argv, null)
+    openWindow(true)(process.argv, null)
   }
 }
 

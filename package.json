@@ -50,7 +50,7 @@
     "cpx": "^1.5.0",
     "css-loader": "^0.27.3",
     "electron": "1.6.2",
-    "electron-builder": "^16.0.1",
+    "electron-builder": "^16.4.2",
     "electron-packager": "^8.6.0",
     "electron-rebuild": "^1.5.7",
     "eslint": "^3.18.0",
@@ -113,12 +113,19 @@
     "directories": {
       "buildResources": "buildRes"
     },
+    "extraResources": [
+      "tad.sh"
+    ],
     "files": [
       "build",
       "node_modules"
     ],
-    "extraResources": [
-      "tad.sh"
+    "fileAssociations": [
+      {
+        "ext": "csv",
+        "name": "Comma Separated Values",
+        "role": "Editor"
+      }
     ],
     "mac": {
       "category": "public.app-category.developer-tools",

@@ -24,8 +24,12 @@ const postInstall = (markerPath) => {
   const appDir = path.dirname(appPath)
   const targetPath = path.join(appDir, 'tad.sh')
   const linkPath = '/usr/local/bin/tad'
-  fs.symlinkSync(targetPath, linkPath)
-  log.warn('created symlink ' + linkPath + ' -> ' + targetPath)
+  if (fs.existsSync(linkPath)) {
+    log.warn('file ' + linkPath + ' exists -- skipping symlink creation.')
+  } else {
+    fs.symlinkSync(targetPath, linkPath)
+    log.warn('created symlink ' + linkPath + ' -> ' + targetPath)
+  }
   // and create the marker:
   fs.writeFileSync(markerPath, '')
 }
