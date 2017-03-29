@@ -55,7 +55,7 @@ export default class ColumnSelector extends React.Component {
     return (
       <div className='column-selector'>
         <div className='column-selector-header'>
-          <table className='table table-condensed table-hover column-selector-table'>
+          <table className='table table-condensed pt-interactive column-selector-table'>
             <thead>
               <tr>
                 <th className='column-selector-th col-colName'>Column</th>
