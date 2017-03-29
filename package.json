@@ -5,6 +5,7 @@
   "version": "0.6.6",
   "author": "Antony Courtney <antony@antonycourtney.com> (http://www.antonycourtney.com)",
   "dependencies": {
+    "@blueprintjs/core": "^1.13.0",
     "babel-runtime": "^6.23.0",
     "bootstrap": "^3.3.7",
     "command-line-args": "^4.0.2",
@@ -27,6 +28,7 @@
     "mkdirp": "^0.5.1",
     "oneref": "^0.3.1",
     "react": "^15.4.2",
+    "react-addons-css-transition-group": "^15.4.2",
     "react-dnd": "^2.2.4",
     "react-dnd-html5-backend": "^2.2.4",
     "react-dom": "^15.4.2",
@@ -77,10 +79,9 @@
   "main": "./build/main.bundle.js",
   "scripts": {
     "build:jquery": "mkdir -p build && cpx \"node_modules/jquery/dist/**/*\" build/js",
-    "build:bootstrap": "mkdir -p build && cpx \"node_modules/bootstrap/dist/**/*\" build",
     "build:html": "mkdir -p build && cpx \"html/*\" build",
     "build:icon": "mkdir -p buildRes && cp res/AppIcon.icns buildRes/icon.icns",
-    "build-assets": "npm run build:bootstrap && npm run build:jquery && npm run build:html && npm run build:icon",
+    "build-assets": "npm run build:jquery && npm run build:html && npm run build:icon",
     "build-dev": "npm run build-assets && webpack --env=dev",
     "build-prod": "npm run build-assets && webpack --env=prod",
     "clean": "rm -rf build/*",

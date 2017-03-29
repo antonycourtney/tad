@@ -327,8 +327,9 @@ const openWindow = firstInstance => (instanceArgv, workingDirectory) => {
 
 const main = () => {
   log.warn('Tad started, argv: ', process.argv)
-  const shouldQuit = app.makeSingleInstance(openWindow(false))
-  log.warn('After call to makeSingleInstance: ', shouldQuit)
+  const shouldQuit = false
+//  const shouldQuit = app.makeSingleInstance(openWindow(false))
+//  log.warn('After call to makeSingleInstance: ', shouldQuit)
   if (shouldQuit) {
     app.quit()
   } else {

@@ -37,6 +37,10 @@ function config(nodeEnv) {
                 'file-loader?hash=sha512&digest=hex&name=[hash].[ext]',
                 'image-webpack-loader?bypassOnDebug&optipng.optimizationLevel=7&gifsicle.interlaced=false'
             ]
+          },
+          {
+            test: /\.(eot|svg|ttf|woff|woff2)$/,
+            loader: 'file-loader?name=public/fonts/[name].[ext]'
           }
         ]
     },

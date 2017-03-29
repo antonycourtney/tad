@@ -36,7 +36,7 @@ export default class ColumnList extends React.Component {
     return (
       <div className='column-list'>
         <div className='column-list-header'>
-          <table className='table table-condensed table-hover column-selector-table'>
+          <table className='column-selector-table'>
             <thead>
               <tr>
                 <th className='column-list-th col-colName'>Column</th>
@@ -46,7 +46,7 @@ export default class ColumnList extends React.Component {
           </table>
         </div>
         <div className='column-list-body'>
-          <table className='table table-condensed table-hover column-selector-table'>
+          <table className='column-selector-table'>
             <tbody>
               {columnRows}
             </tbody>
