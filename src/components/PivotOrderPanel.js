@@ -20,7 +20,7 @@ export default class PivotOrderPanel extends React.Component {
 
     return (
       <div className='ui-block'>
-        <h6>Pivots <small className='ui-subtext'>(drag to reorder)</small></h6>
+        <h6>Pivot Columns <small className='ui-subtext'>(drag to reorder)</small></h6>
         <ColumnList
           schema={this.props.baseSchema}
           columnListType={ColumnListType.PIVOT}

@@ -6,7 +6,7 @@ import ColumnSelector from './ColumnSelector'
 import PivotOrderPanel from './PivotOrderPanel'
 import DisplayOrderPanel from './DisplayOrderPanel'
 import SortOrderPanel from './SortOrderPanel'
-import { Checkbox } from '@blueprintjs/core'
+import { Checkbox, Tabs2, Tab2 } from '@blueprintjs/core'
 
 export default class Sidebar extends React.Component {
   state: any
@@ -24,6 +24,23 @@ export default class Sidebar extends React.Component {
     const viewParams = this.props.viewParams
     const refUpdater = this.props.stateRefUpdater
     const expandClass = this.state.expanded ? 'sidebar-expanded' : 'sidebar-collapsed'
+
+    const pivotPanel =
+      <PivotOrderPanel
+        baseSchema={this.props.baseSchema}
+        viewParams={viewParams}
+        stateRefUpdater={this.props.stateRefUpdater} />
+    const displayPanel =
+      <DisplayOrderPanel
+        baseSchema={this.props.baseSchema}
+        viewParams={viewParams}
+        stateRefUpdater={this.props.stateRefUpdater} />
+    const sortPanel =
+      <SortOrderPanel
+        baseSchema={this.props.baseSchema}
+        viewParams={viewParams}
+        stateRefUpdater={this.props.stateRefUpdater} />
+
     return (
       <div className={'sidebar ' + expandClass}>
         <div className='sidebar-placeholder'>
@@ -53,18 +70,14 @@ export default class Sidebar extends React.Component {
                 viewParams={viewParams}
                 stateRefUpdater={this.props.stateRefUpdater} />
             </div>
-            <PivotOrderPanel
-              baseSchema={this.props.baseSchema}
-              viewParams={viewParams}
-              stateRefUpdater={this.props.stateRefUpdater} />
-            <DisplayOrderPanel
-              baseSchema={this.props.baseSchema}
-              viewParams={viewParams}
-              stateRefUpdater={this.props.stateRefUpdater} />
-            <SortOrderPanel
-              baseSchema={this.props.baseSchema}
-              viewParams={viewParams}
-              stateRefUpdater={this.props.stateRefUpdater} />
+            <div className='ui-block addl-col-props'>
+              <h6>Additional Column Properties</h6>
+              <Tabs2 animate={false} id='ColumnPropTabs' >
+                <Tab2 id='shownColumnsTab' title='Display Order' panel={displayPanel} />
+                <Tab2 id='pivotColumnsTab' title='Pivot' panel={pivotPanel} />
+                <Tab2 id='sortColumnsTab' title='Sort' panel={sortPanel} />
+              </Tabs2>
+            </div>
           </div>
         </div>
       </div>

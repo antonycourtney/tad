@@ -10,7 +10,7 @@ export default class DisplayOrderPanel extends React.Component {
 
     return (
       <div className='ui-block'>
-        <h6>Display Order <small className='ui-subtext'>(drag to reorder)</small></h6>
+        <h6>Displayed Columns <small className='ui-subtext'>(drag to reorder)</small></h6>
         <ColumnList
           schema={this.props.baseSchema}
           columnListType={ColumnListType.DISPLAY}
