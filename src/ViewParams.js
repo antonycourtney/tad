@@ -5,18 +5,23 @@ import * as _ from 'lodash'
 import PathTree from './PathTree'
 import type {Path} from './PathTree'  // eslint-disable-line
 import type {QueryExp} from './reltab'  // eslint-disable-line
+import * as reltab from './reltab' // eslint-disable-line
 
 /**
  * Immutable representation of user-configurable view parameters
  *
  */
+
+type AggMap = {[cid: string]: reltab.AggFn}
+
 export default class ViewParams extends Immutable.Record({
   showRoot: false,
   displayColumns: [],
   vpivots: [],
   pivotLeafColumn: null,
   sortKey: [],
-  openPaths: PathTree
+  openPaths: PathTree,
+  aggMap: {}  // overrides of agg fns
 }) {
   showRoot: boolean
   displayColumns: Array<string> // array of column ids to display, in order
@@ -24,6 +29,7 @@ export default class ViewParams extends Immutable.Record({
   pivotLeafColumn: ?string
   sortKey: Array<[string, boolean]>
   openPaths: PathTree
+  aggMap: AggMap
 
   // toggle element membership in array:
   toggleArrElem (propName: string, cid: string): ViewParams {
@@ -79,5 +85,20 @@ export default class ViewParams extends Immutable.Record({
 
   closePath (path: Path): ViewParams {
     return this.set('openPaths', this.openPaths.close(path))
+  }
+
+  getAggFn (schema: reltab.Schema, cid: string): reltab.AggFn {
+    let aggFn = this.aggMap[cid]
+    if (aggFn == null) {
+      aggFn = reltab.defaultAggFn(schema.columnType(cid))
+    }
+    return aggFn
+  }
+
+  setAggFn (cid: string, cidAgg: reltab.AggFn) {
+    const nextAggMap = {}
+    Object.assign(nextAggMap, this.aggMap)
+    nextAggMap[cid] = cidAgg
+    return this.set('aggMap', nextAggMap)
   }
 }

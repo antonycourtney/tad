@@ -108,6 +108,10 @@ export const closePath = (path: Path, updater: RefUpdater) => {
   updater(vpUpdate(viewParams => viewParams.closePath(path)))
 }
 
+export const setAggFn = (cid: string, aggFn: reltab.AggFn, updater: RefUpdater) => {
+  updater(vpUpdate(viewParams => viewParams.setAggFn(cid, aggFn)))
+}
+
 export const updateViewport = (top: number, bottom: number, updater: RefUpdater) => {
   updater(st => st.update('viewState', vs => vs
     .set('viewportTop', top)

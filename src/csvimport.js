@@ -364,7 +364,9 @@ const readHeaderRow = (path: string): Promise<Array<string>> => {
         }
         var eolIndex = buf.indexOf('\n')
         if (eolIndex < 0) {
-          const msg = "'" + path + "' does not appear to be a CSV file - no newline found in file"
+          const msg = "'" + path + "' - invalid CSV format, no newline found in file.\n\n" +
+          'This may be due to saving a CSV file from an older version of Excel on OS/X.\n\n' +
+          'Possible fix: Use mac2unix utility from dos2unix homebrew package to repair file.'
           reject(new Error(msg))
         }
         var s = buf.toString('utf8', 0, eolIndex)

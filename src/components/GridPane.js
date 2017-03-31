@@ -102,6 +102,9 @@ const mkSlickColMap = (schema: reltab.Schema, colWidths: ColWidthMap) => {
   slickColMap['_parentId'] = { id: '_parentId', field: '_parentId', name: '_parentId' }
   for (let colId of schema.columns) {
     let cmd = schema.columnMetadata[ colId ]
+    if (!cmd) {
+      console.error('could not find column metadata for ', colId, schema)
+    }
     let ci: any = { id: colId, field: colId, cssClass: '', name: '', formatter: null }
     if (colId === '_pivot') {
       ci.cssClass = 'pivot-column'

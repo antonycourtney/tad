@@ -55,6 +55,7 @@ export class VPivotTree {
   outCols: Array<string>
   rootQuery: ?QueryExp
   sortKey: Array<[string, boolean]>
+  aggMap: ?{[cid: string]: reltab.AggFn}
 
   constructor (rt: Connection,
     baseQuery: QueryExp,
@@ -63,7 +64,9 @@ export class VPivotTree {
     pivotLeafColumn: ?string,
     outCols: Array<string>,
     rootQuery: ?QueryExp,
-    sortKey: Array<[string, boolean]>) {
+    sortKey: Array<[string, boolean]>,
+    inAggMap: ?{[cid: string]: reltab.AggFn}
+  ) {
     this.rt = rt
     this.pivotColumns = pivotColumns
     this.pivotLeafColumn = pivotLeafColumn
@@ -72,6 +75,7 @@ export class VPivotTree {
     this.outCols = outCols
     this.rootQuery = rootQuery
     this.sortKey = sortKey
+    this.aggMap = inAggMap
   }
   /*
    * returns a query for the children of the specified path:
@@ -98,9 +102,13 @@ export class VPivotTree {
 
     var pivotColumnInfo = {id: '_pivot', type: 'text', displayName: '_pivot'}
 
+    const aggCols = this.baseSchema.columns
+    const aggMap = this.aggMap
+    const gbAggs : any = (aggMap != null) ? aggCols.map(cid => [aggMap[cid], cid]) : aggCols
+
     if (path.length < this.pivotColumns.length) {
       pathQuery = pathQuery
-        .groupBy([this.pivotColumns[path.length]], this.baseSchema.columns)
+        .groupBy([this.pivotColumns[path.length]], gbAggs)
         .mapColumnsByIndex({ '0': pivotColumnInfo })
     } else {
       // leaf level
@@ -155,12 +163,14 @@ export class VPivotTree {
   getSortQuery (depth: number): QueryExp {
     let sortQuery = this.baseQuery // recCountQuery
 
-    let sortCols = this.sortKey.map(p => p[0])
+    const sortCols = this.sortKey.map(p => p[0])
+    const aggMap = this.aggMap
+    const sortColAggs : any = (aggMap != null) ? sortCols.map(cid => [aggMap[cid], cid]) : sortCols
 
     const gbCols = this.pivotColumns.slice(0, depth)
 
     sortQuery = sortQuery
-      .groupBy(gbCols, sortCols)
+      .groupBy(gbCols, sortColAggs)
 
     let colMap = {}
     for (let i = 0; i < gbCols.length; i++) {
@@ -278,18 +288,21 @@ export const vpivot = (rt: reltab.Connection,
     pivotColumns: Array<string>,
     pivotLeafColumn: ?string,
     showRoot: boolean,
-    sortKey: Array<[string, boolean]>
+    sortKey: Array<[string, boolean]>,
+    inAggMap: ?{[cid: string]: reltab.AggFn} = null
   ): VPivotTree => {
+  const aggMap = inAggMap // just for Flow
   baseQuery = baseQuery.extend('Rec', { type: 'integer' }, 1)
   const hiddenCols = ['_depth', '_pivot', '_isRoot']
   const outCols = baseSchema.columns.concat(hiddenCols)
 
   const gbCols = baseSchema.columns.slice()
+  const gbAggs = (aggMap != null) ? gbCols.map(cid => [aggMap[cid], cid]) : gbCols
 
   let rootQuery = null
   if (showRoot) {
     rootQuery = baseQuery
-      .groupBy([], gbCols)
+      .groupBy([], gbAggs)
       .extend('_pivot', { type: 'text' }, null)
       .extend('_depth', { type: 'integer' }, 0)
       .extend('_isRoot', {type: 'boolean'}, 1)
@@ -297,5 +310,5 @@ export const vpivot = (rt: reltab.Connection,
   }
 
   return new VPivotTree(rt, baseQuery, baseSchema, pivotColumns,
-    pivotLeafColumn, outCols, rootQuery, sortKey)
+    pivotLeafColumn, outCols, rootQuery, sortKey, aggMap)
 }

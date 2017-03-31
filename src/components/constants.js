@@ -8,5 +8,6 @@ export const DragItemTypes = {
 export const ColumnListType = {
   PIVOT: 'vpivots',
   DISPLAY: 'displayColumns',
-  SORT: 'sortKey'
+  SORT: 'sortKey',
+  AGG: 'aggFn'
 }

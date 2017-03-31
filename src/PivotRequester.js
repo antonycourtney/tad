@@ -69,8 +69,13 @@ const requestQueryView = async (rt: Connection,
     baseQuery: reltab.QueryExp,
     baseSchema: reltab.Schema,
     viewParams: ViewParams): Promise<QueryView> => {
+  const schemaCols = baseSchema.columns
+  const aggMap = {}
+  for (let cid of schemaCols) {
+    aggMap[cid] = viewParams.getAggFn(baseSchema, cid)
+  }
   const ptree = await aggtree.vpivot(rt, baseQuery, baseSchema, viewParams.vpivots,
-      viewParams.pivotLeafColumn, viewParams.showRoot, viewParams.sortKey)
+      viewParams.pivotLeafColumn, viewParams.showRoot, viewParams.sortKey, aggMap)
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths)
   const rowCount = await rt.rowCount(treeQuery)
   const ret = new QueryView({query: treeQuery, rowCount})

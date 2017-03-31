@@ -183,3 +183,8 @@ $ node_modules/.bin/build --mac
 
 ...but will need to work out publishing step to push releases to github.
   See README.md and publish.sh in electron-updater-example
+
+=====
+3/30/17:
+  - REALLY need to use column type to determine what agg fns to allow in UI;
+    avg/count/sum just don't make sense for string columns

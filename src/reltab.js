@@ -171,13 +171,11 @@ export const or = () : FilterExp => new FilterExp('OR')
 type QueryOp = 'table' | 'project' | 'filter' | 'groupBy' |
 'mapColumns' | 'mapColumnsByIndex' | 'concat' | 'sort' | 'extend' | 'join'
 
-export type AggStr = 'uniq' | 'sum' | 'avg'
+export type AggFn = 'avg' | 'count' | 'min' | 'max' | 'sum' | 'uniq' | 'null'
 
 // An AggColSpec is either a column name (for default aggregation based on column type
-// or a pair of column name and AggStr
-// TODO: type AggColSpec = string | [string, AggStr]
-// For now we'll only handle string types (default agg):
-export type AggColSpec = string
+// or a pair of column name and AggFn
+export type AggColSpec = string | [AggFn, string]
 
 type Scalar = ?number | ?string | ?boolean
 export type Row = {[columnId: string]: Scalar}
@@ -186,6 +184,16 @@ export type Row = {[columnId: string]: Scalar}
 // TODO: date, time, datetime, URL, ...
 export type ColumnType = 'integer' | 'real' | 'text' | 'boolean'
 export type ColumnMetadata = { displayName: string, type: ColumnType }
+
+const basicAggFns = ['min', 'max', 'uniq', 'null']
+const numericAggFns = ['avg', 'count', 'min', 'max', 'sum', 'uniq', 'null']
+
+export const aggFns = (ct: ColumnType): Array<AggFn> => {
+  if (ct === 'text') {
+    return basicAggFns
+  }
+  return numericAggFns
+}
 
 /*
  * A ColumnExtendVal is either a simple scalar or a function from a row object
@@ -221,8 +229,16 @@ export class QueryExp {
     return new QueryExp('project', [cols], [this])
   }
 
-  groupBy (cols: Array<string>, aggs: Array<AggColSpec>): QueryExp {
-    return new QueryExp('groupBy', [cols, aggs], [this])
+  /* We'd like to use Array<AggColSpec> as arg to groupBy but
+   * that causes Flow to get confused. We can probably fix
+   * by changing QueryExp to be a Disjoint Union type instead
+   * of current untyped args arrays (which predates adding Flow annotations):
+   * https://flow.org/en/docs/types/unions/#toc-disjoint-unions
+   */
+  groupBy (cols: Array<string>, aggs: Array<any>): QueryExp {
+    const gbArgs : Array<any> = [cols]
+    gbArgs.push(aggs)
+    return new QueryExp('groupBy', gbArgs, [this])
   }
 
   filter (fexp: FilterExp): QueryExp {
@@ -333,8 +349,8 @@ const projectGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
 }
 
 const groupByGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  // TODO: deal with non-default aggregations
-  const [ cols, aggCols ] = query.valArgs
+  const [ cols, aggSpecs ] = query.valArgs
+  const aggCols : Array<string> = aggSpecs.map(aggSpec => (typeof aggSpec === 'string') ? aggSpec : aggSpec[1])
   const inSchema = query.tableArgs[0].getSchema(tableMap)
   const rs = new Schema(cols.concat(aggCols), inSchema.columnMetadata)
 
@@ -645,21 +661,29 @@ const defaultAggs = {
   'null': 'uniq'
 }
 
+export const defaultAggFn = (colType: ColumnType): AggFn => defaultAggs[colType]
+
 const groupByQueryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
-  // TODO: deal with non-default aggregations
-  const [ cols, aggCols ] = query.valArgs
+  const [ cols, aggSpecs ] = query.valArgs
   const inSchema = query.tableArgs[0].getSchema(tableMap)
 
-  // Attempt to generate the uniq agg for SQL:
+  // emulate the uniq and null aggregation functions:
   const genUniq = (aggStr, qcid) => `case when min(${qcid})=max(${qcid}) then min(${qcid}) else null end`
-
+  const genNull = (aggStr, qcid) => 'null'
   const genAgg = (aggStr, qcid) => aggStr + '(' + qcid + ')'
 
   // Get the aggregation expressions for each aggCol:
-  const aggExprs = aggCols.map(cid => {
-    const colType = inSchema.columnType(cid)
-    const aggStr = defaultAggs[colType]
-    const aggFn = (aggStr === 'uniq') ? genUniq : genAgg
+  const aggExprs = aggSpecs.map(aggSpec => {
+    let aggStr
+    let cid
+    if (typeof aggSpec === 'string') {
+      cid = aggSpec
+      const colType = inSchema.columnType(cid)
+      aggStr = defaultAggs[colType]
+    } else {
+      [aggStr, cid] = aggSpec
+    }
+    const aggFn = (aggStr === 'uniq') ? genUniq : (aggStr === 'null') ? genNull : genAgg
     return { colExp: aggFn(aggStr, quoteCol(cid)), as: cid }
   })
 

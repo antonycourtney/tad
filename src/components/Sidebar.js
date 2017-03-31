@@ -6,6 +6,7 @@ import ColumnSelector from './ColumnSelector'
 import PivotOrderPanel from './PivotOrderPanel'
 import DisplayOrderPanel from './DisplayOrderPanel'
 import SortOrderPanel from './SortOrderPanel'
+import AggPanel from './AggPanel'
 import { Checkbox, Tabs2, Tab2 } from '@blueprintjs/core'
 
 export default class Sidebar extends React.Component {
@@ -41,6 +42,12 @@ export default class Sidebar extends React.Component {
         viewParams={viewParams}
         stateRefUpdater={this.props.stateRefUpdater} />
 
+    const aggPanel =
+          <AggPanel
+            schema={this.props.baseSchema}
+            viewParams={viewParams}
+            stateRefUpdater={this.props.stateRefUpdater} />
+
     return (
       <div className={'sidebar ' + expandClass}>
         <div className='sidebar-placeholder'>
@@ -59,7 +66,7 @@ export default class Sidebar extends React.Component {
                   className='pt-condensed'
                   checked={viewParams.showRoot}
                   onChange={() => actions.toggleShowRoot(refUpdater)}
-                  label='Show Global Totals as First Row'
+                  label='Show Global Aggregations as Top Row'
                 />
               </div>
             </div>
@@ -71,11 +78,12 @@ export default class Sidebar extends React.Component {
                 stateRefUpdater={this.props.stateRefUpdater} />
             </div>
             <div className='ui-block addl-col-props'>
-              <h6>Additional Column Properties</h6>
+              <h6>Additional Properties</h6>
               <Tabs2 animate={false} id='ColumnPropTabs' >
-                <Tab2 id='shownColumnsTab' title='Display Order' panel={displayPanel} />
+                <Tab2 id='shownColumnsTab' title='Order' panel={displayPanel} />
                 <Tab2 id='pivotColumnsTab' title='Pivot' panel={pivotPanel} />
                 <Tab2 id='sortColumnsTab' title='Sort' panel={sortPanel} />
+                <Tab2 id='aggColumnsTab' title='Agg Fns' panel={aggPanel} />
               </Tabs2>
             </div>
           </div>

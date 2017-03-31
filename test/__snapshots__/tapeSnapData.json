@@ -968,18 +968,6 @@
       ],
       "path set after closing one path": [
         [
-          "a"
-        ],
-        [
-          "a",
-          "b"
-        ],
-        [
-          "a",
-          "b",
-          "c"
-        ],
-        [
           "foo"
         ],
         [
@@ -990,9 +978,28 @@
           "foo",
           "bar",
           "blech"
+        ],
+        [
+          "a"
+        ],
+        [
+          "a",
+          "b"
+        ],
+        [
+          "a",
+          "b",
+          "c"
         ]
       ],
       "path set after closing two paths with common prefix": [
+        [
+          "foo"
+        ],
+        [
+          "foo",
+          "bar"
+        ],
         [
           "a"
         ],
