@@ -46,6 +46,7 @@ const MAXCOLWIDTH = 300
 
 // TODO: use real font metrics:
 const measureStringWidth = (s: string): number => 8 + (5.5 * s.length)
+const measureHeaderStringWidth = (s: string): number => 24 + (5.5 * s.length)
 
 // get column width for specific column:
 const getColWidth = (dataView: PagedDataView, cnm: string) => {
@@ -65,7 +66,8 @@ const getColWidth = (dataView: PagedDataView, cnm: string) => {
     colWidth = Math.min(MAXCOLWIDTH,
       Math.max(colWidth || MINCOLWIDTH, cellWidth))
   }
-  const headerStrWidth = measureStringWidth(dataView.schema.displayName(cnm))
+  const displayName = dataView.schema.displayName(cnm)
+  const headerStrWidth = measureHeaderStringWidth(displayName)
   colWidth = Math.min(MAXCOLWIDTH,
     Math.max(colWidth || MINCOLWIDTH, headerStrWidth))
   return colWidth
