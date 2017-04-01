@@ -43,6 +43,17 @@ export const toggleShown = (cid: string, updater: RefUpdater): void => {
   updater(vpUpdate(viewParams => viewParams.toggleShown(cid)))
 }
 
+export const toggleAllShown = (updater: RefUpdater): void => {
+  updater(s => {
+    const schema = s.baseSchema
+    const viewParams = s.viewState.viewParams
+    const allShown = schema.columns.length === viewParams.displayColumns.length
+    const nextDisplayColumns = allShown ? [] : schema.columns
+
+    return vpUpdate(viewParams => viewParams.set('displayColumns', nextDisplayColumns))(s)
+  })
+}
+
 export const togglePivot = (cid: string, updater: RefUpdater): void => {
   updater(vpUpdate(viewParams => viewParams.togglePivot(cid)))
 }

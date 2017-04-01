@@ -2,11 +2,11 @@
 
 import * as React from 'react'
 import * as actions from '../actions'
+import IndeterminateCheckbox from './IndeterminateCheckbox'
 
 export default class ColumnSelector extends React.Component {
   renderColumnRow (cid: string) {
-    const schema = this.props.schema
-    const viewParams = this.props.viewParams
+    const {schema, viewParams} = this.props
     const displayName = schema.displayName(cid)
     const isShown = viewParams.displayColumns.includes(cid)
     const isPivot = viewParams.vpivots.includes(cid)
@@ -46,10 +46,37 @@ export default class ColumnSelector extends React.Component {
     )
   }
 
+  // render row with checkboxes to select / deselect all items:
+  renderAllRow () {
+    const {schema, viewParams} = this.props
+    const allShown = schema.columns.length === viewParams.displayColumns.length
+    const someShown = (viewParams.displayColumns.length > 0)
+    const refUpdater = this.props.stateRefUpdater    
+    return (
+      <tr className='all-row'>
+        <td className='col-colName-all'>All Columns</td>
+        <td className='col-check'>
+          <IndeterminateCheckbox
+            className='colSel-check'
+            type='checkbox'
+            title='Show all columns'
+            ref={'showCheckbox-all'}
+            onChange={() => actions.toggleAllShown(refUpdater)}
+            checked={allShown}
+            indeterminate={!allShown && someShown}
+          />
+        </td>
+        <td className='col-check' />
+        <td className='col-check' />
+      </tr>
+    )
+  }
+
   render () {
     const schema = this.props.schema
     const columnIds = schema.columns.slice()
     columnIds.sort((cid1, cid2) => schema.displayName(cid1).localeCompare(schema.displayName(cid2)))
+    const allRow = this.renderAllRow()
     const columnRows = columnIds.map(cid => this.renderColumnRow(cid))
 
     return (
@@ -64,6 +91,9 @@ export default class ColumnSelector extends React.Component {
                 <th className='column-selector-th col-check'>Sort</th>
               </tr>
             </thead>
+            <tbody>
+              {allRow}
+            </tbody>
           </table>
         </div>
         <div className='column-selector-body'>

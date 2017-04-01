@@ -39,7 +39,7 @@ const aggRowFormatter = (viewParams: ViewParams, stateRefUpdater: any) => (schem
   const select = aggSelect(viewParams, schema, cid, stateRefUpdater)
   return ([
     <td key={cid} className='col-colName'>{displayName}</td>,
-    <td key={'aggFn-' + cid}>
+    <td key={'aggFn-' + cid} className='aggFn'>
       {select}
     </td>
   ])
