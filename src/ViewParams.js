@@ -79,6 +79,20 @@ export default class ViewParams extends Immutable.Record({
     return this.set('sortKey', nextArr)
   }
 
+  setSortDir (cid: string, asc: boolean): ViewParams {
+    const arr = this.get('sortKey')
+    const idx = arr.findIndex(entry => entry[0] === cid)
+    let nextArr
+    if (idx === -1) {
+      console.warn('viewParam.setSortDir: called for non-sort col ', cid)
+    } else {
+      // otherwise remove it:
+      nextArr = arr.slice()
+      nextArr[idx] = [cid, asc]
+    }
+    return this.set('sortKey', nextArr)
+  }
+
   openPath (path: Path): ViewParams {
     return this.set('openPaths', this.openPaths.open(path))
   }

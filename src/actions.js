@@ -62,6 +62,10 @@ export const toggleSort = (cid: string, updater: RefUpdater): void => {
   updater(vpUpdate(viewParams => viewParams.toggleSort(cid)))
 }
 
+export const setSortDir = (cid: string, asc: boolean, updater: RefUpdater): void => {
+  updater(vpUpdate(viewParams => viewParams.setSortDir(cid, asc)))
+}
+
 export const toggleShowRoot = (updater: RefUpdater): void => {
   updater(vpUpdate(viewParams => viewParams.set('showRoot', !(viewParams.showRoot))))
 }
