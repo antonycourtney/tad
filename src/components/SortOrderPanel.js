@@ -47,7 +47,7 @@ export default class SortOrderPanel extends React.Component {
           headerLabels={['Sort Dir']}
           items={viewParams.sortKey}
           rowFormatter={sortKeyRowFormatter(viewParams, stateRefUpdater)}
-          stateRefUpdater />
+          stateRefUpdater={stateRefUpdater} />
       </div>
     )
   }

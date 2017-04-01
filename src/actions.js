@@ -76,29 +76,41 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
     console.log('mismatched column list types, ignoring...')
     return
   }
-  // TODO: fix to deal with sort key column list:
-  if (dstProps.columnListType === constants.ColumnListType.SORT) {
-    console.error('drag and drop of sort key not supported')
-    return
-  }
   const fieldKey = dstProps.columnListType
+  const isSortKey = (fieldKey === constants.ColumnListType.SORT)
   dstProps.stateRefUpdater(vpUpdate(viewParams => {
     let colList = viewParams.get(fieldKey).slice()
-    // TODO: FIX when we add sort key support:
-    const srcColumnId = srcProps.rowData
-    const srcIndex = colList.indexOf(srcColumnId)
-    if (srcIndex === -1) {
-      return viewParams
+    if (isSortKey) {
+      const srcSortKey = srcProps.rowData
+      const srcIndex = colList.findIndex(k => (k[0] === srcSortKey[0]))
+      if (srcIndex === -1) {
+        return viewParams
+      }
+      // remove source from its current position:
+      colList.splice(srcIndex, 1)
+      const dstSortKey = dstProps.rowData
+      const dstIndex = colList.findIndex(k => (k[0] === dstSortKey[0]))
+      if (dstIndex === -1) {
+        return viewParams
+      }
+      colList.splice(dstIndex, 0, srcSortKey)
+      return viewParams.set(fieldKey, colList)
+    } else {
+      const srcColumnId = srcProps.rowData
+      const srcIndex = colList.indexOf(srcColumnId)
+      if (srcIndex === -1) {
+        return viewParams
+      }
+      // remove source from its current position:
+      colList.splice(srcIndex, 1)
+      const dstColumnId = dstProps.rowData
+      const dstIndex = colList.indexOf(dstColumnId)
+      if (dstIndex === -1) {
+        return viewParams
+      }
+      colList.splice(dstIndex, 0, srcColumnId)
+      return viewParams.set(fieldKey, colList)
     }
-    // remove source from its current position:
-    colList.splice(srcIndex, 1)
-    const dstColumnId = dstProps.rowData
-    const dstIndex = colList.indexOf(dstColumnId)
-    if (dstIndex === -1) {
-      return viewParams
-    }
-    colList.splice(dstIndex, 0, srcColumnId)
-    return viewParams.set(fieldKey, colList)
   }))
 }
 

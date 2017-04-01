@@ -60,7 +60,7 @@ export default class AggPanel extends React.Component {
           headerLabels={['Agg Fn']}
           items={columnIds}
           rowFormatter={aggRowFormatter(viewParams, stateRefUpdater)}
-          stateRefUpdater />
+          stateRefUpdater={stateRefUpdater} />
       </div>
     )
   }
