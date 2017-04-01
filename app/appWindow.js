@@ -13,7 +13,7 @@ let baseX = 0
 let baseY = 0
 const POS_OFFSET = 25 // pixel offset of new windows
 export const create = targetPath => {
-  const winProps = {width: 1150, height: 910}
+  const winProps = {width: 1280, height: 980}
   if (openCount > 0) {
     winProps.x = baseX + openCount * POS_OFFSET
     winProps.y = baseY + openCount * POS_OFFSET

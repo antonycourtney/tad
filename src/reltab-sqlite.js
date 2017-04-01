@@ -59,7 +59,6 @@ class SqliteContext {
       const t3 = process.hrtime(t2)
       const [t3s, t3ns] = t3
       console.info('time to run query: %ds %dms', t3s, t3ns / 1e6)
-      console.log('result of count query: ', rows)
       const ret = Number.parseInt(rows[0].rowCount)
       return ret
     })

@@ -51,7 +51,7 @@ export default class ColumnSelector extends React.Component {
     const {schema, viewParams} = this.props
     const allShown = schema.columns.length === viewParams.displayColumns.length
     const someShown = (viewParams.displayColumns.length > 0)
-    const refUpdater = this.props.stateRefUpdater    
+    const refUpdater = this.props.stateRefUpdater
     return (
       <tr className='all-row'>
         <td className='col-colName-all'>All Columns</td>
