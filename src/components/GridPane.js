@@ -237,6 +237,10 @@ export default class GridPane extends React.Component {
       this.grid.setColumns(gridCols)
       this.grid.setData(dataView)
     }
+    // update sort columns:
+    const viewParams = this.props.viewState.viewParams
+    const vpSortKey = viewParams.sortKey.map(([columnId, sortAsc]) => ({columnId, sortAsc}))
+    this.grid.setSortColumns(vpSortKey)
     this.grid.invalidateAllRows()
     this.grid.updateRowCount()
     this.grid.render()
