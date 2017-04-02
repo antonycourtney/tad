@@ -6,6 +6,8 @@ import PathTree from './PathTree'
 import type {Path} from './PathTree'  // eslint-disable-line
 import type {QueryExp} from './reltab'  // eslint-disable-line
 import * as reltab from './reltab' // eslint-disable-line
+import TextFormatOptions from './TextFormatOptions'
+import NumFormatOptions from './NumFormatOptions'
 
 /**
  * Immutable representation of user-configurable view parameters
@@ -14,6 +16,16 @@ import * as reltab from './reltab' // eslint-disable-line
 
 type AggMap = {[cid: string]: reltab.AggFn}
 
+type FormatsMap = {[cid: string]: any}
+
+// formatting defaults, keyed by column type:
+const FormatDefaults = Immutable.Record({
+  'text': new TextFormatOptions(),
+  'integer': new NumFormatOptions({decimalPlaces: 0}),
+  'real': new NumFormatOptions(),
+  'boolean': new NumFormatOptions({decimalPlaces: 0})  // for now...
+})
+
 export default class ViewParams extends Immutable.Record({
   showRoot: false,
   displayColumns: [],
@@ -21,7 +33,9 @@ export default class ViewParams extends Immutable.Record({
   pivotLeafColumn: null,
   sortKey: [],
   openPaths: PathTree,
-  aggMap: {}  // overrides of agg fns
+  aggMap: {}, // overrides of agg fns
+  defaultFormats: new FormatDefaults(),
+  columnFormats: {}
 }) {
   showRoot: boolean
   displayColumns: Array<string> // array of column ids to display, in order
@@ -30,6 +44,13 @@ export default class ViewParams extends Immutable.Record({
   sortKey: Array<[string, boolean]>
   openPaths: PathTree
   aggMap: AggMap
+  defaultFormats: {
+    'text': TextFormatOptions,
+    'integer': NumFormatOptions,
+    'real': NumFormatOptions,
+    'boolean': NumFormatOptions
+  }
+  columnFormats: FormatsMap
 
   // toggle element membership in array:
   toggleArrElem (propName: string, cid: string): ViewParams {
@@ -114,5 +135,20 @@ export default class ViewParams extends Immutable.Record({
     Object.assign(nextAggMap, this.aggMap)
     nextAggMap[cid] = cidAgg
     return this.set('aggMap', nextAggMap)
+  }
+
+  getColumnFormat (schema: reltab.Schema, cid: string): any {
+    let formatOpts = this.columnFormats[cid]
+    if (formatOpts == null) {
+      formatOpts = this.defaultFormats[schema.columnType(cid)]
+    }
+    return formatOpts
+  }
+
+  setColumnFormat (cid: string, opts: any) {
+    const nextFmts = {}
+    Object.assign(nextFmts, this.columnFormats)
+    nextFmts[cid] = opts
+    return this.set('columnFormats', nextFmts)
   }
 }

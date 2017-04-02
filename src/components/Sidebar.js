@@ -7,6 +7,7 @@ import PivotOrderPanel from './PivotOrderPanel'
 import DisplayOrderPanel from './DisplayOrderPanel'
 import SortOrderPanel from './SortOrderPanel'
 import AggPanel from './AggPanel'
+import FormatPanel from './FormatPanel'
 import { Checkbox, Tabs2, Tab2 } from '@blueprintjs/core'
 
 export default class Sidebar extends React.Component {
@@ -43,10 +44,16 @@ export default class Sidebar extends React.Component {
         stateRefUpdater={this.props.stateRefUpdater} />
 
     const aggPanel =
-          <AggPanel
-            schema={this.props.baseSchema}
-            viewParams={viewParams}
-            stateRefUpdater={this.props.stateRefUpdater} />
+      <AggPanel
+        schema={this.props.baseSchema}
+        viewParams={viewParams}
+        stateRefUpdater={this.props.stateRefUpdater} />
+
+    const formatPanel =
+      <FormatPanel
+        schema={this.props.baseSchema}
+        viewParams={viewParams}
+        stateRefUpdater={this.props.stateRefUpdater} />
 
     return (
       <div className={'sidebar ' + expandClass}>
@@ -83,7 +90,8 @@ export default class Sidebar extends React.Component {
                 <Tab2 id='shownColumnsTab' title='Order' panel={displayPanel} />
                 <Tab2 id='pivotColumnsTab' title='Pivot' panel={pivotPanel} />
                 <Tab2 id='sortColumnsTab' title='Sort' panel={sortPanel} />
-                <Tab2 id='aggColumnsTab' title='Agg Fns' panel={aggPanel} />
+                <Tab2 id='aggColumnsTab' title='Aggregations' panel={aggPanel} />
+                <Tab2 id='formatColumnsTab' title='Format' panel={formatPanel} />
               </Tabs2>
             </div>
           </div>

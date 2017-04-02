@@ -144,3 +144,11 @@ export const updateViewport = (top: number, bottom: number, updater: RefUpdater)
     .set('viewportTop', top)
     .set('viewportBottom', bottom)))
 }
+
+export const setDefaultFormatOptions = (colType: string, opts: any, updater: RefUpdater) => {
+  updater(vpUpdate(viewParams => viewParams.setIn(['defaultFormats', colType], opts)))
+}
+
+export const setColumnFormatOptions = (cid: string, opts: any, updater: RefUpdater) => {
+  updater(vpUpdate(viewParams => viewParams.setColumnFormat(cid, opts)))
+}
