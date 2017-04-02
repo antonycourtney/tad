@@ -6,7 +6,7 @@ import GridPane from './GridPane'
 import LoadingModal from './LoadingModal'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
-import { FocusStyleManager } from "@blueprintjs/core";
+import { FocusStyleManager } from '@blueprintjs/core'
 
 /**
  * top level application pane
@@ -14,7 +14,6 @@ import { FocusStyleManager } from "@blueprintjs/core";
 
 class AppPane extends React.Component {
   componentDidMount () {
-    console.log('AppPane.componentDidMount: tweaking focus mgr:')
     FocusStyleManager.onlyShowFocusOnTabs()
   }
 

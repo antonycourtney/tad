@@ -7,6 +7,7 @@ import * as reltab from '../reltab'
 import * as actions from '../actions'
 import LoadingModal from './LoadingModal'
 import PagedDataView from '../PagedDataView'
+import ViewParams from '../ViewParams'
 import * as util from '../util'
 
 const container = '#epGrid' // for now
@@ -96,7 +97,7 @@ function getInitialColWidthsMap (dataView: Object): ColWidthMap {
  *
  * Map should contain entries for all column ids
  */
-const mkSlickColMap = (schema: reltab.Schema, colWidths: ColWidthMap) => {
+const mkSlickColMap = (schema: reltab.Schema, viewParams: ViewParams, colWidths: ColWidthMap) => {
   let slickColMap = {}
 
   // hidden columns:
@@ -117,6 +118,8 @@ const mkSlickColMap = (schema: reltab.Schema, colWidths: ColWidthMap) => {
       ci.name = displayName
       ci.toolTip = displayName
       ci.sortable = true
+      const ff = viewParams.getColumnFormat(schema, colId).getFormatter()
+      ci.formatter = (row, cell, value, columnDef, item) => ff(value)
     }
     ci.width = colWidths[ colId ]
     slickColMap[ colId ] = ci
@@ -223,11 +226,12 @@ export default class GridPane extends React.Component {
    * update grid from dataView
    */
   updateGrid (dataView: any) {
+    const viewParams = this.props.viewState.viewParams
     // console.log('updateGrid: dataView: offset: ', dataView.getOffset(), 'length: ', dataView.getLength())
     if (!this.colWidthsMap) {
       this.colWidthsMap = getInitialColWidthsMap(dataView)
     }
-    this.slickColMap = mkSlickColMap(dataView.schema, this.colWidthsMap)
+    this.slickColMap = mkSlickColMap(dataView.schema, viewParams, this.colWidthsMap)
     const gridCols = this.getGridCols(dataView)
     if (!this.grid) {
       // console.log('updateGrid: initial update, creating grid...')
@@ -238,7 +242,6 @@ export default class GridPane extends React.Component {
       this.grid.setData(dataView)
     }
     // update sort columns:
-    const viewParams = this.props.viewState.viewParams
     const vpSortKey = viewParams.sortKey.map(([columnId, sortAsc]) => ({columnId, sortAsc}))
     this.grid.setSortColumns(vpSortKey)
     this.grid.invalidateAllRows()

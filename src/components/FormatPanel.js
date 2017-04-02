@@ -32,7 +32,6 @@ export default class FormatPanel extends React.Component {
   // render a select for columns of type state.colType:
   renderColumnSelect () {
     const schema = this.props.schema
-    console.log('renderColumnSelect: ', this.props, schema)
     const typeCols = schema.columns
     const colOpts = typeCols.map(cid => (
       <option key={'colSel-' + cid} value={cid}>{schema.displayName(cid)}</option>))
