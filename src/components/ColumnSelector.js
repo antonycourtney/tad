@@ -4,10 +4,15 @@ import * as React from 'react'
 import * as actions from '../actions'
 import IndeterminateCheckbox from './IndeterminateCheckbox'
 
+const shortenTypeName = (tn: string): string => {
+  return (tn === 'integer') ? 'int' : tn
+}
+
 export default class ColumnSelector extends React.Component {
   renderColumnRow (cid: string) {
     const {schema, viewParams} = this.props
     const displayName = schema.displayName(cid)
+    const colTypeName = shortenTypeName(schema.columnType(cid))
     const isShown = viewParams.displayColumns.includes(cid)
     const isPivot = viewParams.vpivots.includes(cid)
     const isSort = (viewParams.sortKey.findIndex(entry => entry[0] === cid) !== -1)
@@ -15,6 +20,7 @@ export default class ColumnSelector extends React.Component {
     return (
       <tr key={cid}>
         <td className='col-colName'>{displayName}</td>
+        <td className='col-colType'>{colTypeName}</td>
         <td className='col-check'>
           <input
             className='colSel-check'
@@ -55,6 +61,7 @@ export default class ColumnSelector extends React.Component {
     return (
       <tr className='all-row'>
         <td className='col-colName-all'>All Columns</td>
+        <td className='col-colType' />
         <td className='col-check'>
           <IndeterminateCheckbox
             className='colSel-check'
@@ -86,6 +93,7 @@ export default class ColumnSelector extends React.Component {
             <thead>
               <tr>
                 <th className='column-selector-th col-colName'>Column</th>
+                <th className='column-selector-th col-colType' />
                 <th className='column-selector-th col-check'>Show</th>
                 <th className='column-selector-th col-check'>Pivot</th>
                 <th className='column-selector-th col-check'>Sort</th>
