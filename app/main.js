@@ -85,38 +85,33 @@ const getRowCount = rtc => (queryStr, cb) => {
  *
  * invoked via electron remote
  */
-const mkInitMain = (options) => (path, cb) => {
+
+const initMainAsync = async (options, path) => {
   let md
-  try {
-    const hrProcStart = process.hrtime()
-    db.open(':memory:')
-      // .then(() => csvimport.importSqlite(path))
-      .then(() => csvimport.fastImport(path))
-      .then(importMd => {
-        const [es, ens] = process.hrtime(hrProcStart)
-        console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
-        md = importMd
-        let rtOptions = {}
-        if (options['show-queries']) {
-          rtOptions.showQueries = true
-        }
-        return reltabSqlite.init(db, md, rtOptions)
-      })
-      .then(rtc => {
-        console.log('completed reltab initalization.')
-        // Now let's place a function in global so it can be run via remote:
-        global.runQuery = runQuery(rtc)
-        global.getRowCount = getRowCount(rtc)
-        const mdStr = JSON.stringify(md, null, 2)
-        cb(null, mdStr)
-      })
-      .catch(err => {
-        cb(err, null)
-      })
-  } catch (err) {
-    console.error('Error during app initialization: ', err)
-    cb(err, null)
+  const hrProcStart = process.hrtime()
+  await db.open(':memory:')
+  // could also call: csvimport.importSqlite(path)
+  const importMd = await csvimport.fastImport(path)
+  const [es, ens] = process.hrtime(hrProcStart)
+  console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
+  md = importMd
+  let rtOptions = {}
+  if (options['show-queries']) {
+    rtOptions.showQueries = true
   }
+  const rtc = await reltabSqlite.init(db, md, rtOptions)
+  console.log('completed reltab initalization.')
+  // Now let's place a function in global so it can be run via remote:
+  global.runQuery = runQuery(rtc)
+  global.getRowCount = getRowCount(rtc)
+  const mdStr = JSON.stringify(md, null, 2)
+  return mdStr
+}
+
+const mkInitMain = (options) => (path, cb) => {
+  initMainAsync(options, path)
+    .then(mdStr => cb(null, mdStr))
+    .catch(err => cb(err, null))
 }
 
 // App initialization:

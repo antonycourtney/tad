@@ -127,6 +127,11 @@
       {
         "ext": "csv",
         "name": "Comma Separated Values",
+        "role": "Viewer"
+      },
+      {
+        "ext": "tad",
+        "name": "Tad Saved Workspace",
         "role": "Editor"
       }
     ],

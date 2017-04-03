@@ -122,6 +122,34 @@ const genColumnIds = (headerRow: Array<string>): Array<string> => {
   return columnIds
 }
 
+let uniqMap = {}
+
+/* add a numeric _N suffix to an identifer to make it unique */
+const uniquify = (src: string): string => {
+  let entry = uniqMap[src]
+  if (entry === undefined) {
+    uniqMap[src] = 1
+    return src  // no suffix needed
+  }
+  const ret = src + '_' + entry.toString()
+  uniqMap[src] = ++entry
+  return ret
+}
+
+/* map to alphanumeric */
+const mapIdent = (src: string): string => {
+  const ret = src.replace(/[^a-z0-9_]/gi, '_')
+  return ret
+}
+
+/* generate a SQL table name from pathname */
+const genTableName = (pathname: string): string => {
+  const extName = path.extname(pathname)
+  const baseName = path.basename(pathname, extName)
+  const tableName = uniquify(mapIdent(baseName))
+  return tableName
+}
+
 /* scanTypes will read a CSV file and return a Promise<FileMetadata> */
 const metaScan = (pathname: string): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
@@ -135,7 +163,7 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
     // extract table name from file path:
     const extName = path.extname(pathname)
     const extension = extName.slice(1)
-    const tableName = path.basename(pathname, extName)
+    const tableName = genTableName(pathname)
 
     let csvOptions = {}
     if (extension === 'tsv') {
@@ -354,13 +382,17 @@ const BUFSIZE = 1024
 const readHeaderRow = (path: string): Promise<Array<string>> => {
   return new Promise((resolve, reject) => {
     fs.open(path, 'r', 0, (err, fd) => {
+      console.log('readHeaderRow: fs.open returned: ', err, fd)
       if (err) {
+        console.error('readHeaderRow: rejecting with error: ', err)
         reject(err)
+        return
       }
       var buf = Buffer.alloc(BUFSIZE)
       fs.read(fd, buf, 0, BUFSIZE, null, (err, bytesRead, buf) => {
         if (err) {
           reject(err)
+          return
         }
         var eolIndex = buf.indexOf('\n')
         if (eolIndex < 0) {
@@ -368,6 +400,7 @@ const readHeaderRow = (path: string): Promise<Array<string>> => {
           'This may be due to saving a CSV file from an older version of Excel on OS/X.\n\n' +
           'Possible fix: Use mac2unix utility from dos2unix homebrew package to repair file.'
           reject(new Error(msg))
+          return
         }
         var s = buf.toString('utf8', 0, eolIndex)
         csv
@@ -376,6 +409,7 @@ const readHeaderRow = (path: string): Promise<Array<string>> => {
             fs.close(fd, err => {
               if (err) {
                 reject(err)
+                return
               }
               resolve(data)
             })
@@ -391,7 +425,8 @@ export const fastImport = (pathname: string): Promise<FileMetadata> => {
     readHeaderRow(pathname)
       .then(columnNames => {
         const columnIds = genColumnIds(columnNames)
-        db.driver.import(pathname, 'staging', {columnIds}, (err, res) => {
+        const tableName = genTableName(pathname)
+        db.driver.import(pathname, tableName, {columnIds}, (err, res) => {
           const [es, ens] = process.hrtime(importStart)
           if (err) {
             reject(err)
