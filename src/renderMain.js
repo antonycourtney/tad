@@ -19,7 +19,7 @@ import OneRef from 'oneref'
 import AppPane from './components/AppPane'
 import PivotRequester from './PivotRequester'
 import AppState from './AppState'
-
+import ViewParams from './ViewParams'
 import * as reltab from './reltab' // eslint-disable-line
 import * as reltabElectron from './reltab-electron'
 import * as actions from './actions'
@@ -28,6 +28,8 @@ const remote = require('electron').remote
 
 const remoteInitMain = remote.getGlobal('initMain')
 const remoteErrorDialog = remote.getGlobal('errorDialog')
+
+const ipcRenderer = require('electron').ipcRenderer
 
 const initMainProcess = (targetPath): Promise<reltab.FileMetadata> => {
   return new Promise((resolve, reject) => {
@@ -44,10 +46,20 @@ const initMainProcess = (targetPath): Promise<reltab.FileMetadata> => {
 }
 
 const init = () => {
-  const targetPath = remote.getCurrentWindow().targetPath
-  console.log('renderMain: target path: ', targetPath)
+  const openParams = remote.getCurrentWindow().openParams
+  let targetPath
+  let viewParams = null
+  if (openParams.fileType === 'csv') {
+    targetPath = openParams.targetPath
+  } else if (openParams.fileType === 'tad') {
+    const parsedFileState = JSON.parse(openParams.fileContents)
+    // This would be the right place to validate / migrate tadFileFormatVersion
+    const savedFileState = parsedFileState.contents
+    targetPath = savedFileState.targetPath
+    viewParams = ViewParams.deserialize(savedFileState.viewParams)
+  }
 
-  const appState = new AppState()
+  const appState = new AppState({ targetPath })
   const stateRef = new OneRef.Ref(appState)
   const updater = OneRef.refUpdater(stateRef)
 
@@ -67,9 +79,20 @@ const init = () => {
       // module local to keep alive:
       var pivotRequester: ?PivotRequester = null  // eslint-disable-line
 
-      actions.initAppState(rtc, md.tableName, baseQuery, updater)
+      actions.initAppState(rtc, md.tableName, baseQuery, viewParams, updater)
         .then(() => {
           pivotRequester = new PivotRequester(stateRef) // eslint-disable-line
+
+          ipcRenderer.on('request-serialize-app-state', (event, req) => {
+            console.log('got request-serialize-app-state: ', req)
+            const { requestId } = req
+            const curState = stateRef.getValue()
+            const viewParamsJS = curState.viewState.viewParams.toJS()
+            const serState = { targetPath, viewParams: viewParamsJS }
+            console.log('current viewParams: ', viewParamsJS)
+            ipcRenderer.send('response-serialize-app-state',
+              { requestId, contents: serState })
+          })
         })
     })
     .catch(err => {

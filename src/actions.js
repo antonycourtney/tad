@@ -13,13 +13,21 @@ type RefUpdater = (f: ((s: AppState) => AppState)) => void
 
 // called after main process initialization completes:
 export const initAppState = (rtc: reltab.Connection,
-    windowTitle: string, baseQuery: reltab.QueryExp, updater: RefUpdater): Promise<void> => {
+    windowTitle: string,
+    baseQuery: reltab.QueryExp,
+    initialViewParams: ?ViewParams,
+    updater: RefUpdater): Promise<void> => {
   return aggtree.getBaseSchema(rtc, baseQuery)
     .then(baseSchema => {
       // start off with all columns displayed:
       const displayColumns = baseSchema.columns.slice()
-      const openPaths = new PathTree()
-      const viewParams = new ViewParams({displayColumns, openPaths})
+      let viewParams
+      if (initialViewParams != null) {
+        viewParams = initialViewParams
+      } else {
+        const openPaths = new PathTree()
+        viewParams = new ViewParams({displayColumns, openPaths})
+      }
       const viewState = new ViewState({viewParams})
       // We explicitly set rather than merge() because merge
       // will attempt to deep convert JS objects to Immutables

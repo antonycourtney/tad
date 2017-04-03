@@ -13,6 +13,7 @@ export default class AppState extends Immutable.Record({
   initialized: false,
   windowTitle: '',
   rtc: null,
+  targetPath: '', // path to CSV file
   baseQuery: null,
   baseSchema: null,
   viewState: new ViewState()
@@ -21,6 +22,7 @@ export default class AppState extends Immutable.Record({
   initialized: boolean    // Has main process initialization completed?
   windowTitle: string     // Usually just the table name or file name
   rtc : reltab.Connection
+  targetPath: string
   baseQuery: reltab.QueryExp
   baseSchema: reltab.Schema   // always in sync with baseQuery
   viewState: ViewState

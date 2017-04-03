@@ -19,12 +19,22 @@ type AggMap = {[cid: string]: reltab.AggFn}
 type FormatsMap = {[cid: string]: any}
 
 // formatting defaults, keyed by column type:
-const FormatDefaults = Immutable.Record({
+class FormatDefaults extends Immutable.Record({
   'text': new TextFormatOptions(),
   'integer': new NumFormatOptions({decimalPlaces: 0}),
   'real': new NumFormatOptions(),
   'boolean': new NumFormatOptions({decimalPlaces: 0})  // for now...
-})
+}) {
+  static deserialize (jsObj) {
+    const initMap = {
+      'text': new TextFormatOptions(jsObj['text']),
+      'integer': new NumFormatOptions(jsObj['integer']),
+      'real': new NumFormatOptions(jsObj['real']),
+      'boolean': new NumFormatOptions(jsObj['boolean'])
+    }
+    return new FormatDefaults(initMap)
+  }
+}
 
 export default class ViewParams extends Immutable.Record({
   showRoot: false,
@@ -150,5 +160,17 @@ export default class ViewParams extends Immutable.Record({
     Object.assign(nextFmts, this.columnFormats)
     nextFmts[cid] = opts
     return this.set('columnFormats', nextFmts)
+  }
+
+  static deserialize (js) {
+    const { defaultFormats, openPaths, ...rest } = js
+    const defaultFormatsObj = FormatDefaults.deserialize(defaultFormats)
+    const openPathsObj = new PathTree(openPaths._rep)
+    const baseVP = new ViewParams(rest)
+    const retVP =
+      baseVP
+        .set('defaultFormats', defaultFormatsObj)
+        .set('openPaths', openPathsObj)
+    return retVP
   }
 }

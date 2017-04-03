@@ -31,6 +31,14 @@ export const createMenu = () => {
       click: (item, focusedWindow) => {
         appWindow.openDialog()
       }
+    },
+    separatorMenuItem,
+    {
+      label: 'Save As...',
+      accelerator: 'Shift+CmdOrCtrl+S',
+      click: (item, focusedWindow) => {
+        appWindow.saveAsDialog()
+      }
     }
   ]
   const debugSubmenu = [

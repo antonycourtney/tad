@@ -16,6 +16,7 @@ const path = require('path')
 
 const pkgInfo = require('../package.json')
 
+require('babel-polyfill')
 require('console.table')
 
 // Can insert delay in promise chain by:
@@ -293,12 +294,10 @@ const openWindow = firstInstance => (instanceArgv, workingDirectory) => {
           // const startMsg = `pid ${process.pid}: Tad started, version: ${app.getVersion()}`
           // console.log(startMsg)
           // dialog.showMessageBox({ message: startMsg })
-          /*
           if (openFilePath) {
             const openMsg = `pid ${process.pid}: Got open-file for ${openFilePath}`
             dialog.showMessageBox({ message: openMsg })
           }
-          */
           appInit(options)
           if (targetPath) {
             appWindow.create(targetPath)
