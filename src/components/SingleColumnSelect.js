@@ -26,7 +26,7 @@ export default class SingleColumnSelect extends React.Component {
     const selVal = (propVal === null) ? '__none' : propVal
 
     return (
-      <div>
+      <div className='pivot-leaf-select'>
         <label>Pivot Tree Leaf Level:</label>
         <select className='scs-select'
           disabled={this.props.disabled}
