@@ -220,8 +220,8 @@ const getTargetPath = (options, filePath) => {
 let openFilePath = null
 
 // callback for app.makeSingleInstance:
-const openWindow = firstInstance => (instanceArgv, workingDirectory) => {
-  log.warn('openWindow: ', firstInstance, instanceArgv, workingDirectory)
+const initApp = firstInstance => (instanceArgv, workingDirectory) => {
+  log.warn('initApp: ', firstInstance, instanceArgv, workingDirectory)
   try {
     const argv = instanceArgv.slice(1)
     // deal with weird difference between starting from npm and starting
@@ -245,18 +245,25 @@ const openWindow = firstInstance => (instanceArgv, workingDirectory) => {
     } else {
       const targetPath = getTargetPath(options, options.csvfile)
 
+      // set at end of ready event handler:
+      let isReady = false
+
       // This method will be called when Electron has finished
       // initialization and is ready to create browser windows.
       // Some APIs can only be used after this event occurs.
       if (firstInstance) {
         const handleOpen = (event, filePath) => {
           console.log('handleOpen called!')
-          log.warn('got open-file event: ', event, filePath)
+          log.warn('got open-file event for: ', filePath)
           event.preventDefault()
           const targetPath = getTargetPath(options, filePath)
-          // appWindow.create(targetPath)
-          log.warn('open-file: opened ' + targetPath)
-          openFilePath = targetPath
+          if (isReady) {
+            log.warn('open-file: app is ready, opening in new window')
+            appWindow.create(targetPath)
+          } else {
+            openFilePath = targetPath
+            log.warn('open-file: set openFilePath ' + targetPath)
+          }
         }
 
         app.on('open-file', handleOpen)
@@ -287,22 +294,27 @@ const openWindow = firstInstance => (instanceArgv, workingDirectory) => {
           // const startMsg = `pid ${process.pid}: Tad started, version: ${app.getVersion()}`
           // console.log(startMsg)
           // dialog.showMessageBox({ message: startMsg })
-          if (openFilePath) {
-            const openMsg = `pid ${process.pid}: Got open-file for ${openFilePath}`
-            dialog.showMessageBox({ message: openMsg })
-          }
           appInit(options)
           if (targetPath) {
             appWindow.create(targetPath)
-          } else {
-            appWindow.openDialog()
           }
+          if (openFilePath) {
+            const openMsg = `pid ${process.pid}: Got open-file for ${openFilePath}`
+            log.warn(openMsg)
+            appWindow.create(openFilePath)
+            // dialog.showMessageBox({ message: openMsg })
+          } else {
+            if (!targetPath) {
+              appWindow.openDialog()
+            }
+          }
+          isReady = true
         })
       } else {
         if (targetPath) {
           appWindow.create(targetPath)
         } else {
-          log.warn('openWindow called with no targetPath')
+          log.warn('initApp called with no targetPath')
           app.focus()
           // appWindow.openDialog()
         }
@@ -320,13 +332,13 @@ const openWindow = firstInstance => (instanceArgv, workingDirectory) => {
 const main = () => {
   log.warn('Tad started, argv: ', process.argv)
   const shouldQuit = false
-//  const shouldQuit = app.makeSingleInstance(openWindow(false))
+//  const shouldQuit = app.makeSingleInstance(initApp(false))
 //  log.warn('After call to makeSingleInstance: ', shouldQuit)
   if (shouldQuit) {
     app.quit()
   } else {
     // first instance:
-    openWindow(true)(process.argv, null)
+    initApp(true)(process.argv, null)
   }
 }
 
