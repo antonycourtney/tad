@@ -1,4 +1,3 @@
-const db = require('sqlite')
 const reltab = require('../src/reltab')
 const commandLineArgs = require('command-line-args')
 const getUsage = require('command-line-usage')
@@ -87,19 +86,18 @@ const getRowCount = rtc => (queryStr, cb) => {
  */
 
 const initMainAsync = async (options, path) => {
-  let md
   const hrProcStart = process.hrtime()
-  await db.open(':memory:')
-  // could also call: csvimport.importSqlite(path)
-  const importMd = await csvimport.fastImport(path)
-  const [es, ens] = process.hrtime(hrProcStart)
-  console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
-  md = importMd
   let rtOptions = {}
   if (options['show-queries']) {
     rtOptions.showQueries = true
   }
-  const rtc = await reltabSqlite.init(db, md, rtOptions)
+  const rtc = await reltabSqlite.getContext(rtOptions)
+
+  // could also call: csvimport.importSqlite(path)
+  const md = await csvimport.fastImport(path)
+  rtc.addImportedTable(md)
+  const [es, ens] = process.hrtime(hrProcStart)
+  console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
   console.log('completed reltab initalization.')
   // Now let's place a function in global so it can be run via remote:
   global.runQuery = runQuery(rtc)

@@ -1,5 +1,6 @@
 /* @flow */
 
+import sqlite from 'sqlite'
 import * as reltab from './reltab'
 import {  TableRep, Schema, RelExp, FilterExp, QueryExp } from './reltab'  // eslint-disable-line
 import type { FileMetadata, TableInfoMap, ValExp, Row, AggColSpec, SubExp, ColumnMetaMap, ColumnMapInfo, ColumnExtendVal, Connection } from './reltab' // eslint-disable-line
@@ -9,10 +10,14 @@ class SqliteContext {
   tableMap: TableInfoMap
   showQueries: boolean
 
-  constructor (db: any, tableMap: TableInfoMap, options: Object) {
+  constructor (db: any, options: Object) {
     this.db = db
-    this.tableMap = tableMap
+    this.tableMap = {}
     this.showQueries = (options && options.showQueries)
+  }
+
+  addImportedTable (md: FileMetadata) {
+    this.tableMap[md.tableName] = reltab.mkTableInfo(md)
   }
 
   evalQuery (query: QueryExp, offset: number = -1, limit: number = -1): Promise<TableRep> {
@@ -65,13 +70,18 @@ class SqliteContext {
   }
 }
 
-export const init = (db: any, md: FileMetadata,
-    options: Object = {}): Promise<Connection> => {
-  return new Promise((resolve, reject) => {
-    let tm = {}
-    tm[md.tableName] = reltab.mkTableInfo(md)
-    const ctx = new SqliteContext(db, tm, options)
-    global.rtc = ctx
-    resolve(ctx)
-  })
+const init = async (options: Object = {}): Connection => {
+  await sqlite.open(':memory:')
+  const ctx = new SqliteContext(sqlite, options)
+  return ctx
+}
+
+// get (singleton) connection to sqlite:
+let ctxPromise: ?Promise<Connection> = null
+
+export const getContext = (options: Object = {}): Promise<Connection> => {
+  if (!ctxPromise) {
+    ctxPromise = init(options)
+  }
+  return ctxPromise
 }

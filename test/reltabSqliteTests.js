@@ -18,18 +18,19 @@ const q1 = reltab.tableQuery('barttest')
 var tcoeSum
 
 const sqliteTestSetup = (htest) => {
-  htest('sqlite test setup', t => {
-    const showQueries = global.showQueries
-    db.open(':memory:')
-      .then(() => csvimport.importSqlite(testPath))
-      .then(md => reltabSqlite.init(db, md, {showQueries}))
-      .then(rtc => {
-        sharedRtc = rtc
-        console.log('set rtc: ', sharedRtc)
-        t.ok(true, 'setup and import complete')
-        t.end()
-      })
-      .catch(err => console.error('sqliteTestSetup failure: ', err, err.stack))
+  htest('sqlite test setup', async (t) => {
+    try {
+      const showQueries = global.showQueries
+      const rtc = await reltabSqlite.getContext({showQueries})
+      const md = await csvimport.importSqlite(testPath)
+      rtc.addImportedTable(md)
+      sharedRtc = rtc
+      console.log('set rtc: ', sharedRtc)
+      t.ok(true, 'setup and import complete')
+      t.end()
+    } catch (err) {
+      console.error('sqliteTestSetup failure: ', err, err.stack)
+    }
   })
 }
 
