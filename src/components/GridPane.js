@@ -110,8 +110,13 @@ const mkSlickColMap = (schema: reltab.Schema, viewParams: ViewParams, colWidths:
     }
     let ci: any = { id: colId, field: colId, cssClass: '', name: '', formatter: null }
     if (colId === '_pivot') {
+      const pivotNames = viewParams.vpivots.map(cid => schema.displayName(cid))
+      const leafCid = viewParams.pivotLeafColumn
+      let leafPivotStr = leafCid ? (' > ' + schema.displayName(leafCid)) : ''
+      const pivotDisplayName = 'Pivot: ' + pivotNames.join(' > ') + leafPivotStr
       ci.cssClass = 'pivot-column'
-      ci.name = ''
+      ci.name = pivotDisplayName
+      ci.toolTip = pivotDisplayName
       ci.formatter = groupCellFormatter
     } else {
       var displayName = cmd.displayName || colId
