@@ -24,7 +24,10 @@ class AppPane extends React.Component {
    * Attempt to scroll column into view on click in column selector
    *
    * Doesn't actually seem to work reliably in practice; seems like a
-   * bug in SlickGrid.
+   * bug in SlickGrid, so is turned off.
+   *
+   * add  onColumnClick={cid => this.handleColumnClick(cid)} to
+   * Sidebar to re-enable.
    */
   handleColumnClick (cid: string) {
     if (this.grid) {
@@ -50,7 +53,6 @@ class AppPane extends React.Component {
       mainContents = (
         <div className='container-fluid full-height main-container'>
           <Sidebar
-            onColumnClick={cid => this.handleColumnClick(cid)}
             baseSchema={appState.baseSchema}
             viewParams={viewParams}
             stateRefUpdater={this.props.stateRefUpdater} />
