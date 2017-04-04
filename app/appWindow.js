@@ -31,7 +31,12 @@ const encodeOpenParams = (targetPath: string): Object => {
 }
 
 export const create = targetPath => {
-  const winProps = {width: 1280, height: 980}
+  const winProps = {
+    width: 1280,
+    height: 980,
+    // titleBarStyle: 'hidden'
+    title: 'tad - foo.csv'
+  }
   if (openCount > 0) {
     winProps.x = baseX + openCount * POS_OFFSET
     winProps.y = baseY + openCount * POS_OFFSET
