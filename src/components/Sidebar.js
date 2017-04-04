@@ -90,6 +90,7 @@ export default class Sidebar extends React.Component {
             <div className='ui-block'>
               <h6>Columns</h6>
               <ColumnSelector
+                onColumnClick={this.props.onColumnClick}
                 schema={this.props.baseSchema}
                 viewParams={viewParams}
                 stateRefUpdater={this.props.stateRefUpdater} />

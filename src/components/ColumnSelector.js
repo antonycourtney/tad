@@ -8,7 +8,13 @@ const shortenTypeName = (tn: string): string => {
   return (tn === 'integer') ? 'int' : tn
 }
 
-export default class ColumnSelector extends React.Component {
+export default class ColumnSelector extends React.PureComponent {
+  handleRowClick (cid: string) {
+    if (this.props.onColumnClick) {
+      this.props.onColumnClick(cid)
+    }
+  }
+
   renderColumnRow (cid: string) {
     const {schema, viewParams} = this.props
     const displayName = schema.displayName(cid)
@@ -19,7 +25,9 @@ export default class ColumnSelector extends React.Component {
     const refUpdater = this.props.stateRefUpdater
     return (
       <tr key={cid}>
-        <td className='col-colName'>{displayName}</td>
+        <td className='col-colName' onClick={e => this.handleRowClick(cid)}>
+          {displayName}
+        </td>
         <td className='col-colType'>{colTypeName}</td>
         <td className='col-check'>
           <input
@@ -59,7 +67,7 @@ export default class ColumnSelector extends React.Component {
     const someShown = (viewParams.displayColumns.length > 0)
     const refUpdater = this.props.stateRefUpdater
     return (
-      <tr className='all-row'>
+      <tr className='all-row' >
         <td className='col-colName-all'>All Columns</td>
         <td className='col-colType' />
         <td className='col-check'>

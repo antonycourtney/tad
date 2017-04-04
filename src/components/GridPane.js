@@ -219,6 +219,10 @@ export default class GridPane extends React.Component {
 
     // load the first page
     this.grid.onViewportChanged.notify()
+
+    if (this.props.onSlickGridCreated) {
+      this.props.onSlickGridCreated(this.grid)
+    }
   }
 
   updateColWidth (dataView: any, colId: string) {
