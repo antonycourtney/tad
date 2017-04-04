@@ -90,8 +90,6 @@ const getRowCount = rtc => (queryStr, cb) => {
  * srcfile (optional) -- path we are opening from
  */
 const initMainAsync = async (options, pathname, srcfile) => {
-  console.log('initMainAsync: options: ', options)
-  const hrProcStart = process.hrtime()
   let rtOptions = {}
   if (options['show-queries']) {
     rtOptions.showQueries = true
@@ -126,9 +124,6 @@ const initMainAsync = async (options, pathname, srcfile) => {
   // could also call: csvimport.importSqlite(pathname)
   const md = await csvimport.fastImport(pathname)
   rtc.addImportedTable(md)
-  const [es, ens] = process.hrtime(hrProcStart)
-  console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
-  console.log('completed reltab initalization.')
   // Now let's place a function in global so it can be run via remote:
   global.runQuery = runQuery(rtc)
   global.getRowCount = getRowCount(rtc)
@@ -252,7 +247,6 @@ let openFilePath = null
 
 // callback for app.makeSingleInstance:
 const initApp = firstInstance => (instanceArgv, workingDirectory) => {
-  log.warn('initApp: ', firstInstance, instanceArgv, workingDirectory)
   try {
     const argv = instanceArgv.slice(1)
     // deal with weird difference between starting from npm and starting

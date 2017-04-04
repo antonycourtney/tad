@@ -382,7 +382,6 @@ const BUFSIZE = 1024
 const readHeaderRow = (path: string): Promise<Array<string>> => {
   return new Promise((resolve, reject) => {
     fs.open(path, 'r', 0, (err, fd) => {
-      console.log('readHeaderRow: fs.open returned: ', err, fd)
       if (err) {
         console.error('readHeaderRow: rejecting with error: ', err)
         reject(err)
@@ -433,7 +432,7 @@ export const fastImport = (pathname: string): Promise<FileMetadata> => {
             return
           }
           console.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
-          console.log('import info: ', res)
+          // console.log('import info: ', res)
           const fileMetadata = {
             columnIds: res.columnIds,
             columnNames: columnNames,
