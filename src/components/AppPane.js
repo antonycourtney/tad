@@ -27,22 +27,15 @@ class AppPane extends React.Component {
       const viewState = appState.viewState
       const viewParams = viewState.viewParams
       mainContents = (
-        <div className='container-fluid full-height'>
-          <nav id='titlebar' className='pt-navbar'>
-            <div className='pt-navbar-group pt-align-right'>
-              <div className='pt-navbar-heading'>{fileBaseName}</div>
-            </div>
-          </nav>
-          <div className='container-fluid full-height main-container'>
-            <Sidebar
-              baseSchema={appState.baseSchema}
-              viewParams={viewParams}
-              stateRefUpdater={this.props.stateRefUpdater} />
-            <GridPane
-              appState={appState}
-              viewState={viewState}
-              stateRefUpdater={this.props.stateRefUpdater} />
-          </div>
+        <div className='container-fluid full-height main-container'>
+          <Sidebar
+            baseSchema={appState.baseSchema}
+            viewParams={viewParams}
+            stateRefUpdater={this.props.stateRefUpdater} />
+          <GridPane
+            appState={appState}
+            viewState={viewState}
+            stateRefUpdater={this.props.stateRefUpdater} />
         </div>
       )
     } else {
