@@ -333,7 +333,7 @@ const aggTreeTest0 = (htest) => {
           util.logTable(res)
 
           // const openPaths = {'Executive Management': {'General Manager': {}}, 'Safety': {}}
-          const openPaths = new PathTree({'Executive Management': {}})
+          const openPaths = new PathTree({'"Executive Management"': {}})
           const q4 = tree0.getTreeQuery(openPaths)
           return rtc.evalQuery(q4)
         })
@@ -453,7 +453,7 @@ const asyncAggTreeSortTest = (htest) => {
     console.log('level 2 join result:')
     util.logTable(jres2, {maxRows: 25})
 
-    const openPaths = new PathTree({'Executive Management': {'General Manager': {}}, 'Safety': {}})
+    const openPaths = new PathTree({'"Executive Management"': {'"General Manager"': {}}, '"Safety"': {}})
     // const openPaths = {'Executive Management': {}}
     const q4 = tree0.getTreeQuery(openPaths)
     const res4 = await rtc.evalQuery(q4)
@@ -499,7 +499,7 @@ const basicPivotSortTest = async (t, htest) => {
       [['Title', true]])
   console.log('vpivot initial promise resolved...')
 
-  const openPaths = new PathTree({'Legal & Paralegal': {}})
+  const openPaths = new PathTree({'"Legal & Paralegal"': {}})
 
   const stq = tree0.getSortedTreeQuery(openPaths)
   const sres = await rtc.evalQuery(stq)
@@ -534,7 +534,7 @@ const descPivotSortTest = async (t, htest) => {
   console.log('baseRes:')
   util.logTable(baseRes)
 
-  const openPaths = new PathTree({'Legal & Paralegal': {}})
+  const openPaths = new PathTree({'"Legal & Paralegal"': {}})
 
   const stq = tree0.getSortedTreeQuery(openPaths)
   const sres = await rtc.evalQuery(stq)
@@ -560,7 +560,7 @@ const multiPivotSingleSortTest = async (t, htest) => {
       [['Title', true]])
   console.log('vpivot initial promise resolved...')
 
-  const openPaths = new PathTree({'Legal & Paralegal': {}})
+  const openPaths = new PathTree({'"Legal & Paralegal"': {}})
 
   const stq = tree0.getSortedTreeQuery(openPaths)
   const sres = await rtc.evalQuery(stq)
@@ -583,7 +583,7 @@ const queryGenPerfTest = async (t) => {
       [['Title', true]])
   console.log('vpivot initial promise resolved...')
 
-  const openPaths = new PathTree({'Executive Management': {'General Manager': {}}, 'Safety': {}})
+  const openPaths = new PathTree({'"Executive Management"': {'"General Manager"': {}}, '"Safety"': {}})
 
   const stq = tree0.getSortedTreeQuery(openPaths)
 

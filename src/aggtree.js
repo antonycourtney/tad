@@ -17,7 +17,10 @@ const ENCPATHSEP = '%23'
  *  We'll do this much simpler string encoding that escapes % chars and PATHSEP.
  *  Can still be decoded with decodeURIComponent.
  */
-const simpleStringEncode = (str: string): string => {
+const simpleStringEncode = (str: ?string): ?string => {
+  if (str == null) {
+    return null
+  }
   return str.replace('%', '%25').replace(PATHSEP, ENCPATHSEP)
 }
 
@@ -95,7 +98,13 @@ export class VPivotTree {
     if (path.length > 0) {
       var pred = reltab.and()
       for (var i = 0; i < path.length; i++) {
-        pred = pred.eq(col(this.pivotColumns[i]), constVal(path[i]))
+        let pathElem = path[i]
+        let pivotColExp = col(this.pivotColumns[i])
+        if (pathElem == null) {
+          pred = pred.isNull(pivotColExp)
+        } else {
+          pred = pred.eq(pivotColExp, constVal(pathElem))
+        }
       }
       pathQuery = pathQuery.filter(pred)
     }
@@ -141,13 +150,17 @@ export class VPivotTree {
     for (let i = 0; i < this.pivotColumns.length; i++) {
       let pathElemExp = null
       if (i < path.length) {
-        pathElemExp = `'${path[i]}'`
+        let pathElem = path[i]
+        if (pathElem == null) {
+          pathElemExp = 'null'
+        } else {
+          pathElemExp = `${reltab.sqlEscapeString(pathElem)}`
+        }
       } else if (i === path.length) {
-        pathElemExp = '"_pivot"'
+        pathElemExp = '"_pivot"'  // N.B. Not a literal; SQL expression referring to _pivot column
       }
 
-      pathQuery = pathQuery.extend('_path' + i,
-            {type: 'text'}, pathElemExp)
+      pathQuery = pathQuery.extend('_path' + i, {type: 'text'}, pathElemExp)
     }
     // TODO: Should we optionally also insert _childCount and _leafCount ?
     // _childCount would count next level of groupBy,

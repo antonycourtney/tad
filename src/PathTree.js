@@ -10,27 +10,32 @@ import * as _ from 'lodash'
  *    'Executive Management'/'General Manager'
  *     'Executive Management'/'Safety'
  */
-export type Path = Array<string>
+export type Path = Array<?string>
 
+/*
+ * N.B.: components of NodeMap have type string, not ?string;
+ * We use JSON encoding / parsing of path components to ensure
+ * correct handling of null
+ */
 type NodeMap = {[elem: string]: NodeMap|{}} // internal rep, not exported
 
-const mkPathObj = (path: Array<string>, idx: number = 0) => {
+const mkPathObj = (path: Path, idx: number = 0) => {
   let ret = {}
   if (idx === (path.length - 1)) {
-    ret[path[idx]] = {}
+    ret[JSON.stringify(path[idx])] = {}
   } else {
     if (idx < (path.length - 1)) {
-      ret[path[idx]] = mkPathObj(path, idx + 1)
+      ret[JSON.stringify(path[idx])] = mkPathObj(path, idx + 1)
     }
   }
   return ret
 }
 
-const extendNodeMap = (nm: NodeMap, path: Array<string>): NodeMap => {
+const extendNodeMap = (nm: NodeMap, path: Array<?string>): NodeMap => {
   if (path.length === 0) {
     return nm
   }
-  const head = path[0]
+  const head = JSON.stringify(path[0])
   const rest = path.slice(1)
   const subMap = nm[head]
   const restMap = subMap ? extendNodeMap(subMap, rest) : mkPathObj(rest)
@@ -40,11 +45,11 @@ const extendNodeMap = (nm: NodeMap, path: Array<string>): NodeMap => {
 }
 
 // remove path from node map:
-const removeNodeMap = (nodeMap: ?NodeMap, path: Array<string>): NodeMap => {
+const removeNodeMap = (nodeMap: ?NodeMap, path: Path): NodeMap => {
   if (!nodeMap) {
     return {}
   }
-  const head = path[0]
+  const head = JSON.stringify(path[0])
   const rest = path.slice(1)
   if (rest.length === 0) {
     return _.omit(nodeMap, [head])
@@ -80,7 +85,7 @@ function * walkNodeMap (prefix: Path,
   for (var component in nodeMap) {
     if (nodeMap.hasOwnProperty(component)) {
       let subPath = prefix.slice()
-      subPath.push(component)
+      subPath.push(JSON.parse(component))
       yield subPath // parents before children
       let cval = nodeMap[component]
       if (typeof cval === 'object') {
@@ -117,7 +122,8 @@ export default class PathTree {
   isOpen (path: Path): boolean {
     let nm = this._rep
     for (let elem of path) {
-      nm = nm[elem]
+      let encElem = JSON.stringify(elem)
+      nm = nm[encElem]
       if (!nm) {
         return false
       }

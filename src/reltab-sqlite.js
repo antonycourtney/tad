@@ -2,7 +2,7 @@
 
 import sqlite from 'sqlite'
 import * as reltab from './reltab'
-import {  TableRep, Schema, RelExp, FilterExp, QueryExp } from './reltab'  // eslint-disable-line
+import {  TableRep, Schema, FilterExp, QueryExp } from './reltab'  // eslint-disable-line
 import type { FileMetadata, TableInfoMap, ValExp, Row, AggColSpec, SubExp, ColumnMetaMap, ColumnMapInfo, ColumnExtendVal, Connection } from './reltab' // eslint-disable-line
 
 class SqliteContext {

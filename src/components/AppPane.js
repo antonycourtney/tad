@@ -7,7 +7,6 @@ import LoadingModal from './LoadingModal'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import { FocusStyleManager } from '@blueprintjs/core'
-import path from 'path'
 
 /**
  * top level application pane

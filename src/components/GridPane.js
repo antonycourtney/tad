@@ -162,7 +162,6 @@ export default class GridPane extends React.Component {
       }
       path.push(item['_path' + i])
     }
-    console.log('item path: ', path)
     if (item._isOpen) {
       actions.closePath(path, this.props.stateRefUpdater)
     } else {

@@ -25,10 +25,8 @@ const mkDataView = (viewParams: ViewParams,
     let path = []
     for (let i = 0; i < depth; i++) {
       let pathElemAny: any = rowMap['_path' + i]
-      let pathElem: string = pathElemAny
-      if (pathElem) {
-        path.push(pathElem)
-      }
+      let pathElem: ?string = pathElemAny
+      path.push(pathElem)
     }
     return path
   }
@@ -39,9 +37,10 @@ const mkDataView = (viewParams: ViewParams,
   for (var i = 0; i < tableData.rowData.length; i++) {
     // ?? shouldn't we just be constructing the rowMap once and re-use it for every row??
     var rowMap: Object = tableData.rowData[ i ]
-    var path = getPath(rowMap, nPivots)
     var depth: number = rowMap._depth
+    var path = getPath(rowMap, depth)
     rowMap._isOpen = viewParams.openPaths.isOpen(path)
+    // console.log('mkDataView: row: ', i, ', depth: ', depth, ' path: ', path, ', isOpen: ', rowMap._isOpen)
     rowMap._isLeaf = depth > nPivots
     rowMap._id = i
     parentIdStack[ depth ] = i

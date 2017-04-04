@@ -14,8 +14,10 @@ const _ = require('lodash')
  * data FilterExp = FilterExp {op: BoolOp, opArgs: [SubExp] }
  * data SubExp = RelSub RelExp
  *           | FilterSub FilterExp
- * data RelOp = EQ | GT | GE | LT | LE
- * data RelExp = RelExp {lhs: ValRef, op: RelOp, rhs: ValRef }
+ * data BinaryRelOp = EQ | GT | GE | LT | LE
+ * data UnaryRelOp = ISNULL | ISNOTNULL
+ * data RelExp = BinaryRelExp {lhs: ValRef, op: RelOp, rhs: ValRef }
+*              | UnaryRelExp {op: UnaryRelOp, arg: ValRef }
  * data ValRef = ColRef Ident   -- for now; may extend to dot-delimited path
  *             | Const Literal
  * data Literal = LitNum Number | LitStr String
@@ -39,7 +41,7 @@ type ValType = number|string|Date
 
 const escRegEx = /[\0\n\r\b\t\\'"\x1a]/g
 
-const sqlEscapeString = (inStr: string): string => {
+export const sqlEscapeString = (inStr: string): string => {
   const outStr = inStr.replace(escRegEx, s => {
     switch (s) {
       case '\0':
@@ -81,24 +83,26 @@ export class ConstVal {
 }
 export const constVal = (val: ValType) => new ConstVal(val)
 
-export type RelOp = 'EQ' | 'GT' | 'GE' | 'LT' | 'LE'
+export type BinRelOp = 'EQ' | 'GT' | 'GE' | 'LT' | 'LE'
 
 const ppOpMap = {
   'EQ': '=',
   'GT': '>',
   'GE': '>=',
   'LT': '<',
-  'LE': '<='
+  'LE': '<=',
+  'ISNULL': 'is null',
+  'NOTNULL': 'is not null'
 }
 
-export class RelExp {
-  expType: 'RelExp'
-  op: RelOp
+export class BinRelExp {
+  expType: 'BinRelExp'
+  op: BinRelOp
   lhs: ValExp
   rhs: ValExp
 
-  constructor (op: RelOp, lhs: ValExp, rhs: ValExp) {
-    this.expType = 'RelExp'
+  constructor (op: BinRelOp, lhs: ValExp, rhs: ValExp) {
+    this.expType = 'BinRelExp'
     this.op = op
     this.lhs = lhs
     this.rhs = rhs
@@ -108,6 +112,26 @@ export class RelExp {
     return this.lhs.toSqlWhere() + ppOpMap[this.op] + this.rhs.toSqlWhere()
   }
 }
+
+export type UnaryRelOp = 'ISNULL' | 'NOTNULL'
+
+export class UnaryRelExp {
+  expType: 'UnaryRelExp'
+  op: UnaryRelOp
+  arg: ValExp
+
+  constructor (op: UnaryRelOp, arg: ValExp) {
+    this.expType = 'UnaryRelExp'
+    this.op = op
+    this.arg = arg
+  }
+
+  toSqlWhere (): string {
+    return this.arg.toSqlWhere() + ' ' + ppOpMap[this.op]
+  }
+}
+
+export type RelExp = BinRelExp | UnaryRelExp
 
 export type SubExp = RelExp | FilterExp
 
@@ -125,26 +149,38 @@ export class FilterExp {
   }
 
   // chained operator constructors for relational expressions:
-  chainRelExp (op: RelOp, lhs: ValExp, rhs: ValExp): FilterExp {
-    const relExp = new RelExp(op, lhs, rhs)
+  chainBinRelExp (op: BinRelOp, lhs: ValExp, rhs: ValExp): FilterExp {
+    const relExp = new BinRelExp(op, lhs, rhs)
+    const extOpArgs = this.opArgs.concat(relExp)
+    return new FilterExp(this.op, extOpArgs)
+  }
+
+  chainUnaryRelExp (op: UnaryRelOp, arg: ValExp): FilterExp {
+    const relExp = new UnaryRelExp(op, arg)
     const extOpArgs = this.opArgs.concat(relExp)
     return new FilterExp(this.op, extOpArgs)
   }
 
   eq (lhs: ValExp, rhs: ValExp): FilterExp {
-    return this.chainRelExp('EQ', lhs, rhs)
+    return this.chainBinRelExp('EQ', lhs, rhs)
   }
   gt (lhs: ValExp, rhs: ValExp): FilterExp {
-    return this.chainRelExp('GT', lhs, rhs)
+    return this.chainBinRelExp('GT', lhs, rhs)
   }
   ge (lhs: ValExp, rhs: ValExp): FilterExp {
-    return this.chainRelExp('GE', lhs, rhs)
+    return this.chainBinRelExp('GE', lhs, rhs)
   }
   lt (lhs: ValExp, rhs: ValExp): FilterExp {
-    return this.chainRelExp('LT', lhs, rhs)
+    return this.chainBinRelExp('LT', lhs, rhs)
   }
   le (lhs: ValExp, rhs: ValExp): FilterExp {
-    return this.chainRelExp('LE', lhs, rhs)
+    return this.chainBinRelExp('LE', lhs, rhs)
+  }
+  isNull (arg: ValExp): FilterExp {
+    return this.chainUnaryRelExp('ISNULL', arg)
+  }
+  isNotNull (arg: ValExp): FilterExp {
+    return this.chainUnaryRelExp('NOTNULL', arg)
   }
 
   subExp (sub: FilterExp): FilterExp {
@@ -290,7 +326,8 @@ export class QueryExp {
 const reviverMap = {
   'ColRef': v => new ColRef(v.colName),
   'ConstVal': v => new ConstVal(v.val),
-  'RelExp': v => new RelExp(v.op, v.lhs, v.rhs),
+  'BinRelExp': v => new BinRelExp(v.op, v.lhs, v.rhs),
+  'UnaryRelExp': v => new UnaryRelExp(v.op, v.arg),
   'FilterExp': v => new FilterExp(v.op, v.opArgs),
   'QueryExp': v => new QueryExp(v.operator, v.valArgs, v.tableArgs)
 }
