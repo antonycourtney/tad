@@ -31,9 +31,9 @@ const remoteErrorDialog = remote.getGlobal('errorDialog')
 
 const ipcRenderer = require('electron').ipcRenderer
 
-const initMainProcess = (targetPath): Promise<reltab.FileMetadata> => {
+const initMainProcess = (targetPath, srcFile): Promise<reltab.FileMetadata> => {
   return new Promise((resolve, reject) => {
-    remoteInitMain(targetPath, (err, mdStr) => {
+    remoteInitMain(targetPath, srcFile, (err, mdStr) => {
       if (err) {
         console.error('initMain error: ', err)
         reject(err)
@@ -48,6 +48,7 @@ const initMainProcess = (targetPath): Promise<reltab.FileMetadata> => {
 const init = () => {
   const openParams = remote.getCurrentWindow().openParams
   let targetPath
+  let srcFile = null
   let viewParams = null
   if (openParams.fileType === 'csv') {
     targetPath = openParams.targetPath
@@ -56,6 +57,7 @@ const init = () => {
     // This would be the right place to validate / migrate tadFileFormatVersion
     const savedFileState = parsedFileState.contents
     targetPath = savedFileState.targetPath
+    srcFile = openParams.srcFile
     viewParams = ViewParams.deserialize(savedFileState.viewParams)
   }
 
@@ -69,7 +71,7 @@ const init = () => {
   )
 
   // and kick off main process initialization:
-  initMainProcess(targetPath)
+  initMainProcess(targetPath, srcFile)
     .then(md => {
       const tableName = md.tableName
       const baseQuery = reltab.tableQuery(tableName)

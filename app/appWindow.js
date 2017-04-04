@@ -23,7 +23,7 @@ const encodeOpenParams = (targetPath: string): Object => {
   let openParams
   if (path.extname(targetPath) === '.tad') {
     const fileContents = fs.readFileSync(targetPath, 'utf8')
-    openParams = { fileType: 'tad', fileContents }
+    openParams = { fileType: 'tad', srcFile: targetPath, fileContents }
   } else {
     openParams = { fileType: 'csv', targetPath }
   }
@@ -44,6 +44,8 @@ export const create = targetPath => {
     baseY = bounds.y
   }
 
+  // win.targetPath = targetPath
+  win.openParams = encodeOpenParams(targetPath)
   win.loadURL(url.format({
     pathname: path.join(__dirname, 'index.html'),
     protocol: 'file:',
@@ -61,8 +63,6 @@ export const create = targetPath => {
       delete mainWindows[idx]
     }
   })
-  // win.targetPath = targetPath
-  win.openParams = encodeOpenParams(targetPath)
   mainWindows.push(win)
   openCount += 1
   return win

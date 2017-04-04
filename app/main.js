@@ -8,6 +8,7 @@ const setup = require('./setup')
 const appMenu = require('./appMenu')
 const appWindow = require('./appWindow')
 const electron = require('electron')
+const fs = require('fs')
 const dialog = electron.dialog
 const app = electron.app
 
@@ -83,9 +84,13 @@ const getRowCount = rtc => (queryStr, cb) => {
  * main process initialization
  *
  * invoked via electron remote
+ *
+ * arguments:
+ * pathname -- path to CSV file we are opening
+ * srcfile (optional) -- path we are opening from
  */
-
-const initMainAsync = async (options, path) => {
+const initMainAsync = async (options, pathname, srcfile) => {
+  console.log('initMainAsync: options: ', options)
   const hrProcStart = process.hrtime()
   let rtOptions = {}
   if (options['show-queries']) {
@@ -93,8 +98,33 @@ const initMainAsync = async (options, path) => {
   }
   const rtc = await reltabSqlite.getContext(rtOptions)
 
-  // could also call: csvimport.importSqlite(path)
-  const md = await csvimport.fastImport(path)
+  // check if pathname exists
+  if (!fs.existsSync(pathname)) {
+    let found = false
+    let srcdir = null
+    let srcDirTarget = null
+    log.warn('initMain: pathname not found: ', pathname)
+    const basename = path.basename(pathname)
+    if (srcfile) {
+      srcdir = path.dirname(srcfile)
+      srcDirTarget = path.join(srcdir, basename)
+      if (fs.existsSync(srcDirTarget)) {
+        log.warn('initMain: using ' + srcDirTarget + ' instead')
+        pathname = srcDirTarget
+        found = true
+      }
+    }
+    if (!found) {
+      let msg = '"' + pathname + '": file not found.'
+      if (srcdir) {
+        msg += '\n(Also tried "' + srcDirTarget + '")'
+      }
+      throw new Error(msg)
+    }
+  }
+
+  // could also call: csvimport.importSqlite(pathname)
+  const md = await csvimport.fastImport(pathname)
   rtc.addImportedTable(md)
   const [es, ens] = process.hrtime(hrProcStart)
   console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
@@ -106,8 +136,8 @@ const initMainAsync = async (options, path) => {
   return mdStr
 }
 
-const mkInitMain = (options) => (path, cb) => {
-  initMainAsync(options, path)
+const mkInitMain = (options) => (pathname, srcfile, cb) => {
+  initMainAsync(options, pathname, srcfile)
     .then(mdStr => cb(null, mdStr))
     .catch(err => cb(err, null))
 }
@@ -123,11 +153,11 @@ const appInit = (options) => {
 
 const optionDefinitions = [
   {
-    name: 'csvfile',
+    name: 'srcfile',
     type: String,
     defaultOption: true,
-    typeLabel: '[underline]{file}.csv',
-    description: 'CSV file to view, with header row'
+    typeLabel: '[underline]{file}.csv or [underline]{file}.tad',
+    description: 'CSV file(.csv with header row) or Tad(.tad) file to view'
   },
   {
     name: 'executed-from',
@@ -172,12 +202,13 @@ const usageInfo = [
   {
     header: 'Synopsis',
     content: [
-      '$ tad [[italic]{options}] [underline]{file}.csv'
+      '$ tad [[italic]{options}] [underline]{file}.csv',
+      '$ tad [[italic]{options}] [underline]{file}.tad'
     ]
   },
   {
     header: 'Options',
-    optionList: optionDefinitions.filter(opt => opt.name !== 'csvfile')
+    optionList: optionDefinitions.filter(opt => opt.name !== 'srcfile')
   }
 ]
 
@@ -243,7 +274,7 @@ const initApp = firstInstance => (instanceArgv, workingDirectory) => {
     if (quickExit) {
       app.quit()
     } else {
-      const targetPath = getTargetPath(options, options.csvfile)
+      const targetPath = getTargetPath(options, options.srcfile)
 
       // set at end of ready event handler:
       let isReady = false
