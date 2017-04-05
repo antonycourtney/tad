@@ -1,21 +1,19 @@
 # Tad
 
-**Note: This is unannounced, unstable, pre-release software. Repository is public only to enable collaboration and testing by the project developers. Please do not publicize or link to this repository yet.  Thank You!**
-
 Tad is a desktop application for viewing and analyzing tabular data such as CSV files.
 
-Launch tad from the command line like this:
+You can launch tad from the command line like this:
 
     $ tad movie_metadata.csv
 
 This will open a new window with a scrollable view of the file contents:
 
-![Tad screenshot](doc/screenshots/tad-movies-unpivoted.png "Unpivoted view of CSV file")
+![Tad screenshot](src/doc/screenshots/tad-movies-unpivoted.png "Unpivoted view of CSV file")
 
 Tad's main grid component is actually a full featured
 [pivot table](https://en.wikipedia.org/wiki/Pivot_table); a few additional mouse clicks from the above view yields this:
 
-![tad screenshot](doc/screenshots/movie_pivots.png "Movie Metadata with Pivots")
+![tad screenshot](src/doc/screenshots/tad-movies-pivoted.png "Movie Metadata with Pivots")
 
 # Building Tad from Source
 
@@ -108,4 +106,4 @@ This should create a full application in `./dist/mac`, and a packaged DMG for di
 
 Tad is an [Electron](http://electron.atom.io/) application written in ES2015 using [flow](https://flowtype.org/) type annotations.
 Tad's front end User Interface is implemented in [React](https://facebook.github.io/react/), using [SlickGrid](https://github.com/mleibman/SlickGrid) for the main grid component.
-In the main process, Tad uses [SQLite](https://sqlite.org/) for internal storage and efficient queries on tabular data.  (TODO: architecture diagram)
+In the main process, Tad uses [SQLite](https://sqlite.org/) for internal storage and efficient queries on tabular data.  
