@@ -87,7 +87,7 @@
     "build-assets": "npm run build:html && npm run build:icon",
     "build-dev": "npm run build-assets && webpack --env=dev",
     "build-prod": "npm run build-assets && webpack --env=prod",
-    "build-site": "mkdir -p doc && cp -r src/doc/site/src/* doc",
+    "build-site": "mkdir -p doc && cp -r src/doc/site/src/* docs",
     "clean": "rm -rf build/*",
     "csvimport": "electron build/csvimport.bundle.js",
     "dist": "build",
