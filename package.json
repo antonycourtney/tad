@@ -82,10 +82,9 @@
   },
   "main": "./build/main.bundle.js",
   "scripts": {
-    "build:jquery": "mkdir -p build && cpx \"node_modules/jquery/dist/**/*\" build/js",
-    "build:html": "mkdir -p build && cpx \"html/*\" build",
+    "build:html": "mkdir -p build && cp -r html/* build ",
     "build:icon": "mkdir -p buildRes && cp res/AppIcon.icns buildRes/icon.icns",
-    "build-assets": "npm run build:jquery && npm run build:html && npm run build:icon",
+    "build-assets": "npm run build:html && npm run build:icon",
     "build-dev": "npm run build-assets && webpack --env=dev",
     "build-prod": "npm run build-assets && webpack --env=prod",
     "clean": "rm -rf build/*",

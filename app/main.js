@@ -4,10 +4,13 @@ const getUsage = require('command-line-usage')
 const reltabSqlite = require('../src/reltab-sqlite')
 const csvimport = require('../src/csvimport')
 const log = require('electron-log')
+
 const setup = require('./setup')
+const quickStart = require('./quickStart')
 const appMenu = require('./appMenu')
 const appWindow = require('./appWindow')
 const electron = require('electron')
+
 const fs = require('fs')
 const dialog = electron.dialog
 const app = electron.app
@@ -296,7 +299,8 @@ const initApp = firstInstance => (instanceArgv, workingDirectory) => {
           log.warn('got open-url: ', event, url)
           handleOpen(event, url)
         })
-        setup.postInstallCheck()
+        const firstRun = setup.postInstallCheck()
+        const showQuickStart = firstRun
         process.on('uncaughtException', function (error) {
           log.error(error.message)
           log.error(error.stack)
@@ -330,8 +334,14 @@ const initApp = firstInstance => (instanceArgv, workingDirectory) => {
             // dialog.showMessageBox({ message: openMsg })
           } else {
             if (!targetPath) {
-              appWindow.openDialog()
+              app.focus()
+              if (!showQuickStart) {
+                appWindow.openDialog()
+              }
             }
+          }
+          if (showQuickStart) {
+            quickStart.showQuickStart()
           }
           isReady = true
         })

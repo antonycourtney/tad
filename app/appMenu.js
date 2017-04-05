@@ -1,6 +1,7 @@
 
 import * as updater from './updater'
 import * as appWindow from './appWindow'
+import * as quickStart from './quickStart'
 const electron = require('electron')
 
 const Menu = electron.Menu
@@ -44,6 +45,20 @@ export const createMenu = () => {
   const debugSubmenu = [
     { role: 'toggledevtools' }
   ]
+  const helpSubmenu = [
+    {
+      label: 'Quick Start Guide',
+      click: (item, focusedWindow) => {
+        quickStart.showQuickStart()
+      }
+    },
+    {
+      label: 'Send Feedback / Bug Reports',
+      click: (item, focusedWindow) => {
+        electron.shell.openExternal('mailto:tad-feedback@tadviewer.com')
+      }
+    }
+  ]
   const template = [
     { label: 'File', submenu: fileSubmenu }
   ]
@@ -53,6 +68,10 @@ export const createMenu = () => {
       submenu: debugSubmenu
     })
   }
+  template.push({
+    label: 'Help',
+    submenu: helpSubmenu
+  })
   if (isDarwin) {
     template.unshift({
       label: 'Tad', // ignored on Mac OS; comes from plist

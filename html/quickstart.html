@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Tad Quick Start</title>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <main>
+      <div class="container">
+        <h1>Quick Start</h1>
+        <p class="lead">Welcome to Tad!</p>
+        <p>If you are reading this message, Tad has been succesfully installed.<p>
+        <h3>Launching Tad</h3>
+        <p>There are three ways to launch Tad:
+        <ol>
+          <li>From the Command Line
+          <P>During installation Tad installs a symbolic link to the application in <code>/usr/local/bin/tad</code>.  If you are working in the shell (and have <code>/usr/local/bin</code> on your <code>PATH</code>), simply type:
+<pre>
+$ tad somefile.csv
+</pre>
+          to launch Tad to explore <code>somefile.csv</code>. You can also open <code>.tad</code> files (previously saved Tad view configurations) via the command line.
+          <li>Application Icon
+          <p>You can double click on the Tad application icon in <code>/Applications</code> in the Finder or the dock to open Tad.  Use <strong>File...Open</strong> and the standard file open dialog to open a <code>.csv</code> or <code>.tad</code> file.
+          <li>Finder Context Menu or Drag and Drop</li>
+          <p>The installation process registers Tad as a viewer for <code>.csv</code> files. On any <code>.csv</code> file in the Finder, use <strong>Open With...</strong> and select <strong>Tad.app</strong> to open the file in Tad.
+        </ol>
+        <h3>Basic Usage</h3>
+        <p>
+        When you open a CSV file in Tad, Tad automatically imports your CSV file into an internal in-memory SQLite database.
+        You can see the result of this import process by clicking on the gear icon on the left of the Tad window:
+        <P>
+        <img src="images/tad-quickstart-1.png"></img>
+        <P>
+        This will open the sidebar:
+        <P>
+        <img src="images/tad-quickstart-2.png"></img>
+<!--        <P>
+        The primary feature that Tad provides for exploring and analyzing files is a <emph>pivot table</emph>.
+        Briefly, a pivot table is a transformation of a table into a hiearchical <emph>tree table</emph> by grouping all rows in the source table that have the same value for some columns (the pivot columns).
+        Multiple pivot columns result in a nested hierarchical structure, with each level of the hierarchy corresponding to one pivot column. Values of cells for non-pivoted columns at higher levels of the pivot table are determined by applying an <emph>aggregate function</emph> to all leaf rows underneath that row.
+-->
+        <P>
+        Tad scans your data file during the import process makes a conservative guess at the type of each column.
+        For now the only supported types are <code>text</code>, <code>integer</code> and <code>real</code>, and there is no facility for manually overriding the inferred types.
+        <P>
+        The name and type of each column are shown in the main <strong>Column Selector</strong> above.
+        The additional controls in the column selector enable you to quickly build a
+        <a href="https://en.wikipedia.org/wiki/Pivot_table"
+          onclick='tadOpenExternal(event,"https://en.wikipedia.org/wiki/Pivot_table")'>pivot table</a>
+        to explore your data set:
+        <ul>
+          <li>Use the checkboxes under <strong>Pivot</strong> in the main column selector to choose columns for the pivot hierarchy.
+          <li>Use the checkboxes under <strong>Show</strong> in the main column selector to determine what columns are shown / hidden.
+          <li>Set the sort columns using either the checkboxes under <strong>Sort</strong> the main column selector or by clicking on column headers in the main grid.
+          </ul>
+        Additional controls for setting the order of columns, pivots and the sort key, and controlling aggregation and formatting rules are available under <strong>Additional Properties</strong> at the bottom of the side bar.
+        <h3>Data Sources</h3>
+        <p>
+        If you work in data science, chances are you have no shortage of CSV files of your own to explore.
+        If you don't have any CSVs readily available, a few of my favorite data sources on the Internet are:
+        <ul>
+          <li><a href="https://www.kaggle.com/datasets" onclick='tadOpenExternal(event,"https://www.kaggle.com/datasets")'>Kaggle Datasets</a>. The <code>movie_metadata.csv</code> file used for many Tad examples is from the <a href="https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset"
+            onclick='tadOpenExternal(event,"https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a>.
+          <li><a href="https://data.world/" onclick='tadOpenExternal(event,"https://data.world/")'>data.world</a> is a site for sharing and exploring data on a variety of topics.
+          <li>The <a href="https://github.com/fivethirtyeight/data" onclick='tadOpenExternal(event,"https://github.com/fivethirtyeight/data")'>FiveThirtyEight github repository</a> has many CSV files providing data behind the stories and interactives on the FiveThirtyEight web site.
+        </ul>
+        <h3>Going Further (Developers and Data Hackers)</h3>
+        <P>
+        If for some reason you want to see the gnarly details of the SQL queries that Tad is constructing and executing, you can use the <code>-f</code> option on the command line to keep Tad in the foreground and <code>--show-queries</code> to get Tad to print the generated SQL queries like so:
+<pre>
+$ tad -f --show-queries somefile.csv
+</pre>
+        Not for the faint-hearted.
+        <P>
+        <h3>And Finally...</h3>
+        <P>
+        Have fun! I hope you find Tad a useful utility for viewing and analyzing data. <a href="mailto:tad-feedback@tadviewer.com" onclick='tadOpenExternal(event,"mailto:tad-feedback@tadviewer.com")'>  Feedback welcome</a>.
+        <P>
+      </div>
+    </main>
+<script>
+  console.log('hello quick start!')
+  const electron = require('electron')
+  console.log('electron: ', electron)
+  // install this globally so we can access in generated a tag:
+  window.tadOpenExternal = function (event,url) {
+    event.preventDefault()
+    console.log('tadOpenExternal: ', url)
+    electron.shell.openExternal(url)
+    return false
+  }
+</script>
+  </body>
+</html>

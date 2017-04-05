@@ -36,8 +36,11 @@ const postInstall = (markerPath) => {
 
 /*
  * check for marker file and run post install step if it doesn't exist
+ *
+ * returns: true iff first install detected
  */
 export const postInstallCheck = () => {
+  let firstInstall = false
   const userDataPath = app.getPath('userData')
   const versionStr = app.getVersion().replace(/\./g, '_')
   const markerFilename = MARKER_BASENAME + versionStr + '.txt'
@@ -47,6 +50,7 @@ export const postInstallCheck = () => {
     log.info('postInstalCheck: found marker file, skipping post-install setup')
   } else {
     log.warn('postInstallCheck: install marker file not found, performing post-install step.')
+    firstInstall = true
     try {
       postInstall(markerPath)
       log.warn('postInstallCheck: postInstall complete')
@@ -55,4 +59,5 @@ export const postInstallCheck = () => {
       log.error(e.stack)
     }
   }
+  return firstInstall
 }
