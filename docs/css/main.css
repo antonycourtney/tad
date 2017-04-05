@@ -1,6 +1,5 @@
 body{
 	font-family: 'Lato', sans-serif;
-	font-size: 17px;
 	color: #35556f;
 }
 header{
@@ -20,7 +19,7 @@ header .navbar-nav > li > a{
 h1{
 	font-size: 50px;
 	color: #FFF;
-	font-weight: 300;
+	font-weight: 100;
 	margin-top:100px;
 }
 h1.ornament{
@@ -46,26 +45,31 @@ h1.ornament{
 	min-width: 217px;
 }
 .navbar-brand{
+	padding-top: 22px;
+	font-weight: 600;
 	font-size: 40px;
-	font-weight: 900;
 }
-main{
+.features-section {
 	text-align: center;
+	font-size: 17px;
 	padding-bottom: 60px;
 }
-main p strong{
+.features-section p strong{
 	color:#0072ce;
 }
-main .specs-holder img{
+.features-section .specs-holder img{
 	max-width: 55px;
 }
-main .specs-holder{
+.features-section .specs-holder{
 	margin-top:60px;
 	padding: 0 70px;
 }
-main .specs-holder p{
+.features-section .specs-holder p{
 	margin-top:28px;
 	line-height: 28px;
+}
+.download {
+	text-align: center;
 }
 footer{
 	text-align: center;
@@ -77,12 +81,16 @@ footer .container{
 	border-top:1px solid #cce3f5;
 	padding: 25px 15px;
 }
+.section .container {
+	border-top:1px solid #cce3f5;
+	padding-bottom: 25px;
+}
 footer p a{
 	font-weight: bold;
 	color:#35556f;
 }
 @media (max-width:1199px){
-	main .specs-holder{
+	.features-section .specs-holder{
 		padding: 0 20px;
 	}
 }
@@ -96,7 +104,7 @@ footer p a{
 	p{
 		font-size:14px;
 	}
-	
+
 }
 @media (max-width:767px){
 	.navbar-header{
