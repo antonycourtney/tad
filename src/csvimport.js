@@ -374,7 +374,7 @@ export const importSqlite = (pathname: string): Promise<FileMetadata> => {
   })
 }
 
-const BUFSIZE = 1024
+const BUFSIZE = 8192
 
 /*
  * Reader header row from specified path
