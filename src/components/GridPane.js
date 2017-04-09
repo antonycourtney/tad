@@ -1,8 +1,11 @@
 /* @flow */
 
+// for debugging resize handler:
+// import $ from 'jquery'
 import * as React from 'react'
 import * as _ from 'lodash'
 import { Slick } from 'slickgrid-es6'
+import { WindowResizeListener } from 'react-window-resize-listener'
 import * as reltab from '../reltab'
 import * as actions from '../actions'
 import LoadingModal from './LoadingModal'
@@ -269,6 +272,22 @@ export default class GridPane extends React.Component {
     return ret
   }
 
+  handleWindowResize (e) {
+    if (this.grid) {
+      /*
+      const $container = $(container)
+      console.log('$container: ', $container)
+      const pvh = $.css($container[0], 'height', true)
+      console.log('viewport height before resize:', pvh)
+      */
+      this.grid.resizeCanvas()
+      /*
+      console.log('viewport height after resize:', $.css($container[0], 'height', true))
+      console.log('gridPane.handleWindowResize: done with resize and render')
+      */
+    }
+  }
+
   render () {
     const viewState = this.props.viewState
     const lt = viewState.loadingTimer
@@ -276,6 +295,7 @@ export default class GridPane extends React.Component {
     const lm = (lt.running && (lt.elapsed > 500)) ? <LoadingModal /> : null
     return (
       <div className='gridPaneOuter'>
+        <WindowResizeListener onResize={e => this.handleWindowResize(e)} />
         <div className='gridPaneInner'>
           <div id='epGrid' className='slickgrid-container full-height' />
         </div>

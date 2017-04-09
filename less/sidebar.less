@@ -6,7 +6,7 @@
   width: 40px;
   min-width: 40px;
   flex: 0 0 auto;
-  min-height: 888px;
+  height: 100%;
   transition-duration: 0.3s;
   overflow: none;
 }
@@ -16,16 +16,26 @@
   min-width: 328px;
 }
 
+
 .sidebar-content {
   position: absolute;
   left: 0;
   top: 0;
+  visibility:hidden;
+  height: 100%;
+  width: 328px;
+  min-width: 328px;
+  overflow-y: auto;
+}
+
+.sidebar-content-inner {
   margin-left: 8px;
   margin-top: 8px;
-  margin-right: 8px;
-  overflow: hidden;
-  visibility:hidden;
+  margin-right: 16px;
+  width: 300px;
 }
+
+
 
 .sidebar-placeholder {
   position: absolute;
