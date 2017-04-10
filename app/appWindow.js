@@ -79,6 +79,7 @@ export const openDialog = () => {
     properties: [ 'openFile' ],
     filters: [
       {name: 'CSV files', extensions: ['csv']},
+      {name: 'TSV files', extensions: ['tsv']},
       {name: 'Tad Workspace files', extensions: ['tad']}
     ]
   })

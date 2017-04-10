@@ -379,7 +379,7 @@ const BUFSIZE = 8192
 /*
  * Reader header row from specified path
  */
-const readHeaderRow = (path: string): Promise<Array<string>> => {
+const readHeaderRow = (path: string, delimiter: string): Promise<Array<string>> => {
   return new Promise((resolve, reject) => {
     fs.open(path, 'r', 0, (err, fd) => {
       if (err) {
@@ -403,7 +403,7 @@ const readHeaderRow = (path: string): Promise<Array<string>> => {
         }
         var s = buf.toString('utf8', 0, eolIndex)
         csv
-          .fromString(s, {headers: false})
+          .fromString(s, {headers: false, delimiter})
           .on('data', data => {
             fs.close(fd, err => {
               if (err) {
@@ -421,11 +421,16 @@ const readHeaderRow = (path: string): Promise<Array<string>> => {
 export const fastImport = (pathname: string): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
     const importStart = process.hrtime()
-    readHeaderRow(pathname)
+    let delimiter = ','
+    if (path.extname(pathname) === '.tsv') {
+      delimiter = '\t'
+    }
+    readHeaderRow(pathname, delimiter)
       .then(columnNames => {
         const columnIds = genColumnIds(columnNames)
         const tableName = genTableName(pathname)
-        db.driver.import(pathname, tableName, {columnIds}, (err, res) => {
+        const importOpts = { columnIds, delimiter }
+        db.driver.import(pathname, tableName, importOpts, (err, res) => {
           const [es, ens] = process.hrtime(importStart)
           if (err) {
             reject(err)

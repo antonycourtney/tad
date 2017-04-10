@@ -2,7 +2,7 @@
   "name": "tad",
   "productName": "Tad",
   "description": "Tabular data viewer",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "author": "Antony Courtney <antony@antonycourtney.com> (http://www.antonycourtney.com)",
   "repository": "https://github.com/antonycourtney/tad",
   "dependencies": {
@@ -131,6 +131,11 @@
       {
         "ext": "csv",
         "name": "Comma Separated Values",
+        "role": "Viewer"
+      },
+      {
+        "ext": "tsv",
+        "name": "Tab Separated Values",
         "role": "Viewer"
       },
       {
