@@ -185,7 +185,7 @@ export default class PivotRequester {
           return this.requestData(stateRef, queryView)
         })
         .catch(err => {
-          console.error('PivotRequester: caught error updating view: ', err.message)
+          console.error('PivotRequester: caught error updating view: ', err.message, err.stack)
           remoteErrorDialog('Error constructing view', err.message)
           // Now let's try and restore to previous view params:
           const appState = stateRef.getValue()

@@ -43,7 +43,14 @@ export const createMenu = () => {
     }
   ]
   const debugSubmenu = [
-    { role: 'toggledevtools' }
+    { role: 'toggledevtools' },
+    { label: 'Show Hidden Columns',
+      type: 'checkbox',
+      click: (item, focusedWindow) => {
+        console.log('show hidden...: ', item)
+        focusedWindow.webContents.send('set-show-hidden-cols', item.checked)
+      }
+    }
   ]
   const helpSubmenu = [
     {

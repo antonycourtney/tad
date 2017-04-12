@@ -175,7 +175,7 @@ export default class GridPane extends React.Component {
   // Get grid columns based on current column visibility settings:
   getGridCols (dataView: ?Object = null) {
     const viewParams = this.props.viewState.viewParams
-    const showHiddenCols = false  // TODO: make this available again via an option / menu item
+    const showHiddenCols = viewParams.showHiddenCols
     const displayCols = viewParams.displayColumns
 
     let gridCols = displayCols.map(cid => this.slickColMap[cid])
@@ -272,7 +272,7 @@ export default class GridPane extends React.Component {
     return ret
   }
 
-  handleWindowResize (e) {
+  handleWindowResize (e: any) {
     if (this.grid) {
       /*
       const $container = $(container)

@@ -150,12 +150,8 @@ export class VPivotTree {
     for (let i = 0; i < this.pivotColumns.length; i++) {
       let pathElemExp = null
       if (i < path.length) {
-        let pathElem = path[i]
-        if (pathElem == null) {
-          pathElemExp = 'null'
-        } else {
-          pathElemExp = `${reltab.sqlEscapeString(pathElem)}`
-        }
+        let colType = this.baseSchema.columnType(this.pivotColumns[i])
+        pathElemExp = reltab.sqlLiteralVal(colType, path[i])
       } else if (i === path.length) {
         pathElemExp = '"_pivot"'  // N.B. Not a literal; SQL expression referring to _pivot column
       }

@@ -45,7 +45,8 @@ export default class ViewParams extends Immutable.Record({
   openPaths: PathTree,
   aggMap: {}, // overrides of agg fns
   defaultFormats: new FormatDefaults(),
-  columnFormats: {}
+  columnFormats: {},
+  showHiddenCols: false
 }) {
   showRoot: boolean
   displayColumns: Array<string> // array of column ids to display, in order
@@ -61,6 +62,7 @@ export default class ViewParams extends Immutable.Record({
     'boolean': NumFormatOptions
   }
   columnFormats: FormatsMap
+  showHiddenCols: boolean
 
   // toggle element membership in array:
   toggleArrElem (propName: string, cid: string): ViewParams {
@@ -85,6 +87,11 @@ export default class ViewParams extends Immutable.Record({
   togglePivot (cid: string): ViewParams {
     const oldPivots = this.vpivots
     return this.toggleArrElem('vpivots', cid).trimOpenPaths(oldPivots)
+  }
+
+  setVPivots (newPivots: Array<string>): ViewParams {
+    const oldPivots = this.vpivots
+    return this.set('vpivots', newPivots).trimOpenPaths(oldPivots)
   }
 
   /*

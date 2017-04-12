@@ -95,6 +95,10 @@ const init = () => {
             ipcRenderer.send('response-serialize-app-state',
               { requestId, contents: serState })
           })
+          ipcRenderer.on('set-show-hidden-cols', (event, val) => {
+            console.log('got set-show-hidden-cols: ', val)
+            actions.setShowHiddenCols(val, updater)
+          })
         })
     })
     .catch(err => {

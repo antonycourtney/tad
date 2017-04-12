@@ -232,6 +232,22 @@ export const aggFns = (ct: ColumnType): Array<AggFn> => {
 }
 
 /*
+ * generate a SQL literal for the given value based on its
+ * column type.
+ *
+ * Will need work if we enrich the column type system.
+ */
+export const sqlLiteralVal = (ct: ColumnType, jsVal: any): string => {
+  let ret
+  if (jsVal == null) {
+    ret = 'null'
+  } else {
+    ret = (ct === 'text') ? sqlEscapeString(jsVal) : jsVal.toString()
+  }
+  return ret
+}
+
+/*
  * A ColumnExtendVal is either a simple scalar or a function from a row object
  * to a scalar.
  */

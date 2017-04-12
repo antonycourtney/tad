@@ -573,6 +573,34 @@ const multiPivotSingleSortTest = async (t, htest) => {
   t.end()
 }
 
+/*
+ * Pivot by an integer column and open a few nodes:
+ */
+const intPivotTest = async (t, htest) => {
+  const deepEqualSnap = tapeSnapInit(htest)
+  const q0 = reltab.tableQuery('barttest').project(pcols)
+  const rtc = sharedRtc
+  const schema0 = await aggtree.getBaseSchema(rtc, q0)
+  const tree0 = await aggtree.vpivot(rtc, q0, schema0,
+      ['Base', 'JobFamily'], 'Name', true, [])
+  console.log('vpivot initial promise resolved...')
+
+  const openPaths = new PathTree({
+    '75701': {'"Police"': {}},
+    '77446': {'"Maintenance, Vehicle & Facilities"': {}}
+  })
+
+  const stq = tree0.getSortedTreeQuery(openPaths)
+  const sres = await rtc.evalQuery(stq)
+
+  console.log('result of numeric pivot:')
+  util.logTable(sres, {maxRows: 50})
+
+  deepEqualSnap(t, sres, 'int pivot query')
+
+  t.end()
+}
+
 // queryGenPerfTest
 const queryGenPerfTest = async (t) => {
   const q0 = reltab.tableQuery('barttest').project(pcols)
@@ -629,6 +657,8 @@ const runTests = (htest: any) => {
 
     asyncTest(htest, 'descPivotSortTest', descPivotSortTest)
     asyncTest(htest, 'multiPivotSingleSortTest', multiPivotSingleSortTest)
+    asyncTest(htest, 'intPivotTest', intPivotTest)
+
     asyncTest(htest, 'queryGenPerfTest', queryGenPerfTest)
   }
 

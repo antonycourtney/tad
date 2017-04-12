@@ -117,7 +117,11 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
         return viewParams
       }
       colList.splice(dstIndex, 0, srcColumnId)
-      return viewParams.set(fieldKey, colList)
+      if (fieldKey === 'vpivots') { // evil hack
+        return viewParams.setVPivots(colList)
+      } else {
+        return viewParams.set(fieldKey, colList)
+      }
     }
   }))
 }
@@ -159,4 +163,8 @@ export const setDefaultFormatOptions = (colType: string, opts: any, updater: Ref
 
 export const setColumnFormatOptions = (cid: string, opts: any, updater: RefUpdater) => {
   updater(vpUpdate(viewParams => viewParams.setColumnFormat(cid, opts)))
+}
+
+export const setShowHiddenCols = (show: boolean, updater: RefUpdater) => {
+  updater(vpUpdate(viewParams => viewParams.set('showHiddenCols', show)))
 }
