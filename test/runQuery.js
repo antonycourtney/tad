@@ -7,10 +7,12 @@ import 'console.table'
 import db from 'sqlite'
 import * as csvimport from '../src/csvimport'
 
-// const testPath = 'csv/bart-comp-all.csv'
-const testPath = '/Users/antony/data/uber-raw-data-apr14.csv'
+const testPath = 'csv/bart-comp-all.csv'
+// const testPath = '/Users/antony/data/uber-raw-data-apr14.csv'
 
-// const tq = 'select * from \'bart-comp-all\' limit 10'
+// const tq = 'select * from \'bart_comp_all\' limit 10'
+
+const tq = 'PRAGMA table_info(bart_comp_all)'
 
 /*
 const tq = `
@@ -61,35 +63,35 @@ SELECT "Name", "Title", "Base", "OT", "Other", "MDV", "ER", "EE", "DC", "Misc", 
         FROM 'bart-comp-all'
         WHERE "Title"='Department Manager Gov''t & Comm Rel'`
 */
-
+/*
 const tq = `
   SELECT *
-  FROM 'uber-raw-data-apr14'
+  FROM 'uber_raw_data_apr14'
   LIMIT 10`
+*/
 
-const main = () => {
-  const hrProcStart = process.hrtime()
-  let hrQueryStart = 0
-  db.open(':memory:')
-    .then(() => csvimport.importSqlite(testPath))
-    .then(md => {
-      const [es, ens] = process.hrtime(hrProcStart)
-      console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
-      console.log('table import complete: ', md.tableName)
-      console.log('running query:\n', tq)
-      hrQueryStart = process.hrtime()
-      return db.all(tq)
-    })
-    .then(rows => {
-      const [es, ens] = process.hrtime(hrQueryStart)
-      console.log('read rows from sqlite table.')
-      console.table(rows)
-      console.info('runQuery: evaluated query in %ds %dms', es, ens / 1e6)
-    })
-    .then(() => db.close())
-    .catch(err => {
-      console.error('caught exception in promise chain: ', err, err.stack)
-    })
+const main = async () => {
+  try {
+    const hrProcStart = process.hrtime()
+    let hrQueryStart = 0
+    await db.open(':memory:')
+    await csvimport.importSqlite(testPath)
+    // await db.open('/Users/antony/data/testdb.sqlite')
+    const [es, ens] = process.hrtime(hrProcStart)
+    console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)
+    // console.log('table import complete: ', md.tableName)
+    console.log('running query:\n', tq)
+    hrQueryStart = process.hrtime()
+
+    const rows = await db.all(tq)
+    const [qes, qens] = process.hrtime(hrQueryStart)
+    console.log('read rows from sqlite table.')
+    console.table(rows)
+    console.info('runQuery: evaluated query in %ds %dms', qes, qens / 1e6)
+    await db.close()
+  } catch (err) {
+    console.error('caught exception running query: ', err, err.stack)
+  }
 }
 
 main()

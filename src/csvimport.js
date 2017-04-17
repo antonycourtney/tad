@@ -3,7 +3,8 @@
  * Import CSV files into sqlite
  */
 
-import type {ColumnType, FileMetadata} from './reltab'
+import type {ColumnType, ColumnMetaMap, TableInfo} from './reltab'
+import {Schema} from './reltab' // eslint-disable-line
 import csv from 'fast-csv'
 import * as _ from 'lodash'
 import * as path from 'path'
@@ -12,13 +13,53 @@ import through from 'through'
 import * as fs from 'fs'
 import db from 'sqlite'
 import Gauge from 'gauge'
-
 /*
  * regex to match a float or int:
  * allows commas and leading $
  */
 const intRE = /[-+]?[$]?[0-9,]+/
 const realRE = /[-+]?[$]?[0-9,]*\.?[0-9]+([eE][-+]?[0-9]+)?/
+
+/*
+ * FileMetaData is an array of unique column IDs, column display names and
+ * ColumnType for each column in a CSV file.
+ * The possible null for ColumnType deals with an empty file (no rows)
+ *
+ */
+export type FileMetadata = {
+  columnIds: Array<string>,
+  columnNames: Array<string>,
+  columnTypes: Array<?ColumnType>,
+  rowCount: number,
+  tableName: string,
+  csvOptions: Object
+}
+
+function assertDefined<A> (x: ?A): A {
+  if (x == null) {
+    throw new Error('unexpected null value')
+  }
+  return x
+}
+
+export const mkTableInfo = (md: FileMetadata): TableInfo => {
+  const extendCMap = (cmm: ColumnMetaMap,
+        cnm: string, idx: number): ColumnMetaMap => {
+    const cType = md.columnTypes[idx]
+    if (cType == null) {
+      console.error('mkTableInfo: No column type for "' + cnm + '", index: ' + idx)
+    }
+    const cmd = {
+      displayName: md.columnNames[idx],
+      type: assertDefined(cType)
+    }
+    cmm[cnm] = cmd
+    return cmm
+  }
+  const cmMap = md.columnIds.reduce(extendCMap, {})
+  const schema = new Schema(md.columnIds, cmMap)
+  return { tableName: md.tableName, schema }
+}
 
 /**
  * Given the current guess (or null) for a column type and cell value string cs

@@ -31,15 +31,15 @@ const remoteErrorDialog = remote.getGlobal('errorDialog')
 
 const ipcRenderer = require('electron').ipcRenderer
 
-const initMainProcess = (targetPath, srcFile): Promise<reltab.FileMetadata> => {
+const initMainProcess = (targetPath, srcFile): Promise<reltab.TableInfo> => {
   return new Promise((resolve, reject) => {
-    remoteInitMain(targetPath, srcFile, (err, mdStr) => {
+    remoteInitMain(targetPath, srcFile, (err, tiStr) => {
       if (err) {
         console.error('initMain error: ', err)
         reject(err)
       } else {
-        const md = JSON.parse(mdStr)
-        resolve(md)
+        const ti = JSON.parse(tiStr)
+        resolve(ti)
       }
     })
   })
@@ -72,8 +72,8 @@ const init = () => {
 
   // and kick off main process initialization:
   initMainProcess(targetPath, srcFile)
-    .then(md => {
-      const tableName = md.tableName
+    .then(ti => {
+      const tableName = ti.tableName
       const baseQuery = reltab.tableQuery(tableName)
 
       const rtc = reltabElectron.init()
@@ -81,7 +81,7 @@ const init = () => {
       // module local to keep alive:
       var pivotRequester: ?PivotRequester = null  // eslint-disable-line
 
-      actions.initAppState(rtc, md.tableName, baseQuery, viewParams, updater)
+      actions.initAppState(rtc, ti.tableName, baseQuery, viewParams, updater)
         .then(() => {
           pivotRequester = new PivotRequester(stateRef) // eslint-disable-line
 
@@ -96,12 +96,12 @@ const init = () => {
               { requestId, contents: serState })
           })
           ipcRenderer.on('set-show-hidden-cols', (event, val) => {
-            console.log('got set-show-hidden-cols: ', val)
             actions.setShowHiddenCols(val, updater)
           })
         })
     })
     .catch(err => {
+      console.error('renderMain: caught error during initialization: ', err.message, err.stack)
       remoteErrorDialog('Error initializing Tad', err.message, true)
     })
 }

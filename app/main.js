@@ -89,49 +89,63 @@ const getRowCount = rtc => (queryStr, cb) => {
  * invoked via electron remote
  *
  * arguments:
- * pathname -- path to CSV file we are opening
+ * targetPath -- filename or sqlite URL we are opening
  * srcfile (optional) -- path we are opening from
  */
-const initMainAsync = async (options, pathname, srcfile) => {
+const initMainAsync = async (options, targetPath, srcfile) => {
   let rtOptions = {}
   if (options['show-queries']) {
     rtOptions.showQueries = true
   }
-  const rtc = await reltabSqlite.getContext(rtOptions)
+  let rtc
+  let ti
 
-  // check if pathname exists
-  if (!fs.existsSync(pathname)) {
-    let found = false
-    let srcdir = null
-    let srcDirTarget = null
-    log.warn('initMain: pathname not found: ', pathname)
-    const basename = path.basename(pathname)
-    if (srcfile) {
-      srcdir = path.dirname(srcfile)
-      srcDirTarget = path.join(srcdir, basename)
-      if (fs.existsSync(srcDirTarget)) {
-        log.warn('initMain: using ' + srcDirTarget + ' instead')
-        pathname = srcDirTarget
-        found = true
+  const sqlUrlPrefix = 'sqlite://'
+  if (targetPath.startsWith(sqlUrlPrefix)) {
+    const urlPath = targetPath.slice(sqlUrlPrefix.length)
+    const tableSepIndex = urlPath.lastIndexOf('/')
+    const tableName = urlPath.slice(tableSepIndex + 1)
+    const dbFileName = urlPath.slice(0, tableSepIndex)
+    rtc = await reltabSqlite.getContext(dbFileName, rtOptions)
+    ti = await rtc.getTableInfo(tableName)
+  } else {
+    rtc = await reltabSqlite.getContext(':memory:', rtOptions)
+    let pathname = targetPath
+    // check if pathname exists
+    if (!fs.existsSync(pathname)) {
+      let found = false
+      let srcdir = null
+      let srcDirTarget = null
+      log.warn('initMain: pathname not found: ', pathname)
+      const basename = path.basename(pathname)
+      if (srcfile) {
+        srcdir = path.dirname(srcfile)
+        srcDirTarget = path.join(srcdir, basename)
+        if (fs.existsSync(srcDirTarget)) {
+          log.warn('initMain: using ' + srcDirTarget + ' instead')
+          pathname = srcDirTarget
+          found = true
+        }
+      }
+      if (!found) {
+        let msg = '"' + pathname + '": file not found.'
+        if (srcdir) {
+          msg += '\n(Also tried "' + srcDirTarget + '")'
+        }
+        throw new Error(msg)
       }
     }
-    if (!found) {
-      let msg = '"' + pathname + '": file not found.'
-      if (srcdir) {
-        msg += '\n(Also tried "' + srcDirTarget + '")'
-      }
-      throw new Error(msg)
-    }
+
+    // could also call: csvimport.importSqlite(pathname)
+    const md = await csvimport.fastImport(pathname)
+    ti = csvimport.mkTableInfo(md)
   }
-
-  // could also call: csvimport.importSqlite(pathname)
-  const md = await csvimport.fastImport(pathname)
-  rtc.addImportedTable(md)
+  rtc.registerTable(ti)
   // Now let's place a function in global so it can be run via remote:
   global.runQuery = runQuery(rtc)
   global.getRowCount = getRowCount(rtc)
-  const mdStr = JSON.stringify(md, null, 2)
-  return mdStr
+  const tiStr = JSON.stringify(ti, null, 2)
+  return tiStr
 }
 
 const mkInitMain = (options) => (pathname, srcfile, cb) => {
@@ -154,8 +168,8 @@ const optionDefinitions = [
     name: 'srcfile',
     type: String,
     defaultOption: true,
-    typeLabel: '[underline]{file}.csv or [underline]{file}.tad',
-    description: 'CSV file(.csv with header row) or Tad(.tad) file to view'
+    typeLabel: '[underline]{file}.csv or [underline]{file}.tad or sqlite://[underline]{file}/[underline]{table}',
+    description: 'CSV file(.csv with header row), Tad(.tad) file to view'
   },
   {
     name: 'executed-from',
@@ -201,7 +215,8 @@ const usageInfo = [
     header: 'Synopsis',
     content: [
       '$ tad [[italic]{options}] [underline]{file}.csv',
-      '$ tad [[italic]{options}] [underline]{file}.tad'
+      '$ tad [[italic]{options}] [underline]{file}.tad',
+      '$ tad [[italic]{options}] sqlite://[underline]{file}/[underline]{table}'
     ]
   },
   {
@@ -236,7 +251,9 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
 const getTargetPath = (options, filePath) => {
   let targetPath = null
   const srcDir = options['executed-from']
-  if (srcDir && filePath && !(filePath.startsWith('/'))) {
+  if (srcDir && filePath &&
+    !(filePath.startsWith('/')) &&
+    !(filePath.startsWith('sqlite://'))) {
     // relative path -- prepend executed-from
     targetPath = path.join(srcDir, filePath)
   } else {

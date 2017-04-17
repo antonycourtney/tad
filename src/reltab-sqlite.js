@@ -1,9 +1,15 @@
 /* @flow */
 
 import sqlite from 'sqlite'
-import * as reltab from './reltab'
-import {  TableRep, Schema, FilterExp, QueryExp } from './reltab'  // eslint-disable-line
-import type { FileMetadata, TableInfoMap, ValExp, Row, AggColSpec, SubExp, ColumnMetaMap, ColumnMapInfo, ColumnExtendVal, Connection } from './reltab' // eslint-disable-line
+import { TableRep, QueryExp, Schema } from './reltab'
+import type { TableInfoMap, TableInfo, ValExp, Row, AggColSpec, SubExp, ColumnMetaMap, ColumnMapInfo, ColumnExtendVal, Connection } from './reltab' // eslint-disable-line
+
+function assertDefined<A> (x: ?A): A {
+  if (x == null) {
+    throw new Error('unexpected null value')
+  }
+  return x
+}
 
 class SqliteContext {
   db: any
@@ -16,8 +22,8 @@ class SqliteContext {
     this.showQueries = (options && options.showQueries)
   }
 
-  addImportedTable (md: FileMetadata) {
-    this.tableMap[md.tableName] = reltab.mkTableInfo(md)
+  registerTable (ti: TableInfo) {
+    this.tableMap[ti.tableName] = ti
   }
 
   evalQuery (query: QueryExp, offset: number = -1, limit: number = -1): Promise<TableRep> {
@@ -68,10 +74,37 @@ class SqliteContext {
       return ret
     })
   }
+
+  // use table_info pragma to construct a TableInfo:
+  getTableInfo (tableName: string): Promise<TableInfo> {
+    const tiQuery = `PRAGMA table_info(${tableName})`
+    const qp = this.db.all(tiQuery)
+    return qp.then(rows => {
+      console.log('getTableInfo: ', rows)
+      const extendCMap = (cmm: ColumnMetaMap,
+            row: any, idx: number): ColumnMetaMap => {
+        const cnm = row.name
+        const cType = row.type.toLocaleLowerCase()
+        if (cType == null) {
+          console.error('mkTableInfo: No column type for "' + cnm + '", index: ' + idx)
+        }
+        const cmd = {
+          displayName: cnm,
+          type: assertDefined(cType)
+        }
+        cmm[cnm] = cmd
+        return cmm
+      }
+      const cmMap = rows.reduce(extendCMap, {})
+      const columnIds = rows.map(r => r.name)
+      const schema = new Schema(columnIds, cmMap)
+      return { tableName, schema }
+    })
+  }
 }
 
-const init = async (options: Object = {}): Connection => {
-  await sqlite.open(':memory:')
+const init = async (dbfile, options: Object = {}): Connection => {
+  await sqlite.open(dbfile)
   const ctx = new SqliteContext(sqlite, options)
   return ctx
 }
@@ -79,9 +112,9 @@ const init = async (options: Object = {}): Connection => {
 // get (singleton) connection to sqlite:
 let ctxPromise: ?Promise<Connection> = null
 
-export const getContext = (options: Object = {}): Promise<Connection> => {
+export const getContext = (dbfile: string, options: Object = {}): Promise<Connection> => {
   if (!ctxPromise) {
-    ctxPromise = init(options)
+    ctxPromise = init(dbfile, options)
   }
   return ctxPromise
 }
