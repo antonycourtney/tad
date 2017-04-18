@@ -216,7 +216,7 @@ const usageInfo = [
     content: [
       '$ tad [[italic]{options}] [underline]{file}.csv',
       '$ tad [[italic]{options}] [underline]{file}.tad',
-      '$ tad [[italic]{options}] sqlite://[underline]{file}/[underline]{table}'
+      '$ tad [[italic]{options}] sqlite://[underline]{/path/to/sqlite-file}/[underline]{table}'
     ]
   },
   {
