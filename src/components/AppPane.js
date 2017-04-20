@@ -4,6 +4,7 @@ import * as React from 'react'
 import Sidebar from './Sidebar'
 import GridPane from './GridPane'
 import LoadingModal from './LoadingModal'
+import FilterDialog from './FilterDialog'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import { FocusStyleManager } from '@blueprintjs/core'
@@ -14,6 +15,28 @@ import { FocusStyleManager } from '@blueprintjs/core'
 
 class AppPane extends React.Component {
   grid: any
+  state: { showFilterDialog: boolean }
+
+  constructor (props: any) {
+    super(props)
+    this.state = { showFilterDialog: false }
+  }
+
+  handleFilterButtonClicked (event: any) {
+    this.setState({ showFilterDialog: true })
+  }
+
+  handleFilterClose (event: any) {
+    this.setState({ showFilterDialog: false })
+  }
+
+  handleFilterCancel (event: any) {
+    this.setState({ showFilterDialog: false })
+  }
+
+  handleFilterApply (event: any) {
+    this.setState({ showFilterDialog: false })
+  }
 
   handleSlickGridCreated (grid: any) {
     this.grid = grid
@@ -55,11 +78,25 @@ class AppPane extends React.Component {
             baseSchema={appState.baseSchema}
             viewParams={viewParams}
             stateRefUpdater={this.props.stateRefUpdater} />
-          <GridPane
-            onSlickGridCreated={grid => this.handleSlickGridCreated(grid)}
-            appState={appState}
-            viewState={viewState}
-            stateRefUpdater={this.props.stateRefUpdater} />
+          <div className='center-app-pane'>
+            <FilterDialog
+              isOpen={this.state.showFilterDialog}
+              onClose={e => this.handleFilterClose(e)}
+              onCancel={e => this.handleFilterCancel(e)}
+              onApply={e => this.handleFilterApply(e)}
+            />
+            <GridPane
+              onSlickGridCreated={grid => this.handleSlickGridCreated(grid)}
+              appState={appState}
+              viewState={viewState}
+              stateRefUpdater={this.props.stateRefUpdater} />
+            <div className='app-footer'>
+              <a
+                onClick={(event) => this.handleFilterButtonClicked(event)}
+                tabIndex='0'>Filter:</a>
+              <span className='filter-summary'> x is not null</span>
+            </div>
+          </div>
         </div>
       )
     } else {
