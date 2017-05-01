@@ -84,6 +84,14 @@ export class ConstVal {
 export const constVal = (val: ValType) => new ConstVal(val)
 
 export type BinRelOp = 'EQ' | 'GT' | 'GE' | 'LT' | 'LE'
+export type UnaryRelOp = 'ISNULL' | 'NOTNULL'
+export type RelOp = UnaryRelOp | BinRelOp
+
+const binaryOps = ['EQ', 'GT', 'GE', 'LT', 'LE']
+const binaryOpsSet = new Set(binaryOps)
+
+const unaryOps = ['ISNULL', 'NOTNULL']
+const unaryOpsSet = new Set(unaryOps)
 
 const ppOpMap = {
   'EQ': '=',
@@ -93,6 +101,19 @@ const ppOpMap = {
   'LE': '<=',
   'ISNULL': 'is null',
   'NOTNULL': 'is not null'
+}
+
+export const opIsBinary = (op: RelOp): boolean => {
+  return binaryOpsSet.has(op)
+}
+
+export const columnTypeOps = (ct: ColumnType): Array<RelOp> => {
+  // for now:
+  return unaryOps.concat(binaryOps)
+}
+
+export const opDisplayName = (op: RelOp): string => {
+  return ppOpMap[op]
 }
 
 export class BinRelExp {
@@ -111,9 +132,15 @@ export class BinRelExp {
   toSqlWhere (): string {
     return this.lhs.toSqlWhere() + ppOpMap[this.op] + this.rhs.toSqlWhere()
   }
+
+  lhsCol (): string {
+    if (this.lhs.expType !== 'ColRef') {
+      throw new Error('Unexpected non-colref arg expType: ', this.lhs)
+    }
+    return this.lhs.colName
+  }
 }
 
-export type UnaryRelOp = 'ISNULL' | 'NOTNULL'
 
 export class UnaryRelExp {
   expType: 'UnaryRelExp'
@@ -129,6 +156,13 @@ export class UnaryRelExp {
   toSqlWhere (): string {
     return this.arg.toSqlWhere() + ' ' + ppOpMap[this.op]
   }
+
+  lhsCol (): string {
+    if (this.arg.expType !== 'ColRef') {
+      throw new Error('Unexpected non-colref arg expType: ', this.arg)
+    }
+    return this.arg.colName
+  }
 }
 
 export type RelExp = BinRelExp | UnaryRelExp
@@ -142,7 +176,7 @@ export class FilterExp {
   op: BoolOp
   opArgs: Array<SubExp>
 
-  constructor (op: BoolOp, opArgs: Array<SubExp> = []) {
+  constructor (op: BoolOp = 'AND', opArgs: Array<SubExp> = []) {
     this.expType = 'FilterExp'
     this.op = op
     this.opArgs = opArgs
@@ -223,6 +257,10 @@ export type ColumnMetadata = { displayName: string, type: ColumnType }
 
 const basicAggFns = ['min', 'max', 'uniq', 'null']
 const numericAggFns = ['avg', 'count', 'min', 'max', 'sum', 'uniq', 'null']
+
+export const typeIsNumeric = (ct: ColumnType): boolean => {
+  return ((ct === 'integer') || (ct === 'real'))
+}
 
 export const aggFns = (ct: ColumnType): Array<AggFn> => {
   if (ct === 'text') {
@@ -958,11 +996,13 @@ export class Schema {
   columnMetadata: ColumnMetaMap
   columns: Array<string>
   columnIndices:{[colId: string]: number}
+  _sortedColumns: ?Array<string>
 
   constructor (columns: Array<string>, columnMetadata: ColumnMetaMap) {
     // TODO: really need to clone these to be safe
     this.columns = columns
     this.columnMetadata = columnMetadata
+    this._sortedColumns = null
 
     var columnIndices = {}
     for (var i = 0; i < columns.length; i++) {
@@ -1027,6 +1067,19 @@ export class Schema {
     var outSchema = new Schema(outCols, outMetadata)
 
     return outSchema
+  }
+
+  // returned an array of column ids in locale-sorted order
+  // cached lazily
+  sortedColumns (): Array<string> {
+    let sc = this._sortedColumns
+    if (sc === null) {
+      sc = this.columns.slice()
+      sc.sort((cid1, cid2) =>
+        this.displayName(cid1).localeCompare(this.displayName(cid2)))
+      this._sortedColumns = sc
+    }
+    return sc
   }
 }
 

@@ -5,8 +5,6 @@
 @import "~slickgrid-es6/dist/slick.grid.less";
 @import "~slickgrid-es6/dist/slick-default-theme.less";
 
-@footer-height: 25px;
-
 .cell-story {
   white-space: normal !important;
   line-height: 19px !important;
@@ -123,28 +121,9 @@ table {
 
 .center-app-pane {
   flex: 1 1 auto;
+  width: 500px;
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
-}
-
-.app-footer {
-  width: 100%;
-  height: @footer-height;
-  background: #ffffff;
-  border: 1px solid #bababa;
-  padding-left: 10px;
-  padding-right: 16px;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  font-size: 14px;
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin: 0;
-}
-
-.filter-summary {
-  margin-left: 8px;
+  overflow: none;
 }

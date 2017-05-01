@@ -48,8 +48,7 @@ const aggRowFormatter = (viewParams: ViewParams, stateRefUpdater: any) => (schem
 export default class AggPanel extends React.Component {
   render () {
     const {schema, viewParams, stateRefUpdater} = this.props  //eslint-disable-line
-    const columnIds = schema.columns.slice()
-    columnIds.sort((cid1, cid2) => schema.displayName(cid1).localeCompare(schema.displayName(cid2)))
+    const columnIds = schema.sortedColumns()
 
     return (
       <div className='ui-block'>

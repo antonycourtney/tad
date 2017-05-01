@@ -16,6 +16,7 @@ export default class AppState extends Immutable.Record({
   targetPath: '', // path to CSV file
   baseQuery: null,
   baseSchema: null,
+  filterExp: new reltab.FilterExp(),
   viewState: new ViewState()
 }) {
   // duplicated here to allow us to write flow types:
@@ -25,5 +26,6 @@ export default class AppState extends Immutable.Record({
   targetPath: string
   baseQuery: reltab.QueryExp
   baseSchema: reltab.Schema   // always in sync with baseQuery
+  filterExp: reltab.FilterExp
   viewState: ViewState
 }
