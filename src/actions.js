@@ -168,3 +168,7 @@ export const setColumnFormatOptions = (cid: string, opts: any, updater: RefUpdat
 export const setShowHiddenCols = (show: boolean, updater: RefUpdater) => {
   updater(vpUpdate(viewParams => viewParams.set('showHiddenCols', show)))
 }
+
+export const setFilter = (fe: reltab.FilterExp, updater: RefUpdater) => {
+  updater(appState => appState.set('filterExp', fe))
+}

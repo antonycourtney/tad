@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import * as reltab from '../reltab'
+import * as actions from '../actions'
 import FilterEditor from './FilterEditor'
 
 export default class Footer extends React.Component {
@@ -26,33 +27,36 @@ export default class Footer extends React.Component {
   }
 
   handleFilterApply (filterExp: reltab.FilterExp) {
+    actions.setFilter(filterExp, this.props.stateRefUpdater)
   }
 
-  handleFilterDone (filterExp: reltab.FilterExp) {
+  handleFilterDone () {
     this.setState({ expanded: false })
   }
 
   render () {
     const {appState} = this.props
 
+    const filterStr = appState.filterExp.toSqlWhere()
+
     const expandClass = this.state.expanded ? 'footer-expanded' : 'footer-collapsed'
 
     const editorComponent = this.state.expanded ? (
       <FilterEditor
         schema={appState.baseSchema}
-        initialFilterExp={appState.filterExp}
+        filterExp={appState.filterExp}
         onCancel={e => this.handleFilterCancel(e)}
         onApply={fexp => this.handleFilterApply(fexp)}
-        onDone={fexp => this.handleFilterDone(fexp)} />
+        onDone={() => this.handleFilterDone()} />
       ) : null
 
-    return(
+    return (
       <div className={'footer ' + expandClass}>
         <div className='footer-top-row'>
           <a
             onClick={(event) => this.handleFilterButtonClicked(event)}
-            tabIndex='0'>Filter:</a>
-          <span className='filter-summary'> x is not null</span>
+            tabIndex='0'>Filter</a>
+          <span className='filter-summary'> {filterStr}</span>
         </div>
         {editorComponent}
       </div>

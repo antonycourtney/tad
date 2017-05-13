@@ -103,6 +103,10 @@ const ppOpMap = {
   'NOTNULL': 'is not null'
 }
 
+export const opIsUnary = (op: RelOp): boolean => {
+  return unaryOpsSet.has(op)
+}
+
 export const opIsBinary = (op: RelOp): boolean => {
   return binaryOpsSet.has(op)
 }
@@ -140,7 +144,6 @@ export class BinRelExp {
     return this.lhs.colName
   }
 }
-
 
 export class UnaryRelExp {
   expType: 'UnaryRelExp'
@@ -247,7 +250,7 @@ export type AggFn = 'avg' | 'count' | 'min' | 'max' | 'sum' | 'uniq' | 'null'
 // or a pair of column name and AggFn
 export type AggColSpec = string | [AggFn, string]
 
-type Scalar = ?number | ?string | ?boolean
+export type Scalar = ?number | ?string | ?boolean
 export type Row = {[columnId: string]: Scalar}
 
 // metadata for a single column:
@@ -1073,7 +1076,7 @@ export class Schema {
   // cached lazily
   sortedColumns (): Array<string> {
     let sc = this._sortedColumns
-    if (sc === null) {
+    if (sc == null) {
       sc = this.columns.slice()
       sc.sort((cid1, cid2) =>
         this.displayName(cid1).localeCompare(this.displayName(cid2)))
