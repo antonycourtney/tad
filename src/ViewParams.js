@@ -46,7 +46,8 @@ export default class ViewParams extends Immutable.Record({
   aggMap: {}, // overrides of agg fns
   defaultFormats: new FormatDefaults(),
   columnFormats: {},
-  showHiddenCols: false
+  showHiddenCols: false,
+  filterExp: new reltab.FilterExp()
 }) {
   showRoot: boolean
   displayColumns: Array<string> // array of column ids to display, in order
@@ -63,6 +64,7 @@ export default class ViewParams extends Immutable.Record({
   }
   columnFormats: FormatsMap
   showHiddenCols: boolean
+  filterExp: reltab.FilterExp  
 
   // toggle element membership in array:
   toggleArrElem (propName: string, cid: string): ViewParams {

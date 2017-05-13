@@ -36,15 +36,15 @@ export default class Footer extends React.Component {
 
   render () {
     const {appState} = this.props
-
-    const filterStr = appState.filterExp.toSqlWhere()
+    const filterExp = appState.viewState.viewParams.filterExp
+    const filterStr = filterExp.toSqlWhere()
 
     const expandClass = this.state.expanded ? 'footer-expanded' : 'footer-collapsed'
 
     const editorComponent = this.state.expanded ? (
       <FilterEditor
         schema={appState.baseSchema}
-        filterExp={appState.filterExp}
+        filterExp={filterExp}
         onCancel={e => this.handleFilterCancel(e)}
         onApply={fexp => this.handleFilterApply(fexp)}
         onDone={() => this.handleFilterDone()} />

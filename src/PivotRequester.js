@@ -73,7 +73,8 @@ const requestQueryView = async (rt: Connection,
   for (let cid of schemaCols) {
     aggMap[cid] = viewParams.getAggFn(baseSchema, cid)
   }
-  const ptree = await aggtree.vpivot(rt, baseQuery, baseSchema, viewParams.vpivots,
+  const filterQuery = baseQuery.filter(viewParams.filterExp)
+  const ptree = await aggtree.vpivot(rt, filterQuery, baseSchema, viewParams.vpivots,
       viewParams.pivotLeafColumn, viewParams.showRoot, viewParams.sortKey, aggMap)
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths)
   const rowCount = await rt.rowCount(treeQuery)

@@ -170,5 +170,5 @@ export const setShowHiddenCols = (show: boolean, updater: RefUpdater) => {
 }
 
 export const setFilter = (fe: reltab.FilterExp, updater: RefUpdater) => {
-  updater(appState => appState.set('filterExp', fe))
+  updater(vpUpdate(viewParams => viewParams.set('filterExp', fe)))
 }
