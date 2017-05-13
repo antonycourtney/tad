@@ -71,6 +71,7 @@
               "type": "text"
             }
           },
+          "_sortedColumns": null,
           "columnIndices": {
             "JobFamily": 0,
             "Title": 1,
@@ -370,6 +371,7 @@
               "type": "text"
             }
           },
+          "_sortedColumns": null,
           "columnIndices": {
             "JobFamily": 0,
             "Title": 1,
@@ -682,6 +684,7 @@
               "type": "text"
             }
           },
+          "_sortedColumns": null,
           "columnIndices": {
             "JobFamily": 0,
             "Title": 1,
@@ -1087,6 +1090,7 @@
               "type": "boolean"
             }
           },
+          "_sortedColumns": null,
           "columnIndices": {
             "JobFamily": 0,
             "Title": 1,

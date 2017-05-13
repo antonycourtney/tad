@@ -6,8 +6,10 @@ require('babel-polyfill')
 
 var test = require('tape')
 var tapeSnapInit = require('./tapeSnap')
-var tapSpec = require('tap-spec')
+// var tapSpec = require('tap-spec')
 // var summarize = require('tap-summary')
+var tapDifflet = require('tap-difflet')
+var formatter = tapDifflet()
 const commandLineArgs = require('command-line-args')
 
 const optionDefinitions = [
@@ -46,8 +48,14 @@ const optionDefinitions = [
 let htest = test.createHarness()
 
 htest.createStream()
+  .pipe(formatter)
+  .pipe(process.stdout)
+
+/*
+htest.createStream()
   .pipe(tapSpec())
   .pipe(process.stdout)
+*/
 
 // A fetch polyfill using ReadFile that assumes url is relative:
 function readFileAsync (file, options) {
