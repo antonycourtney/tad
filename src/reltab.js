@@ -83,6 +83,14 @@ export class ConstVal {
 }
 export const constVal = (val: ValType) => new ConstVal(val)
 
+const deserializeValExp = (js: Object): ValExp => {
+  if (js.expType === 'ConstVal') {
+    return new ConstVal(js.val)
+  } else {
+    return new ColRef(js.colName)
+  }
+}
+
 export type BinRelOp = 'EQ' | 'GT' | 'GE' | 'LT' | 'LE' | 'BEGINS' | 'ENDS' | 'CONTAINS'
 export type UnaryRelOp = 'ISNULL' | 'NOTNULL'
 export type RelOp = UnaryRelOp | BinRelOp
@@ -212,6 +220,17 @@ export type SubExp = RelExp | FilterExp
 
 export type BoolOp = 'AND' | 'OR'
 
+const deserializeRelExp = (jsExp: Object): RelExp => {
+  if (jsExp.expType === 'UnaryRelExp') {
+    const arg = deserializeValExp(jsExp.arg)
+    return new UnaryRelExp(jsExp.op, arg)
+  } else {
+    const lhs = deserializeValExp(jsExp.lhs)
+    const rhs = deserializeValExp(jsExp.rhs)
+    return new BinRelExp(jsExp.op, lhs, rhs)
+  }
+}
+
 export class FilterExp {
   expType: 'FilterExp'
   op: BoolOp
@@ -221,6 +240,12 @@ export class FilterExp {
     this.expType = 'FilterExp'
     this.op = op
     this.opArgs = opArgs
+  }
+
+  static deserialize (jsObj: Object): FilterExp {
+    const opArgs = jsObj.opArgs.map(deserializeRelExp)
+
+    return new FilterExp(jsObj.op, opArgs)
   }
 
   // chained operator constructors for relational expressions:

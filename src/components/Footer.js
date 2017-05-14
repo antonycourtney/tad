@@ -13,17 +13,21 @@ export default class Footer extends React.Component {
     this.state = { expanded: false }
   }
 
-  handleFilterButtonClicked (event: any) {
-    event.preventDefault()
-    const nextState = !this.state.expanded
+  setExpandedState (nextState: boolean) {
     this.setState({expanded: nextState})
     if (this.props.onFilterToggled) {
       this.props.onFilterToggled(nextState)
     }
   }
 
+  handleFilterButtonClicked (event: any) {
+    event.preventDefault()
+    const nextState = !this.state.expanded
+    this.setExpandedState(nextState)
+  }
+
   handleFilterCancel (event: any) {
-    this.setState({ expanded: false })
+    this.setExpandedState(false)
   }
 
   handleFilterApply (filterExp: reltab.FilterExp) {
@@ -31,7 +35,7 @@ export default class Footer extends React.Component {
   }
 
   handleFilterDone () {
-    this.setState({ expanded: false })
+    this.setExpandedState(false)
   }
 
   render () {
@@ -50,13 +54,27 @@ export default class Footer extends React.Component {
         onDone={() => this.handleFilterDone()} />
       ) : null
 
+    let rowCountBlock = null
+    const queryView = appState.viewState.queryView
+    if (queryView) {
+      const rowCountStr = queryView.rowCount.toLocaleString(undefined, {grouping: true})
+      rowCountBlock = (
+        <div className='footer-block'>
+          <span className='footer-label'>Rows: </span>
+          <span className='footer-value'>{rowCountStr}</span>
+        </div>
+      )
+    }
     return (
       <div className={'footer ' + expandClass}>
         <div className='footer-top-row'>
-          <a
-            onClick={(event) => this.handleFilterButtonClicked(event)}
-            tabIndex='0'>Filter</a>
-          <span className='filter-summary'> {filterStr}</span>
+          <div className='footer-filter-block'>
+            <a
+              onClick={(event) => this.handleFilterButtonClicked(event)}
+              tabIndex='0'>Filter</a>
+            <span className='filter-summary'> {filterStr}</span>
+          </div>
+          {rowCountBlock}
         </div>
         {editorComponent}
       </div>

@@ -64,7 +64,7 @@ export default class ViewParams extends Immutable.Record({
   }
   columnFormats: FormatsMap
   showHiddenCols: boolean
-  filterExp: reltab.FilterExp  
+  filterExp: reltab.FilterExp
 
   // toggle element membership in array:
   toggleArrElem (propName: string, cid: string): ViewParams {
@@ -172,14 +172,21 @@ export default class ViewParams extends Immutable.Record({
   }
 
   static deserialize (js) {
-    const { defaultFormats, openPaths, ...rest } = js
+    const { defaultFormats, openPaths, filterExp, ...rest } = js
     const defaultFormatsObj = FormatDefaults.deserialize(defaultFormats)
     const openPathsObj = new PathTree(openPaths._rep)
+    let filterExpObj
+    if (filterExp) {
+      filterExpObj = reltab.FilterExp.deserialize(filterExp)
+    } else {
+      filterExpObj = new reltab.FilterExp()
+    }
     const baseVP = new ViewParams(rest)
     const retVP =
       baseVP
         .set('defaultFormats', defaultFormatsObj)
         .set('openPaths', openPathsObj)
+        .set('filterExp', filterExpObj)
     return retVP
   }
 }
