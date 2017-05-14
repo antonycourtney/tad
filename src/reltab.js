@@ -83,11 +83,14 @@ export class ConstVal {
 }
 export const constVal = (val: ValType) => new ConstVal(val)
 
-export type BinRelOp = 'EQ' | 'GT' | 'GE' | 'LT' | 'LE'
+export type BinRelOp = 'EQ' | 'GT' | 'GE' | 'LT' | 'LE' | 'BEGINS' | 'ENDS' | 'CONTAINS'
 export type UnaryRelOp = 'ISNULL' | 'NOTNULL'
 export type RelOp = UnaryRelOp | BinRelOp
 
-const binaryOps = ['EQ', 'GT', 'GE', 'LT', 'LE']
+const textOnlyBinaryOps = ['BEGINS', 'ENDS', 'CONTAINS']
+const textOnlyOpsSet = new Set(textOnlyBinaryOps)
+const commonBinaryOps = ['EQ', 'GT', 'GE', 'LT', 'LE']
+const binaryOps = commonBinaryOps.concat(textOnlyBinaryOps)
 const binaryOpsSet = new Set(binaryOps)
 
 const unaryOps = ['ISNULL', 'NOTNULL']
@@ -100,7 +103,14 @@ const ppOpMap = {
   'LT': '<',
   'LE': '<=',
   'ISNULL': 'is null',
-  'NOTNULL': 'is not null'
+  'NOTNULL': 'is not null',
+  'BEGINS': 'starts with',
+  'ENDS': 'ends with',
+  'CONTAINS': 'contains'
+}
+
+export const opIsTextOnly = (op: RelOp): boolean => {
+  return textOnlyOpsSet.has(op)
 }
 
 export const opIsUnary = (op: RelOp): boolean => {
@@ -111,13 +121,38 @@ export const opIsBinary = (op: RelOp): boolean => {
   return binaryOpsSet.has(op)
 }
 
+const textOps = textOnlyBinaryOps.concat(commonBinaryOps).concat(unaryOps)
+const numOps = commonBinaryOps.concat(unaryOps)
+
 export const columnTypeOps = (ct: ColumnType): Array<RelOp> => {
-  // for now:
-  return unaryOps.concat(binaryOps)
+  if (ct === 'text') {
+    return textOps
+  }
+  return numOps
 }
 
 export const opDisplayName = (op: RelOp): string => {
   return ppOpMap[op]
+}
+
+const textOpToSqlWhere = (lhs: ValExp, op: BinRelOp, rhs: ValExp): string => {
+  if (rhs.expType !== 'ConstVal') {
+    throw new Error('textOpToSqlWhere: only constants supported for rhs of text ops')
+  }
+  const rhsStr : string = (rhs.val: any)
+  let matchStr
+  switch (op) {
+    case 'BEGINS':
+      matchStr = rhsStr + '%'
+      break
+    case 'ENDS':
+      matchStr = '%' + rhsStr
+      break
+    case 'CONTAINS':
+      matchStr = '%' + rhsStr + '%'
+      break
+  }
+  return lhs.toSqlWhere() + ' LIKE ' + sqlEscapeString(matchStr)
 }
 
 export class BinRelExp {
@@ -134,6 +169,9 @@ export class BinRelExp {
   }
 
   toSqlWhere (): string {
+    if (opIsTextOnly(this.op)) {
+      return textOpToSqlWhere(this.lhs, this.op, this.rhs)
+    }
     return this.lhs.toSqlWhere() + ppOpMap[this.op] + this.rhs.toSqlWhere()
   }
 

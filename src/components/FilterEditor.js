@@ -21,6 +21,9 @@ export default class FilterEditor extends React.Component {
     let op, opArgs
     if (filterExp != null) {
       ({ op, opArgs } = filterExp)
+      if (!opArgs || (opArgs.length === 0)) {
+        opArgs = [null]
+      }
     } else {
       op = 'AND'
       opArgs = [null]
