@@ -6,15 +6,21 @@ import * as actions from '../actions'
 import FilterEditor from './FilterEditor'
 
 export default class Footer extends React.Component {
-  state: { expanded: boolean }
+  state: { expanded: boolean, dirty: boolean, prevFilter: ?reltab.FilterExp }
 
   constructor (props: any) {
     super(props)
-    this.state = { expanded: false }
+    this.state = { expanded: false, dirty: false, prevFilter: null }
   }
 
   setExpandedState (nextState: boolean) {
-    this.setState({expanded: nextState})
+    if (nextState && !this.state.dirty) {
+      // snap current filter into prevFilter:
+      const prevFilter = this.props.appState.viewState.viewParams.filterExp
+      this.setState({expanded: nextState, prevFilter, dirty: true})
+    } else {
+      this.setState({expanded: nextState})
+    }
     if (this.props.onFilterToggled) {
       this.props.onFilterToggled(nextState)
     }
@@ -27,7 +33,11 @@ export default class Footer extends React.Component {
   }
 
   handleFilterCancel (event: any) {
+    // restore previous filter:
+    const fe = this.state.prevFilter || new reltab.FilterExp()
+    actions.setFilter(fe, this.props.stateRefUpdater)
     this.setExpandedState(false)
+    this.setState({dirty: false, prevFilter: null})
   }
 
   handleFilterApply (filterExp: reltab.FilterExp) {
@@ -36,6 +46,7 @@ export default class Footer extends React.Component {
 
   handleFilterDone () {
     this.setExpandedState(false)
+    this.setState({dirty: false, prevFilter: null})
   }
 
   render () {

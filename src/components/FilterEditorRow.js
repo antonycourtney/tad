@@ -39,7 +39,7 @@ export default class FilterEditorRow extends React.Component {
     schema: reltab.Schema,
     relExp: ?reltab.RelExp,
     onDeleteRow: () => void,
-    onUpdate: (fe: reltab.RelExp) => void
+    onUpdate: (fe: ?reltab.RelExp) => void
   }
   state: EditorRowState
 
@@ -59,16 +59,20 @@ export default class FilterEditorRow extends React.Component {
 
   /* validate row and notify if valid */
   handleUpdate (rs: EditorRowState) {
-    if (validRow(rs) && this.props.onUpdate) {
-      const relExp = mkRelExp(rs)
-      this.props.onUpdate(relExp)
+    if (this.props.onUpdate) {
+      if (validRow(rs)) {
+        const relExp = mkRelExp(rs)
+        this.props.onUpdate(relExp)
+      } else {
+        this.props.onUpdate(null)
+      }
     }
   }
 
   handleColumnSelect (event: any) {
     const sval = event.target.value
     const columnId = (sval === '') ? null : sval
-    this.setState({ columnId })
+    this.setState({ columnId, op: null, value: null })
     this.handleUpdate({ ...this.state, columnId })
   }
 

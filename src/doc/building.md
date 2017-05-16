@@ -22,20 +22,6 @@ To build Tad, you should have [node](https://nodejs.org/en/) and `npm`(https://w
 
 This will install dependencies from `package.json` from npm(https://www.npmjs.com/). This will take some time, particularly if this is the first time you are downloading many of the dependencies.
 
-## Build static assets
-
-This step will install various static assets (such as the Bootstrap CSS file) into a common build directory used by the application:
-
-    $ npm run build-assets
-
-## Run webpack
-
-Open a new terminal window in the same directory, and run
-
-    $ npm run webpack:watch
-
-This will use [webpack](https://webpack.github.io/) and [Babel](https://babeljs.io/) to compile and bundle the ES2015 sources into older versions of JavaScript supported by node.js and Chromium.
-
 ## Rebuild binary libraries with electron-rebuild
 
 Tad depends on the sqlite npm package, which in turn depends on the SQLite library, implemented in C++.  For reasons I don't fully understand related to how native libraries are
@@ -49,6 +35,12 @@ To perform this step, run:
 This will take considerable time (around 70 seconds on my Late 2013 MacBook Pro).
 
 **Note**:  Every time a new dependency is added to the application (using `npm install --save`), it is necessary to redo this step.
+
+## Build a Full Development Bundle
+
+    $ npm run build-dev
+
+This will first copy static assets to `./build` and then run webpack to transpile and bundle the application sources and various resources (also placed in `./build`).
 
 ## Run Tad
 
@@ -65,6 +57,21 @@ For example:
 
 if you want to see the generated SQL queries.
 
+# Build steps while developing Tad
+
+## Build static assets
+
+This step will install various static assets (such as the Bootstrap CSS file) into a common build directory used by the application:
+
+    $ npm run build-assets
+
+## Run webpack
+
+Open a new terminal window in the same directory, and run
+
+    $ npm run webpack:watch
+
+This will use [webpack](https://webpack.github.io/) and [Babel](https://babeljs.io/) to compile and bundle the ES2015 sources into older versions of JavaScript supported by node.js and Chromium.
 
 # Packaging a Release
 

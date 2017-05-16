@@ -13,7 +13,7 @@ export default class FilterEditor extends React.Component {
     onApply: (fe: reltab.FilterExp) => void,
     onDone: () => void
   }
-  state: {op: reltab.BoolOp, opArgs: Array<?reltab.RelExp>}
+  state: {op: reltab.BoolOp, opArgs: Array<?reltab.RelExp>, dirty: boolean}
 
   constructor (props: any) {
     super(props)
@@ -28,7 +28,7 @@ export default class FilterEditor extends React.Component {
       op = 'AND'
       opArgs = [null]
     }
-    this.state = {op, opArgs}
+    this.state = {op, opArgs, dirty: false}
   }
 
   renderFilterRows () {
@@ -46,25 +46,25 @@ export default class FilterEditor extends React.Component {
 
   handleAddRow () {
     const {opArgs} = this.state
-    this.setState({ opArgs: opArgs.concat(null) })
+    this.setState({ opArgs: opArgs.concat(null), dirty: true })
   }
 
   handleDeleteRow (idx: number) {
     const {opArgs: prevArgs} = this.state
     const opArgs = prevArgs.slice()
     delete opArgs[idx]  // delete, not splice, to keep React keys correct
-    this.setState({ opArgs })
+    this.setState({ opArgs, dirty: true })
   }
 
   handleOpChange (op: reltab.BoolOp) {
-    this.setState({ op })
+    this.setState({ op, dirty: true })
   }
 
-  handleUpdateRow (idx: number, re: reltab.RelExp) {
+  handleUpdateRow (idx: number, re: ?reltab.RelExp) {
     const {opArgs: prevArgs} = this.state
     const opArgs = (prevArgs.slice())
     opArgs[idx] = re
-    this.setState({ opArgs })
+    this.setState({ opArgs, dirty: true })
   }
 
   handleApply () {
@@ -72,6 +72,7 @@ export default class FilterEditor extends React.Component {
     const nnOpArgs: any = opArgs.filter(r => r != null)
     const fe = new reltab.FilterExp(op, nnOpArgs)
     this.props.onApply(fe)
+    this.setState({ dirty: false })
   }
 
   handleDone () {
@@ -114,6 +115,7 @@ export default class FilterEditor extends React.Component {
             text='Cancel'
             onClick={e => this.props.onCancel(e)} />
           <Button
+            disabled={!this.state.dirty}
             text='Apply'
             onClick={e => this.handleApply()} />
           <Button

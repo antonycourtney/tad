@@ -148,7 +148,7 @@ const textOpToSqlWhere = (lhs: ValExp, op: BinRelOp, rhs: ValExp): string => {
     throw new Error('textOpToSqlWhere: only constants supported for rhs of text ops')
   }
   const rhsStr : string = (rhs.val: any)
-  let matchStr
+  let matchStr = ''
   switch (op) {
     case 'BEGINS':
       matchStr = rhsStr + '%'
