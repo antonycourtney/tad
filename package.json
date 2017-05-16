@@ -40,7 +40,7 @@
     "sqlite-parser": "^1.0.0",
     "sqlite3": "git://github.com/antonycourtney/node-sqlite3.git",
     "through": "^2.3.8",
-    "url-regex": "git@github.com:antonycourtney/url-regex.git"
+    "url-regex": "git://github.com/antonycourtney/url-regex.git"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
