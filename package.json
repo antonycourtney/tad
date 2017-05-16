@@ -80,7 +80,7 @@
     "tap-spec": "^4.1.1",
     "tap-summary": "^3.0.2",
     "tape": "^4.6.3",
-    "uglify-js": "git+https://github.com/mishoo/UglifyJS2.git#harmony",
+    "uglify-js": "^3.0.5",
     "webpack": "^2.5.1"
   },
   "main": "./build/main.bundle.js",
