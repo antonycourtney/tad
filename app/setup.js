@@ -11,6 +11,7 @@ const log = require('electron-log')
 const electron = require('electron')
 const app = electron.app
 
+const isDarwin = process.platform === 'darwin'
 const MARKER_BASENAME = 'install-marker-'
 
 const postInstall = (markerPath) => {
@@ -23,12 +24,15 @@ const postInstall = (markerPath) => {
   }
   const appDir = path.dirname(appPath)
   const targetPath = path.join(appDir, 'tad.sh')
-  const linkPath = '/usr/local/bin/tad'
-  if (fs.existsSync(linkPath)) {
-    log.warn('file ' + linkPath + ' exists -- skipping symlink creation.')
-  } else {
-    fs.symlinkSync(targetPath, linkPath)
-    log.warn('created symlink ' + linkPath + ' -> ' + targetPath)
+
+  if (isDarwin) {
+    const linkPath = '/usr/local/bin/tad'
+    if (fs.existsSync(linkPath)) {
+      log.warn('file ' + linkPath + ' exists -- skipping symlink creation.')
+    } else {
+      fs.symlinkSync(targetPath, linkPath)
+      log.warn('created symlink ' + linkPath + ' -> ' + targetPath)
+    }
   }
   // and create the marker:
   fs.writeFileSync(markerPath, '')
