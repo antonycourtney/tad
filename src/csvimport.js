@@ -212,7 +212,7 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
       console.log('tsv file -- using tab as delimiter')
     }
 
-    const pathStream = new fs.ReadStream(pathname)
+    const pathStream = fs.createReadStream(pathname)
 
     let gauge = new Gauge()
 

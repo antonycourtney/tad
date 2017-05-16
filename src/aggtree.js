@@ -1,11 +1,11 @@
 /* @flow */
 
 import * as reltab from './reltab'
-const {col, constVal} = reltab
 import * as _ from 'lodash'
 import PathTree from './PathTree'
 import type { Connection, QueryExp, Schema } from './reltab' // eslint-disable-line
 import type { Path } from './PathTree'  // eslint-disable-line
+const {col, constVal} = reltab
 const PATHSEP = '#'
 const ENCPATHSEP = '%23'
 

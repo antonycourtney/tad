@@ -5,16 +5,6 @@
  */
 
 import * as styles from '../less/app.less'  // eslint-disable-line
-require('../less/sidebar.less')
-require('../less/columnSelector.less')
-require('../less/columnList.less')
-require('../less/singleColumnSelect.less')
-require('../less/modal.less')
-require('../less/footer.less')
-require('../less/filterEditor.less')
-
-require('babel-polyfill')
-
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import OneRef from 'oneref'
@@ -25,6 +15,15 @@ import ViewParams from './ViewParams'
 import * as reltab from './reltab' // eslint-disable-line
 import * as reltabElectron from './reltab-electron'
 import * as actions from './actions'
+require('../less/sidebar.less')
+require('../less/columnSelector.less')
+require('../less/columnList.less')
+require('../less/singleColumnSelect.less')
+require('../less/modal.less')
+require('../less/footer.less')
+require('../less/filterEditor.less')
+
+require('babel-polyfill')
 
 const remote = require('electron').remote
 

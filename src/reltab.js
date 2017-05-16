@@ -39,7 +39,7 @@ export const col = (colName: string) => new ColRef(colName)
 
 type ValType = number|string|Date
 
-const escRegEx = /[\0\n\r\b\t\\'"\x1a]/g
+const escRegEx = /[\0\n\r\b\t'"\x1a]/g
 
 export const sqlEscapeString = (inStr: string): string => {
   const outStr = inStr.replace(escRegEx, s => {
