@@ -42,6 +42,10 @@ export const createMenu = () => {
       }
     }
   ]
+  if (!isDarwin) {
+    fileSubmenu.push(separatorMenuItem)
+    fileSubmenu.push({ role: 'quit' })
+  }
   const debugSubmenu = [
     { role: 'toggledevtools' },
     { label: 'Show Hidden Columns',
