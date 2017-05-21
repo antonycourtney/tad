@@ -8,8 +8,13 @@ import * as reltab from './reltab'
  */
 export default class QueryView extends Immutable.Record({
   query: null,
-  rowCount: 0
+  rowCount: 0,
+  // The following fields are just for auxiliary info in footer
+  baseRowCount: 0,
+  filterRowCount: 0
 }) {
   query: reltab.QueryExp
   rowCount: number
+  baseRowCount: number
+  filterRowCount: number
 }

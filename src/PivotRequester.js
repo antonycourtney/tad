@@ -58,6 +58,34 @@ const mkDataView = (viewParams: ViewParams,
   return dataView
 }
 
+/*
+ * hacky opt for filter count: If empty filter, just retun baseRowCount
+ */
+const fastFilterRowCount = async (rt: Connection,
+  baseRowCount: number,
+  filterExp: reltab.FilterExp,
+  filterQuery: reltab.QueryExp): number => {
+  if (filterExp.opArgs.length === 0) {
+    // short circuit!
+    return baseRowCount
+  }
+  return rt.rowCount(filterQuery)
+}
+
+/*
+ * hacky opt for using filterRowCount as viewRowCount if not pivoted
+ */
+const fastViewRowCount = async (rt: Connection,
+  filterRowCount: number,
+  vpivots: Array<string>,
+  viewQuery: reltab.QueryExp): number => {
+  if (vpivots.length === 0) {
+    // short circuit!
+    return filterRowCount
+  }
+  return rt.rowCount(viewQuery)
+}
+
 /**
  * Use the current ViewParams to construct a QueryExp to send to
  * reltab using aggtree.
@@ -77,8 +105,14 @@ const requestQueryView = async (rt: Connection,
   const ptree = await aggtree.vpivot(rt, filterQuery, baseSchema, viewParams.vpivots,
       viewParams.pivotLeafColumn, viewParams.showRoot, viewParams.sortKey, aggMap)
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths)
-  const rowCount = await rt.rowCount(treeQuery)
-  const ret = new QueryView({query: treeQuery, rowCount})
+
+  // const t0 = performance.now()  // eslint-disable-line
+  const baseRowCount = await rt.rowCount(baseQuery)
+  const filterRowCount = await fastFilterRowCount(rt, baseRowCount, viewParams.filterExp, filterQuery)
+  const rowCount = await fastViewRowCount(rt, filterRowCount, viewParams.vpivots, treeQuery)
+  // const t1 = performance.now() // eslint-disable-line
+  // console.log('gathering row counts took ', (t1 - t0) / 1000, ' sec')
+  const ret = new QueryView({query: treeQuery, baseRowCount, filterRowCount, rowCount})
   return ret
 }
 

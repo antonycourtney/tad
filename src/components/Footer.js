@@ -68,11 +68,27 @@ export default class Footer extends React.Component {
     let rowCountBlock = null
     const queryView = appState.viewState.queryView
     if (queryView) {
-      const rowCountStr = queryView.rowCount.toLocaleString(undefined, {grouping: true})
+      const numFmt = num => num.toLocaleString(undefined, {grouping: true})
+
+      const {rowCount, baseRowCount, filterRowCount} = queryView
+      const rowCountStr = numFmt(rowCount)
+      const rcParts = [rowCountStr]
+      if (rowCount !== baseRowCount) {
+        rcParts.push(' (')
+        if ((filterRowCount !== baseRowCount) &&
+            (filterRowCount !== rowCount)) {
+          const filterCountStr = numFmt(filterRowCount)
+          rcParts.push(filterCountStr)
+          rcParts.push(' Filtered, ')
+        }
+        rcParts.push(numFmt(baseRowCount))
+        rcParts.push(' Total)')
+      }
+      const rcStr = rcParts.join('')
       rowCountBlock = (
         <div className='footer-block'>
           <span className='footer-label'>Rows: </span>
-          <span className='footer-value'>{rowCountStr}</span>
+          <span className='footer-value'>{rcStr}</span>
         </div>
       )
     }
