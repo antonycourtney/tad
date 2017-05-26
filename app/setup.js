@@ -22,18 +22,6 @@ const postInstall = (markerPath) => {
     log.info('postInsall: not running from packaged app, skipping post-install')
     return
   }
-  const appDir = path.dirname(appPath)
-  const targetPath = path.join(appDir, 'tad.sh')
-
-  if (isDarwin) {
-    const linkPath = '/usr/local/bin/tad'
-    if (fs.existsSync(linkPath)) {
-      log.warn('file ' + linkPath + ' exists -- skipping symlink creation.')
-    } else {
-      fs.symlinkSync(targetPath, linkPath)
-      log.warn('created symlink ' + linkPath + ' -> ' + targetPath)
-    }
-  }
   // and create the marker:
   fs.writeFileSync(markerPath, '')
 }

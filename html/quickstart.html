@@ -8,6 +8,11 @@
     <title>Tad Quick Start</title>
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      .code {
+        font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+      }
+    </style>
   </head>
   <body>
     <main>
@@ -18,16 +23,37 @@
         <h3>Launching Tad</h3>
         <p>There are three ways to launch Tad:
         <ol>
+          <li>Application Icon
+          <p>You can double click on the Tad application icon to open Tad.  Use <strong>File...Open</strong> and the standard file open dialog to open a <code>.csv</code> or <code>.tad</code> file.
+          <li>Context Menu or Drag and Drop</li>
+          <p>The installation process registers Tad as a viewer for <code>.csv</code> files. On any <code>.csv</code> file in the Finder (macOS) or Explorer (Windows), use <strong>Open With...</strong> and select <strong>Tad</strong> to open the file in Tad.
           <li>From the Command Line
-          <P>During installation Tad installs a symbolic link to the application in <code>/usr/local/bin/tad</code>.  If you are working in the shell (and have <code>/usr/local/bin</code> on your <code>PATH</code>), simply type:
+          <P>To launch tad from the command line, you need to ensure the Tad launcher shell script is on your <code>PATH</code>. The recommended way to do this is the following:
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">macOS / Linux</h4>
+              </div>
+              <div class="panel-body">
+                If you have administrative rights on your machine, run the following command to create a symbolic link to <code>tad.sh</code> in <code>/usr/local/bin</code>:
+                <br>
+                <br>
+                <div id="tadLinkCmd">
+                </div>
+              </div>
+            </div>
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">Windows</h4>
+              </div>
+              <div class="panel-body">
+              On Windows, you should use the Control Panel to add <code><span id="tadAppDir"></span></code> to your <code>PATH</code> environment variable.
+              </div>
+            </div>
+          You only ever need to perform the above PATH setup once. Then simply type:
 <pre>
 $ tad somefile.csv
 </pre>
           to launch Tad to explore <code>somefile.csv</code>. You can also open <code>.tad</code> files (previously saved Tad view configurations) via the command line.
-          <li>Application Icon
-          <p>You can double click on the Tad application icon in <code>/Applications</code> in the Finder or the dock to open Tad.  Use <strong>File...Open</strong> and the standard file open dialog to open a <code>.csv</code> or <code>.tad</code> file.
-          <li>Finder Context Menu or Drag and Drop</li>
-          <p>The installation process registers Tad as a viewer for <code>.csv</code> files. On any <code>.csv</code> file in the Finder, use <strong>Open With...</strong> and select <strong>Tad.app</strong> to open the file in Tad.
         </ol>
         <h3>Basic Usage</h3>
         <p>
@@ -83,10 +109,35 @@ $ tad -f --show-queries somefile.csv
         <P>
       </div>
     </main>
+<script src="js/clipboard.min.js"></script>
 <script>
+  new Clipboard('.btn')
   console.log('hello quick start!')
   const electron = require('electron')
   console.log('electron: ', electron)
+  const setupInfo = electron.remote.getGlobal('setupInfo')
+  console.log('setup info: ', setupInfo)
+  const {appDir, appScriptPath} = setupInfo
+  const elem = document.getElementById('tadLinkCmd')
+  const installCmd = `sudo ln -s ${appScriptPath} /usr/local/bin/tad`
+  elem.innerHTML = `
+<div class="row">
+  <div class="col-md-2"></div>
+  <div class="col-md-8">
+    <div class="input-group">
+       <input type="text" id="install-cmd" class="form-control code" value="${installCmd}"></input>
+       <span class="input-group-btn">
+         <button class="btn btn-default" type="button" data-clipboard-target="#install-cmd">
+          <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>Copy
+         </button>
+       </span>
+    </div><!-- /input-group -->
+  </div>
+  <div class="col-md-2"></div>
+</div>
+`
+  const pathElem = document.getElementById('tadAppDir')
+  pathElem.innerHTML=appDir
   // install this globally so we can access in generated a tag:
   window.tadOpenExternal = function (event,url) {
     event.preventDefault()
@@ -95,5 +146,5 @@ $ tad -f --show-queries somefile.csv
     return false
   }
 </script>
-  </body>
+</body>
 </html>

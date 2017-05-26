@@ -265,13 +265,17 @@ const getTargetPath = (options, filePath) => {
 
 let openFilePath = null
 
+
 // callback for app.makeSingleInstance:
 const initApp = firstInstance => (instanceArgv, workingDirectory) => {
   try {
     const argv = instanceArgv.slice(1)
+    // Using context menu on Windows results in invoking .exe with
+    // just the filename as argument, no directory passed in and
+    // no shell wrapper, hence the check for argv.length > 1 here.
     // deal with weird difference between starting from npm and starting
     // from packaged shell wrapper:
-    if (argv && (argv.length > 0) && !(argv[0].startsWith('--executed-from'))) {
+    if (argv && (argv.length > 1) && !(argv[0].startsWith('--executed-from'))) {
       // npm / electron start -- passes '.' as first argument
       argv.unshift('--executed-from')
     }

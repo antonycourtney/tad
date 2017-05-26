@@ -46,6 +46,9 @@ export const createMenu = () => {
     fileSubmenu.push(separatorMenuItem)
     fileSubmenu.push({ role: 'quit' })
   }
+  const editSubmenu = [
+    { role: 'copy' }
+  ]
   const debugSubmenu = [
     { role: 'toggledevtools' },
     { label: 'Show Hidden Columns',
@@ -71,7 +74,8 @@ export const createMenu = () => {
     }
   ]
   const template = [
-    { label: 'File', submenu: fileSubmenu }
+    { label: 'File', submenu: fileSubmenu },
+    { label: 'Edit', submenu: editSubmenu }
   ]
   if (process.env.NODE_ENV === 'development') {
     template.push({
