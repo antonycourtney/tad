@@ -12,7 +12,9 @@ const createSetupInfo = () => {
   const appPath = app.getAppPath()
   const appDir = path.dirname(appPath)
   const appScriptPath = path.join(appDir, 'tad.sh')
-  global.setupInfo = { platform, appDir, appScriptPath }
+  const exePath = app.getPath('exe')
+  const exeDir = path.dirname(exePath)
+  global.setupInfo = { platform, appDir, appScriptPath, exePath, exeDir }
 }
 
 export const showQuickStart = () => {

@@ -91,3 +91,13 @@ Note that, due to an alleged bug in Yarn's handling of sub-processes, *one must 
     $ npm run dist
 
 This should create a full application in `./dist/mac`, and a packaged DMG for distribution in `./dist/Tad-X.Y.Z.dmg`.
+
+# Additional Info
+
+## Useful paths:
+
+Log information (from [electron-log](https://www.npmjs.com/package/electron-log)):
+
+- on Linux: ~/.config/Tad/log.log
+- on OS X: ~/Library/Logs/Tad/log.log
+- on Windows: %USERPROFILE%\AppData\Roaming\Tad\log.log

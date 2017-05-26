@@ -188,3 +188,23 @@ $ node_modules/.bin/build --mac
 3/30/17:
   - REALLY need to use column type to determine what agg fns to allow in UI;
     avg/count/sum just don't make sense for string columns
+
+
+=====
+Let's look at log data for what argv looks like under the different
+launch scenarios:
+Open Action: double click on app, context menu open, command line:
+npm run vs production app
+Platform: Mac, Windows
+
+Mac, Production App:
+  - Double Click on App: `[ '/Applications/Tad.app/Contents/MacOS/Tad' ]`
+  - Context menu from Finder: `[ '/Users/antony/home/src/tad/dist/mac/Tad.app/Contents/MacOS/Tad',
+  '-psn_0_3781531' ]` (followed by `open-file` event)
+  - command line (shell wrapper, no arguments):
+  `[ '/Applications/Tad.app/Contents/MacOS/Tad',
+  '--executed-from=/Users/antony/home/src/tad' ]`
+  - command line w/ specific file:
+  `[ '/Applications/Tad.app/Contents/MacOS/Tad',
+  '--executed-from=/Users/antony/home/src/tad',
+  '/Users/antony/data/movie_metadata.csv' ]`

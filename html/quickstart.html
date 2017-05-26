@@ -124,17 +124,16 @@ $ tad -f --show-queries somefile.csv
   function winSetup(appDir) {
     const title='Windows'
     const content=`
-On Windows, you should use the Control Panel to add <code>${appDir}</code> to your <code>PATH</code> environment variable.`
+On Windows, you should use the Control Panel to add <code>${appDir}</code> to your <code>PATH</code> environment variable.
+`
     return titledPanel(title, content)
   }
   function addSetup() {
     new Clipboard('.btn')
-    console.log('hello quick start!')
     const electron = require('electron')
-    console.log('electron: ', electron)
     const setupInfo = electron.remote.getGlobal('setupInfo')
     console.log('setup info: ', setupInfo)
-    const {platform, appDir, appScriptPath} = setupInfo
+    const {platform, appDir, appScriptPath, exeDir} = setupInfo
     let installCmdHtml
     if (platform === 'win32') {
       installCmdHtml = winSetup(appDir)
