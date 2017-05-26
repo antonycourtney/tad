@@ -29,26 +29,8 @@
           <p>The installation process registers Tad as a viewer for <code>.csv</code> files. On any <code>.csv</code> file in the Finder (macOS) or Explorer (Windows), use <strong>Open With...</strong> and select <strong>Tad</strong> to open the file in Tad.
           <li>From the Command Line
           <P>To launch tad from the command line, you need to ensure the Tad launcher shell script is on your <code>PATH</code>. The recommended way to do this is the following:
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <h4 class="panel-title">macOS / Linux</h4>
-              </div>
-              <div class="panel-body">
-                If you have administrative rights on your machine, run the following command to create a symbolic link to <code>tad.sh</code> in <code>/usr/local/bin</code>:
-                <br>
-                <br>
-                <div id="tadLinkCmd">
-                </div>
-              </div>
-            </div>
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <h4 class="panel-title">Windows</h4>
-              </div>
-              <div class="panel-body">
-              On Windows, you should use the Control Panel to add <code><span id="tadAppDir"></span></code> to your <code>PATH</code> environment variable.
-              </div>
-            </div>
+          <div id="cmdLineSetup">
+          </div>
           You only ever need to perform the above PATH setup once. Then simply type:
 <pre>
 $ tad somefile.csv
@@ -111,33 +93,61 @@ $ tad -f --show-queries somefile.csv
     </main>
 <script src="js/clipboard.min.js"></script>
 <script>
-  new Clipboard('.btn')
-  console.log('hello quick start!')
-  const electron = require('electron')
-  console.log('electron: ', electron)
-  const setupInfo = electron.remote.getGlobal('setupInfo')
-  console.log('setup info: ', setupInfo)
-  const {appDir, appScriptPath} = setupInfo
-  const elem = document.getElementById('tadLinkCmd')
-  const installCmd = `sudo ln -s ${appScriptPath} /usr/local/bin/tad`
-  elem.innerHTML = `
-<div class="row">
-  <div class="col-md-2"></div>
-  <div class="col-md-8">
-    <div class="input-group">
-       <input type="text" id="install-cmd" class="form-control code" value="${installCmd}"></input>
-       <span class="input-group-btn">
-         <button class="btn btn-default" type="button" data-clipboard-target="#install-cmd">
-          <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>Copy
-         </button>
-       </span>
-    </div><!-- /input-group -->
+  function titledPanel(title,content) {
+    return `
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">${title}</h4>
   </div>
-  <div class="col-md-2"></div>
-</div>
+  <div class="panel-body">
+  ${content}
+  </div>
+</div>`
+  }
+  function unixSetup(installCmd) {
+    const title = 'macOS / Linux'
+    const content=`
+  If you have administrative rights on your machine, run the following command to create a symbolic link to <code>tad.sh</code> in <code>/usr/local/bin</code>:
+  <br>
+  <br>
+  <div class="input-group">
+     <input type="text" id="install-cmd" class="form-control code" value="${installCmd}"></input>
+     <span class="input-group-btn">
+       <button class="btn btn-default" type="button" data-clipboard-target="#install-cmd">
+        <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>Copy
+       </button>
+     </span>
+  </div><!-- /input-group -->
 `
-  const pathElem = document.getElementById('tadAppDir')
-  pathElem.innerHTML=appDir
+    return titledPanel(title, content)
+  }
+  function winSetup(appDir) {
+    const title='Windows'
+    const content=`
+On Windows, you should use the Control Panel to add <code>${appDir}</code> to your <code>PATH</code> environment variable.`
+    return titledPanel(title, content)
+  }
+  function addSetup() {
+    new Clipboard('.btn')
+    console.log('hello quick start!')
+    const electron = require('electron')
+    console.log('electron: ', electron)
+    const setupInfo = electron.remote.getGlobal('setupInfo')
+    console.log('setup info: ', setupInfo)
+    const {platform, appDir, appScriptPath} = setupInfo
+    let installCmdHtml
+    if (platform === 'win32') {
+      installCmdHtml = winSetup(appDir)
+    } else {
+      const installCmd = `sudo ln -s ${appScriptPath} /usr/local/bin/tad`
+      installCmdHtml = unixSetup(installCmd)
+    }
+
+    const elem = document.getElementById('cmdLineSetup')
+    elem.innerHTML = installCmdHtml
+  }
+  window.onload = addSetup
+
   // install this globally so we can access in generated a tag:
   window.tadOpenExternal = function (event,url) {
     event.preventDefault()

@@ -8,10 +8,11 @@ const BrowserWindow = electron.BrowserWindow
 let win = null
 
 const createSetupInfo = () => {
+  const platform = process.platform
   const appPath = app.getAppPath()
   const appDir = path.dirname(appPath)
   const appScriptPath = path.join(appDir, 'tad.sh')
-  global.setupInfo = { appDir, appScriptPath }
+  global.setupInfo = { platform, appDir, appScriptPath }
 }
 
 export const showQuickStart = () => {
