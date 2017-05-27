@@ -147,6 +147,12 @@
         "role": "Editor"
       }
     ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [

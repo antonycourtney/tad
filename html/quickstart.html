@@ -136,7 +136,7 @@ On Windows, you should use the Control Panel to add <code>${appDir}</code> to yo
     const {platform, appDir, appScriptPath, exeDir} = setupInfo
     let installCmdHtml
     if (platform === 'win32') {
-      installCmdHtml = winSetup(appDir)
+      installCmdHtml = winSetup(exeDir)
     } else {
       const installCmd = `sudo ln -s ${appScriptPath} /usr/local/bin/tad`
       installCmdHtml = unixSetup(installCmd)

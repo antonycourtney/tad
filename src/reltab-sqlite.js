@@ -3,6 +3,7 @@
 import sqlite from 'sqlite'
 import { TableRep, QueryExp, Schema } from './reltab'
 import type { TableInfoMap, TableInfo, ValExp, Row, AggColSpec, SubExp, ColumnMetaMap, ColumnMapInfo, ColumnExtendVal, Connection } from './reltab' // eslint-disable-line
+const log = require('electron-log')
 
 function assertDefined<A> (x: ?A): A {
   if (x == null) {
@@ -33,9 +34,9 @@ class SqliteContext {
     let t1 = process.hrtime(t0)
     const [t1s, t1ns] = t1
     if (this.showQueries) {
-      console.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6)
-      console.log('SqliteContext.evalQuery: evaluating:')
-      console.log(sqlQuery)
+      log.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6)
+      log.log('SqliteContext.evalQuery: evaluating:')
+      log.log(sqlQuery)
     }
     const t2 = process.hrtime()
     const qp = this.db.all(sqlQuery)
@@ -47,8 +48,8 @@ class SqliteContext {
       const t4 = process.hrtime(t4pre)
       const [t4s, t4ns] = t4
       if (this.showQueries) {
-        console.info('time to run query: %ds %dms', t3s, t3ns / 1e6)
-        console.info('time to mk table rep: %ds %dms', t4s, t4ns / 1e6)
+        log.info('time to run query: %ds %dms', t3s, t3ns / 1e6)
+        log.info('time to mk table rep: %ds %dms', t4s, t4ns / 1e6)
       }
       return ret
     })
@@ -59,17 +60,17 @@ class SqliteContext {
     const countSql = query.toCountSql(this.tableMap)
     let t1 = process.hrtime(t0)
     const [t1s, t1ns] = t1
-    console.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6)
+    log.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6)
     if (this.showQueries) {
-      console.log('SqliteContext.evalQuery: evaluating:')
-      console.log(countSql)
+      log.log('SqliteContext.evalQuery: evaluating:')
+      log.log(countSql)
     }
     const t2 = process.hrtime()
     const qp = this.db.all(countSql)
     return qp.then(rows => {
       const t3 = process.hrtime(t2)
       const [t3s, t3ns] = t3
-      console.info('time to run query: %ds %dms', t3s, t3ns / 1e6)
+      log.info('time to run query: %ds %dms', t3s, t3ns / 1e6)
       const ret = Number.parseInt(rows[0].rowCount)
       return ret
     })
@@ -80,13 +81,13 @@ class SqliteContext {
     const tiQuery = `PRAGMA table_info(${tableName})`
     const qp = this.db.all(tiQuery)
     return qp.then(rows => {
-      console.log('getTableInfo: ', rows)
+      log.log('getTableInfo: ', rows)
       const extendCMap = (cmm: ColumnMetaMap,
             row: any, idx: number): ColumnMetaMap => {
         const cnm = row.name
         const cType = row.type.toLocaleLowerCase()
         if (cType == null) {
-          console.error('mkTableInfo: No column type for "' + cnm + '", index: ' + idx)
+          log.error('mkTableInfo: No column type for "' + cnm + '", index: ' + idx)
         }
         const cmd = {
           displayName: cnm,

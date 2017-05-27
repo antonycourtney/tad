@@ -26,14 +26,14 @@ require('console.table')
 // delay(amount).then(() => ...)
 let delay = ms => {
   if (ms > 0) {
-    console.log('injecting delay of ', ms, ' ms')
+    log.log('injecting delay of ', ms, ' ms')
   }
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 const runQuery = rtc => (queryStr, cb) => {
   try {
-    console.info('\n%s: runQuery: got query', new Date().toLocaleTimeString())
+    log.info('runQuery: got query')
     const req = reltab.deserializeQueryReq(queryStr)
     const hrstart = process.hrtime()
     delay(0)
@@ -42,23 +42,23 @@ const runQuery = rtc => (queryStr, cb) => {
       qp
         .then(res => {
           const [es, ens] = process.hrtime(hrstart)
-          console.info('runQuery: evaluated query in %ds %dms', es, ens / 1e6)
+          log.info('runQuery: evaluated query in %ds %dms', es, ens / 1e6)
           const serRes = JSON.stringify(res, null, 2)
           cb(null, serRes)
         })
         .catch(err => {
-          console.error('runQuery: error running query: ', err, err.stack)
+          log.error('runQuery: error running query: ', err, err.stack)
           cb(err, null)
         })
     })
   } catch (err) {
-    console.error('runQuery: ', err, err.stack)
+    log.error('runQuery: ', err, err.stack)
   }
 }
 
 const getRowCount = rtc => (queryStr, cb) => {
   try {
-    console.info('\n%s: getRowCount: got query', new Date().toLocaleTimeString())
+    log.info('getRowCount: got query')
     const req = reltab.deserializeQueryReq(queryStr)
     const hrstart = process.hrtime()
     delay(0)
@@ -67,19 +67,19 @@ const getRowCount = rtc => (queryStr, cb) => {
       qp
         .then(rowCount => {
           const [es, ens] = process.hrtime(hrstart)
-          console.info('getRowCount: evaluated query in %ds %dms', es, ens / 1e6)
+          log.info('getRowCount: evaluated query in %ds %dms', es, ens / 1e6)
           const resObj = { rowCount }
           const serRes = JSON.stringify(resObj, null, 2)
           cb(null, serRes)
         })
         .catch(err => {
-          console.error('getRowCount: error running query: ', err.message)
+          log.error('getRowCount: error running query: ', err.message)
           cb(err, null)
         }
       )
     })
   } catch (err) {
-    console.error('runQuery: ', err, err.stack)
+    log.error('runQuery: ', err, err.stack)
   }
 }
 
@@ -156,11 +156,11 @@ const mkInitMain = (options) => (pathname, srcfile, cb) => {
 
 // App initialization:
 const appInit = (options) => {
-  // console.log('appInit: ', options)
+  // log.log('appInit: ', options)
   global.initMain = mkInitMain(options)
   global.errorDialog = errorDialog
   appMenu.createMenu()
-  // console.log('appInit: done')
+  // log.log('appInit: done')
 }
 
 const optionDefinitions = [
@@ -227,12 +227,12 @@ const usageInfo = [
 
 const showVersion = () => {
   const version = pkgInfo.version
-  console.log(version)
+  log.log(version)
 }
 
 const showUsage = () => {
   const usage = getUsage(usageInfo)
-  console.log(usage)
+  log.log(usage)
 }
 
 const reportFatalError = (msg: string) => {
@@ -302,7 +302,7 @@ const initApp = firstInstance => (instanceArgv, workingDirectory) => {
       // Some APIs can only be used after this event occurs.
       if (firstInstance) {
         const handleOpen = (event, filePath) => {
-          console.log('handleOpen called!')
+          log.log('handleOpen called!')
           log.warn('got open-file event for: ', filePath)
           event.preventDefault()
           const targetPath = getTargetPath(options, filePath)
@@ -342,7 +342,7 @@ const initApp = firstInstance => (instanceArgv, workingDirectory) => {
         })
         app.on('ready', () => {
           // const startMsg = `pid ${process.pid}: Tad started, version: ${app.getVersion()}`
-          // console.log(startMsg)
+          // log.log(startMsg)
           // dialog.showMessageBox({ message: startMsg })
           appInit(options)
           if (targetPath) {
