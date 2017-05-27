@@ -386,6 +386,10 @@ const initApp = firstInstance => (instanceArgv, workingDirectory) => {
 }
 
 const main = () => {
+  // turn off console logging on win32:
+  if (process.platform === 'win32') {
+    log.transports.file.level = false
+  }
   log.warn('Tad started, argv: ', process.argv)
   const shouldQuit = false
 //  const shouldQuit = app.makeSingleInstance(initApp(false))

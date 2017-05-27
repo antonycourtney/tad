@@ -13,6 +13,9 @@ import through from 'through'
 import * as fs from 'fs'
 import db from 'sqlite'
 import Gauge from 'gauge'
+
+const log = require('electron-log')
+
 /*
  * regex to match a float or int:
  * allows commas and leading $
@@ -47,7 +50,7 @@ export const mkTableInfo = (md: FileMetadata): TableInfo => {
         cnm: string, idx: number): ColumnMetaMap => {
     const cType = md.columnTypes[idx]
     if (cType == null) {
-      console.error('mkTableInfo: No column type for "' + cnm + '", index: ' + idx)
+      log.error('mkTableInfo: No column type for "' + cnm + '", index: ' + idx)
     }
     const cmd = {
       displayName: md.columnNames[idx],
@@ -194,9 +197,9 @@ const genTableName = (pathname: string): string => {
 /* scanTypes will read a CSV file and return a Promise<FileMetadata> */
 const metaScan = (pathname: string): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
-    console.log('starting metascan...')
+    log.log('starting metascan...')
     const pathStats = fs.statSync(pathname)
-    console.log('file size: ', pathStats.size)
+    log.log('file size: ', pathStats.size)
     const msStart = process.hrtime()
     let firstRow = true
     var colTypes: Array<string>
@@ -209,7 +212,7 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
     let csvOptions = {}
     if (extension === 'tsv') {
       csvOptions.delimiter = '\t'
-      console.log('tsv file -- using tab as delimiter')
+      log.log('tsv file -- using tab as delimiter')
     }
 
     const pathStream = fs.createReadStream(pathname)
@@ -226,7 +229,7 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
       this.emit('data', buf)
     }, function end () {
       gauge.hide()
-      console.log('countStream: bytesRead: ', bytesRead)
+      log.log('countStream: bytesRead: ', bytesRead)
       this.emit('end')
     })
 
@@ -250,7 +253,7 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
         // default any remaining null column types to text:
         const columnTypes = colTypes.map(ct => (ct == null) ? 'text' : ct)
         const [es, ens] = process.hrtime(msStart)
-        console.info('metascan completed in %ds %dms', es, ens / 1e6)
+        log.info('metascan completed in %ds %dms', es, ens / 1e6)
         resolve({columnIds, columnNames, columnTypes, rowCount, tableName, csvOptions})
       })
 
@@ -333,7 +336,7 @@ const consumeStream = (s: stream.Readable,
         wrBatch(inputDone)
         resolve(writeCount)
       } else {
-        // console.log('consumeStream: readCount: ', readCount, ', writeCount: ', writeCount)
+        // log.log('consumeStream: readCount: ', readCount, ', writeCount: ', writeCount)
       }
     }
 
@@ -383,20 +386,20 @@ const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> =
      */
     db.run(dropStmt)
       .then(() => db.run(createStmt))
-      .then(() => console.log('table created'))
+      .then(() => log.log('table created'))
       .then(() => db.run('begin'))
       .then(() => db.prepare(insertStmtStr))
       .then(insertStmt => {
         return consumeStream(csv.fromPath(pathname, md.csvOptions),
                              insertRow(insertStmt), commitBatch, md.rowCount, true)
                 .then(rowCount => {
-                  console.log('consumeStream completed, rowCount: ', rowCount)
+                  log.log('consumeStream completed, rowCount: ', rowCount)
                   return insertStmt.finalize()
                 })
       })
       .then(() => resolve(md))
       .catch(err => {
-        console.error(err, err.stack)
+        log.error(err, err.stack)
         reject(err)
       })
   })
@@ -410,7 +413,7 @@ const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> =
  */
 export const importSqlite = (pathname: string): Promise<FileMetadata> => {
   return metaScan(pathname).then(md => {
-    console.log('metascan complete. rows to import: ', md.rowCount)
+    log.log('metascan complete. rows to import: ', md.rowCount)
     return importData(md, pathname)
   })
 }
@@ -424,7 +427,7 @@ const readHeaderRow = (path: string, delimiter: string): Promise<Array<string>> 
   return new Promise((resolve, reject) => {
     fs.open(path, 'r', 0, (err, fd) => {
       if (err) {
-        console.error('readHeaderRow: rejecting with error: ', err)
+        log.error('readHeaderRow: rejecting with error: ', err)
         reject(err)
         return
       }
@@ -477,8 +480,8 @@ export const fastImport = (pathname: string): Promise<FileMetadata> => {
             reject(err)
             return
           }
-          console.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
-          // console.log('import info: ', res)
+          log.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
+          // log.log('import info: ', res)
           const fileMetadata = {
             columnIds: res.columnIds,
             columnNames: columnNames,
