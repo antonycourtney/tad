@@ -362,16 +362,20 @@ const initApp = firstInstance => (instanceArgv, workingDirectory) => {
             log.warn(openMsg)
             appWindow.create(openFilePath)
             // dialog.showMessageBox({ message: openMsg })
+            if (showQuickStart) {
+              quickStart.showQuickStart()
+            }
           } else {
             if (!targetPath) {
               app.focus()
-              if (!showQuickStart) {
-                appWindow.openDialog()
-              }
+              /*
+               * We used to just do:
+               *     appWindow.openDialog()
+               * but showing quickStart seems more useful for no-arg
+               * startup path:
+               */
+              quickStart.showQuickStart()
             }
-          }
-          if (showQuickStart) {
-            quickStart.showQuickStart()
           }
           isReady = true
         })

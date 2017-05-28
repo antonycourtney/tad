@@ -76,13 +76,33 @@ $ tad somefile.csv
           <li>Set the sort columns using either the checkboxes under <strong>Sort</strong> the main column selector or by clicking on column headers in the main grid.
           </ul>
         Additional controls for setting the order of columns, pivots and the sort key, and controlling aggregation and formatting rules are available under <strong>Additional Properties</strong> at the bottom of the side bar.
+        <h4>Filtering</h4>
+        <P>
+        Tad provides rudimentary facilities for constructing a <emph>filter</emph> to select a subset of data. A filter consists of a collection of simple predicates that compare a value in that row (identified by column name) with a constant.
+        <P>
+        Activate the filter pane by clicking the <strong>Filter</strong> link at the bottom of the window:
+        <P>
+        <img src="images/tad-quickstart-filter-1.png"></img>
+        <P>
+        When opened, a (populated) filter dialog looks like this:
+        <P>
+        <img src="images/tad-quickstart-filter-2.png"></img>
+        <P>
+        Construct the filter by selecting the logical operator (AND or OR) <strong>(1)</strong> and editing individual predicate rows <strong>(2)</strong>.
+        Add more rows by pressing the <strong>+</strong> button <strong>(3)</strong>, and delete predicates by clicking the <strong>x</strong> button <strong>(4)</strong> next to that predicate.
+        <P>
+        Discard, test or commit your changes using the three buttons in the lower right of the pane:
+        <P>
+        <img src="images/tad-quickstart-filter-3.png"></img>
+        <P>
         <h3>Data Sources</h3>
         <p>
         If you work in data science, chances are you have no shortage of CSV files of your own to explore.
-        If you don't have any CSVs readily available, a few of my favorite data sources on the Internet are:
+        In addition to the <a href='#' onclick='tadOpenExample()'>movie_metadata.csv</a> sample file included with Tad, a few of my favorite data sources on the Internet are:
         <ul>
           <li><a href="https://www.kaggle.com/datasets" onclick='tadOpenExternal(event,"https://www.kaggle.com/datasets")'>Kaggle Datasets</a>. The <code>movie_metadata.csv</code> file used for many Tad examples is from the <a href="https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset"
-            onclick='tadOpenExternal(event,"https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a>.
+            onclick='tadOpenExternal(event,"https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a> on Kaggle.
+          <li><a href="https://github.com/metmuseum/openaccess" onclick='tadOpenExternal(event,"https://github.com/metmuseum/openaccess")'>Met Museum Open Access Initiative</a>. The Metropolitan Museum of Art recently made 420,000 artworks available online for unrestricted use. The catalog file <code>MetObjects.csv</code> available at the linked github repository is a good example for testing Tad's ability to handle larger CSV files. It's a 228MB CSV file with 420,000 rows of data. It takes about 13 sec to load and display this file in Tad on my late 2013 MacBook Pro.
           <li><a href="https://data.world/" onclick='tadOpenExternal(event,"https://data.world/")'>data.world</a> is a site for sharing and exploring data on a variety of topics.
           <li>The <a href="https://github.com/fivethirtyeight/data" onclick='tadOpenExternal(event,"https://github.com/fivethirtyeight/data")'>FiveThirtyEight github repository</a> has many CSV files providing data behind the stories and interactives on the FiveThirtyEight web site.
         </ul>
@@ -163,6 +183,7 @@ On Windows, you should use the Control Panel to add <code>${appDir}</code> to yo
     }
 
     window.tadOpenExample = function () {
+      event.preventDefault()
       electron.remote.getGlobal('openExample')()
     }
   }
