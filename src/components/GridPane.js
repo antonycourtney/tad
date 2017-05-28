@@ -4,7 +4,7 @@
 // import $ from 'jquery'
 import * as React from 'react'
 import * as _ from 'lodash'
-import { Slick } from 'slickgrid-es6'
+import { Slick, Plugins } from 'slickgrid-es6'
 import { WindowResizeListener } from 'react-window-resize-listener'
 import * as reltab from '../reltab'
 import * as actions from '../actions'
@@ -12,6 +12,10 @@ import LoadingModal from './LoadingModal'
 import PagedDataView from '../PagedDataView'
 import ViewParams from '../ViewParams'
 import * as util from '../util'
+import {clipboard} from 'electron'
+import csv from 'fast-csv'
+
+const { CellRangeSelector, CellSelectionModel, CellCopyManager } = Plugins
 
 const container = '#epGrid' // for now
 
@@ -152,7 +156,6 @@ export default class GridPane extends React.Component {
   onGridClick (e: any, args: any) {
     const viewParams = this.props.viewState.viewParams
     var item = this.grid.getDataItem(args.row)
-    console.log('onGridClick: item: ', item)
     if (item._isLeaf) {
       return
     }
@@ -195,6 +198,41 @@ export default class GridPane extends React.Component {
   /* Create grid from the specified set of columns */
   createGrid (columns: any, data: any) {
     this.grid = new Slick.Grid(container, data, columns, gridOptions)
+
+    const selectionModel = new CellSelectionModel()
+    this.grid.setSelectionModel(selectionModel)
+    selectionModel.onSelectedRangesChanged.subscribe((e, args) => {
+      // TODO: could store this in app state and show some
+      // stats about selected range
+    })
+
+    const copyManager = new CellCopyManager()
+    this.grid.registerPlugin(copyManager)
+
+    copyManager.onCopyCells.subscribe((e, args) => {
+      const range = args.ranges[0]
+      let copyData = []
+      for (let row = range.fromRow; row <= range.toRow; row++) {
+        const rowData = data.getItem(row)
+        const copyRow = []
+        for (let col = range.fromCell; col <= range.toCell; col++) {
+          const cid = columns[col].id
+          copyRow.push(rowData[cid])
+        }
+        copyData.push(copyRow)
+      }
+      csv.writeToString(copyData, {headers: false}, (err, data) => {
+        if (err) {
+          console.error('error converting copied data to CSV: ', err)
+          return
+        }
+        clipboard.writeText(data)
+      })
+    })
+
+    const rangeSelector = new CellRangeSelector()
+
+    this.grid.registerPlugin(rangeSelector)
 
     const updateViewportDebounced = _.debounce(() => {
       const vp = this.grid.getViewport()
