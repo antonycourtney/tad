@@ -88,7 +88,8 @@
   "scripts": {
     "build:html": "mkdirp build && cp -r html/* build ",
     "build:icon": "mkdirp buildRes && cp res/AppIcon.icns buildRes/icon.icns",
-    "build-assets": "npm run build:html && npm run build:icon",
+    "build:csv": "mkdirp build/csv && cp csv/movie_metadata.csv csv/*.tad build/csv",
+    "build-assets": "npm run build:html && npm run build:icon && npm run build:csv",
     "build-dev": "npm run build-assets && webpack --env=dev",
     "build-prod": "npm run build-assets && webpack --env=prod",
     "build-site": "mkdirp doc && cp -r src/doc/site/src/* docs",

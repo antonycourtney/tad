@@ -39,6 +39,15 @@ $ tad somefile.csv
         </ol>
         <h3>Basic Usage</h3>
         <p>
+        You can explore the basics of Tad by opening this example CSV file (from the <a href="https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset"
+          onclick='tadOpenExternal(event,"https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a> on Kaggle)
+        included in the Tad distribution:
+        <p>
+        <button class="btn btn-primary btn-lg"
+          onclick='tadOpenExample()'>
+        Open movie_metadata.csv
+        </button>
+        <p>
         When you open a CSV file in Tad, Tad automatically imports your CSV file into an internal in-memory SQLite database.
         You can see the result of this import process by clicking on the gear icon on the left of the Tad window:
         <P>
@@ -128,7 +137,7 @@ On Windows, you should use the Control Panel to add <code>${appDir}</code> to yo
 `
     return titledPanel(title, content)
   }
-  function addSetup() {
+  function init() {
     new Clipboard('.btn')
     const electron = require('electron')
     const setupInfo = electron.remote.getGlobal('setupInfo')
@@ -144,16 +153,21 @@ On Windows, you should use the Control Panel to add <code>${appDir}</code> to yo
 
     const elem = document.getElementById('cmdLineSetup')
     elem.innerHTML = installCmdHtml
-  }
-  window.onload = addSetup
 
-  // install this globally so we can access in generated a tag:
-  window.tadOpenExternal = function (event,url) {
-    event.preventDefault()
-    console.log('tadOpenExternal: ', url)
-    electron.shell.openExternal(url)
-    return false
+    // install this globally so we can access in generated a tag:
+    window.tadOpenExternal = function (event,url) {
+      event.preventDefault()
+      console.log('tadOpenExternal: ', url)
+      electron.shell.openExternal(url)
+      return false
+    }
+
+    window.tadOpenExample = function () {
+      electron.remote.getGlobal('openExample')()
+    }
   }
+  window.onload = init
+
 </script>
 </body>
 </html>

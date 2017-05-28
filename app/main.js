@@ -263,8 +263,13 @@ const getTargetPath = (options, filePath) => {
   return targetPath
 }
 
-let openFilePath = null
+const exampleFilePath = 'csv/movie_metadata.csv'
 
+global.openExample = () => {
+  appWindow.create(exampleFilePath)
+}
+
+let openFilePath = null
 
 // callback for app.makeSingleInstance:
 const initApp = firstInstance => (instanceArgv, workingDirectory) => {
@@ -275,7 +280,11 @@ const initApp = firstInstance => (instanceArgv, workingDirectory) => {
     // no shell wrapper, hence the check for argv.length > 1 here.
     // deal with weird difference between starting from npm and starting
     // from packaged shell wrapper:
-    if (argv && (argv.length > 1) && !(argv[0].startsWith('--executed-from'))) {
+    // Update (5/28/17): See also:
+    // https://github.com/electron/electron/issues/4690
+    //
+    // argv && (argv.length > 1) && !(argv[0].startsWith('--executed-from'))
+    if (process.defaultApp) {
       // npm / electron start -- passes '.' as first argument
       argv.unshift('--executed-from')
     }
