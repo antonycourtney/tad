@@ -186,11 +186,17 @@ const mapIdent = (src: string): string => {
   return ret
 }
 
+const isAlpha = (ch: string): boolean => /^[A-Z]$/i.test(ch)
+
 /* generate a SQL table name from pathname */
 const genTableName = (pathname: string): string => {
   const extName = path.extname(pathname)
   const baseName = path.basename(pathname, extName)
-  const tableName = uniquify(mapIdent(baseName))
+  let baseIdent = mapIdent(baseName)
+  if (!isAlpha(baseIdent[0])) {
+    baseIdent = 't_' + baseIdent
+  }
+  const tableName = uniquify(baseIdent)
   return tableName
 }
 
