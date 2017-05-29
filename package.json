@@ -44,6 +44,7 @@
     "url-regex": "git://github.com/antonycourtney/url-regex.git"
   },
   "devDependencies": {
+    "ajv": "^5.1.5",
     "babel-cli": "^6.24.1",
     "babel-core": "^6.24.1",
     "babel-eslint": "^7.2.3",
@@ -58,7 +59,7 @@
     "css-loader": "^0.28.1",
     "difflet": "^1.0.1",
     "electron": "1.6.7",
-    "electron-builder": "^17.5.0",
+    "electron-builder": "^17.10.0",
     "electron-packager": "^8.7.0",
     "electron-rebuild": "^1.5.11",
     "eslint": "^3.19.0",
