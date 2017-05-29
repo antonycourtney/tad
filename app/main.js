@@ -263,9 +263,12 @@ const getTargetPath = (options, filePath) => {
   return targetPath
 }
 
-const exampleFilePath = 'csv/movie_metadata.csv'
-
 global.openExample = () => {
+  const app = electron.app
+  const appPath = app.getAppPath()
+  console.log('appPath: ', appPath)
+  const appDir = process.defaultApp ? appPath : path.dirname(appPath)
+  const exampleFilePath = path.join(appDir, 'examples', 'movie_metadata.csv')
   appWindow.create(exampleFilePath)
 }
 

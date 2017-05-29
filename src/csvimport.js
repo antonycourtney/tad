@@ -492,7 +492,6 @@ export const fastImport = async (pathname: string): FileMetadata => {
     const columnNames = await readHeaderRow(pathname, delimiter)
     const columnIds = genColumnIds(columnNames)
     const tableName = genTableName(pathname)
-    console.log('fastImport: ', tableName, columnIds, columnNames)
     const importOpts = { columnIds, delimiter }
     const res = await dbImport(pathname, tableName, importOpts)
     const [es, ens] = process.hrtime(importStart)
@@ -508,7 +507,7 @@ export const fastImport = async (pathname: string): FileMetadata => {
     }
     return fileMetadata
   } catch (err) {
-    console.error('caught error during fastImport: ', err, err.stack)
+    log.error('caught error during fastImport: ', err, err.stack)
     throw err
   }
 }
