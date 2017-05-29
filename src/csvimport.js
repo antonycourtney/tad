@@ -152,16 +152,16 @@ const genColumnIds = (headerRow: Array<string>): Array<string> => {
     let origHeader = headerRow[i]
     let matches = reFindAll(identRE, origHeader)
     var colId : string = mkColId(matches) // form candidate column id
-    if ((matches.length === 0) || (colId in colIdMap)) {
+    if ((matches.length === 0) || (colId.toLowerCase() in colIdMap)) {
       let baseColId = 'col' + i.toString()
       colId = baseColId
       // deal with pathological case of a previous column named 'col<i>'
-      for (let j = 2; colId in colIdMap; j++) {
+      for (let j = 2; colId.toLowerCase() in colIdMap; j++) {
         colId = baseColId + '_' + j.toString()
       }
     }
     columnIds.push(colId)
-    colIdMap[colId] = i
+    colIdMap[colId.toLowerCase()] = i
   }
   return columnIds
 }
@@ -462,39 +462,47 @@ const readHeaderRow = (path: string, delimiter: string): Promise<Array<string>> 
   })
 }
 
-export const fastImport = (pathname: string): Promise<FileMetadata> => {
+// async wrapper around dn.driver.import:
+export const dbImport = (pathname: string, tableName: string,
+                         importOpts: Object): Promise<Object> => {
   return new Promise((resolve, reject) => {
-    const importStart = process.hrtime()
-    let delimiter = ','
-    if (path.extname(pathname) === '.tsv') {
-      delimiter = '\t'
-    }
-    readHeaderRow(pathname, delimiter)
-      .then(columnNames => {
-        const columnIds = genColumnIds(columnNames)
-        const tableName = genTableName(pathname)
-        const importOpts = { columnIds, delimiter }
-        db.driver.import(pathname, tableName, importOpts, (err, res) => {
-          const [es, ens] = process.hrtime(importStart)
-          if (err) {
-            reject(err)
-            return
-          }
-          log.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
-          // log.log('import info: ', res)
-          const fileMetadata = {
-            columnIds: res.columnIds,
-            columnNames: columnNames,
-            columnTypes: res.columnTypes,
-            rowCount: res.rowCount,
-            tableName: res.tableName,
-            csvOptions: {}
-          }
-          resolve(fileMetadata)
-        })
-      })
-      .catch(err => {
+    db.driver.import(pathname, tableName, importOpts, (err, res) => {
+      if (err) {
         reject(err)
-      })
+        return
+      }
+      resolve(res)
+    })
   })
+}
+
+export const fastImport = async (pathname: string): FileMetadata => {
+  const importStart = process.hrtime()
+  let delimiter = ','
+  if (path.extname(pathname) === '.tsv') {
+    delimiter = '\t'
+  }
+  try {
+    const columnNames = await readHeaderRow(pathname, delimiter)
+    const columnIds = genColumnIds(columnNames)
+    const tableName = genTableName(pathname)
+    console.log('fastImport: ', tableName, columnIds, columnNames)
+    const importOpts = { columnIds, delimiter }
+    const res = await dbImport(pathname, tableName, importOpts)
+    const [es, ens] = process.hrtime(importStart)
+    log.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
+    // log.log('import info: ', res)
+    const fileMetadata = {
+      columnIds: res.columnIds,
+      columnNames: columnNames,
+      columnTypes: res.columnTypes,
+      rowCount: res.rowCount,
+      tableName: res.tableName,
+      csvOptions: {}
+    }
+    return fileMetadata
+  } catch (err) {
+    console.error('caught error during fastImport: ', err, err.stack)
+    throw err
+  }
 }
