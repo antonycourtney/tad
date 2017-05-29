@@ -90,27 +90,29 @@
   <div id="news" class="section news-section">
     <div class="container">
     <h3>News</h3>
-    <p class="lead">Tad 0.8.3 - April 17, 2017</p>
+    <p class="lead">Tad 0.8.4 - May 29, 2017</p>
     <P>
-    An <strong>initial release</strong> of Tad for macOS is now available for download and installation.
+    A packaged installer for Tad is available for macOS, Linux and Windows.
     <P>
-    This release supports basic viewing and analysis of CSV files but there are some important limitations and caveats:
-    <ul>
-      <li>This initial release is for macOS only (no Windows or Linux builds yet, sorry).
-      <li>This release only supports CSV files imported into an internal SQLite instance; there is no connectivity to other SQL databases.
-      <li>There is no cell selection or Cut / Copy / Paste.
-      <li>The only aggregation functions provided are those supported natively by SQLite: <code>min</code>, <code>max</code>, <code>sum</code>, <code>count</code>.
-      <li>There is no support for interactive filtering of data.
-      <li>Due to an outstanding issue, opening Tad multiple times will result in multiple instances of Tad starting (and appearing in the Dock).
-    </ul>
-    <P>This is an <emph>initial release</emph>, so there is a reasonable chance you'll encounter bugs, UI annoyances, and corner cases. Please report them via <strong>Help...Send Feedback</strong>.
+    Tad is still new and under development so there is a reasonable chance you'll encounter bugs, UI annoyances, and corner cases while using Tad. Please report them via <strong>Help...Send Feedback</strong>.
     <P>
-    If you're comfortable with the above, please...
+    If you're comfortable with that caveat, pick your platform and install:
     <P class="download">
       <a id="download-latest-release" class="btn btn-default"
-        href="https://github.com/antonycourtney/tad/releases/download/v0.8.3/tad-0.8.3.dmg">
+        href="https://github.com/antonycourtney/tad/releases/download/v0.8.4/tad-0.8.4.dmg">
         <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
         Download for Mac
+      </a>
+      <a id="download-latest-release" class="btn btn-default"
+        href="https://github.com/antonycourtney/tad/releases/download/v0.8.4/tad_0.8.4_amd64.deb"
+        >
+        <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+        Download for Linux
+      </a>
+      <a id="download-latest-release" class="btn btn-default"
+        href="https://github.com/antonycourtney/tad/releases/download/v0.8.4/Tad.Setup.0.8.4.exe">
+        <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+        Download for Windows
       </a>
     </P>
     </div>
@@ -151,6 +153,25 @@
   <div id="relnotes" class="section relnotes-section">
     <div class="container">
     <h3>Release Notes</h3>
+    <div class="release-section">
+      <h4>Tad 0.8.4 - May 29, 2017</h4>
+      <P>
+      <h5>New Features</h5>
+      <ul>
+        <li>Rudimentary filters - simple list of predicates combined with AND or OR
+        <li>Footer showing row count information: Total Rows, Filtered Rows, Current View
+        <li>Cross-Platform: First release for macOS, Linux and Windows
+        <li>Sample CSV file included with distribution, linked in Quick Start Guide.
+      </ul>
+      <h5>Bug Fixes</h5>
+      <ul>
+        <li>Pivoting on columns containing backslashes now works.
+        <li>Improve error reporting of SQLITE errors when creating table during import.
+        <li>Allow filenames that are all digits.
+        <li>Correct handling of duplicate column identifiers that differ in upper/lower case.
+        <li>Replace auto-create of symbolic link in <code>/usr/local/bin</code>with self-serve instructions in quick start guide.
+      </ul>
+    </div>
     <div class="release-section">
       <h4>Tad 0.8.3 - April 17, 2017</h4>
       <P>

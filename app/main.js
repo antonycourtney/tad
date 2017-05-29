@@ -277,7 +277,8 @@ let openFilePath = null
 // callback for app.makeSingleInstance:
 const initApp = firstInstance => (instanceArgv, workingDirectory) => {
   try {
-    const argv = instanceArgv.slice(1)
+    let argv = instanceArgv.slice(1)
+    let awaitingOpenEvent = false // macOS OpenWith peculiarity
     // Using context menu on Windows results in invoking .exe with
     // just the filename as argument, no directory passed in and
     // no shell wrapper, hence the check for argv.length > 1 here.
@@ -290,6 +291,13 @@ const initApp = firstInstance => (instanceArgv, workingDirectory) => {
     if (process.defaultApp) {
       // npm / electron start -- passes '.' as first argument
       argv.unshift('--executed-from')
+    }
+    // macOS insanity:  If we're started via Open With..., we get invoked
+    // with -psn_0_XXXXX argument; let's just kill it:
+    if (process.platform === 'darwin' && argv && (argv.length > 0) &&
+      argv[0].startsWith('-psn_')) {
+      argv = argv.slice(1)
+      awaitingOpenEvent = true
     }
     const options = commandLineArgs(optionDefinitions, {argv})
     let quickExit = false
@@ -360,24 +368,18 @@ const initApp = firstInstance => (instanceArgv, workingDirectory) => {
           if (targetPath) {
             appWindow.create(targetPath)
           }
+          if (showQuickStart) {
+            quickStart.showQuickStart()
+          }
           if (openFilePath) {
             const openMsg = `pid ${process.pid}: Got open-file for ${openFilePath}`
             log.warn(openMsg)
             appWindow.create(openFilePath)
             // dialog.showMessageBox({ message: openMsg })
-            if (showQuickStart) {
-              quickStart.showQuickStart()
-            }
           } else {
-            if (!targetPath) {
+            if (!targetPath && !awaitingOpenEvent) {
               app.focus()
-              /*
-               * We used to just do:
-               *     appWindow.openDialog()
-               * but showing quickStart seems more useful for no-arg
-               * startup path:
-               */
-              quickStart.showQuickStart()
+              appWindow.openDialog()
             }
           }
           isReady = true
