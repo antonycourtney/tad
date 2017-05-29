@@ -28,10 +28,10 @@
           <li>Context Menu or Drag and Drop</li>
           <p>The installation process registers Tad as a viewer for <code>.csv</code> files. On any <code>.csv</code> file in the Finder (macOS) or Explorer (Windows), use <strong>Open With...</strong> and select <strong>Tad</strong> to open the file in Tad.
           <li>From the Command Line
-          <P>To launch tad from the command line, you need to ensure the Tad launcher shell script is on your <code>PATH</code>. The recommended way to do this is the following:
           <div id="cmdLineSetup">
           </div>
-          You only ever need to perform the above PATH setup once. Then simply type:
+          <P>
+          Once Tad is installed and available on your PATH, simply type:
 <pre>
 $ tad somefile.csv
 </pre>
@@ -134,9 +134,9 @@ $ tad -f --show-queries somefile.csv
 </div>`
   }
   function unixSetup(installCmd) {
-    const title = 'macOS / Linux'
+    const title = 'macOS'
     const content=`
-  If you have administrative rights on your machine, run the following command to create a symbolic link to <code>tad.sh</code> in <code>/usr/local/bin</code>:
+    <P>To launch tad from the command line, you need to ensure the Tad launcher shell script is on your <code>PATH</code>. If you have administrative rights on your machine, run the following command to create a symbolic link to <code>tad.sh</code> in <code>/usr/local/bin</code>:
   <br>
   <br>
   <div class="input-group">
@@ -166,7 +166,7 @@ On Windows, you should use the Control Panel to add <code>${appDir}</code> to yo
     let installCmdHtml
     if (platform === 'win32') {
       installCmdHtml = winSetup(exeDir)
-    } else {
+    } else if (platform === 'darwin') {
       const installCmd = `sudo ln -s ${appScriptPath} /usr/local/bin/tad`
       installCmdHtml = unixSetup(installCmd)
     }

@@ -150,7 +150,6 @@
     ],
     "linux": {
       "target": [
-        "AppImage",
         "deb"
       ]
     },
