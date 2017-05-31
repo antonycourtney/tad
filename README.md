@@ -19,11 +19,11 @@ Tad's main grid component is actually a full featured
 
 The easiest way to install Tad is to use a pre-packaged binary release.  See [The Tad Landing Page](http://tadviewer.com/#news) for information on the latest release and a download link.
 
-# Building Tad from Source
+# Building Tad from source
 
 Detailed instructions on building tad from sources available in [src/doc/building.md](src/doc/building.md)
 
-# Implementation / Architecture
+# Implementation / architecture
 
 Tad is an [Electron](http://electron.atom.io/) application written in ES2015 using [flow](https://flowtype.org/) type annotations.
 Tad's front end User Interface is implemented in [React](https://facebook.github.io/react/), using [SlickGrid](https://github.com/mleibman/SlickGrid) for the main grid component.
