@@ -1,4 +1,4 @@
-@filter-row-value-width: 186px;
+@filter-row-value-width: 250px;
 
 .filter-editor {
   margin-top: 10px;
@@ -25,7 +25,7 @@
 .filter-editor-scroll-pane {
   display: flex;
   height: 170px;
-  width: 580px;
+  width: 675px;
   flex: 0 0 auto;
   border: 1px solid #cacaca;
   justify-content: flex-start;
@@ -67,6 +67,15 @@
 
 .filter-row-col-select, .filter-row-op-select {
   margin-right: 8px;
+  flex: 0 0 auto;
+}
+
+.filter-row-col-select, .filter-row-col-select select {
+  width: 200px;
+}
+
+.filter-row-op-select, .filter-row-op-select select {
+  width: 170px;
 }
 
 .filter-editor-edit-section {

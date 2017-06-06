@@ -91,13 +91,17 @@ const deserializeValExp = (js: Object): ValExp => {
   }
 }
 
-export type BinRelOp = 'EQ' | 'GT' | 'GE' | 'LT' | 'LE' | 'BEGINS' | 'ENDS' | 'CONTAINS'
+export type BinRelOp = 'EQ' | 'NEQ' | 'GT' | 'GE' | 'LT' | 'LE' |
+  'BEGINS' | 'NOTBEGINS' | 'ENDS' | 'NOTENDS' |
+  'CONTAINS' | 'NOTCONTAINS'
 export type UnaryRelOp = 'ISNULL' | 'NOTNULL'
 export type RelOp = UnaryRelOp | BinRelOp
 
-const textOnlyBinaryOps = ['BEGINS', 'ENDS', 'CONTAINS']
+const textOnlyBinaryOps = ['BEGINS', 'NOTBEGINS', 'ENDS', 'NOTENDS', 'CONTAINS', 'NOTCONTAINS']
 const textOnlyOpsSet = new Set(textOnlyBinaryOps)
-const commonBinaryOps = ['EQ', 'GT', 'GE', 'LT', 'LE']
+const textNegBinaryOps = ['NOTBEGINS', 'NOTENDS', 'NOTCONTAINS']
+const textNegOpsSet = new Set(textNegBinaryOps)
+const commonBinaryOps = ['EQ', 'NEQ', 'GT', 'GE', 'LT', 'LE']
 const binaryOps = commonBinaryOps.concat(textOnlyBinaryOps)
 const binaryOpsSet = new Set(binaryOps)
 
@@ -106,6 +110,7 @@ const unaryOpsSet = new Set(unaryOps)
 
 const ppOpMap = {
   'EQ': '=',
+  'NEQ': '<>',
   'GT': '>',
   'GE': '>=',
   'LT': '<',
@@ -113,8 +118,11 @@ const ppOpMap = {
   'ISNULL': 'is null',
   'NOTNULL': 'is not null',
   'BEGINS': 'starts with',
+  'NOTBEGINS': 'does not start with',
   'ENDS': 'ends with',
-  'CONTAINS': 'contains'
+  'NOTENDS': 'does not end with',
+  'CONTAINS': 'contains',
+  'NOTCONTAINS': 'does not contain'
 }
 
 export const opIsTextOnly = (op: RelOp): boolean => {
@@ -148,19 +156,22 @@ const textOpToSqlWhere = (lhs: ValExp, op: BinRelOp, rhs: ValExp): string => {
     throw new Error('textOpToSqlWhere: only constants supported for rhs of text ops')
   }
   const rhsStr : string = (rhs.val: any)
+  const negStr = textNegOpsSet.has(op) ? 'NOT ' : ''
   let matchStr = ''
   switch (op) {
     case 'BEGINS':
+    case 'NOTBEGINS':
       matchStr = rhsStr + '%'
       break
-    case 'ENDS':
+    case 'NOTENDS':
       matchStr = '%' + rhsStr
       break
     case 'CONTAINS':
+    case 'NOTCONTAINS':
       matchStr = '%' + rhsStr + '%'
       break
   }
-  return lhs.toSqlWhere() + ' LIKE ' + sqlEscapeString(matchStr)
+  return lhs.toSqlWhere() + ' ' + negStr + 'LIKE ' + sqlEscapeString(matchStr)
 }
 
 export class BinRelExp {
