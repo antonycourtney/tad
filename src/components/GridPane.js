@@ -212,11 +212,13 @@ export default class GridPane extends React.Component {
     copyManager.onCopyCells.subscribe((e, args) => {
       const range = args.ranges[0]
       let copyData = []
+      const gridCols = this.grid.getColumns()
+      const gridData = this.grid.getData()
       for (let row = range.fromRow; row <= range.toRow; row++) {
-        const rowData = data.getItem(row)
+        const rowData = gridData.getItem(row)
         const copyRow = []
         for (let col = range.fromCell; col <= range.toCell; col++) {
-          const cid = columns[col].id
+          const cid = gridCols[col].id
           copyRow.push(rowData[cid])
         }
         copyData.push(copyRow)
