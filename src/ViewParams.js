@@ -16,7 +16,23 @@ import NumFormatOptions from './NumFormatOptions'
 
 type AggMap = {[cid: string]: reltab.AggFn}
 
-type FormatsMap = {[cid: string]: any}
+// type FormatsMap = {[cid: string]: any}
+type FormatOptions = TextFormatOptions | NumFormatOptions
+type FormatsMap = Immutable.Map<string, FormatOptions>
+
+// deserialize a formatter by examining its type member:
+const deserializeFormatOptions = (jsObj: Object): ?FormatOptions => {
+  let ret
+  if (jsObj.type === 'TextFormatOptions') {
+    ret = new TextFormatOptions(jsObj)
+  } else if (jsObj.type === 'NumFormatOptions') {
+    ret = new NumFormatOptions(jsObj)
+  } else {
+    console.error('could not deserialize FormatOptions: ', jsObj)
+    ret = null
+  }
+  return ret
+}
 
 // formatting defaults, keyed by column type:
 class FormatDefaults extends Immutable.Record({
@@ -45,7 +61,7 @@ export default class ViewParams extends Immutable.Record({
   openPaths: PathTree,
   aggMap: {}, // overrides of agg fns
   defaultFormats: new FormatDefaults(),
-  columnFormats: {},
+  columnFormats: new Immutable.Map(),
   showHiddenCols: false,
   filterExp: new reltab.FilterExp()
 }) {
@@ -157,7 +173,7 @@ export default class ViewParams extends Immutable.Record({
   }
 
   getColumnFormat (schema: reltab.Schema, cid: string): any {
-    let formatOpts = this.columnFormats[cid]
+    let formatOpts = this.columnFormats.get(cid)
     if (formatOpts == null) {
       formatOpts = this.defaultFormats[schema.columnType(cid)]
     }
@@ -165,14 +181,13 @@ export default class ViewParams extends Immutable.Record({
   }
 
   setColumnFormat (cid: string, opts: any) {
-    const nextFmts = {}
-    Object.assign(nextFmts, this.columnFormats)
-    nextFmts[cid] = opts
+    const nextFmts = this.columnFormats.set(cid, opts)
     return this.set('columnFormats', nextFmts)
   }
 
   static deserialize (js) {
-    const { defaultFormats, openPaths, filterExp, ...rest } = js
+    const { defaultFormats, openPaths, filterExp,
+            columnFormats, ...rest } = js
     const defaultFormatsObj = FormatDefaults.deserialize(defaultFormats)
     const openPathsObj = new PathTree(openPaths._rep)
     let filterExpObj
@@ -181,12 +196,20 @@ export default class ViewParams extends Immutable.Record({
     } else {
       filterExpObj = new reltab.FilterExp()
     }
+    const deserColumnFormats = _.mapValues(columnFormats,
+        deserializeFormatOptions)
+    // drop column formats that we couldn't deserialize;
+    // prevents us from falling over on older, malformed
+    // saved per-column format options.
+    const deserColumnFormatsNN = _.pickBy(deserColumnFormats)
+    let columnFormatsMap = new Immutable.Map(deserColumnFormatsNN)
     const baseVP = new ViewParams(rest)
     const retVP =
       baseVP
         .set('defaultFormats', defaultFormatsObj)
         .set('openPaths', openPathsObj)
         .set('filterExp', filterExpObj)
+        .set('columnFormats', columnFormatsMap)
     return retVP
   }
 }

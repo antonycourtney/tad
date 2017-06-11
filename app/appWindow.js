@@ -111,7 +111,7 @@ export const getAppState = async (win: BrowserWindow) => {
   })
 }
 
-const TAD_FILE_FORMAT_VERSION = 1
+const TAD_FILE_FORMAT_VERSION = 2
 
 const serialize = (contents): string => {
   const versionedObject = {

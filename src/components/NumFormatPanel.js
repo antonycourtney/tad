@@ -20,20 +20,30 @@ export default class NumFormatPanel extends React.Component {
     }
   }
 
+  handleExponentialChange (event: any) {
+    const opts = this.props.value
+    const checkVal = event.target.checked
+    const nextOpts = opts.set('exponential', checkVal)
+    if (this.props.onChange) {
+      this.props.onChange(nextOpts)
+    }
+  }
+
   handleDecimalsChange (event: any) {
     const opts = this.props.value
     const nextText = event.target.value
     this.setState({decimalsText: nextText})
     const decVal = Number.parseInt(nextText)
-    console.log('handleDecimalsChange: "' + nextText + '" ==> ', decVal)
-    if (isNaN(decVal) || (decVal < 0) || (decVal > 10)) {
-      // ignore
-      return
+    let nextDec
+    if ((nextText.length === 0) || isNaN(decVal) ||
+        (decVal < 0) || (decVal > 10)) {
+      nextDec = null
+    } else {
+      nextDec = decVal
     }
-    const nextOpts = opts.set('decimalPlaces', decVal)
+    const nextOpts = opts.set('decimalPlaces', nextDec)
     // explicitly check for value change
     if (this.props.onChange && decVal !== opts.decimalPlaces) {
-      console.log('handleDecimalsChange: calling onChange with ', nextOpts.toJS())
       this.props.onChange(nextOpts)
     }
   }
@@ -44,8 +54,10 @@ export default class NumFormatPanel extends React.Component {
   componentWillReceiveProps (nextProps: any) {
     const opts = this.props.value
     const nextOpts = nextProps.value
-    if (opts.decimalPlaces !== nextProps.decimalPlaces) {
-      this.setState({ decimalsText: nextOpts.decimalPlaces.toString() })
+    const nextDec = nextOpts.decimalPlaces
+    if (opts.decimalPlaces !== nextDec) {
+      const decStr = nextDec ? nextDec.toString() : ''
+      this.setState({ decimalsText: decStr })
     }
   }
 
@@ -56,6 +68,7 @@ export default class NumFormatPanel extends React.Component {
         <Checkbox
           className='pt-condensed'
           checked={opts.commas}
+          disabled={opts.exponential}
           onChange={event => this.handleCommasChange(event)}
           label='Use (,) as 1000s Separator'
         />
@@ -68,6 +81,12 @@ export default class NumFormatPanel extends React.Component {
             onChange={event => this.handleDecimalsChange(event)}
           />
         </label>
+        <Checkbox
+          className='pt-condensed'
+          checked={opts.exponential}
+          onChange={event => this.handleExponentialChange(event)}
+          label='Use Scientific (exponential) Notation'
+        />
       </div>
     )
   }

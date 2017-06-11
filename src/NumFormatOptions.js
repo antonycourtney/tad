@@ -3,11 +3,15 @@
 import * as Immutable from 'immutable'
 
 export default class NumFormatOptions extends Immutable.Record({
+  type: 'NumFormatOptions',
   commas: true,
-  decimalPlaces: 2
+  decimalPlaces: 2,
+  exponential: false
 }) {
+  type: string
   commas: boolean
-  decimalPlaces: number
+  decimalPlaces: ?number
+  exponential: boolean
 
   getFormatter () {
     const fmtOpts = {
@@ -19,7 +23,17 @@ export default class NumFormatOptions extends Immutable.Record({
       if (val == null) {
         return null
       }
-      return val.toLocaleString(undefined, fmtOpts)
+      let ret
+      if (this.exponential) {
+        if (this.decimalPlaces) {
+          ret = val.toExponential(this.decimalPlaces)
+        } else {
+          ret = val.toExponential()
+        }
+      } else {
+        ret = val.toLocaleString(undefined, fmtOpts)
+      }
+      return ret
     }
     return ff
   }

@@ -14,8 +14,10 @@ window.tadOpenExternal = (url: string) => {
 const isValidURL = s => urlRegex({exact: true}).test(s)
 
 export default class TextFormatOptions extends Immutable.Record({
+  type: 'TextFormatOptions',
   urlsAsHyperlinks: true
 }) {
+  type: string
   urlsAsHyperlinks: boolean
 
   getFormatter () {
