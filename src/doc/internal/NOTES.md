@@ -208,3 +208,9 @@ Mac, Production App:
   `[ '/Applications/Tad.app/Contents/MacOS/Tad',
   '--executed-from=/Users/antony/home/src/tad',
   '/Users/antony/data/movie_metadata.csv' ]`
+
+======
+Notes, reworking csv import to support European format:
+
+- Need to tweak readHeaderRow to become extractHeaderRow from first line returned from byline based readSampleLines
+- need to thread delimiter through importData so that prepValue can kill . and map , to . if European format

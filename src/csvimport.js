@@ -11,17 +11,38 @@ import * as path from 'path'
 import * as stream from 'stream'
 import through from 'through'
 import * as fs from 'fs'
+import byline from 'byline'
 import db from 'sqlite'
 import Gauge from 'gauge'
 
 const log = require('electron-log')
 
+const CSVSniffer = require('csv-sniffer')()
+
+const delimChars = [',', '\t', '|', ';']
+const sniffer = new CSVSniffer(delimChars)
+
 /*
  * regex to match a float or int:
  * allows commas and leading $
  */
-const intRE = /[-+]?[$]?[0-9,]+/
-const realRE = /[-+]?[$]?[0-9,]*\.?[0-9]+([eE][-+]?[0-9]+)?/
+const usIntRE = /[-+]?[$]?[0-9,]+/
+const usRealRE = /[-+]?[$]?[0-9,]*\.?[0-9]+([eE][-+]?[0-9]+)?/
+
+const usNumREs = {
+  intRE: usIntRE,
+  realRE: usRealRE
+}
+
+// adaptations of these REs for European format, where the
+// use of , and . are reversed:
+const eurIntRE = /[-+]?[$]?[0-9.]+/
+const eurRealRE = /[-+]?[$]?[0-9.]*,?[0-9]+([eE][-+]?[0-9]+)?/
+
+const eurNumREs = {
+  intRE: eurIntRE,
+  realRE: eurRealRE
+}
 
 /*
  * FileMetaData is an array of unique column IDs, column display names and
@@ -70,7 +91,7 @@ export const mkTableInfo = (md: FileMetadata): TableInfo => {
  * We use the order int <: real <: text, and a guess will only become more general.
  * TODO: support various date formats
  */
-const guessColumnType = (cg: ?ColumnType, cs: ?string): ?ColumnType => {
+const guessColumnType = numREs => (cg: ?ColumnType, cs: ?string): ?ColumnType => {
   if (cg === 'text') {
     return cg // already most general case
   }
@@ -78,13 +99,13 @@ const guessColumnType = (cg: ?ColumnType, cs: ?string): ?ColumnType => {
     return cg // empty cells don't affect current guess
   }
   if (cg === null || cg === 'integer') {
-    let match = intRE.exec(cs)
+    let match = numREs.intRE.exec(cs)
     if (match !== null && match.index === 0 && match[0].length === cs.length) {
       return 'integer'
     }
   }
   if (cg !== 'text') {
-    let match = realRE.exec(cs)
+    let match = numREs.realRE.exec(cs)
     if (match !== null && match.index === 0 && match[0].length === cs.length) {
       return 'real'
     }
@@ -201,7 +222,7 @@ const genTableName = (pathname: string): string => {
 }
 
 /* scanTypes will read a CSV file and return a Promise<FileMetadata> */
-const metaScan = (pathname: string): Promise<FileMetadata> => {
+const metaScan = (pathname: string, delimiter: string): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
     log.log('starting metascan...')
     const pathStats = fs.statSync(pathname)
@@ -215,15 +236,13 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
     const extension = extName.slice(1)
     const tableName = genTableName(pathname)
 
-    let csvOptions = {}
-    if (extension === 'tsv') {
-      csvOptions.delimiter = '\t'
-      log.log('tsv file -- using tab as delimiter')
-    }
-
+    let csvOptions = { delimiter }
     const pathStream = fs.createReadStream(pathname)
 
     let gauge = new Gauge()
+
+    const numREs = (delimiter === ';') ? eurNumREs : usNumREs
+    const guessFunc = guessColumnType(numREs)
 
     gauge.show('scanning...', 0)
     let bytesRead = 0
@@ -251,7 +270,7 @@ const metaScan = (pathname: string): Promise<FileMetadata> => {
           colTypes = Array(columnIds.length).fill(null)
           firstRow = false
         } else {
-          colTypes = _.zipWith(colTypes, row, guessColumnType)
+          colTypes = _.zipWith(colTypes, row, guessFunc)
           rowCount++
         }
       })
@@ -417,14 +436,37 @@ const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> =
  * returns: Promise<tableName: string>
  *
  */
-export const importSqlite = (pathname: string): Promise<FileMetadata> => {
-  return metaScan(pathname).then(md => {
-    log.log('metascan complete. rows to import: ', md.rowCount)
-    return importData(md, pathname)
-  })
+export const importSqlite = async (pathname: string, delimiter: string): FileMetadata => {
+  const md = await metaScan(pathname, delimiter)
+  log.log('metascan complete. metadata:', md)
+  return importData(md, pathname, delimiter)
 }
 
 const BUFSIZE = 8192
+
+const readSampleLines = (path: string, lcount: number): Promise<Array<string>> => {
+  return new Promise((resolve, reject) => {
+    const ret = []
+    const fstream = fs.createReadStream(path, {encoding: 'utf8'})
+    const lstream = byline(fstream)
+    let linesRead = 0
+    lstream.on('readable', () => {
+      while (linesRead < lcount) {
+        let line
+        line = lstream.read()
+        if (line === null) {
+          resolve(ret)
+          return
+        } else {
+          ret.push(line)
+          linesRead++
+        }
+      }
+      fstream.pause()
+      resolve(ret)
+    })
+  })
+}
 
 /*
  * Reader header row from specified path
@@ -484,28 +526,35 @@ export const dbImport = (pathname: string, tableName: string,
 
 export const fastImport = async (pathname: string): FileMetadata => {
   const importStart = process.hrtime()
-  let delimiter = ','
-  if (path.extname(pathname) === '.tsv') {
-    delimiter = '\t'
-  }
   try {
-    const columnNames = await readHeaderRow(pathname, delimiter)
-    const columnIds = genColumnIds(columnNames)
-    const tableName = genTableName(pathname)
-    const importOpts = { columnIds, delimiter }
-    const res = await dbImport(pathname, tableName, importOpts)
-    const [es, ens] = process.hrtime(importStart)
-    log.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
-    // log.log('import info: ', res)
-    const fileMetadata = {
-      columnIds: res.columnIds,
-      columnNames: columnNames,
-      columnTypes: res.columnTypes,
-      rowCount: res.rowCount,
-      tableName: res.tableName,
-      csvOptions: {}
+    const sampleLines = await readSampleLines(pathname, 2)
+    const sample = sampleLines.join('\n')
+    console.log('read sample lines: ', sample)
+    const sniffRes = sniffer.sniff(sample, {hasHeader: true})
+    console.log('csv sniffer result: ', sniffRes)
+    const delimiter = sniffRes.delimiter
+    if (delimiter === ';') {
+      // assume European number format, use JS import impl:
+      return importSqlite(pathname, delimiter)
+    } else {
+      const columnNames = await readHeaderRow(pathname, delimiter)
+      const columnIds = genColumnIds(columnNames)
+      const tableName = genTableName(pathname)
+      const importOpts = { columnIds, delimiter }
+      const res = await dbImport(pathname, tableName, importOpts)
+      const [es, ens] = process.hrtime(importStart)
+      log.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
+      // log.log('import info: ', res)
+      const fileMetadata = {
+        columnIds: res.columnIds,
+        columnNames: columnNames,
+        columnTypes: res.columnTypes,
+        rowCount: res.rowCount,
+        tableName: res.tableName,
+        csvOptions: {}
+      }
+      return fileMetadata
     }
-    return fileMetadata
   } catch (err) {
     log.error('caught error during fastImport: ', err, err.stack)
     throw err
