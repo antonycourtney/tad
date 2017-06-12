@@ -116,13 +116,19 @@ const guessColumnType = numREs => (cg: ?ColumnType, cs: ?string): ?ColumnType =>
 /**
  * prepare a raw value string for db insert based on column type
  */
-const badCharsRE = /\$,/g
-const prepValue = (ct: ?ColumnType, vs: ?string): ?string => {
+const usBadCharsRE = /[$,]/g
+const eurBadCharsRE = /[$.]/g
+const prepValue = (ct: ?ColumnType, vs: ?string, isEuroFormat: boolean): ?string => {
   if (vs == null || (vs.length === 0 && ct !== 'text')) {
     return null
   }
   if ((ct === 'integer') || (ct === 'real')) {
-    let cs = vs.trim().replace(badCharsRE, '')
+    let cs
+    if (isEuroFormat) {
+      cs = vs.trim().replace(eurBadCharsRE, '').replace(',', '.')
+    } else {
+      cs = vs.trim().replace(usBadCharsRE, '')
+    }
     return cs
   }
   // TODO: Will probably need to deal with charset encoding issues for SQLite
@@ -375,8 +381,10 @@ const consumeStream = (s: stream.Readable,
  *
  * returns: Promise<FileMetadata>
  */
-const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> => {
-  return new Promise((resolve, reject) => {
+const importData = async (md: FileMetadata, pathname: string,
+    delimiter: string): FileMetadata => {
+  try {
+    const isEuroFormat = (delimiter === ';')
     const tableName = md.tableName
     const qTableName = "'" + tableName + "'"
     const dropStmt = 'drop table if exists ' + qTableName
@@ -392,7 +400,7 @@ const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> =
       for (let i = 0; i < row.length; i++) {
         const t = md.columnTypes[i]
         const v = row[i]
-        rowVals.push(prepValue(t, v))
+        rowVals.push(prepValue(t, v, isEuroFormat))
       }
       return insertStmt.run(rowVals)
     }
@@ -409,25 +417,20 @@ const importData = (md: FileMetadata, pathname: string): Promise<FileMetadata> =
      * We're currently wrapping all inserts in one huge transaction. Should probably break
      * this into more reasonable (50K rows?) chunks.
      */
-    db.run(dropStmt)
-      .then(() => db.run(createStmt))
-      .then(() => log.log('table created'))
-      .then(() => db.run('begin'))
-      .then(() => db.prepare(insertStmtStr))
-      .then(insertStmt => {
-        return consumeStream(csv.fromPath(pathname, md.csvOptions),
+    await db.run(dropStmt)
+    await db.run(createStmt)
+    log.log('table created')
+    await db.run('begin')
+    const insertStmt = await db.prepare(insertStmtStr)
+    const rowCount = await consumeStream(csv.fromPath(pathname, md.csvOptions),
                              insertRow(insertStmt), commitBatch, md.rowCount, true)
-                .then(rowCount => {
-                  log.log('consumeStream completed, rowCount: ', rowCount)
-                  return insertStmt.finalize()
-                })
-      })
-      .then(() => resolve(md))
-      .catch(err => {
-        log.error(err, err.stack)
-        reject(err)
-      })
-  })
+    log.log('consumeStream completed, rowCount: ', rowCount)
+    insertStmt.finalize()
+    return md
+  } catch (err) {
+    log.error(err, err.stack)
+    throw err
+  }
 }
 
 /*
@@ -529,9 +532,7 @@ export const fastImport = async (pathname: string): FileMetadata => {
   try {
     const sampleLines = await readSampleLines(pathname, 2)
     const sample = sampleLines.join('\n')
-    console.log('read sample lines: ', sample)
     const sniffRes = sniffer.sniff(sample, {hasHeader: true})
-    console.log('csv sniffer result: ', sniffRes)
     const delimiter = sniffRes.delimiter
     if (delimiter === ';') {
       // assume European number format, use JS import impl:
