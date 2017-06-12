@@ -238,8 +238,6 @@ const metaScan = (pathname: string, delimiter: string): Promise<FileMetadata> =>
     var colTypes: Array<string>
     let rowCount = 0
     // extract table name from file path:
-    const extName = path.extname(pathname)
-    const extension = extName.slice(1)
     const tableName = genTableName(pathname)
 
     let csvOptions = { delimiter }
@@ -445,8 +443,6 @@ export const importSqlite = async (pathname: string, delimiter: string): FileMet
   return importData(md, pathname, delimiter)
 }
 
-const BUFSIZE = 8192
-
 const readSampleLines = (path: string, lcount: number): Promise<Array<string>> => {
   return new Promise((resolve, reject) => {
     const ret = []
@@ -471,45 +467,14 @@ const readSampleLines = (path: string, lcount: number): Promise<Array<string>> =
   })
 }
 
-/*
- * Reader header row from specified path
- */
-const readHeaderRow = (path: string, delimiter: string): Promise<Array<string>> => {
+const extractColumnHeaders = (headerLine: string,
+    delimiter: string): Promise<Array<string>> => {
   return new Promise((resolve, reject) => {
-    fs.open(path, 'r', 0, (err, fd) => {
-      if (err) {
-        log.error('readHeaderRow: rejecting with error: ', err)
-        reject(err)
-        return
-      }
-      var buf = Buffer.alloc(BUFSIZE)
-      fs.read(fd, buf, 0, BUFSIZE, null, (err, bytesRead, buf) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        var eolIndex = buf.indexOf('\n')
-        if (eolIndex < 0) {
-          const msg = "'" + path + "' - invalid CSV format, no newline found in file.\n\n" +
-          'This may be due to saving a CSV file from an older version of Excel on OS/X.\n\n' +
-          'Possible fix: Use mac2unix utility from dos2unix homebrew package to repair file.'
-          reject(new Error(msg))
-          return
-        }
-        var s = buf.toString('utf8', 0, eolIndex)
-        csv
-          .fromString(s, {headers: false, delimiter})
-          .on('data', data => {
-            fs.close(fd, err => {
-              if (err) {
-                reject(err)
-                return
-              }
-              resolve(data)
-            })
-          })
+    csv
+      .fromString(headerLine, {headers: false, delimiter})
+      .on('data', data => {
+        resolve(data)
       })
-    })
   })
 }
 
@@ -538,7 +503,7 @@ export const fastImport = async (pathname: string): FileMetadata => {
       // assume European number format, use JS import impl:
       return importSqlite(pathname, delimiter)
     } else {
-      const columnNames = await readHeaderRow(pathname, delimiter)
+      const columnNames = await extractColumnHeaders(sampleLines[0], delimiter)
       const columnIds = genColumnIds(columnNames)
       const tableName = genTableName(pathname)
       const importOpts = { columnIds, delimiter }

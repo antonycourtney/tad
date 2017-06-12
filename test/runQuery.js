@@ -75,7 +75,7 @@ const main = async () => {
     const hrProcStart = process.hrtime()
     let hrQueryStart = 0
     await db.open(':memory:')
-    await csvimport.importSqlite(testPath)
+    await csvimport.importSqlite(testPath, ',')
     // await db.open('/Users/antony/data/testdb.sqlite')
     const [es, ens] = process.hrtime(hrProcStart)
     console.info('runQuery: import completed in %ds %dms', es, ens / 1e6)

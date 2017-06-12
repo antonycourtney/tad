@@ -21,26 +21,23 @@ const expRow0 = {
   Union: 'Non-Represented'
 }
 
-const csvImportTest = (t:any): Promise<any> => {
-  const testPath = 'csv/bart-comp-all.csv'
-  return csvimport.importSqlite(testPath)
-    .then(md => {
-      console.log('table import complete: ', md.tableName)
-      t.ok(true, 'table import completed.')
-      t.ok(md.tableName === 'bart-comp-all', 'tableName as expected')
-      t.ok(md.rowCount === 2873, 'expected rowCount')
-      return db.all('select * from \'' + md.tableName + '\' limit 10')
-    })
-    .then(rows => {
-      console.log('read rows from sqlite table.')
-      // console.log(rows)
-      t.deepEqual(rows[0], expRow0, 'first row as expected')
-    })
-    .then(() => t.end())
-    .catch(err => {
-      console.error('caught exception in importSqlite: ', err, err.stack)
-      t.fail(err)
-    })
+const csvImportTest = async (t:any): any => {
+  try {
+    const testPath = 'csv/bart-comp-all.csv'
+    const md = await csvimport.importSqlite(testPath, ',')
+    console.log('table import complete: ', md.tableName)
+    t.ok(true, 'table import completed.')
+    t.ok(md.tableName === 'bart-comp-all', 'tableName as expected')
+    t.ok(md.rowCount === 2873, 'expected rowCount')
+    const rows = await db.all('select * from \'' + md.tableName + '\' limit 10')
+    console.log('read rows from sqlite table.')
+    // console.log(rows)
+    t.deepEqual(rows[0], expRow0, 'first row as expected')
+    t.end()
+  } catch (err) {
+    console.error('caught exception in importSqlite: ', err, err.stack)
+    t.fail(err)
+  }
 }
 
 const runTests = () => {
