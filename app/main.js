@@ -33,7 +33,6 @@ let delay = ms => {
 
 const runQuery = rtc => (queryStr, cb) => {
   try {
-    log.info('runQuery: got query')
     const req = reltab.deserializeQueryReq(queryStr)
     const hrstart = process.hrtime()
     delay(0)
@@ -58,7 +57,6 @@ const runQuery = rtc => (queryStr, cb) => {
 
 const getRowCount = rtc => (queryStr, cb) => {
   try {
-    log.info('getRowCount: got query')
     const req = reltab.deserializeQueryReq(queryStr)
     const hrstart = process.hrtime()
     delay(0)
@@ -136,8 +134,8 @@ const initMainAsync = async (options, targetPath, srcfile) => {
       }
     }
 
-    // could also call: csvimport.importSqlite(pathname)
-    const md = await csvimport.fastImport(pathname)
+    const noHeaderRow = options['no-headers'] || false
+    const md = await csvimport.fastImport(pathname, { noHeaderRow })
     ti = csvimport.mkTableInfo(md)
   }
   rtc.registerTable(ti)
@@ -192,6 +190,11 @@ const optionDefinitions = [
     name: 'hidden-cols',
     type: Boolean,
     description: 'Show hidden columns (for debugging)'
+  },
+  {
+    name: 'no-headers',
+    type: Boolean,
+    description: 'source file has no header line'
   },
   {
     name: 'show-queries',

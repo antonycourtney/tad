@@ -22,7 +22,7 @@ const sqliteTestSetup = (htest) => {
     try {
       const showQueries = global.showQueries
       const rtc = await reltabSqlite.getContext(':memory:', {showQueries})
-      const md = await csvimport.importSqlite(testPath, ',')
+      const md = await csvimport.importSqlite(testPath, ',', {noHeaderRow: false})
       const ti = csvimport.mkTableInfo(md)
       rtc.registerTable(ti)
       sharedRtc = rtc

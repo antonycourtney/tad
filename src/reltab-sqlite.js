@@ -60,8 +60,8 @@ class SqliteContext {
     const countSql = query.toCountSql(this.tableMap)
     let t1 = process.hrtime(t0)
     const [t1s, t1ns] = t1
-    log.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6)
     if (this.showQueries) {
+      log.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6)
       log.log('SqliteContext.evalQuery: evaluating:')
       log.log(countSql)
     }

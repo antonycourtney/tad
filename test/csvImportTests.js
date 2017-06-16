@@ -24,7 +24,7 @@ const expRow0 = {
 const csvImportTest = async (t:any): any => {
   try {
     const testPath = 'csv/bart-comp-all.csv'
-    const md = await csvimport.importSqlite(testPath, ',')
+    const md = await csvimport.importSqlite(testPath, ',', {noHeaderRow: false})
     console.log('table import complete: ', md.tableName)
     t.ok(true, 'table import completed.')
     t.ok(md.tableName === 'bart-comp-all', 'tableName as expected')

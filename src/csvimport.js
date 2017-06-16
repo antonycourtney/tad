@@ -227,8 +227,16 @@ const genTableName = (pathname: string): string => {
   return tableName
 }
 
+const genColumnNames = (nCols: number): Array<string> => {
+  const fmtNum = colNumStr(nCols)
+  const columnNames = _.range(nCols).map(x => fmtNum(x))
+  return columnNames
+}
+
+type CSVImportOpts = { noHeaderRow: boolean }
+
 /* scanTypes will read a CSV file and return a Promise<FileMetadata> */
-const metaScan = (pathname: string, delimiter: string): Promise<FileMetadata> => {
+const metaScan = (pathname: string, delimiter: string, options: CSVImportOpts): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
     log.log('starting metascan...')
     const pathStats = fs.statSync(pathname)
@@ -262,18 +270,25 @@ const metaScan = (pathname: string, delimiter: string): Promise<FileMetadata> =>
       this.emit('end')
     })
 
+    const hasHeaderRow = !options.noHeaderRow
     let columnNames
     let columnIds
 
     const csvStream =
       csv(csvOptions)
       .on('data', row => {
-        if (firstRow) {
+        if (firstRow && hasHeaderRow) {
           columnNames = row
           columnIds = genColumnIds(columnNames)
           colTypes = Array(columnIds.length).fill(null)
           firstRow = false
         } else {
+          if (firstRow) {
+            columnNames = genColumnNames(row.length)
+            columnIds = genColumnIds(columnNames)
+            colTypes = Array(columnIds.length).fill(null)
+            firstRow = false
+          }
           colTypes = _.zipWith(colTypes, row, guessFunc)
           rowCount++
         }
@@ -380,8 +395,9 @@ const consumeStream = (s: stream.Readable,
  * returns: Promise<FileMetadata>
  */
 const importData = async (md: FileMetadata, pathname: string,
-    delimiter: string): FileMetadata => {
+    delimiter: string, options: CSVImportOpts): FileMetadata => {
   try {
+    const hasHeaderRow = !options.noHeaderRow
     const isEuroFormat = (delimiter === ';')
     const tableName = md.tableName
     const qTableName = "'" + tableName + "'"
@@ -421,7 +437,8 @@ const importData = async (md: FileMetadata, pathname: string,
     await db.run('begin')
     const insertStmt = await db.prepare(insertStmtStr)
     const rowCount = await consumeStream(csv.fromPath(pathname, md.csvOptions),
-                             insertRow(insertStmt), commitBatch, md.rowCount, true)
+                             insertRow(insertStmt), commitBatch, md.rowCount,
+                           hasHeaderRow)
     log.log('consumeStream completed, rowCount: ', rowCount)
     insertStmt.finalize()
     return md
@@ -437,10 +454,11 @@ const importData = async (md: FileMetadata, pathname: string,
  * returns: Promise<tableName: string>
  *
  */
-export const importSqlite = async (pathname: string, delimiter: string): FileMetadata => {
-  const md = await metaScan(pathname, delimiter)
+export const importSqlite = async (pathname: string, delimiter: string,
+    options: CSVImportOpts): FileMetadata => {
+  const md = await metaScan(pathname, delimiter, options)
   log.log('metascan complete. metadata:', md)
-  return importData(md, pathname, delimiter)
+  return importData(md, pathname, delimiter, options)
 }
 
 const readSampleLines = (path: string, lcount: number): Promise<Array<string>> => {
@@ -467,7 +485,12 @@ const readSampleLines = (path: string, lcount: number): Promise<Array<string>> =
   })
 }
 
-const extractColumnHeaders = (headerLine: string,
+/*
+ * extract array of items from string with one row of CSV data.
+ *
+ * Used to extract column headers and to count number of columns
+ */
+const extractRowData = (headerLine: string,
     delimiter: string): Promise<Array<string>> => {
   return new Promise((resolve, reject) => {
     csv
@@ -492,7 +515,13 @@ export const dbImport = (pathname: string, tableName: string,
   })
 }
 
-export const fastImport = async (pathname: string): FileMetadata => {
+// Construct a function to format a number with leading 0s for reasonable alpha sort
+const colNumStr = (len: number) => {
+  const padCount = Math.log10(len + 1)
+  return (x: number): string => 'col' + x.toString().padStart(padCount, '0')
+}
+
+export const fastImport = async (pathname: string, options: CSVImportOpts): FileMetadata => {
   const importStart = process.hrtime()
   try {
     const sampleLines = await readSampleLines(pathname, 2)
@@ -501,12 +530,19 @@ export const fastImport = async (pathname: string): FileMetadata => {
     const delimiter = sniffRes.delimiter
     if (delimiter === ';') {
       // assume European number format, use JS import impl:
-      return importSqlite(pathname, delimiter)
+      return importSqlite(pathname, delimiter, options)
     } else {
-      const columnNames = await extractColumnHeaders(sampleLines[0], delimiter)
+      const firstRowData = await extractRowData(sampleLines[0], delimiter)
+      let columnNames
+      const noHeaderRow = options.noHeaderRow
+      if (noHeaderRow) {
+        columnNames = genColumnNames(firstRowData.length)
+      } else {
+        columnNames = firstRowData
+      }
       const columnIds = genColumnIds(columnNames)
       const tableName = genTableName(pathname)
-      const importOpts = { columnIds, delimiter }
+      const importOpts = { columnIds, delimiter, noHeaderRow }
       const res = await dbImport(pathname, tableName, importOpts)
       const [es, ens] = process.hrtime(importStart)
       log.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
