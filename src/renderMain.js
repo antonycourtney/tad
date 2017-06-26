@@ -4,7 +4,6 @@
  * main module for render process
  */
 
-import * as styles from '../less/app.less'  // eslint-disable-line
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import OneRef from 'oneref'
@@ -12,16 +11,12 @@ import AppPane from './components/AppPane'
 import PivotRequester from './PivotRequester'
 import AppState from './AppState'
 import ViewParams from './ViewParams'
-import * as reltab from './reltab' // eslint-disable-line
-import * as reltabElectron from './reltab-electron'
+import * as baseDialect from './dialects/base' // eslint-disable-line
+import dialect from './dialects/sqlite'
+import * as electronConnection from './drivers/electron'
 import * as actions from './actions'
-require('../less/sidebar.less')
-require('../less/columnSelector.less')
-require('../less/columnList.less')
-require('../less/singleColumnSelect.less')
-require('../less/modal.less')
-require('../less/footer.less')
-require('../less/filterEditor.less')
+import log from 'electron-log'
+import './styles'
 
 require('babel-polyfill')
 
@@ -32,14 +27,15 @@ const remoteErrorDialog = remote.getGlobal('errorDialog')
 
 const ipcRenderer = require('electron').ipcRenderer
 
-const initMainProcess = (targetPath, srcFile): Promise<reltab.TableInfo> => {
+// TODO: DO SOME SHIT SO THAT tiStr IS REVIVED PROPERLY
+const initMainProcess = (targetPath, srcFile): Promise<baseDialect.TableInfo> => {
   return new Promise((resolve, reject) => {
     remoteInitMain(targetPath, srcFile, (err, tiStr) => {
       if (err) {
         console.error('initMain error: ', err)
         reject(err)
       } else {
-        const ti = JSON.parse(tiStr)
+        const ti = dialect.deserializeTableInfo(tiStr)
         resolve(ti)
       }
     })
@@ -59,7 +55,7 @@ const init = () => {
     const savedFileState = parsedFileState.contents
     targetPath = savedFileState.targetPath
     srcFile = openParams.srcFile
-    viewParams = ViewParams.deserialize(savedFileState.viewParams)
+    viewParams = ViewParams.deserialize({ ...savedFileState.viewParams, dialect })
   }
 
   const appState = new AppState({ targetPath })
@@ -74,35 +70,32 @@ const init = () => {
   // and kick off main process initialization:
   initMainProcess(targetPath, srcFile)
     .then(ti => {
-      const tableName = ti.tableName
-      const baseQuery = reltab.tableQuery(tableName)
+      const baseQuery = dialect.tableQuery(ti)
 
-      const rtc = reltabElectron.init()
+      const rtc = electronConnection.init(dialect)
 
       // module local to keep alive:
       var pivotRequester: ?PivotRequester = null  // eslint-disable-line
 
-      actions.initAppState(rtc, ti.tableName, baseQuery, viewParams, updater)
-        .then(() => {
-          pivotRequester = new PivotRequester(stateRef) // eslint-disable-line
+      actions.initAppState(dialect, rtc, ti.tableName, baseQuery, viewParams, updater)
+      pivotRequester = new PivotRequester(stateRef) // eslint-disable-line
 
-          ipcRenderer.on('request-serialize-app-state', (event, req) => {
-            console.log('got request-serialize-app-state: ', req)
-            const { requestId } = req
-            const curState = stateRef.getValue()
-            const viewParamsJS = curState.viewState.viewParams.toJS()
-            const serState = { targetPath, viewParams: viewParamsJS }
-            console.log('current viewParams: ', viewParamsJS)
-            ipcRenderer.send('response-serialize-app-state',
-              { requestId, contents: serState })
-          })
-          ipcRenderer.on('set-show-hidden-cols', (event, val) => {
-            actions.setShowHiddenCols(val, updater)
-          })
-        })
+      ipcRenderer.on('request-serialize-app-state', (event, req) => {
+        console.log('got request-serialize-app-state: ', req)
+        const {requestId} = req
+        const curState = stateRef.getValue()
+        const viewParamsJS = curState.viewState.viewParams.toJS()
+        const serState = {targetPath, viewParams: viewParamsJS}
+        console.log('current viewParams: ', viewParamsJS)
+        ipcRenderer.send('response-serialize-app-state',
+          {requestId, contents: serState})
+      })
+      ipcRenderer.on('set-show-hidden-cols', (event, val) => {
+        actions.setShowHiddenCols(val, updater)
+      })
     })
     .catch(err => {
-      console.error('renderMain: caught error during initialization: ', err.message, err.stack)
+      log.error('renderMain: caught error during initialization: ', err.message, err.stack)
       remoteErrorDialog('Error initializing Tad', err.message, true)
     })
 }

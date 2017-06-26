@@ -12,9 +12,9 @@ export default class PivotOrderPanel extends React.Component {
       <div className='ui-block'>
         <h6>Pivot Columns <small className='ui-subtext'>(drag to reorder)</small></h6>
         <ColumnList
-          schema={this.props.baseSchema}
+          schema={this.props.schema}
           columnListType={ColumnListType.PIVOT}
-          items={viewParams.vpivots}
+          items={viewParams.vpivots.map(pivot => ({ key: pivot.id, value: pivot }))}
           stateRefUpdater={stateRefUpdater} />
       </div>
     )

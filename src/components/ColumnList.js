@@ -2,15 +2,14 @@
 
 import * as React from 'react'
 import ColumnRow from './ColumnRow'
+
 /*
  * A simple ordered list of columns.  Supports re-ordering
  */
 export default class ColumnList extends React.Component {
-  renderColumnRow (row: any) {
-    let key = row
-    if (typeof row !== 'string') {
-      key = row[0]
-    }
+  renderColumnRow (item: { key: string, value: any }) {
+    let key = item.key
+
     return (
       <ColumnRow
         key={key}
@@ -18,7 +17,7 @@ export default class ColumnList extends React.Component {
         schema={this.props.schema}
         rowFormatter={this.props.rowFormatter}
         stateRefUpdater={this.props.stateRefUpdater}
-        rowData={row} />
+        rowData={item} />
     )
   }
 
@@ -31,7 +30,8 @@ export default class ColumnList extends React.Component {
         )
       })
     }
-    const columnRows = this.props.items.map(row => this.renderColumnRow(row))
+
+    const columnRows = this.props.items.map(item => this.renderColumnRow(item))
 
     return (
       <div className='column-list'>

@@ -1,10 +1,10 @@
 /* @flow */
 
 import * as Immutable from 'immutable'
-import * as reltab from './reltab'
+import * as baseDialect from './dialects/base'
 
 /*
- * State needed for a scollable view of a reltab query
+ * State needed for a scollable view of a query
  */
 export default class QueryView extends Immutable.Record({
   query: null,
@@ -13,7 +13,7 @@ export default class QueryView extends Immutable.Record({
   baseRowCount: 0,
   filterRowCount: 0
 }) {
-  query: reltab.QueryExp
+  query: baseDialect.QueryExp
   rowCount: number
   baseRowCount: number
   filterRowCount: number

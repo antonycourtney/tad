@@ -1,23 +1,23 @@
 /* @flow */
 
 import * as React from 'react'
-import * as reltab from '../reltab'
+import * as baseDialect from '../dialects/base'
 import * as actions from '../actions'
 import FilterEditor from './FilterEditor'
 
 export default class Footer extends React.Component {
-  state: { expanded: boolean, dirty: boolean, prevFilter: ?reltab.FilterExp }
+  state: { expanded: boolean, dirty: boolean, prevCondition: ?baseDialect.Condition }
 
   constructor (props: any) {
     super(props)
-    this.state = { expanded: false, dirty: false, prevFilter: null }
+    this.state = { expanded: false, dirty: false, prevCondition: null }
   }
 
   setExpandedState (nextState: boolean) {
     if (nextState && !this.state.dirty) {
-      // snap current filter into prevFilter:
-      const prevFilter = this.props.appState.viewState.viewParams.filterExp
-      this.setState({expanded: nextState, prevFilter, dirty: true})
+      // snap current filter into prevCondition:
+      const prevCondition = this.props.appState.viewState.viewParams.condition
+      this.setState({expanded: nextState, prevCondition, dirty: true})
     } else {
       this.setState({expanded: nextState})
     }
@@ -34,25 +34,25 @@ export default class Footer extends React.Component {
 
   handleFilterCancel (event: any) {
     // restore previous filter:
-    const fe = this.state.prevFilter || new reltab.FilterExp()
-    actions.setFilter(fe, this.props.stateRefUpdater)
+    const cond = this.state.prevCondition || new this.props.appState.dialect.Condition()
+    actions.setCondition(cond, this.props.stateRefUpdater)
     this.setExpandedState(false)
-    this.setState({dirty: false, prevFilter: null})
+    this.setState({dirty: false, prevCondition: null})
   }
 
-  handleFilterApply (filterExp: reltab.FilterExp) {
-    actions.setFilter(filterExp, this.props.stateRefUpdater)
+  handleFilterApply (condition: baseDialect.Condition) {
+    actions.setCondition(condition, this.props.stateRefUpdater)
   }
 
   handleFilterDone () {
     this.setExpandedState(false)
-    this.setState({dirty: false, prevFilter: null})
+    this.setState({dirty: false, prevCondition: null})
   }
 
   render () {
     const {appState} = this.props
-    const filterExp = appState.viewState.viewParams.filterExp
-    const filterStr = filterExp.toSqlWhere()
+    const condition = appState.viewState.viewParams.condition
+    const filterStr = condition.toSqlWhere()
 
     const expandClass = this.state.expanded ? 'footer-expanded' : 'footer-collapsed'
 
@@ -61,9 +61,10 @@ export default class Footer extends React.Component {
         appState={appState}
         stateRefUpdater={this.props.stateRefUpdater}
         schema={appState.baseSchema}
-        filterExp={filterExp}
+        condition={condition}
+        dialect={appState.dialect}
         onCancel={e => this.handleFilterCancel(e)}
-        onApply={fexp => this.handleFilterApply(fexp)}
+        onApply={cond => this.handleFilterApply(cond)}
         onDone={() => this.handleFilterDone()} />
       ) : null
 

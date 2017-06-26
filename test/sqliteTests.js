@@ -3,49 +3,46 @@
 import db from 'sqlite'
 import tapeSnapInit from './tapeSnap'
 import * as _ from 'lodash'
-import * as reltab from '../src/reltab'
-import * as reltabSqlite from '../src/reltab-sqlite'
+import * as baseDialect from '../src/dialects/base'
+import dialect from '../src/dialects/sqlite'
+import * as sqliteDriver from '../src/drivers/sqlite'
 import * as csvimport from '../src/csvimport'
 import * as util from './reltabTestUtils'
 import * as aggtree from '../src/aggtree'
 import PathTree from '../src/PathTree'
-const {col, constVal} = reltab
 var sharedRtc
 const testPath = 'csv/barttest.csv'
 
-const q1 = reltab.tableQuery('barttest')
+let q1, pcols, q2, q3, q4, q5, q5b, q6, q7, q8, q9, q10, q11, barttestTi
 
 var tcoeSum
 
-const sqliteTestSetup = (htest) => {
-  htest('sqlite test setup', async (t) => {
-    try {
-      const showQueries = global.showQueries
-      const rtc = await reltabSqlite.getContext(':memory:', {showQueries})
-      const md = await csvimport.importSqlite(testPath, ',', {noHeaderRow: false})
-      const ti = csvimport.mkTableInfo(md)
-      rtc.registerTable(ti)
-      sharedRtc = rtc
-      console.log('set rtc: ', sharedRtc)
-      t.ok(true, 'setup and import complete')
-      t.end()
-    } catch (err) {
-      console.error('sqliteTestSetup failure: ', err, err.stack)
-    }
-  })
-}
+const afterInit = (htest) => {
+  q1 = dialect.tableQuery(barttestTi)
 
-const sqliteTestShutdown = (htest) => {
-  htest('sqlite test shutdown', t => {
-    db.close()
-      .then(() => {
-        console.log('shut down sqlite')
-        t.ok(true, 'finished db.close')
-        t.end()
-        // And exit on next tick:
-        setImmediate(() => { process.exit(0) })
-      })
-  })
+  pcols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
+  q2 = q1.project(pcols)
+
+  q3 = q1.groupBy(['JobFamily', 'Title'], [new dialect.Field({ name: 'TCOE', type: 'integer' })])  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
+
+  q4 = q2.groupBy([new dialect.Field({ name: 'JobFamily' })], [new dialect.Field({ name: 'Title' }), new dialect.Field({ name: 'Union' }), new dialect.Field({ name: 'Name' }), new dialect.Field({ name: 'Base' }), new dialect.Field({ name: 'TCOE', type: 'integer' })])
+
+  q5 = q1.filter(dialect.Condition.and().eq('JobFamily', 'Executive Management'))
+
+// Test for literal string with single quote (which must be escaped):
+  q5b = q1.filter(new dialect.Condition('$and', [new dialect.Filter({ op: '$eq', lhs: 'Title', rhs: 'Department Manager Gov\'t & Comm Rel' })]))
+
+  q6 = q1.mapColumns({Name: {name: 'Name', displayName: 'Employee Name', type: 'text'}})
+
+  q7 = q1.mapColumnsByIndex({'0': {name: 'Name'}})
+
+  q8 = q5.concat(q1.filter(dialect.Condition.and().eq('JobFamily', 'Safety')))
+
+  q9 = q8.sortBy([['Name', true]])
+
+  q10 = q8.sortBy([['JobFamily', true], ['TCOE', false]])
+
+  q11 = q8.extend('ExtraComp', {type: 'integer'}, 'TCOE - Base')
 }
 
 const dbTest0 = (htest) => {
@@ -53,39 +50,38 @@ const dbTest0 = (htest) => {
     const rtc = sharedRtc // Note: need to ensure we only read sharedRtc inside test()
     console.log('dbTest0: test start: ', rtc)
     rtc.evalQuery(q1)
-    .then(res => {
-      t.ok(true, 'basic table read')
-      var schema = res.schema
-      var expectedCols = [ 'Name', 'Title', 'Base', 'TCOE', 'JobFamily', 'Union' ]
+      .then(res => {
+        t.ok(true, 'basic table read')
+        var schema = res.schema
+        var expectedCols = [ 'Name', 'Title', 'Base', 'TCOE', 'JobFamily', 'Union' ]
 
-      const columns = schema.columns // array of strings
-      // console.log('columns: ', columns)
+        const columns = schema.columns // array of strings
 
-      t.deepEqual(columns, expectedCols, 'getSchema column ids')
+        t.deepEqual(columns, expectedCols, 'getSchema column ids')
 
-      const columnTypes = columns.map(colId => schema.columnType(colId))
-      var expectedColTypes = [ 'text', 'text', 'integer', 'integer', 'text', 'text' ]
-      t.deepEqual(columnTypes, expectedColTypes, 'getSchema column types')
+        const columnTypes = columns.map(colId => schema.columnType(colId))
+        var expectedColTypes = [ 'text', 'text', 'integer', 'integer', 'text', 'text' ]
+        t.deepEqual(columnTypes, expectedColTypes, 'getSchema column types')
 
-      const rowData = res.rowData
-      t.equal(rowData.length, 23, 'q1 rowData.length')
+        const rowData = res.rowData
+        t.equal(rowData.length, 23, 'q1 rowData.length')
 
-      // console.log(rowData[0])
-      var expRow0 = {
-        'Name': 'Crunican, Grace',
-        'Title': 'General Manager',
-        'Base': 312461,
-        'TCOE': 399921,
-        'JobFamily': 'Executive Management',
-        'Union': 'Non-Represented'
-      }
-      t.deepEqual(rowData[0], expRow0, 'first row matches expected')
+        // console.log(rowData[0])
+        var expRow0 = {
+          'Name': 'Crunican, Grace',
+          'Title': 'General Manager',
+          'Base': 312461,
+          'TCOE': 399921,
+          'JobFamily': 'Executive Management',
+          'Union': 'Non-Represented'
+        }
+        t.deepEqual(rowData[0], expRow0, 'first row matches expected')
 
-      tcoeSum = util.columnSum(res, 'TCOE')
-      console.log('TCOE sum: ', tcoeSum)
+        tcoeSum = util.columnSum(res, 'TCOE')
+        console.log('TCOE sum: ', tcoeSum)
 
-      t.end()
-    })
+        t.end()
+      })
   })
 }
 
@@ -94,17 +90,14 @@ const dbTestRowCount0 = (htest) => {
     const rtc = sharedRtc // Note: need to ensure we only read sharedRtc inside test()
     console.log('dbTestRowCount0: test start: ', rtc)
     rtc.rowCount(q1)
-    .then(rowCount => {
-      t.ok(true, 'got row count!')
-      console.log('rowCount: ', rowCount)
-      t.equal(rowCount, 23, 'row count matches expected')
-      t.end()
-    })
+      .then(rowCount => {
+        t.ok(true, 'got row count!')
+        console.log('rowCount: ', rowCount)
+        t.equal(rowCount, 23, 'row count matches expected')
+        t.end()
+      })
   })
 }
-
-const pcols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
-const q2 = q1.project(pcols)
 
 const dbTest2 = (htest) => {
   htest('basic project operator', t => {
@@ -116,7 +109,6 @@ const dbTest2 = (htest) => {
       // console.log('project query schema: ', res.schema)
       t.deepEqual(res.schema.columns, pcols, 'result schema from project')
 
-      // console.log(res.rowData[0])
       // Note: object is actually identical under projection using
       // object rep of row data
       var expRow0 = {
@@ -127,13 +119,12 @@ const dbTest2 = (htest) => {
         'JobFamily': 'Executive Management',
         'Union': 'Non-Represented'
       }
+      console.log(res.rowData)
       t.deepEqual(res.rowData[0], expRow0, 'project result row 0')
       t.end()
     })
   })
 }
-
-const q3 = q1.groupBy(['Job', 'Title'], ['TCOE'])  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
 
 const dbTest3 = (htest) => {
   htest('basic groupBy', t => {
@@ -141,7 +132,7 @@ const dbTest3 = (htest) => {
     rtc.evalQuery(q3).then(res => {
       // console.log('groupBy result: ', res)
 
-      const expCols = ['Job', 'Title', 'TCOE']
+      const expCols = ['JobFamily', 'Title', 'TCOE']
       t.deepEqual(res.schema.columns, expCols, 'groupBy query schema')
 
       t.deepEqual(res.rowData.length, 19, 'correct number of grouped rows')
@@ -152,8 +143,6 @@ const dbTest3 = (htest) => {
     })
   })
 }
-
-const q4 = q2.groupBy(['JobFamily'], ['Title', 'Union', 'Name', 'Base', 'TCOE'])
 
 const dbTest4 = (htest) => {
   htest('groupBy aggs', t => {
@@ -176,29 +165,24 @@ const dbTest4 = (htest) => {
   })
 }
 
-const sqliteQueryTest = (htest, label: string, query: reltab.QueryExp,
-                          cf: (t: any, res: reltab.TableRep) => void): void => {
+const sqliteQueryTest = (htest, label: string, query: () => dialect.QueryExp,
+                         cf: (t: any, res: baseDialect.TableRep) => void): void => {
   htest(label, t => {
     const rtc = sharedRtc
-    rtc.evalQuery(query).then(res => cf(t, res), util.mkAsyncErrHandler(t, label))
+    rtc.evalQuery(query()).then(res => cf(t, res), util.mkAsyncErrHandler(t, label))
   })
 }
 
-const q5 = q1.filter(reltab.and().eq(col('JobFamily'), constVal('Executive Management')))
-
 const dbTest5 = (htest) => {
-  sqliteQueryTest(htest, 'basic filter', q5, (t, res) => {
+  sqliteQueryTest(htest, 'basic filter', () => q5, (t, res) => {
     t.equal(res.rowData.length, 4, 'expected row count after filter')
     util.logTable(res)
     t.end()
   })
 }
 
-// Test for literal string with single quote (which must be escaped):
-const q5b = q1.filter(reltab.and().eq(col('Title'), constVal('Department Manager Gov\'t & Comm Rel')))
-
 const dbTest5b = (htest) => {
-  sqliteQueryTest(htest, 'escaped literal string filter', q5b, (t, res) => {
+  sqliteQueryTest(htest, 'escaped literal string filter', () => q5b, (t, res) => {
     t.equal(res.rowData.length, 1, 'expected row count after filter')
     util.logTable(res)
     t.end()
@@ -212,7 +196,7 @@ const serTest0 = (htest) => {
     const ser5 = JSON.stringify(req, null, 2)
     console.log('serialized query')
     console.log(ser5)
-    dq5 = reltab.deserializeQueryReq(ser5)
+    dq5 = dialect.deserializeQueryReq(ser5)
     console.log('deserialized query: ', dq5)
     const rtc = sharedRtc
     rtc.evalQuery(dq5.query)
@@ -225,34 +209,29 @@ const serTest0 = (htest) => {
   })
 }
 
-const q6 = q1.mapColumns({Name: {id: 'EmpName', displayName: 'Employee Name'}})
-
 const dbTest6 = (htest) => {
-  sqliteQueryTest(htest, 'mapColumns', q6, (t, res) => {
+  sqliteQueryTest(htest, 'mapColumns', () => q6, (t, res) => {
     const rs = res.schema
-    t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
-    const em = rs.columnMetadata['EmpName']
-    t.deepEqual(em, {type: 'text', displayName: 'Employee Name'}, 'EmpName metadata')
+    console.log(rs.columns)
+    t.ok(rs.columns[0], 'Name', 'first column key is employee name')
+    const em = rs.fieldMap['Name']
+    t.deepEqual(em.toJS(), {type: 'text', name: 'Name', alias: 'Name', displayName: 'Employee Name', expType: 'Field'}, 'EmpName metadata')
     t.equal(res.rowData.length, 23, 'expected row count after mapColumns')
     t.end()
   })
 }
 
-const q7 = q1.mapColumnsByIndex({'0': {id: 'EmpName'}})
-
 const dbTest7 = (htest) => {
-  sqliteQueryTest(htest, 'mapColumnsByIndex', q7, (t, res) => {
+  sqliteQueryTest(htest, 'mapColumnsByIndex', () => q7, (t, res) => {
     const rs = res.schema
-    t.ok(rs.columns[0], 'EmpName', 'first column key is employee name')
+    t.ok(rs.columns[0], 'Name', 'first column key is employee name')
     t.equal(res.rowData.length, 23, 'expected row count after mapColumnsByIndex')
     t.end()
   })
 }
 
-const q8 = q5.concat(q1.filter(reltab.and().eq(col('JobFamily'), constVal('Safety'))))
-
 const dbTest8 = (htest) => {
-  sqliteQueryTest(htest, 'concat', q8, (t, res) => {
+  sqliteQueryTest(htest, 'concat', () => q8, (t, res) => {
     t.equal(res.rowData.length, 5, 'expected row count after filter and concat')
     const jobCol = res.getColumn('JobFamily')
     const jobs = _.sortedUniq(jobCol)
@@ -261,146 +240,132 @@ const dbTest8 = (htest) => {
   })
 }
 
-const q9 = q8.sort([['Name', true]])
 const dbTest9 = (htest) => {
-  sqliteQueryTest(htest, 'basic sort', q9, (t, res) => {
+  sqliteQueryTest(htest, 'basic sort', () => q9, (t, res) => {
     util.logTable(res)
     t.end()
   })
 }
 
-const q10 = q8.sort([['JobFamily', true], ['TCOE', false]])
 const dbTest10 = (htest) => {
-  sqliteQueryTest(htest, 'compound key sort', q10, (t, res) => {
+  sqliteQueryTest(htest, 'compound key sort', () => q10, (t, res) => {
     util.logTable(res)
     t.end()
   })
 }
 
-const q11 = q8.extend('ExtraComp', {type: 'integer'}, 'TCOE - Base')
 const dbTest11 = (htest) => {
-  sqliteQueryTest(htest, 'extend with expression', q11, (t, res) => {
+  sqliteQueryTest(htest, 'extend with expression', () => q11, (t, res) => {
     util.logTable(res)
     t.end()
   })
 }
 
 const aggTreeTest0 = (htest) => {
-  const q0 = reltab.tableQuery('barttest').project(pcols)
   htest('initial aggTree test', t => {
+    const q0 = dialect.tableQuery(barttestTi).project(pcols)
     const rtc = sharedRtc
-    const sp0 = aggtree.getBaseSchema(rtc, q0)
-    const p0 = sp0.then(schema => {
-      console.log('got schema: ', schema)
-      return aggtree.vpivot(rtc, q0, schema, ['JobFamily', 'Title'], 'Name', true, [])
-    })
+    const schema = aggtree.getBaseSchema(dialect, rtc, q0)
+    console.log('got schema: ', schema)
+    const tree0 = aggtree.vpivot(rtc, q0, schema, dialect, [new dialect.Field({name: 'JobFamily'}), new dialect.Field({name: 'Title'})], 'Name', true, [])
 
-    p0.then(tree0 => {
-      console.log('vpivot initial promise resolved...')
-      const rq0 = tree0.rootQuery
-      console.log('root query exp: ', rq0)
-      rtc.evalQuery(rq0)
-        .then(res => {
-          console.log('root query: ')
-          util.logTable(res)
+    const rq0 = tree0.rootQuery
+    console.log('root query exp: ', rq0)
+    rtc.evalQuery(rq0)
+      .then(res => {
+        console.log('root query: ')
+        util.logTable(res)
 
-          const q1 = tree0.applyPath([])
-          return rtc.evalQuery(q1)
-        })
-        .then(res => {
-          console.log('open root query: ')
-          util.logTable(res)
-          const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec', '_depth', '_pivot', '_isRoot', '_sortVal_0', '_sortVal_1', '_sortVal_2', '_path0', '_path1']
+        const q1 = tree0.applyPath([])
+        return rtc.evalQuery(q1)
+      })
+      .then(res => {
+        console.log('open root query: ')
+        util.logTable(res)
+        const expCols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec', '_depth', '_pivot', '_isRoot', '_sortVal_0', '_sortVal_1', '_sortVal_2', '_path0', '_path1']
 
-          t.deepEqual(res.schema.columns, expCols, 'Q1 schema columns')
-          t.deepEqual(res.rowData.length, 9, 'Q1 rowData length')
+        t.deepEqual(res.schema.columns, expCols, 'Q1 schema columns')
+        t.deepEqual(res.rowData.length, 9, 'Q1 rowData length')
 
-          const actSum = util.columnSum(res, 'TCOE')
+        const actSum = util.columnSum(res, 'TCOE')
 
-          t.deepEqual(actSum, 4691559, 'Q1 rowData sum(TCOE)')
+        t.deepEqual(actSum, 4691559, 'Q1 rowData sum(TCOE)')
 
-          const q2 = tree0.applyPath([ 'Executive Management' ])
-          return rtc.evalQuery(q2)
-        })
-        .then(res => {
-          console.log('after opening path "Executive Management":')
-          util.logTable(res)
+        const q2 = tree0.applyPath(['Executive Management'])
+        return rtc.evalQuery(q2)
+      })
+      .then(res => {
+        console.log('after opening path "Executive Management":')
+        util.logTable(res)
 
-          const q3 = tree0.applyPath(['Executive Management', 'General Manager'])
-          return rtc.evalQuery(q3)
-        })
-        .then(res => {
-          console.log('after opening path /Executive Management/General Manager:')
-          util.logTable(res)
+        const q3 = tree0.applyPath(['Executive Management', 'General Manager'])
+        return rtc.evalQuery(q3)
+      })
+      .then(res => {
+        console.log('after opening path /Executive Management/General Manager:')
+        util.logTable(res)
 
-          // const openPaths = {'Executive Management': {'General Manager': {}}, 'Safety': {}}
-          const openPaths = new PathTree({'"Executive Management"': {}})
-          const q4 = tree0.getTreeQuery(openPaths)
-          return rtc.evalQuery(q4)
-        })
-        .then(res => {
-          console.log('evaluating query returned from getTreeQuery:')
-          util.logTable(res)
-        })
-        .then(() => t.end())
-        .catch(util.mkAsyncErrHandler(t, 'aggtree queries chain'))
-    }).catch(util.mkAsyncErrHandler(t, 'initial vpivot'))
+        // const openPaths = {'Executive Management': {'General Manager': {}}, 'Safety': {}}
+        const openPaths = new PathTree({'"Executive Management"': {}})
+        const q4 = tree0.getTreeQuery(openPaths)
+        return rtc.evalQuery(q4)
+      })
+      .then(res => {
+        console.log('evaluating query returned from getTreeQuery:')
+        util.logTable(res)
+      })
+      .then(() => t.end())
+      .catch(util.mkAsyncErrHandler(t, 'aggtree queries chain'))
   })
 }
 
 const aggTreeTest1 = (htest) => {
-  const q0 = reltab.tableQuery('barttest').project(pcols)
   htest('sorted aggTree test', t => {
+    const q0 = dialect.tableQuery(barttestTi).project(pcols)
     const rtc = sharedRtc
-    const sp0 = aggtree.getBaseSchema(rtc, q0)
-    const p0 = sp0
-      .then(schema => aggtree.vpivot(rtc, q0, schema,
-          ['JobFamily', 'Title'], 'Name', true,
-          [['TCOE', false], ['Base', true], ['Title', true]]))
+    const schema = aggtree.getBaseSchema(dialect, rtc, q0)
+    const tree0 = aggtree.vpivot(rtc, q0, schema, dialect,
+        [new dialect.Field({ name: 'JobFamily' }), new dialect.Field({ name: 'Title' })], 'Name', true,
+      [['TCOE', false], ['Base', true], ['Title', true]])
 
-    p0.then(tree0 => {
-      console.log('vpivot initial promise resolved...')
+    const sq1 = tree0.getSortQuery(1)
 
-      const sq1 = tree0.getSortQuery(1)
+    rtc.evalQuery(sq1)
+      .then(res => {
+        console.log('sort query depth 1: ')
+        util.logTable(res)
+      })
+      .then(() => {
+        const sq2 = tree0.getSortQuery(2)
 
-      rtc.evalQuery(sq1)
-        .then(res => {
-          console.log('sort query depth 1: ')
-          util.logTable(res)
-        })
-        .then(() => {
-          const sq2 = tree0.getSortQuery(2)
+        return rtc.evalQuery(sq2)
+      })
+      .then(res2 => {
+        console.log('sort query depth 2: ')
+        util.logTable(res2)
+      })
+      .then(() => {
+        const q1 = tree0.applyPath([])
+        const sq1 = tree0.getSortQuery(1)
 
-          return rtc.evalQuery(sq2)
-        })
-        .then(res2 => {
-          console.log('sort query depth 2: ')
-          util.logTable(res2)
-        })
-        .then(() => {
-          const q1 = tree0.applyPath([])
-          const sq1 = tree0.getSortQuery(1)
+        console.log('got depth 1 query and sortQuery, joining...: ')
+        const jq1 = q1.join(sq1, '_path0')
 
-          console.log('got depth 1 query and sortQuery, joining...: ')
-          const jq1 = q1.join(sq1, '_path0')
-
-          return rtc.evalQuery(jq1)
-        })
-        .then(res => {
-          console.log('result of join query: ')
-          util.logTable(res)
-        })
-        .then(() => t.end())
-        .catch(util.mkAsyncErrHandler(t, 'aggtree queries chain'))
-    }).catch(util.mkAsyncErrHandler(t, 'initial vpivot'))
+        return rtc.evalQuery(jq1)
+      })
+      .then(res => {
+        console.log('result of join query: ')
+        util.logTable(res)
+      })
+      .then(() => t.end())
+      .catch(util.mkAsyncErrHandler(t, 'aggtree queries chain'))
   })
 }
 
 // Let's try async / await:
 const asyncTest1 = (htest) => {
-  const q0 = reltab.tableQuery('barttest').project(pcols)
-
   const tf = async (t) => {
+    const q0 = dialect.tableQuery(barttestTi).project(pcols)
     const rtc = sharedRtc
     const res0 = await rtc.evalQuery(q0)
     console.log('tf: got result:')
@@ -416,12 +381,12 @@ const asyncTest1 = (htest) => {
 
 const asyncAggTreeSortTest = (htest) => {
   const tf = async (t) => {
-    const q0 = reltab.tableQuery('barttest').project(pcols)
+    const q0 = dialect.tableQuery(barttestTi).project(pcols)
     const rtc = sharedRtc
-    const schema0 = await aggtree.getBaseSchema(rtc, q0)
-    const tree0 = await aggtree.vpivot(rtc, q0, schema0,
-      ['JobFamily', 'Title'], 'Name', true,
-      [['TCOE', false], ['Base', true], ['Title', true]])
+    const schema0 = aggtree.getBaseSchema(dialect, rtc, q0)
+    const tree0 = await aggtree.vpivot(rtc, q0, schema0, dialect,
+      [new dialect.Field({ name: 'JobFamily' }), new dialect.Field({ name: 'Title' })], 'Name', true,
+      [[new dialect.Field({ name: 'TCOE' }), false], [new dialect.Field({ name: 'Base' }), true], [new dialect.Field({ name: 'Title' }), true]])
     console.log('vpivot initial promise resolved...')
 
     const sq1 = tree0.getSortQuery(1)
@@ -484,7 +449,7 @@ const asyncAggTreeSortTest = (htest) => {
 
 const asyncTest = (htest, testName, tf) => {
   return htest(testName, t =>
-      tf(t, htest).catch(util.mkAsyncErrHandler(t, testName)))
+    tf(t, htest).catch(util.mkAsyncErrHandler(t, testName)))
 }
 
 /*
@@ -492,12 +457,12 @@ const asyncTest = (htest, testName, tf) => {
  */
 const basicPivotSortTest = async (t, htest) => {
   const deepEqualSnap = tapeSnapInit(htest)
-  const q0 = reltab.tableQuery('barttest').project(pcols)
+  const q0 = dialect.tableQuery(barttestTi).project(pcols)
   const rtc = sharedRtc
-  const schema0 = await aggtree.getBaseSchema(rtc, q0)
-  const tree0 = await aggtree.vpivot(rtc, q0, schema0,
-      ['JobFamily'], 'Name', true,
-      [['Title', true]])
+  const schema0 = aggtree.getBaseSchema(dialect, rtc, q0)
+  const tree0 = await aggtree.vpivot(rtc, q0, schema0, dialect,
+    [new dialect.Field({ name: 'JobFamily' })], 'Name', true,
+    [[new dialect.Field({ name: 'Title' }), true]])
   console.log('vpivot initial promise resolved...')
 
   const openPaths = new PathTree({'"Legal & Paralegal"': {}})
@@ -520,12 +485,12 @@ const basicPivotSortTest = async (t, htest) => {
  */
 const descPivotSortTest = async (t, htest) => {
   const deepEqualSnap = tapeSnapInit(htest)
-  const q0 = reltab.tableQuery('barttest').project(pcols)
+  const q0 = dialect.tableQuery(barttestTi).project(pcols)
   const rtc = sharedRtc
-  const schema0 = await aggtree.getBaseSchema(rtc, q0)
-  const tree0 = await aggtree.vpivot(rtc, q0, schema0,
-    ['JobFamily'], 'Name', true,
-    [['Title', false]])
+  const schema0 = aggtree.getBaseSchema(dialect, rtc, q0)
+  const tree0 = await aggtree.vpivot(rtc, q0, schema0, dialect,
+    [new dialect.Field({ name: 'JobFamily' })], 'Name', true,
+    [[new dialect.Field({ name: 'Title' }), false]])
   console.log('vpivot initial promise resolved...')
 
   const pq = tree0.applyPath([])
@@ -553,12 +518,12 @@ const descPivotSortTest = async (t, htest) => {
  */
 const multiPivotSingleSortTest = async (t, htest) => {
   const deepEqualSnap = tapeSnapInit(htest)
-  const q0 = reltab.tableQuery('barttest').project(pcols)
+  const q0 = dialect.tableQuery(barttestTi).project(pcols)
   const rtc = sharedRtc
-  const schema0 = await aggtree.getBaseSchema(rtc, q0)
-  const tree0 = await aggtree.vpivot(rtc, q0, schema0,
-      ['JobFamily', 'Title'], 'Name', true,
-      [['Title', true]])
+  const schema0 = aggtree.getBaseSchema(dialect, rtc, q0)
+  const tree0 = await aggtree.vpivot(rtc, q0, schema0, dialect,
+    [new dialect.Field({ name: 'JobFamily' }), new dialect.Field({ name: 'Title' })], 'Name', true,
+    [[new dialect.Field({ name: 'Title' }), true]])
   console.log('vpivot initial promise resolved...')
 
   const openPaths = new PathTree({'"Legal & Paralegal"': {}})
@@ -579,11 +544,11 @@ const multiPivotSingleSortTest = async (t, htest) => {
  */
 const intPivotTest = async (t, htest) => {
   const deepEqualSnap = tapeSnapInit(htest)
-  const q0 = reltab.tableQuery('barttest').project(pcols)
+  const q0 = dialect.tableQuery(barttestTi).project(pcols)
   const rtc = sharedRtc
-  const schema0 = await aggtree.getBaseSchema(rtc, q0)
-  const tree0 = await aggtree.vpivot(rtc, q0, schema0,
-      ['Base', 'JobFamily'], 'Name', true, [])
+  const schema0 = aggtree.getBaseSchema(dialect, rtc, q0)
+  const tree0 = await aggtree.vpivot(rtc, q0, schema0, dialect,
+    [new dialect.Field({ name: 'Base' }), new dialect.Field({ name: 'JobFamily' })], 'Name', true, [])
   console.log('vpivot initial promise resolved...')
 
   const openPaths = new PathTree({
@@ -604,12 +569,12 @@ const intPivotTest = async (t, htest) => {
 
 // queryGenPerfTest
 const queryGenPerfTest = async (t) => {
-  const q0 = reltab.tableQuery('barttest').project(pcols)
+  const q0 = dialect.tableQuery(barttestTi).project(pcols)
   const rtc = sharedRtc
-  const schema0 = await aggtree.getBaseSchema(rtc, q0)
-  const tree0 = await aggtree.vpivot(rtc, q0, schema0,
-      ['JobFamily', 'Title'], 'Name', true,
-      [['Title', true]])
+  const schema0 = aggtree.getBaseSchema(dialect, rtc, q0)
+  const tree0 = await aggtree.vpivot(rtc, q0, schema0, dialect,
+    [new dialect.Field({ name: 'JobFamily' }), new dialect.Field({ name: 'Title' })], 'Name', true,
+    [['Title', true]])
   console.log('vpivot initial promise resolved...')
 
   const openPaths = new PathTree({'"Executive Management"': {'"General Manager"': {}}, '"Safety"': {}})
@@ -638,6 +603,41 @@ const distinctTest = async (t, htest) => {
 }
 
 const doit = true
+
+const sqliteTestSetup = (htest) => {
+  htest('sqlite test setup', async (t) => {
+    try {
+      const showQueries = global.showQueries
+      const rtc = await sqliteDriver.getContext(':memory:', {showQueries})
+      const md = await csvimport.importSqlite(testPath, ',', {noHeaderRow: false})
+      const ti = csvimport.mkTableInfo(md)
+      barttestTi = ti
+
+      rtc.registerTable(ti)
+      sharedRtc = rtc
+      console.log('set rtc: ', sharedRtc)
+
+      afterInit()
+      t.ok(true, 'setup and import complete')
+      t.end()
+    } catch (err) {
+      console.error('sqliteTestSetup failure: ', err, err.stack)
+    }
+  })
+}
+
+const sqliteTestShutdown = (htest) => {
+  htest('sqlite test shutdown', t => {
+    db.close()
+      .then(() => {
+        console.log('shut down sqlite')
+        t.ok(true, 'finished db.close')
+        t.end()
+        // And exit on next tick:
+        setImmediate(() => { process.exit(0) })
+      })
+  })
+}
 
 const runTests = (htest: any) => {
   sqliteTestSetup(htest)

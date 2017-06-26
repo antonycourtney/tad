@@ -1,23 +1,23 @@
 /* @flow */
 
 import * as React from 'react'
+import { Field } from '../dialects/base'
 
 export default class SingleColumnSelect extends React.Component {
 
-  renderColOption (cid: string) {
-    const schema = this.props.schema
-    const displayName = schema.displayName(cid)
+  renderColOption (f: Field) {
+    const displayName = f.displayName
     return (
-      <option key={cid} value={cid}>{displayName}</option>
+      <option key={f.id} value={f.id}>{displayName}</option>
     )
   }
 
   render () {
     const schema = this.props.schema
 
-    const columnIds = schema.columns.slice()
-    columnIds.sort((cid1, cid2) => schema.displayName(cid1).localeCompare(schema.displayName(cid2)))
-    const colOptions = columnIds.map(cid => this.renderColOption(cid))
+    const fields = schema.fields.slice()
+    fields.sort((f1, f2) => f1.displayName.localeCompare(f2.displayName))
+    const colOptions = fields.map(f => this.renderColOption(f))
 
     const noneOption = (<option key='__none' value='__none'>none</option>)
     colOptions.unshift(noneOption)

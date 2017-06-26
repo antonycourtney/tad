@@ -3,28 +3,28 @@
 import * as React from 'react'
 import ColumnList from './ColumnList'
 import { ColumnListType } from './constants'
-import { aggFns, Schema } from '../reltab'
-import type { AggFn } from '../reltab'  // eslint-disable-line
+import { Field, Dialect } from '../dialects/base'
 import ViewParams from '../ViewParams'
 import * as actions from '../actions'
 
-const aggSelect = (viewParams: ViewParams, schema: Schema, cid: string, updater: any) => {
-  const colAggFn = viewParams.getAggFn(schema, cid)
+const aggSelect = (dialect: Dialect, viewParams: ViewParams, field: Field, updater: any) => {
+  const colName = field.selectableName
+  const colAggFn = viewParams.getAggFn(field)
 
   const mkOption = (aggName: string) => {
-    const key = 'agg-' + cid + '-' + aggName
+    const key = 'agg-' + colName + '-' + aggName
     return (
       <option key={key} value={aggName}>{aggName}</option>
     )
   }
 
   const handleChange = (event) => {
-    console.log('agg.handleChange: column: ', cid, 'new agg: ', event.target.value)
-    const aggFn: AggFn = event.target.value
-    actions.setAggFn(cid, aggFn, updater)
+    console.log('agg.handleChange: column: ', field.selectableName, 'new agg: ', event.target.value)
+    const aggFn: string = event.target.value
+    actions.setAggFn(field, aggFn, updater)
   }
 
-  const aggOptions = aggFns(schema.columnType(cid)).map(mkOption)
+  const aggOptions = field.availableAggFns().map(mkOption)
   return (
     <div className='pt-select pt-minimal'>
       <select value={colAggFn} onChange={handleChange}>
@@ -34,12 +34,14 @@ const aggSelect = (viewParams: ViewParams, schema: Schema, cid: string, updater:
   )
 }
 
-const aggRowFormatter = (viewParams: ViewParams, stateRefUpdater: any) => (schema: Schema, cid: string) => {
-  const displayName = schema.displayName(cid)
-  const select = aggSelect(viewParams, schema, cid, stateRefUpdater)
+const aggRowFormatter = (dialect: Dialect, viewParams: ViewParams, stateRefUpdater: any) => (schema: any, row: { value: Field }) => {
+  const field = row.value
+  const displayName = field.displayName
+  const select = aggSelect(dialect, viewParams, field, stateRefUpdater)
+  const colName = field.selectableName
   return ([
-    <td key={cid} className='col-colName'>{displayName}</td>,
-    <td key={'aggFn-' + cid} className='aggFn'>
+    <td key={colName} className='col-colName'>{displayName}</td>,
+    <td key={'aggFn-' + colName} className='aggFn'>
       {select}
     </td>
   ])
@@ -47,18 +49,18 @@ const aggRowFormatter = (viewParams: ViewParams, stateRefUpdater: any) => (schem
 
 export default class AggPanel extends React.Component {
   render () {
-    const {schema, viewParams, stateRefUpdater} = this.props  //eslint-disable-line
-    const columnIds = schema.sortedColumns()
+    const {schema, viewParams, dialect, stateRefUpdater} = this.props  //eslint-disable-line
+    const fields = schema.sortedFields()
 
     return (
       <div className='ui-block'>
         <h6>Aggregation Functions</h6>
         <ColumnList
-          schema={this.props.schema}
+          schema={schema}
           columnListType={ColumnListType.AGG}
           headerLabels={['Agg Fn']}
-          items={columnIds}
-          rowFormatter={aggRowFormatter(viewParams, stateRefUpdater)}
+          items={fields.map(field => ({ key: field.id, value: field }))}
+          rowFormatter={aggRowFormatter(dialect, viewParams, stateRefUpdater)}
           stateRefUpdater={stateRefUpdater} />
       </div>
     )

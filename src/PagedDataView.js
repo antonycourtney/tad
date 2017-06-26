@@ -1,6 +1,6 @@
 /* @flow */
 
-import * as reltab from './reltab'
+import * as baseDialect from './dialects/base'
 
 /*
  * a variant on SimpleDataView that maintains a total row count
@@ -8,12 +8,12 @@ import * as reltab from './reltab'
  * some offset
  */
 export default class PagedDataView {
-  schema: reltab.Schema
+  schema: baseDialect.Schema
   totalRowCount: number
   offset: number
   rawData: Array<any>
 
-  constructor (schema: reltab.Schema, totalRowCount: number, offset: number, items: Array<any>) {
+  constructor (schema: baseDialect.Schema, totalRowCount: number, offset: number, items: Array<any>) {
     this.schema = schema
     this.totalRowCount = totalRowCount
     this.offset = offset

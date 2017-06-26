@@ -6,7 +6,7 @@ import * as React from 'react'
 import * as _ from 'lodash'
 import { Slick, Plugins } from 'slickgrid-es6'
 import { WindowResizeListener } from 'react-window-resize-listener'
-import * as reltab from '../reltab'
+import * as baseDialect from '../dialects/base'
 import * as actions from '../actions'
 import LoadingModal from './LoadingModal'
 import PagedDataView from '../PagedDataView'
@@ -74,8 +74,7 @@ const getColWidth = (dataView: PagedDataView, cnm: string) => {
     colWidth = Math.min(MAXCOLWIDTH,
       Math.max(colWidth || MINCOLWIDTH, cellWidth))
   }
-  const displayName = dataView.schema.displayName(cnm)
-  const headerStrWidth = measureHeaderStringWidth(displayName)
+  const headerStrWidth = measureHeaderStringWidth(cnm)
   colWidth = Math.min(MAXCOLWIDTH,
     Math.max(colWidth || MINCOLWIDTH, headerStrWidth))
   return colWidth
@@ -104,37 +103,38 @@ function getInitialColWidthsMap (dataView: Object): ColWidthMap {
  *
  * Map should contain entries for all column ids
  */
-const mkSlickColMap = (schema: reltab.Schema, viewParams: ViewParams, colWidths: ColWidthMap) => {
+const mkSlickColMap = (schema: baseDialect.Schema, viewParams: ViewParams, colWidths: ColWidthMap) => {
   let slickColMap = {}
 
   // hidden columns:
   slickColMap['_id'] = { id: '_id', field: '_id', name: '_id' }
   slickColMap['_parentId'] = { id: '_parentId', field: '_parentId', name: '_parentId' }
-  for (let colId of schema.columns) {
-    let cmd = schema.columnMetadata[ colId ]
+  for (let colName of schema.columns) {
+    let cmd = schema.fieldMap[ colName ]
     if (!cmd) {
-      console.error('could not find column metadata for ', colId, schema)
+      console.error('could not find column metadata for ', colName, schema)
     }
-    let ci: any = { id: colId, field: colId, cssClass: '', name: '', formatter: null }
-    if (colId === '_pivot') {
-      const pivotNames = viewParams.vpivots.map(cid => schema.displayName(cid))
-      const leafCid = viewParams.pivotLeafColumn
-      let leafPivotStr = leafCid ? (' > ' + schema.displayName(leafCid)) : ''
+    let ci: any = { id: colName, field: colName, cssClass: '', name: '', formatter: null }
+    if (colName === '_pivot') {
+      const pivotNames = viewParams.vpivots.map(field => field.selectableName)
+      const leafCid = viewParams.pivotLeafFieldId
+      let leafPivotStr = leafCid ? (' > ' + schema.getField(leafCid).selectableName) : ''
       const pivotDisplayName = 'Pivot: ' + pivotNames.join(' > ') + leafPivotStr
       ci.cssClass = 'pivot-column'
       ci.name = pivotDisplayName
       ci.toolTip = pivotDisplayName
       ci.formatter = groupCellFormatter
     } else {
-      var displayName = cmd.displayName || colId
+      var displayName = cmd.selectableName || colName
       ci.name = displayName
       ci.toolTip = displayName
       ci.sortable = true
-      const ff = viewParams.getColumnFormat(schema, colId).getFormatter()
+      const field = schema.fieldMap[colName]
+      const ff = field ? viewParams.getColumnFormat(field).getFormatter() : v => v
       ci.formatter = (row, cell, value, columnDef, item) => ff(value)
     }
-    ci.width = colWidths[ colId ]
-    slickColMap[ colId ] = ci
+    ci.width = colWidths[ colName ]
+    slickColMap[ colName ] = ci
   }
   return slickColMap
 }
@@ -163,9 +163,10 @@ export default class GridPane extends React.Component {
     let path = []
     for (let i = 0; i < vpivots.length; i++) {
       let pathItem = item['_path' + i]
-      if (pathItem == null) {
-        break
-      }
+      // TODO: Not sure why this is here, it keeps you from expanding all pivot entries where data=null
+      //if (pathItem == null) {
+      //  break
+      //}
       path.push(item['_path' + i])
     }
     if (item._isOpen) {
@@ -179,17 +180,17 @@ export default class GridPane extends React.Component {
   getGridCols (dataView: ?Object = null) {
     const viewParams = this.props.viewState.viewParams
     const showHiddenCols = viewParams.showHiddenCols
-    const displayCols = viewParams.displayColumns
+    const displayFields = viewParams.displayFields
 
-    let gridCols = displayCols.map(cid => this.slickColMap[cid])
+    let gridCols = displayFields.map(f => this.slickColMap[f.selectableName])
     if (this.isPivoted()) {
       this.updateColWidth(dataView, '_pivot')
       let pivotCol = this.slickColMap['_pivot']
       gridCols.unshift(pivotCol)
     }
     if (showHiddenCols) {
-      const hiddenColIds = _.difference(_.keys(this.slickColMap), gridCols.map(gc => gc.field))
-      const hiddenCols = hiddenColIds.map(cid => this.slickColMap[cid])
+      const hiddenColNames = _.difference(_.keys(this.slickColMap), gridCols.map(gc => gc.field))
+      const hiddenCols = hiddenColNames.map(cid => this.slickColMap[cid])
       gridCols = gridCols.concat(hiddenCols)
     }
     return gridCols
@@ -247,7 +248,8 @@ export default class GridPane extends React.Component {
 
     this.grid.onSort.subscribe((e, args) => {
       // convert back from slickGrid format: */
-      const sortKey = args.sortCols.map(sc => [sc.sortCol.field, sc.sortAsc])
+      const fieldMap = this.props.appState.baseSchema.fieldMap
+      const sortKey = args.sortCols.map(sc => [fieldMap[sc.sortCol.field], sc.sortAsc])
       actions.setSortKey(sortKey, this.props.stateRefUpdater)
     })
 
@@ -255,8 +257,9 @@ export default class GridPane extends React.Component {
 
     this.grid.onColumnsReordered.subscribe((e, args) => {
       const cols = this.grid.getColumns()
-      const displayColIds = cols.map(c => c.field).filter(cid => cid[0] !== '_')
-      actions.setColumnOrder(displayColIds, this.props.stateRefUpdater)
+      const fieldMap = this.props.appState.baseSchema.fieldMap
+      const displayColNames = cols.map(c => fieldMap[c.field]).filter(f => !f.isHidden())
+      actions.setColumnOrder(displayColNames, this.props.stateRefUpdater)
     })
 
     // load the first page
@@ -267,10 +270,10 @@ export default class GridPane extends React.Component {
     }
   }
 
-  updateColWidth (dataView: any, colId: string) {
-    const colWidth = getColWidth(dataView, colId)
-    this.colWidthsMap[ colId ] = colWidth
-    this.slickColMap[ colId ].width = colWidth
+  updateColWidth (dataView: any, colName: string) {
+    const colWidth = getColWidth(dataView, colName)
+    this.colWidthsMap[ colName ] = colWidth
+    this.slickColMap[ colName ].width = colWidth
   }
 
   /*

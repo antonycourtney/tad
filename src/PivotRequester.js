@@ -1,26 +1,27 @@
 /* @flow */
 
-import * as reltab from './reltab'
+import * as baseDialect from './dialects/base'
 import * as aggtree from './aggtree'
 import PagedDataView from './PagedDataView'
 import ViewParams from './ViewParams'
 import AppState from './AppState'
 import QueryView from './QueryView'
-import type { Connection } from './reltab' // eslint-disable-line
+import type { Connection } from './dialects/base' // eslint-disable-line
 import * as oneref from 'oneref'  // eslint-disable-line
 import * as paging from './paging'
 import * as util from './util'
+import log from 'electron-log'
 
 const remoteErrorDialog = require('electron').remote.getGlobal('errorDialog')
 
 /**
  * Use ViewParams to construct a PagedDataView for use with
- * SlickGrid from reltab.TableRep
+ * SlickGrid from baseDialect.TableRep
  */
 const mkDataView = (viewParams: ViewParams,
   rowCount: number,
   offset: number,
-  tableData: reltab.TableRep): PagedDataView => {
+  tableData: baseDialect.TableRep): PagedDataView => {
   const getPath = (rowMap, depth) => {
     let path = []
     for (let i = 0; i < depth; i++) {
@@ -61,11 +62,11 @@ const mkDataView = (viewParams: ViewParams,
 /*
  * hacky opt for filter count: If empty filter, just retun baseRowCount
  */
-const fastFilterRowCount = async (rt: Connection,
+const fastFilterRowCount = (rt: Connection,
   baseRowCount: number,
-  filterExp: reltab.FilterExp,
-  filterQuery: reltab.QueryExp): number => {
-  if (filterExp.opArgs.length === 0) {
+  condition: baseDialect.Condition,
+  filterQuery: baseDialect.QueryExp): Promise<number> => {
+  if (condition.filters.length === 0) {
     // short circuit!
     return baseRowCount
   }
@@ -75,10 +76,10 @@ const fastFilterRowCount = async (rt: Connection,
 /*
  * hacky opt for using filterRowCount as viewRowCount if not pivoted
  */
-const fastViewRowCount = async (rt: Connection,
+const fastViewRowCount = (rt: Connection,
   filterRowCount: number,
-  vpivots: Array<string>,
-  viewQuery: reltab.QueryExp): number => {
+  vpivots: Array<baseDialect.Field>,
+  viewQuery: baseDialect.QueryExp): Promise<number> => {
   if (vpivots.length === 0) {
     // short circuit!
     return filterRowCount
@@ -88,27 +89,30 @@ const fastViewRowCount = async (rt: Connection,
 
 /**
  * Use the current ViewParams to construct a QueryExp to send to
- * reltab using aggtree.
+ * baseDialect using aggtree.
  * Map the resulting TableRep from the query into a PagedDataView for
  * use with SlickGrid
  */
 const requestQueryView = async (rt: Connection,
-    baseQuery: reltab.QueryExp,
-    baseSchema: reltab.Schema,
+    baseQuery: baseDialect.QueryExp,
+    baseSchema: baseDialect.Schema,
+    dialect: baseDialect.Dialect,
     viewParams: ViewParams): Promise<QueryView> => {
-  const schemaCols = baseSchema.columns
-  const aggMap = {}
-  for (let cid of schemaCols) {
-    aggMap[cid] = viewParams.getAggFn(baseSchema, cid)
-  }
-  const filterQuery = baseQuery.filter(viewParams.filterExp)
-  const ptree = await aggtree.vpivot(rt, filterQuery, baseSchema, viewParams.vpivots,
-      viewParams.pivotLeafColumn, viewParams.showRoot, viewParams.sortKey, aggMap)
+  const schemaFields = baseSchema.fields
+  let aggMap = {}
+  schemaFields.forEach((field) => {
+    const cid = field.id
+    aggMap[cid] = viewParams.aggMap[cid] || field.aggFn()
+  })
+
+  const filterQuery = baseQuery.filter(viewParams.condition)
+  const ptree = await aggtree.vpivot(rt, filterQuery, baseSchema, dialect, viewParams.vpivots,
+      viewParams.pivotLeafFieldId, viewParams.showRoot, viewParams.sortKey, aggMap)
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths)
 
   // const t0 = performance.now()  // eslint-disable-line
   const baseRowCount = await rt.rowCount(baseQuery)
-  const filterRowCount = await fastFilterRowCount(rt, baseRowCount, viewParams.filterExp, filterQuery)
+  const filterRowCount = await fastFilterRowCount(rt, baseRowCount, viewParams.condition, filterQuery)
   const rowCount = await fastViewRowCount(rt, filterRowCount, viewParams.vpivots, treeQuery)
   // const t1 = performance.now() // eslint-disable-line
   // console.log('gathering row counts took ', (t1 - t0) / 1000, ' sec')
@@ -198,29 +202,30 @@ export default class PivotRequester {
       const prevViewParams = this.pendingViewParams
       this.pendingViewParams = viewParams
       const qreq = requestQueryView(appState.rtc, appState.baseQuery,
-        appState.baseSchema, this.pendingViewParams)
+        appState.baseSchema, appState.dialect, this.pendingViewParams)
       this.pendingQueryRequest = qreq
       this.pendingDataRequest =
         qreq.then(queryView => {
           this.currentQueryView = queryView
           const appState = stateRef.getValue()
-          const nextSt = appState.update('viewState', vs => {
+          const nextSt = appState
+            .update('viewState', vs => {
             /*
              * queryView.rowCount may have changed since last data request;
              * trim viewport to ensure its in range
              */
-            const [viewportTop, viewportBottom] =
+              const [viewportTop, viewportBottom] =
               paging.clampViewport(queryView.rowCount, vs.viewportTop, vs.viewportBottom)
-            return (vs
+              return (vs
               .set('viewportTop', viewportTop)
               .set('viewportBottom', viewportBottom)
               .set('queryView', queryView))
-          })
+            })
           stateRef.setValue(nextSt)
           return this.sendDataRequest(stateRef, queryView)
         })
         .catch(err => {
-          console.error('PivotRequester: caught error updating view: ', err.message, err.stack)
+          log.error('PivotRequester: caught error updating view: ', err.message, err.stack)
           remoteErrorDialog('Error constructing view', err.message)
           // Now let's try and restore to previous view params:
           const appState = stateRef.getValue()

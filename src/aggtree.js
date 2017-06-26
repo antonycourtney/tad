@@ -1,11 +1,10 @@
 /* @flow */
 
-import * as reltab from './reltab'
+import * as baseDialect from './dialects/base'
 import * as _ from 'lodash'
 import PathTree from './PathTree'
-import type { Connection, QueryExp, Schema } from './reltab' // eslint-disable-line
+import type { Connection, QueryExp, Schema } from './dialects/base' // eslint-disable-line
 import type { Path } from './PathTree'  // eslint-disable-line
-const {col, constVal} = reltab
 const PATHSEP = '#'
 const ENCPATHSEP = '%23'
 
@@ -44,37 +43,40 @@ const addPathCols = (baseQuery: QueryExp,
   let retQuery = baseQuery
   for (let i = baseDepth; i < (maxDepth - 1); i++) {
     retQuery = retQuery.extend('_path' + i,
-        {type: 'text'}, null)
+        {}, null)
   }
   return retQuery
 }
 
 export class VPivotTree {
-  rt: reltab.Connection
+  rt: baseDialect.Connection
   baseQuery: QueryExp
-  pivotColumns: Array<string>
-  pivotLeafColumn: ?string
-  baseSchema: reltab.Schema
+  pivotFields: Array<baseDialect.Field>
+  pivotLeafFieldId: ?string
+  baseSchema: baseDialect.Schema
+  dialect: baseDialect.Dialect
   outCols: Array<string>
   rootQuery: ?QueryExp
   sortKey: Array<[string, boolean]>
-  aggMap: ?{[cid: string]: reltab.AggFn}
+  aggMap: ?{[cname: string]: baseDialect.AggFn}
 
   constructor (rt: Connection,
     baseQuery: QueryExp,
-    baseSchema: reltab.Schema,
-    pivotColumns: Array<string>,
-    pivotLeafColumn: ?string,
+    baseSchema: baseDialect.Schema,
+    dialect: baseDialect.Dialect,
+    pivotFields: Array<baseDialect.Field>,
+    pivotLeafFieldId: ?string,
     outCols: Array<string>,
     rootQuery: ?QueryExp,
     sortKey: Array<[string, boolean]>,
-    inAggMap: ?{[cid: string]: reltab.AggFn}
+    inAggMap: ?{[cname: string]: baseDialect.AggFn}
   ) {
     this.rt = rt
-    this.pivotColumns = pivotColumns
-    this.pivotLeafColumn = pivotLeafColumn
+    this.pivotFields = pivotFields
+    this.pivotLeafFieldId = pivotLeafFieldId
     this.baseQuery = baseQuery
     this.baseSchema = baseSchema
+    this.dialect = dialect
     this.outCols = outCols
     this.rootQuery = rootQuery
     this.sortKey = sortKey
@@ -91,39 +93,39 @@ export class VPivotTree {
     var pathQuery = this.baseQuery // recCountQuery
 
     // We will filter by all path components, and then group by the next pivot Column:
-    if (path.length > this.pivotColumns.length) {
+    if (path.length > this.pivotFields.length) {
       throw new Error('applyPath: path length > pivot columns')
     }
 
     if (path.length > 0) {
-      var pred = reltab.and()
+      var pred = this.dialect.Condition.and()
       for (var i = 0; i < path.length; i++) {
         let pathElem = path[i]
-        let pivotColExp = col(this.pivotColumns[i])
+        let pivotColExp = this.pivotFields[i]
         if (pathElem == null) {
           pred = pred.isNull(pivotColExp)
         } else {
-          pred = pred.eq(pivotColExp, constVal(pathElem))
+          pred = pred.eq(pivotColExp, pathElem)
         }
       }
       pathQuery = pathQuery.filter(pred)
     }
 
-    var pivotColumnInfo = {id: '_pivot', type: 'text', displayName: '_pivot'}
+    var pivotColumnInfo = {name: '_pivot'}
 
-    const aggCols = this.baseSchema.columns
+    const aggCols = this.baseSchema.fields.slice()
     const aggMap = this.aggMap
-    const gbAggs : any = (aggMap != null) ? aggCols.map(cid => [aggMap[cid], cid]) : aggCols
+    const gbAggs : any = (aggMap != null) ? aggCols.map(field => field.aggregate(aggMap[field.name])) : aggCols
 
-    if (path.length < this.pivotColumns.length) {
+    if (path.length < this.pivotFields.length) {
       pathQuery = pathQuery
-        .groupBy([this.pivotColumns[path.length]], gbAggs)
+        .groupBy([this.pivotFields[path.length]], gbAggs)
         .mapColumnsByIndex({ '0': pivotColumnInfo })
     } else {
       // leaf level
-      const leafExp = (this.pivotLeafColumn == null) ? "''" : 'CAST("' + this.pivotLeafColumn + '" as TEXT)'
+      const leafExp = (this.pivotLeafFieldId == null) ? null : new this.dialect.Field({ name: this.pivotLeafFieldId })
       pathQuery = pathQuery
-        .extend('_pivot', { type: 'text' }, leafExp)
+        .extend('_pivot', {}, leafExp)
     }
 
     const depth = path.length + 1
@@ -141,19 +143,18 @@ export class VPivotTree {
        * before their children; without this we'd end up putting parent row
        * immediately after children when sorted descending by some column
        */
-    const maxDepth = this.pivotColumns.length + 1
+    const maxDepth = this.pivotFields.length + 1
     for (let i = 0; i < maxDepth; i++) {
       const depthVal = (depth > i) ? 1 : 0
       pathQuery = pathQuery.extend('_sortVal_' + i, {type: 'integer'}, depthVal)
     }
 
-    for (let i = 0; i < this.pivotColumns.length; i++) {
+    for (let i = 0; i < this.pivotFields.length; i++) {
       let pathElemExp = null
       if (i < path.length) {
-        let colType = this.baseSchema.columnType(this.pivotColumns[i])
-        pathElemExp = reltab.sqlLiteralVal(colType, path[i])
+        pathElemExp = path[i]
       } else if (i === path.length) {
-        pathElemExp = '"_pivot"'  // N.B. Not a literal; SQL expression referring to _pivot column
+        pathElemExp = new this.dialect.Field({ name: '_pivot' })  // N.B. Not a literal; SQL expression referring to _pivot column
       }
 
       pathQuery = pathQuery.extend('_path' + i, {type: 'text'}, pathElemExp)
@@ -172,29 +173,31 @@ export class VPivotTree {
   getSortQuery (depth: number): QueryExp {
     let sortQuery = this.baseQuery // recCountQuery
 
-    const sortCols = this.sortKey.map(p => p[0])
+    const sortCols = this.sortKey.map(p => p[0] instanceof this.dialect.Field ? p[0] : this.baseSchema.getField(p[0]))
     const aggMap = this.aggMap
-    const sortColAggs : any = (aggMap != null) ? sortCols.map(cid => [aggMap[cid], cid]) : sortCols
+    console.log('sort agg')
+    const sortColAggs : any = (aggMap != null) ? sortCols.map(field => field.aggregate(aggMap[field.name])) : sortCols
 
-    const gbCols = this.pivotColumns.slice(0, depth)
+    const gbCols = this.pivotFields.slice(0, depth)
 
     sortQuery = sortQuery
       .groupBy(gbCols, sortColAggs)
 
-    let colMap = {}
+    let fieldMap = {}
+    console.log(gbCols)
     for (let i = 0; i < gbCols.length; i++) {
       const pathColName = '_path' + i
-      colMap[gbCols[i]] = { id: pathColName }
+      fieldMap[gbCols[i].selectableName] = { name: pathColName }
     }
-    sortQuery = sortQuery.mapColumns(colMap)
+    sortQuery = sortQuery.mapColumns(fieldMap)
 
     const pathLevel = depth - 1
 
     let sortColMap = {}
     for (let i = 0; i < sortCols.length; i++) {
-      let colIndex = gbCols.length + i
-      let colName = '_sortVal_' + pathLevel.toString() + '_' + i.toString()
-      sortColMap[colIndex.toString()] = { id: colName }
+      let fieldIndex = gbCols.length + i
+      let fieldName = '_sortVal_' + pathLevel.toString() + '_' + i.toString()
+      sortColMap[fieldIndex.toString()] = { name: fieldName }
     }
     sortQuery = sortQuery.mapColumnsByIndex(sortColMap)
 
@@ -205,7 +208,7 @@ export class VPivotTree {
    * get query for full tree state from a set of openPaths
    */
   getTreeQuery (openPaths: PathTree): QueryExp {
-    const maxDepth = this.pivotColumns.length + 1
+    const maxDepth = this.pivotFields.length + 1
     let resQuery = null
 
     if (this.rootQuery) {
@@ -232,7 +235,7 @@ export class VPivotTree {
     for (let i = 0; i < maxDepth - 1; i++) {
       sortArg.push(['_path' + i, true])
     }
-    resQuery = resQuery.sort(sortArg)
+    resQuery = resQuery.sortBy(sortArg)
     return resQuery
   }
 
@@ -244,12 +247,12 @@ export class VPivotTree {
   getSortedTreeQuery (openPaths: PathTree): QueryExp {
     const tq = this.getTreeQuery(openPaths)
 
-    let jtq = tq
+    let jtq: QueryExp = tq
     // add sort queries for each pivot depth and join to tree query
-    for (let i = 0; i < this.pivotColumns.length; i++) {
+    for (let i = 0; i < this.pivotFields.length; i++) {
       let depth = i + 1
-      let sq = this.getSortQuery(depth)
-      let joinKey = _.range(0, depth).map(j => '_path' + j)
+      let sq: QueryExp = this.getSortQuery(depth)
+      let joinKey: Array<string> = _.range(0, depth).map(j => '_path' + j)
       jtq = jtq.join(sq, joinKey)
     }
 
@@ -257,7 +260,7 @@ export class VPivotTree {
     // potential opt: Eliminate if root not shown
     let tsortKey = [['_isRoot', false]]
 
-    for (let i = 0; i < this.pivotColumns.length; i++) {
+    for (let i = 0; i < this.pivotFields.length; i++) {
       // should be able to do a simple tsortKey.push for next line, but flow being lame
       tsortKey = tsortKey.concat([['_sortVal_' + i.toString(), true]])
       // sort keys for this depth:
@@ -269,55 +272,57 @@ export class VPivotTree {
     }
 
     // Add the final _sortVal_i:
-    const maxDepth = this.pivotColumns.length
+    const maxDepth = this.pivotFields.length
     tsortKey = tsortKey.concat([['_sortVal_' + maxDepth.toString(), true]])
 
     // Finally, add the sort key columns itself for leaf level:
     tsortKey = tsortKey.concat(this.sortKey)
 
-    const stq = jtq.sort(tsortKey)
+    const stq = jtq.sortBy(tsortKey)
     return stq
   }
 }
 
-export const getBaseSchema = (rt: reltab.Connection,
+export const getBaseSchema = (dialect: baseDialect.Dialect, rt: baseDialect.Connection,
     baseQuery: QueryExp): Promise<Schema> => {
   // add a count column and do the usual SQL where 1=0 trick:
-  const schemaQuery = baseQuery
-    .extend('Rec', { type: 'integer' }, 1)
-    .filter(reltab.and().eq(constVal(1), constVal(0)))
+  // TODO: Why do we need to do a 1 = 0 here? And what is Rec?
+  // const schemaQuery = baseQuery.extend('Rec', { type: 'integer' }, 1)
+  //
+  // const schemap = rt.evalQuery(schemaQuery)
+  // return schemap.then(schemaRes => schemaRes.schema)
 
-  const schemap = rt.evalQuery(schemaQuery)
-  return schemap.then(schemaRes => schemaRes.schema)
+  return baseQuery.getSchema()
 }
 
-export const vpivot = (rt: reltab.Connection,
-    baseQuery: QueryExp,
+export const vpivot = (rt: baseDialect.Connection,
+    initialBaseQuery: QueryExp,
     baseSchema: Schema,
-    pivotColumns: Array<string>,
-    pivotLeafColumn: ?string,
+                       dialect: baseDialect.Dialect,
+    pivotFields: Array<baseDialect.Field>,
+    pivotLeafFieldId: ?string,
     showRoot: boolean,
-    sortKey: Array<[string, boolean]>,
-    inAggMap: ?{[cid: string]: reltab.AggFn} = null
+    sortKey: Array<[baseDialect.Field, boolean]>,
+    inAggMap: ?{[cname: string]: string} = null
   ): VPivotTree => {
   const aggMap = inAggMap // just for Flow
-  baseQuery = baseQuery.extend('Rec', { type: 'integer' }, 1)
-  const hiddenCols = ['_depth', '_pivot', '_isRoot']
-  const outCols = baseSchema.columns.concat(hiddenCols)
+  const hiddenFields = ['_depth', '_pivot', '_isRoot']
+  const baseQuery = initialBaseQuery.extend('Rec', { type: 'integer' }, 1)
+  const outFieldNames = baseQuery.getSchema().columns.concat(hiddenFields)
 
-  const gbCols = baseSchema.columns.slice()
-  const gbAggs = (aggMap != null) ? gbCols.map(cid => [aggMap[cid], cid]) : gbCols
+  const gbFields = baseQuery.getSchema().fields.slice()
+  const gbAggs = (aggMap != null) ? gbFields.map(field => field.aggregate(aggMap[field.name])) : gbFields
 
   let rootQuery = null
   if (showRoot) {
     rootQuery = baseQuery
       .groupBy([], gbAggs)
-      .extend('_pivot', { type: 'text' }, null)
+      .extend('_pivot', { }, null)
       .extend('_depth', { type: 'integer' }, 0)
-      .extend('_isRoot', {type: 'boolean'}, 1)
-      .project(outCols)
+      .extend('_isRoot', { type: 'boolean' }, 1)
+      .project(outFieldNames)
   }
 
-  return new VPivotTree(rt, baseQuery, baseSchema, pivotColumns,
-    pivotLeafColumn, outCols, rootQuery, sortKey, aggMap)
+  return new VPivotTree(rt, baseQuery, baseQuery.getSchema(), dialect, pivotFields,
+    pivotLeafFieldId, outFieldNames, rootQuery, sortKey, aggMap)
 }

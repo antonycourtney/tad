@@ -4,6 +4,7 @@ import * as React from 'react'
 import Sidebar from './Sidebar'
 import GridPane from './GridPane'
 import LoadingModal from './LoadingModal'
+import { Field } from '../dialects/base'
 import Footer from './Footer'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
@@ -26,12 +27,12 @@ class AppPane extends React.Component {
    * Doesn't actually seem to work reliably in practice; seems like a
    * bug in SlickGrid, so is turned off.
    *
-   * add  onColumnClick={cid => this.handleColumnClick(cid)} to
+   * add  onColumnClick={field => this.handleColumnClick(field)} to
    * Sidebar to re-enable.
    */
-  handleColumnClick (cid: string) {
+  handleColumnClick (field: Field) {
     if (this.grid) {
-      const columnIdx = this.grid.getColumnIndex(cid)
+      const columnIdx = this.grid.getColumnIndex(field.id)
       if (columnIdx !== undefined) {
         const vp = this.grid.getViewport()
         this.grid.scrollCellIntoView(vp.top, columnIdx)
@@ -64,6 +65,7 @@ class AppPane extends React.Component {
           <Sidebar
             baseSchema={appState.baseSchema}
             viewParams={viewParams}
+            dialect={appState.dialect}
             stateRefUpdater={this.props.stateRefUpdater} />
           <div className='center-app-pane'>
             <GridPane

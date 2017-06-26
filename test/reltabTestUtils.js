@@ -1,10 +1,10 @@
 /* @flow */
 
-import * as reltab from '../src/reltab' // eslint-disable-line
+import * as baseDialect from '../src/dialects/base' // eslint-disable-line
 import db from 'sqlite'
 import test from 'tape'
 
-export const columnSum = (tableData: reltab.TableRep, columnId: string): number => {
+export const columnSum = (tableData: baseDialect.TableRep, columnId: string): number => {
   var sum: number = 0
 
   for (var i = 0; i < tableData.rowData.length; i++) {
@@ -24,7 +24,7 @@ export const mkAsyncErrHandler = (t: any, msg: string): Handler => {
 
 type LogTableOptions = { maxRows?: number }
 
-export const logTable = (table: reltab.TableRep, options: ?LogTableOptions = null): void => {
+export const logTable = (table: baseDialect.TableRep, options: ?LogTableOptions = null): void => {
   // Node's console-table package has slightly different synopsis
   // than browser version; accepts column names as first arg:
   const ctf : any = console.table

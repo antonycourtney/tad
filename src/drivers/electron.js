@@ -1,17 +1,17 @@
 /* @flow */
 /**
- * A reltab connection that uses electron remote to send queries from
+ * A connection that uses electron remote to send queries from
  * the render process to the main process
  */
-import * as reltab from './reltab'
+import * as baseDialect from '../dialects/base'
 
-export const init = (): reltab.Connection => {
+export const init = (dialect: baseDialect.Dialect): baseDialect.Connection => {
   const remoteQuery = require('electron').remote.getGlobal('runQuery')
   const remoteRowCount = require('electron').remote.getGlobal('getRowCount')
 
   const rtc = {
-    evalQuery (query: reltab.QueryExp,
-        offset: number = -1, limit: number = -1): Promise<reltab.TableRep> {
+    evalQuery (query: baseDialect.QueryExp,
+               offset: number = -1, limit: number = -1): Promise<baseDialect.TableRep> {
       return new Promise((resolve, reject) => {
         let req : Object = { query }
         if (offset !== -1) {
@@ -24,7 +24,7 @@ export const init = (): reltab.Connection => {
             reject(err)
             return
           }
-          const res = reltab.deserializeTableRep(resStr)
+          const res = dialect.deserializeTableRep(resStr)
           // console.log('reltab-electron got query result: ')
           // console.log('columns: ', res.schema.columns)
           // console.table(res.rowData)
@@ -32,7 +32,7 @@ export const init = (): reltab.Connection => {
         })
       })
     },
-    rowCount (query: reltab.QueryExp): Promise<number> {
+    rowCount (query: baseDialect.QueryExp): Promise<number> {
       return new Promise((resolve, reject) => {
         let req : Object = { query }
         const sq = JSON.stringify(req, null, 2)

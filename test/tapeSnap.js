@@ -97,7 +97,8 @@ function deepEqualSnap (t: any, val: any, msg: string) {
 
   if (prevSnap && !recordOnlyMode) {
     // comparing to previous snapshot:
-    t.deepEqual(val, prevSnap, msg + ' (comparing to saved snapshot)')
+    // Ensure comparing serialized versions
+    t.deepEqual(JSON.parse(JSON.stringify(val)), prevSnap, msg + ' (comparing to saved snapshot)')
   } else {
     recordSnapshot(t.name, msg, val)
     t.pass(msg + ' (recorded new snapshot)')

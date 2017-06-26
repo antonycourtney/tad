@@ -3,42 +3,51 @@
 import ViewParams from './ViewParams'
 import ViewState from './ViewState'
 import AppState from './AppState'
-import * as reltab from './reltab'
+import * as baseDialect from './dialects/base'
 import * as constants from './components/constants'
+import { List } from 'immutable'
 import PathTree from './PathTree'
 import type {Path} from './PathTree'  // eslint-disable-line
 import * as aggtree from './aggtree'
 
+const _ = require('lodash')
+
 type RefUpdater = (f: ((s: AppState) => AppState)) => void
 
 // called after main process initialization completes:
-export const initAppState = (rtc: reltab.Connection,
+export const initAppState = (dialect: baseDialect.Dialect,
+    rtc: baseDialect.Connection,
     windowTitle: string,
-    baseQuery: reltab.QueryExp,
+    baseQuery: baseDialect.QueryExp,
     initialViewParams: ?ViewParams,
     updater: RefUpdater): Promise<void> => {
-  return aggtree.getBaseSchema(rtc, baseQuery)
-    .then(baseSchema => {
-      // start off with all columns displayed:
-      const displayColumns = baseSchema.columns.slice()
-      let viewParams
-      if (initialViewParams != null) {
-        viewParams = initialViewParams
-      } else {
-        const openPaths = new PathTree()
-        viewParams = new ViewParams({displayColumns, openPaths})
-      }
-      const viewState = new ViewState({viewParams})
-      // We explicitly set rather than merge() because merge
-      // will attempt to deep convert JS objects to Immutables
-      updater(st =>
-        st.set('windowTitle', windowTitle)
-          .set('rtc', rtc)
-          .set('baseSchema', baseSchema)
-          .set('baseQuery', baseQuery)
-          .set('viewState', viewState)
-          .set('initialized', true))
-    })
+  const baseSchema = aggtree.getBaseSchema(dialect, rtc, baseQuery)
+  // start off with all columns displayed:
+  const displayFields = _.uniqBy(baseSchema.fields.slice(), f => f.selectableName)
+
+  let viewParams
+  if (initialViewParams != null) {
+    viewParams = initialViewParams
+  } else {
+    const openPaths = new PathTree()
+    viewParams = new ViewParams({dialect, displayFields, openPaths})
+  }
+  const viewState = new ViewState({viewParams})
+  // We explicitly set rather than merge() because merge
+  // will attempt to deep convert JS objects to Immutables
+  return updater(st =>
+    st.set('windowTitle', windowTitle)
+      .set('rtc', rtc)
+      .set('baseSchema', baseSchema)
+      // Delete all duplicate selectable fields. Queries with duplicated fields aren't valid
+      // The reason baseQuery can have duplicated fields is because in OpsLab multiple joined tables can have
+      // the same selectable field names. We still need those in the query for when we getBaseSchema, but after
+      // that, they should be nuked from further querying.
+      .set('baseQuery', baseQuery.set('fields', List(displayFields)))
+      .set('viewState', viewState)
+      .set('initialized', true)
+      .set('dialect', dialect)
+  )
 }
 
 // helper to hoist a ViewParams => ViewParams fn to an AppState => AppState
@@ -47,31 +56,31 @@ const vpUpdate = (f: ((vp: ViewParams) => ViewParams)) =>
   (s: AppState) => (s
     .updateIn(['viewState', 'viewParams'], f))
 
-export const toggleShown = (cid: string, updater: RefUpdater): void => {
-  updater(vpUpdate(viewParams => viewParams.toggleShown(cid)))
+export const toggleShown = (field: baseDialect.Field, updater: RefUpdater): void => {
+  updater(vpUpdate(viewParams => viewParams.toggleShown(field)))
 }
 
 export const toggleAllShown = (updater: RefUpdater): void => {
   updater(s => {
     const schema = s.baseSchema
     const viewParams = s.viewState.viewParams
-    const allShown = schema.columns.length === viewParams.displayColumns.length
-    const nextDisplayColumns = allShown ? [] : schema.columns
+    const allShown = schema.fields.length === viewParams.displayFields.length
+    const nextDisplayFields = allShown ? [] : _.uniqBy(schema.fields, f => f.selectableName)
 
-    return vpUpdate(viewParams => viewParams.set('displayColumns', nextDisplayColumns))(s)
+    return vpUpdate(viewParams => viewParams.set('displayFields', nextDisplayFields))(s)
   })
 }
 
-export const togglePivot = (cid: string, updater: RefUpdater): void => {
-  updater(vpUpdate(viewParams => viewParams.togglePivot(cid)))
+export const togglePivot = (field: baseDialect.Field, updater: RefUpdater): void => {
+  updater(vpUpdate(viewParams => viewParams.togglePivot(field)))
 }
 
-export const toggleSort = (cid: string, updater: RefUpdater): void => {
-  updater(vpUpdate(viewParams => viewParams.toggleSort(cid)))
+export const toggleSort = (field: baseDialect.Field, updater: RefUpdater): void => {
+  updater(vpUpdate(viewParams => viewParams.toggleSort(field)))
 }
 
-export const setSortDir = (cid: string, asc: boolean, updater: RefUpdater): void => {
-  updater(vpUpdate(viewParams => viewParams.setSortDir(cid, asc)))
+export const setSortDir = (field: baseDialect.Field, asc: boolean, updater: RefUpdater): void => {
+  updater(vpUpdate(viewParams => viewParams.setSortDir(field, asc)))
 }
 
 export const toggleShowRoot = (updater: RefUpdater): void => {
@@ -90,33 +99,33 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
     let colList = viewParams.get(fieldKey).slice()
     if (isSortKey) {
       const srcSortKey = srcProps.rowData
-      const srcIndex = colList.findIndex(k => (k[0] === srcSortKey[0]))
+      const srcIndex = colList.findIndex(k => (k[0].id === srcSortKey[0].id))
       if (srcIndex === -1) {
         return viewParams
       }
       // remove source from its current position:
       colList.splice(srcIndex, 1)
       const dstSortKey = dstProps.rowData
-      const dstIndex = colList.findIndex(k => (k[0] === dstSortKey[0]))
+      const dstIndex = colList.findIndex(k => (k[0].id === dstSortKey[0].id))
       if (dstIndex === -1) {
         return viewParams
       }
       colList.splice(dstIndex, 0, srcSortKey)
       return viewParams.set(fieldKey, colList)
     } else {
-      const srcColumnId = srcProps.rowData
-      const srcIndex = colList.indexOf(srcColumnId)
+      const srcColumnId = srcProps.rowData.id
+      const srcIndex = colList.findIndex(f => f.id === srcColumnId)
       if (srcIndex === -1) {
         return viewParams
       }
       // remove source from its current position:
       colList.splice(srcIndex, 1)
-      const dstColumnId = dstProps.rowData
-      const dstIndex = colList.indexOf(dstColumnId)
+      const dstColumnId = dstProps.rowData.id
+      const dstIndex = colList.findIndex(f => f.id === dstColumnId)
       if (dstIndex === -1) {
         return viewParams
       }
-      colList.splice(dstIndex, 0, srcColumnId)
+      colList.splice(dstIndex, 0, srcProps.rowData)
       if (fieldKey === 'vpivots') { // evil hack
         return viewParams.setVPivots(colList)
       } else {
@@ -130,13 +139,13 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
  * single column version of setting sort key
  * (until we implement compound sort keys)
  */
-export const setSortKey = (sortKey: Array<[string, boolean]>, updater: RefUpdater) => {
+export const setSortKey = (sortKey: Array<[baseDialect.Field, boolean]>, updater: RefUpdater) => {
   console.log('setSortKey: ', sortKey)
   updater(vpUpdate(viewParams => viewParams.set('sortKey', sortKey)))
 }
 
-export const setColumnOrder = (displayColumns: Array<string>, updater: RefUpdater) => {
-  updater(vpUpdate(viewParams => viewParams.set('displayColumns', displayColumns)))
+export const setColumnOrder = (displayFields: Array<baseDialect.Field>, updater: RefUpdater) => {
+  updater(vpUpdate(viewParams => viewParams.set('displayFields', displayFields)))
 }
 
 export const openPath = (path: Path, updater: RefUpdater) => {
@@ -147,8 +156,8 @@ export const closePath = (path: Path, updater: RefUpdater) => {
   updater(vpUpdate(viewParams => viewParams.closePath(path)))
 }
 
-export const setAggFn = (cid: string, aggFn: reltab.AggFn, updater: RefUpdater) => {
-  updater(vpUpdate(viewParams => viewParams.setAggFn(cid, aggFn)))
+export const setAggFn = (field: baseDialect.Field, aggFn: string, updater: RefUpdater) => {
+  updater(vpUpdate(viewParams => viewParams.setAggFn(field, aggFn)))
 }
 
 export const updateViewport = (top: number, bottom: number, updater: RefUpdater) => {
@@ -161,16 +170,16 @@ export const setDefaultFormatOptions = (colType: string, opts: any, updater: Ref
   updater(vpUpdate(viewParams => viewParams.setIn(['defaultFormats', colType], opts)))
 }
 
-export const setColumnFormatOptions = (cid: string, opts: any, updater: RefUpdater) => {
-  updater(vpUpdate(viewParams => viewParams.setColumnFormat(cid, opts)))
+export const setColumnFormatOptions = (field: baseDialect.Field, opts: any, updater: RefUpdater) => {
+  updater(vpUpdate(viewParams => viewParams.setColumnFormat(field, opts)))
 }
 
 export const setShowHiddenCols = (show: boolean, updater: RefUpdater) => {
   updater(vpUpdate(viewParams => viewParams.set('showHiddenCols', show)))
 }
 
-export const setFilter = (fe: reltab.FilterExp, updater: RefUpdater) => {
-  updater(vpUpdate(viewParams => viewParams.set('filterExp', fe)))
+export const setCondition = (cond: baseDialect.Condition, updater: RefUpdater) => {
+  updater(vpUpdate(viewParams => viewParams.set('condition', cond)))
 }
 
 export const ensureDistinctColVals = (colId: string, updater: RefUpdater) => {

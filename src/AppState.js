@@ -2,7 +2,7 @@
 
 import * as Immutable from 'immutable'
 import ViewState from './ViewState'
-import * as reltab from './reltab'
+import * as baseDialect from './dialects/base'
 
 /**
  * Immutable representation of application state
@@ -16,14 +16,16 @@ export default class AppState extends Immutable.Record({
   targetPath: '', // path to CSV file
   baseQuery: null,
   baseSchema: null,
-  viewState: new ViewState()
+  viewState: new ViewState(),
+  dialect: null
 }) {
   // duplicated here to allow us to write flow types:
   initialized: boolean    // Has main process initialization completed?
   windowTitle: string     // Usually just the table name or file name
-  rtc : reltab.Connection
+  rtc : baseDialect.Connection
   targetPath: string
-  baseQuery: reltab.QueryExp
-  baseSchema: reltab.Schema   // always in sync with baseQuery
+  baseQuery: baseDialect.QueryExp
+  baseSchema: baseDialect.Schema   // always in sync with baseQuery
   viewState: ViewState
+  dialect: baseDialect.Dialect // TODO: type dialect
 }

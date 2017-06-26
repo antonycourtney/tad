@@ -2,30 +2,28 @@
 
 import * as React from 'react'
 import * as actions from '../actions'
+import { Field } from '../dialects/base'
 import IndeterminateCheckbox from './IndeterminateCheckbox'
 
-const shortenTypeName = (tn: string): string => {
-  return (tn === 'integer') ? 'int' : tn
-}
 
 export default class ColumnSelector extends React.PureComponent {
-  handleRowClick (cid: string) {
+  handleRowClick (field: Field) {
     if (this.props.onColumnClick) {
-      this.props.onColumnClick(cid)
+      this.props.onColumnClick(field)
     }
   }
 
-  renderColumnRow (cid: string) {
-    const {schema, viewParams} = this.props
-    const displayName = schema.displayName(cid)
-    const colTypeName = shortenTypeName(schema.columnType(cid))
-    const isShown = viewParams.displayColumns.includes(cid)
-    const isPivot = viewParams.vpivots.includes(cid)
-    const isSort = (viewParams.sortKey.findIndex(entry => entry[0] === cid) !== -1)
+  renderColumnRow (field: Field) {
+    const { viewParams } = this.props
+    const displayName = field.displayName
+    const colTypeName = field.typeDisplayName
+    const isShown = !!viewParams.displayFields.find(f => f.id === field.id)
+    const isPivot = viewParams.vpivots.find(f => f.id === field.id)
+    const isSort = (viewParams.sortKey.findIndex(entry => entry[0].id === field.id) !== -1)
     const refUpdater = this.props.stateRefUpdater
     return (
-      <tr key={cid}>
-        <td className='col-colName' onClick={e => this.handleRowClick(cid)}>
+      <tr key={field.id}>
+        <td className='col-colName' onClick={e => this.handleRowClick(field)}>
           {displayName}
         </td>
         <td className='col-colType'>{colTypeName}</td>
@@ -34,8 +32,8 @@ export default class ColumnSelector extends React.PureComponent {
             className='colSel-check'
             type='checkbox'
             title='Show this column'
-            ref={'showCheckbox-' + cid}
-            onChange={() => actions.toggleShown(cid, refUpdater)}
+            ref={'showCheckbox-' + field.id}
+            onChange={() => actions.toggleShown(field, refUpdater)}
             checked={isShown} />
         </td>
         <td className='col-check'>
@@ -43,8 +41,8 @@ export default class ColumnSelector extends React.PureComponent {
             className='colSel-check'
             type='checkbox'
             title='Pivot by column'
-            ref={'pivotCheckbox-' + cid}
-            onChange={() => actions.togglePivot(cid, refUpdater)}
+            ref={'pivotCheckbox-' + field.id}
+            onChange={() => actions.togglePivot(field, refUpdater)}
             checked={isPivot} />
         </td>
         <td className='col-check'>
@@ -52,8 +50,8 @@ export default class ColumnSelector extends React.PureComponent {
             className='colSel-check'
             type='checkbox'
             title='Sort by column'
-            ref={'sortCheckbox-' + cid}
-            onChange={() => actions.toggleSort(cid, refUpdater)}
+            ref={'sortCheckbox-' + field.id}
+            onChange={() => actions.toggleSort(field, refUpdater)}
             checked={isSort} />
         </td>
       </tr>
@@ -63,8 +61,8 @@ export default class ColumnSelector extends React.PureComponent {
   // render row with checkboxes to select / deselect all items:
   renderAllRow () {
     const {schema, viewParams} = this.props
-    const allShown = schema.columns.length === viewParams.displayColumns.length
-    const someShown = (viewParams.displayColumns.length > 0)
+    const allShown = schema.fields.length === viewParams.displayFields.length
+    const someShown = (viewParams.displayFields.length > 0)
     const refUpdater = this.props.stateRefUpdater
     return (
       <tr className='all-row' >
@@ -89,10 +87,10 @@ export default class ColumnSelector extends React.PureComponent {
 
   render () {
     const schema = this.props.schema
-    const columnIds = schema.columns.slice()
-    columnIds.sort((cid1, cid2) => schema.displayName(cid1).localeCompare(schema.displayName(cid2)))
+    const fields = schema.fields.slice()
+    fields.sort((d1, d2) => d1.displayName.localeCompare(d2.displayName))
     const allRow = this.renderAllRow()
-    const columnRows = columnIds.map(cid => this.renderColumnRow(cid))
+    const columnRows = fields.map(this.renderColumnRow.bind(this))
 
     return (
       <div className='column-selector'>

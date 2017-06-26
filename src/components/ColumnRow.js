@@ -10,7 +10,7 @@ const colItemSource = {
     console.log('beginDrag: ', props)
     return {
       columnListType: props.columnListType,
-      rowData: props.rowData,
+      rowData: props.rowData.value,
       stateRefUpdater: props.stateRefUpdater
     }
   }
@@ -52,10 +52,10 @@ class ColumnRow extends React.Component {
 
     let rowFmt
     if (this.props.rowFormatter) {
-      rowFmt = this.props.rowFormatter(schema, this.props.rowData)
+      rowFmt = this.props.rowFormatter(this.props.schema, this.props.rowData)
     } else {
-      const columnId = this.props.rowData
-      const displayName = schema.displayName(columnId)
+      const item = this.props.rowData
+      const displayName = item.value.displayName ? item.value.displayName : item.value
       rowFmt = (<td className='col-colName'>{displayName}</td>)
     }
     return connectDropTarget(connectDragSource(

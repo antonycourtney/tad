@@ -4,6 +4,118 @@
     "basicPivotSortTest": {
       "sorted tree query matches snapshot": {
         "schema": {
+          "fields": [
+            {
+              "name": "JobFamily",
+              "displayName": "Job Family",
+              "type": "text",
+              "alias": "JobFamily",
+              "expType": "Field"
+            },
+            {
+              "name": "Title",
+              "displayName": "Title",
+              "type": "text",
+              "alias": "Title",
+              "expType": "Field"
+            },
+            {
+              "name": "Union",
+              "displayName": "Union",
+              "type": "text",
+              "alias": "Union",
+              "expType": "Field"
+            },
+            {
+              "name": "Name",
+              "displayName": "Name",
+              "type": "text",
+              "alias": "Name",
+              "expType": "Field"
+            },
+            {
+              "name": "Base",
+              "displayName": "Base",
+              "type": "integer",
+              "alias": "Base",
+              "expType": "Field"
+            },
+            {
+              "name": "TCOE",
+              "displayName": "TCOE",
+              "type": "integer",
+              "alias": "TCOE",
+              "expType": "Field"
+            },
+            {
+              "name": "Rec",
+              "displayName": "Rec",
+              "type": "integer",
+              "alias": "Rec",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_100",
+              "name": "_depth",
+              "displayName": "_depth",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_depth",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_100",
+              "name": "_pivot",
+              "displayName": "_pivot",
+              "type": "text",
+              "cast": "text",
+              "alias": "_pivot",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_100",
+              "name": "_isRoot",
+              "displayName": "_isRoot",
+              "type": "boolean",
+              "cast": "boolean",
+              "alias": "_isRoot",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_100",
+              "name": "_sortVal_0",
+              "displayName": "_sortVal_0",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_0",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_100",
+              "name": "_sortVal_1",
+              "displayName": "_sortVal_1",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_1",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_100",
+              "name": "_path0",
+              "displayName": "_path0",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path0",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_99",
+              "name": "_sortVal_0_0",
+              "displayName": "_sortVal_0_0",
+              "alias": "_sortVal_0_0",
+              "expType": "Field"
+            }
+          ],
           "columns": [
             "JobFamily",
             "Title",
@@ -20,74 +132,119 @@
             "_path0",
             "_sortVal_0_0"
           ],
-          "columnMetadata": {
-            "_path0": {
-              "type": "text"
-            },
-            "_sortVal_1": {
-              "type": "integer"
-            },
-            "_sortVal_0": {
-              "type": "integer"
-            },
+          "fieldMap": {
             "JobFamily": {
+              "name": "JobFamily",
               "displayName": "Job Family",
-              "type": "text"
+              "type": "text",
+              "alias": "JobFamily",
+              "expType": "Field"
             },
             "Title": {
+              "name": "Title",
               "displayName": "Title",
-              "type": "text"
+              "type": "text",
+              "alias": "Title",
+              "expType": "Field"
             },
             "Union": {
+              "name": "Union",
               "displayName": "Union",
-              "type": "text"
+              "type": "text",
+              "alias": "Union",
+              "expType": "Field"
             },
             "Name": {
+              "name": "Name",
               "displayName": "Name",
-              "type": "text"
+              "type": "text",
+              "alias": "Name",
+              "expType": "Field"
             },
             "Base": {
+              "name": "Base",
               "displayName": "Base",
-              "type": "integer"
+              "type": "integer",
+              "alias": "Base",
+              "expType": "Field"
             },
             "TCOE": {
+              "name": "TCOE",
               "displayName": "TCOE",
-              "type": "integer"
+              "type": "integer",
+              "alias": "TCOE",
+              "expType": "Field"
             },
             "Rec": {
-              "type": "integer"
+              "name": "Rec",
+              "displayName": "Rec",
+              "type": "integer",
+              "alias": "Rec",
+              "expType": "Field"
             },
             "_depth": {
-              "type": "integer"
+              "table": "alias_100",
+              "name": "_depth",
+              "displayName": "_depth",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_depth",
+              "expType": "Field"
             },
             "_pivot": {
-              "type": "text"
+              "table": "alias_100",
+              "name": "_pivot",
+              "displayName": "_pivot",
+              "type": "text",
+              "cast": "text",
+              "alias": "_pivot",
+              "expType": "Field"
             },
             "_isRoot": {
-              "type": "boolean"
+              "table": "alias_100",
+              "name": "_isRoot",
+              "displayName": "_isRoot",
+              "type": "boolean",
+              "cast": "boolean",
+              "alias": "_isRoot",
+              "expType": "Field"
+            },
+            "_sortVal_0": {
+              "table": "alias_100",
+              "name": "_sortVal_0",
+              "displayName": "_sortVal_0",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_0",
+              "expType": "Field"
+            },
+            "_sortVal_1": {
+              "table": "alias_100",
+              "name": "_sortVal_1",
+              "displayName": "_sortVal_1",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_1",
+              "expType": "Field"
+            },
+            "_path0": {
+              "table": "alias_100",
+              "name": "_path0",
+              "displayName": "_path0",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path0",
+              "expType": "Field"
             },
             "_sortVal_0_0": {
-              "displayName": "Title",
-              "type": "text"
+              "table": "alias_99",
+              "name": "_sortVal_0_0",
+              "displayName": "_sortVal_0_0",
+              "alias": "_sortVal_0_0",
+              "expType": "Field"
             }
           },
-          "_sortedColumns": null,
-          "columnIndices": {
-            "JobFamily": 0,
-            "Title": 1,
-            "Union": 2,
-            "Name": 3,
-            "Base": 4,
-            "TCOE": 5,
-            "Rec": 6,
-            "_depth": 7,
-            "_pivot": 8,
-            "_isRoot": 9,
-            "_sortVal_0": 10,
-            "_sortVal_1": 11,
-            "_path0": 12,
-            "_sortVal_0_0": 13
-          }
+          "_sortedFields": null
         },
         "rowData": [
           {
@@ -97,7 +254,7 @@
             "Name": null,
             "Base": 3251221,
             "TCOE": 4691559,
-            "Rec": 23,
+            "Rec": 1,
             "_depth": 0,
             "_pivot": null,
             "_isRoot": 1,
@@ -113,7 +270,7 @@
             "Name": null,
             "Base": 309734,
             "TCOE": 422244,
-            "Rec": 2,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Engineering & Systems Engineering",
             "_isRoot": 0,
@@ -129,7 +286,7 @@
             "Name": null,
             "Base": 1030722,
             "TCOE": 1389290,
-            "Rec": 4,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Executive Management",
             "_isRoot": 0,
@@ -145,7 +302,7 @@
             "Name": null,
             "Base": 564028,
             "TCOE": 766571,
-            "Rec": 3,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Legal & Paralegal",
             "_isRoot": 0,
@@ -209,7 +366,7 @@
             "Name": null,
             "Base": 366223,
             "TCOE": 594761,
-            "Rec": 5,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Maintenance, Vehicle & Facilities",
             "_isRoot": 0,
@@ -225,7 +382,7 @@
             "Name": null,
             "Base": 413909,
             "TCOE": 709998,
-            "Rec": 5,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Transportation Operations",
             "_isRoot": 0,
@@ -304,6 +461,118 @@
     "descPivotSortTest": {
       "sorted tree query matches snapshot": {
         "schema": {
+          "fields": [
+            {
+              "name": "JobFamily",
+              "displayName": "Job Family",
+              "type": "text",
+              "alias": "JobFamily",
+              "expType": "Field"
+            },
+            {
+              "name": "Title",
+              "displayName": "Title",
+              "type": "text",
+              "alias": "Title",
+              "expType": "Field"
+            },
+            {
+              "name": "Union",
+              "displayName": "Union",
+              "type": "text",
+              "alias": "Union",
+              "expType": "Field"
+            },
+            {
+              "name": "Name",
+              "displayName": "Name",
+              "type": "text",
+              "alias": "Name",
+              "expType": "Field"
+            },
+            {
+              "name": "Base",
+              "displayName": "Base",
+              "type": "integer",
+              "alias": "Base",
+              "expType": "Field"
+            },
+            {
+              "name": "TCOE",
+              "displayName": "TCOE",
+              "type": "integer",
+              "alias": "TCOE",
+              "expType": "Field"
+            },
+            {
+              "name": "Rec",
+              "displayName": "Rec",
+              "type": "integer",
+              "alias": "Rec",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_115",
+              "name": "_depth",
+              "displayName": "_depth",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_depth",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_115",
+              "name": "_pivot",
+              "displayName": "_pivot",
+              "type": "text",
+              "cast": "text",
+              "alias": "_pivot",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_115",
+              "name": "_isRoot",
+              "displayName": "_isRoot",
+              "type": "boolean",
+              "cast": "boolean",
+              "alias": "_isRoot",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_115",
+              "name": "_sortVal_0",
+              "displayName": "_sortVal_0",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_0",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_115",
+              "name": "_sortVal_1",
+              "displayName": "_sortVal_1",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_1",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_115",
+              "name": "_path0",
+              "displayName": "_path0",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path0",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_114",
+              "name": "_sortVal_0_0",
+              "displayName": "_sortVal_0_0",
+              "alias": "_sortVal_0_0",
+              "expType": "Field"
+            }
+          ],
           "columns": [
             "JobFamily",
             "Title",
@@ -320,74 +589,119 @@
             "_path0",
             "_sortVal_0_0"
           ],
-          "columnMetadata": {
-            "_path0": {
-              "type": "text"
-            },
-            "_sortVal_1": {
-              "type": "integer"
-            },
-            "_sortVal_0": {
-              "type": "integer"
-            },
+          "fieldMap": {
             "JobFamily": {
+              "name": "JobFamily",
               "displayName": "Job Family",
-              "type": "text"
+              "type": "text",
+              "alias": "JobFamily",
+              "expType": "Field"
             },
             "Title": {
+              "name": "Title",
               "displayName": "Title",
-              "type": "text"
+              "type": "text",
+              "alias": "Title",
+              "expType": "Field"
             },
             "Union": {
+              "name": "Union",
               "displayName": "Union",
-              "type": "text"
+              "type": "text",
+              "alias": "Union",
+              "expType": "Field"
             },
             "Name": {
+              "name": "Name",
               "displayName": "Name",
-              "type": "text"
+              "type": "text",
+              "alias": "Name",
+              "expType": "Field"
             },
             "Base": {
+              "name": "Base",
               "displayName": "Base",
-              "type": "integer"
+              "type": "integer",
+              "alias": "Base",
+              "expType": "Field"
             },
             "TCOE": {
+              "name": "TCOE",
               "displayName": "TCOE",
-              "type": "integer"
+              "type": "integer",
+              "alias": "TCOE",
+              "expType": "Field"
             },
             "Rec": {
-              "type": "integer"
+              "name": "Rec",
+              "displayName": "Rec",
+              "type": "integer",
+              "alias": "Rec",
+              "expType": "Field"
             },
             "_depth": {
-              "type": "integer"
+              "table": "alias_115",
+              "name": "_depth",
+              "displayName": "_depth",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_depth",
+              "expType": "Field"
             },
             "_pivot": {
-              "type": "text"
+              "table": "alias_115",
+              "name": "_pivot",
+              "displayName": "_pivot",
+              "type": "text",
+              "cast": "text",
+              "alias": "_pivot",
+              "expType": "Field"
             },
             "_isRoot": {
-              "type": "boolean"
+              "table": "alias_115",
+              "name": "_isRoot",
+              "displayName": "_isRoot",
+              "type": "boolean",
+              "cast": "boolean",
+              "alias": "_isRoot",
+              "expType": "Field"
+            },
+            "_sortVal_0": {
+              "table": "alias_115",
+              "name": "_sortVal_0",
+              "displayName": "_sortVal_0",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_0",
+              "expType": "Field"
+            },
+            "_sortVal_1": {
+              "table": "alias_115",
+              "name": "_sortVal_1",
+              "displayName": "_sortVal_1",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_1",
+              "expType": "Field"
+            },
+            "_path0": {
+              "table": "alias_115",
+              "name": "_path0",
+              "displayName": "_path0",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path0",
+              "expType": "Field"
             },
             "_sortVal_0_0": {
-              "displayName": "Title",
-              "type": "text"
+              "table": "alias_114",
+              "name": "_sortVal_0_0",
+              "displayName": "_sortVal_0_0",
+              "alias": "_sortVal_0_0",
+              "expType": "Field"
             }
           },
-          "_sortedColumns": null,
-          "columnIndices": {
-            "JobFamily": 0,
-            "Title": 1,
-            "Union": 2,
-            "Name": 3,
-            "Base": 4,
-            "TCOE": 5,
-            "Rec": 6,
-            "_depth": 7,
-            "_pivot": 8,
-            "_isRoot": 9,
-            "_sortVal_0": 10,
-            "_sortVal_1": 11,
-            "_path0": 12,
-            "_sortVal_0_0": 13
-          }
+          "_sortedFields": null
         },
         "rowData": [
           {
@@ -397,7 +711,7 @@
             "Name": null,
             "Base": 3251221,
             "TCOE": 4691559,
-            "Rec": 23,
+            "Rec": 1,
             "_depth": 0,
             "_pivot": null,
             "_isRoot": 1,
@@ -477,7 +791,7 @@
             "Name": null,
             "Base": 309734,
             "TCOE": 422244,
-            "Rec": 2,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Engineering & Systems Engineering",
             "_isRoot": 0,
@@ -493,7 +807,7 @@
             "Name": null,
             "Base": 1030722,
             "TCOE": 1389290,
-            "Rec": 4,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Executive Management",
             "_isRoot": 0,
@@ -509,7 +823,7 @@
             "Name": null,
             "Base": 564028,
             "TCOE": 766571,
-            "Rec": 3,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Legal & Paralegal",
             "_isRoot": 0,
@@ -573,7 +887,7 @@
             "Name": null,
             "Base": 366223,
             "TCOE": 594761,
-            "Rec": 5,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Maintenance, Vehicle & Facilities",
             "_isRoot": 0,
@@ -589,7 +903,7 @@
             "Name": null,
             "Base": 413909,
             "TCOE": 709998,
-            "Rec": 5,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Transportation Operations",
             "_isRoot": 0,
@@ -604,6 +918,143 @@
     "multiPivotSingleSortTest": {
       "sorted tree query": {
         "schema": {
+          "fields": [
+            {
+              "name": "JobFamily",
+              "displayName": "Job Family",
+              "type": "text",
+              "alias": "JobFamily",
+              "expType": "Field"
+            },
+            {
+              "name": "Title",
+              "displayName": "Title",
+              "type": "text",
+              "alias": "Title",
+              "expType": "Field"
+            },
+            {
+              "name": "Union",
+              "displayName": "Union",
+              "type": "text",
+              "alias": "Union",
+              "expType": "Field"
+            },
+            {
+              "name": "Name",
+              "displayName": "Name",
+              "type": "text",
+              "alias": "Name",
+              "expType": "Field"
+            },
+            {
+              "name": "Base",
+              "displayName": "Base",
+              "type": "integer",
+              "alias": "Base",
+              "expType": "Field"
+            },
+            {
+              "name": "TCOE",
+              "displayName": "TCOE",
+              "type": "integer",
+              "alias": "TCOE",
+              "expType": "Field"
+            },
+            {
+              "name": "Rec",
+              "displayName": "Rec",
+              "type": "integer",
+              "alias": "Rec",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_132",
+              "name": "_depth",
+              "displayName": "_depth",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_depth",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_132",
+              "name": "_pivot",
+              "displayName": "_pivot",
+              "type": "text",
+              "cast": "text",
+              "alias": "_pivot",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_132",
+              "name": "_isRoot",
+              "displayName": "_isRoot",
+              "type": "boolean",
+              "cast": "boolean",
+              "alias": "_isRoot",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_132",
+              "name": "_sortVal_0",
+              "displayName": "_sortVal_0",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_0",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_132",
+              "name": "_sortVal_1",
+              "displayName": "_sortVal_1",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_1",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_132",
+              "name": "_sortVal_2",
+              "displayName": "_sortVal_2",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_2",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_132",
+              "name": "_path0",
+              "displayName": "_path0",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path0",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_132",
+              "name": "_path1",
+              "displayName": "_path1",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path1",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_132",
+              "name": "_sortVal_0_0",
+              "displayName": "_sortVal_0_0",
+              "alias": "_sortVal_0_0",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_131",
+              "name": "_sortVal_1_0",
+              "displayName": "_sortVal_1_0",
+              "alias": "_sortVal_1_0",
+              "expType": "Field"
+            }
+          ],
           "columns": [
             "JobFamily",
             "Title",
@@ -623,87 +1074,144 @@
             "_sortVal_0_0",
             "_sortVal_1_0"
           ],
-          "columnMetadata": {
-            "_path1": {
-              "type": "text"
-            },
-            "_path0": {
-              "type": "text"
-            },
-            "_sortVal_2": {
-              "type": "integer"
-            },
-            "_sortVal_1": {
-              "type": "integer"
-            },
-            "_sortVal_0": {
-              "type": "integer"
-            },
+          "fieldMap": {
             "JobFamily": {
+              "name": "JobFamily",
               "displayName": "Job Family",
-              "type": "text"
+              "type": "text",
+              "alias": "JobFamily",
+              "expType": "Field"
             },
             "Title": {
+              "name": "Title",
               "displayName": "Title",
-              "type": "text"
+              "type": "text",
+              "alias": "Title",
+              "expType": "Field"
             },
             "Union": {
+              "name": "Union",
               "displayName": "Union",
-              "type": "text"
+              "type": "text",
+              "alias": "Union",
+              "expType": "Field"
             },
             "Name": {
+              "name": "Name",
               "displayName": "Name",
-              "type": "text"
+              "type": "text",
+              "alias": "Name",
+              "expType": "Field"
             },
             "Base": {
+              "name": "Base",
               "displayName": "Base",
-              "type": "integer"
+              "type": "integer",
+              "alias": "Base",
+              "expType": "Field"
             },
             "TCOE": {
+              "name": "TCOE",
               "displayName": "TCOE",
-              "type": "integer"
+              "type": "integer",
+              "alias": "TCOE",
+              "expType": "Field"
             },
             "Rec": {
-              "type": "integer"
+              "name": "Rec",
+              "displayName": "Rec",
+              "type": "integer",
+              "alias": "Rec",
+              "expType": "Field"
             },
             "_depth": {
-              "type": "integer"
+              "table": "alias_132",
+              "name": "_depth",
+              "displayName": "_depth",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_depth",
+              "expType": "Field"
             },
             "_pivot": {
-              "type": "text"
+              "table": "alias_132",
+              "name": "_pivot",
+              "displayName": "_pivot",
+              "type": "text",
+              "cast": "text",
+              "alias": "_pivot",
+              "expType": "Field"
             },
             "_isRoot": {
-              "type": "boolean"
+              "table": "alias_132",
+              "name": "_isRoot",
+              "displayName": "_isRoot",
+              "type": "boolean",
+              "cast": "boolean",
+              "alias": "_isRoot",
+              "expType": "Field"
+            },
+            "_sortVal_0": {
+              "table": "alias_132",
+              "name": "_sortVal_0",
+              "displayName": "_sortVal_0",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_0",
+              "expType": "Field"
+            },
+            "_sortVal_1": {
+              "table": "alias_132",
+              "name": "_sortVal_1",
+              "displayName": "_sortVal_1",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_1",
+              "expType": "Field"
+            },
+            "_sortVal_2": {
+              "table": "alias_132",
+              "name": "_sortVal_2",
+              "displayName": "_sortVal_2",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_2",
+              "expType": "Field"
+            },
+            "_path0": {
+              "table": "alias_132",
+              "name": "_path0",
+              "displayName": "_path0",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path0",
+              "expType": "Field"
+            },
+            "_path1": {
+              "table": "alias_132",
+              "name": "_path1",
+              "displayName": "_path1",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path1",
+              "expType": "Field"
             },
             "_sortVal_0_0": {
-              "displayName": "Title",
-              "type": "text"
+              "table": "alias_132",
+              "name": "_sortVal_0_0",
+              "displayName": "_sortVal_0_0",
+              "alias": "_sortVal_0_0",
+              "expType": "Field"
             },
             "_sortVal_1_0": {
-              "displayName": "Title",
-              "type": "text"
+              "table": "alias_131",
+              "name": "_sortVal_1_0",
+              "displayName": "_sortVal_1_0",
+              "alias": "_sortVal_1_0",
+              "expType": "Field"
             }
           },
-          "_sortedColumns": null,
-          "columnIndices": {
-            "JobFamily": 0,
-            "Title": 1,
-            "Union": 2,
-            "Name": 3,
-            "Base": 4,
-            "TCOE": 5,
-            "Rec": 6,
-            "_depth": 7,
-            "_pivot": 8,
-            "_isRoot": 9,
-            "_sortVal_0": 10,
-            "_sortVal_1": 11,
-            "_sortVal_2": 12,
-            "_path0": 13,
-            "_path1": 14,
-            "_sortVal_0_0": 15,
-            "_sortVal_1_0": 16
-          }
+          "_sortedFields": null
         },
         "rowData": [
           {
@@ -713,7 +1221,7 @@
             "Name": null,
             "Base": 3251221,
             "TCOE": 4691559,
-            "Rec": 23,
+            "Rec": 1,
             "_depth": 0,
             "_pivot": null,
             "_isRoot": 1,
@@ -732,7 +1240,7 @@
             "Name": null,
             "Base": 309734,
             "TCOE": 422244,
-            "Rec": 2,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Engineering & Systems Engineering",
             "_isRoot": 0,
@@ -751,7 +1259,7 @@
             "Name": null,
             "Base": 1030722,
             "TCOE": 1389290,
-            "Rec": 4,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Executive Management",
             "_isRoot": 0,
@@ -770,7 +1278,7 @@
             "Name": null,
             "Base": 564028,
             "TCOE": 766571,
-            "Rec": 3,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Legal & Paralegal",
             "_isRoot": 0,
@@ -808,7 +1316,7 @@
             "Name": null,
             "Base": 325759,
             "TCOE": 445028,
-            "Rec": 2,
+            "Rec": 1,
             "_depth": 2,
             "_pivot": "Senior Attorney",
             "_isRoot": 0,
@@ -827,7 +1335,7 @@
             "Name": null,
             "Base": 366223,
             "TCOE": 594761,
-            "Rec": 5,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Maintenance, Vehicle & Facilities",
             "_isRoot": 0,
@@ -846,7 +1354,7 @@
             "Name": null,
             "Base": 413909,
             "TCOE": 709998,
-            "Rec": 5,
+            "Rec": 1,
             "_depth": 1,
             "_pivot": "Transportation Operations",
             "_isRoot": 0,
@@ -1020,6 +1528,129 @@
     "intPivotTest": {
       "int pivot query": {
         "schema": {
+          "fields": [
+            {
+              "name": "JobFamily",
+              "displayName": "Job Family",
+              "type": "text",
+              "alias": "JobFamily",
+              "expType": "Field"
+            },
+            {
+              "name": "Title",
+              "displayName": "Title",
+              "type": "text",
+              "alias": "Title",
+              "expType": "Field"
+            },
+            {
+              "name": "Union",
+              "displayName": "Union",
+              "type": "text",
+              "alias": "Union",
+              "expType": "Field"
+            },
+            {
+              "name": "Name",
+              "displayName": "Name",
+              "type": "text",
+              "alias": "Name",
+              "expType": "Field"
+            },
+            {
+              "name": "Base",
+              "displayName": "Base",
+              "type": "integer",
+              "alias": "Base",
+              "expType": "Field"
+            },
+            {
+              "name": "TCOE",
+              "displayName": "TCOE",
+              "type": "integer",
+              "alias": "TCOE",
+              "expType": "Field"
+            },
+            {
+              "name": "Rec",
+              "displayName": "Rec",
+              "type": "integer",
+              "alias": "Rec",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_159",
+              "name": "_depth",
+              "displayName": "_depth",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_depth",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_159",
+              "name": "_pivot",
+              "displayName": "_pivot",
+              "type": "text",
+              "cast": "text",
+              "alias": "_pivot",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_159",
+              "name": "_isRoot",
+              "displayName": "_isRoot",
+              "type": "boolean",
+              "cast": "boolean",
+              "alias": "_isRoot",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_159",
+              "name": "_sortVal_0",
+              "displayName": "_sortVal_0",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_0",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_159",
+              "name": "_sortVal_1",
+              "displayName": "_sortVal_1",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_1",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_159",
+              "name": "_sortVal_2",
+              "displayName": "_sortVal_2",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_2",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_159",
+              "name": "_path0",
+              "displayName": "_path0",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path0",
+              "expType": "Field"
+            },
+            {
+              "table": "alias_159",
+              "name": "_path1",
+              "displayName": "_path1",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path1",
+              "expType": "Field"
+            }
+          ],
           "columns": [
             "JobFamily",
             "Title",
@@ -1037,77 +1668,130 @@
             "_path0",
             "_path1"
           ],
-          "columnMetadata": {
-            "_path1": {
-              "type": "text"
-            },
-            "_path0": {
-              "type": "text"
-            },
-            "_sortVal_2": {
-              "type": "integer"
-            },
-            "_sortVal_1": {
-              "type": "integer"
-            },
-            "_sortVal_0": {
-              "type": "integer"
-            },
+          "fieldMap": {
             "JobFamily": {
+              "name": "JobFamily",
               "displayName": "Job Family",
-              "type": "text"
+              "type": "text",
+              "alias": "JobFamily",
+              "expType": "Field"
             },
             "Title": {
+              "name": "Title",
               "displayName": "Title",
-              "type": "text"
+              "type": "text",
+              "alias": "Title",
+              "expType": "Field"
             },
             "Union": {
+              "name": "Union",
               "displayName": "Union",
-              "type": "text"
+              "type": "text",
+              "alias": "Union",
+              "expType": "Field"
             },
             "Name": {
+              "name": "Name",
               "displayName": "Name",
-              "type": "text"
+              "type": "text",
+              "alias": "Name",
+              "expType": "Field"
             },
             "Base": {
+              "name": "Base",
               "displayName": "Base",
-              "type": "integer"
+              "type": "integer",
+              "alias": "Base",
+              "expType": "Field"
             },
             "TCOE": {
+              "name": "TCOE",
               "displayName": "TCOE",
-              "type": "integer"
+              "type": "integer",
+              "alias": "TCOE",
+              "expType": "Field"
             },
             "Rec": {
-              "type": "integer"
+              "name": "Rec",
+              "displayName": "Rec",
+              "type": "integer",
+              "alias": "Rec",
+              "expType": "Field"
             },
             "_depth": {
-              "type": "integer"
+              "table": "alias_159",
+              "name": "_depth",
+              "displayName": "_depth",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_depth",
+              "expType": "Field"
             },
             "_pivot": {
-              "type": "text"
+              "table": "alias_159",
+              "name": "_pivot",
+              "displayName": "_pivot",
+              "type": "text",
+              "cast": "text",
+              "alias": "_pivot",
+              "expType": "Field"
             },
             "_isRoot": {
-              "type": "boolean"
+              "table": "alias_159",
+              "name": "_isRoot",
+              "displayName": "_isRoot",
+              "type": "boolean",
+              "cast": "boolean",
+              "alias": "_isRoot",
+              "expType": "Field"
+            },
+            "_sortVal_0": {
+              "table": "alias_159",
+              "name": "_sortVal_0",
+              "displayName": "_sortVal_0",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_0",
+              "expType": "Field"
+            },
+            "_sortVal_1": {
+              "table": "alias_159",
+              "name": "_sortVal_1",
+              "displayName": "_sortVal_1",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_1",
+              "expType": "Field"
+            },
+            "_sortVal_2": {
+              "table": "alias_159",
+              "name": "_sortVal_2",
+              "displayName": "_sortVal_2",
+              "type": "integer",
+              "cast": "integer",
+              "alias": "_sortVal_2",
+              "expType": "Field"
+            },
+            "_path0": {
+              "table": "alias_159",
+              "name": "_path0",
+              "displayName": "_path0",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path0",
+              "expType": "Field"
+            },
+            "_path1": {
+              "table": "alias_159",
+              "name": "_path1",
+              "displayName": "_path1",
+              "type": "text",
+              "cast": "text",
+              "alias": "_path1",
+              "expType": "Field"
             }
           },
-          "_sortedColumns": null,
-          "columnIndices": {
-            "JobFamily": 0,
-            "Title": 1,
-            "Union": 2,
-            "Name": 3,
-            "Base": 4,
-            "TCOE": 5,
-            "Rec": 6,
-            "_depth": 7,
-            "_pivot": 8,
-            "_isRoot": 9,
-            "_sortVal_0": 10,
-            "_sortVal_1": 11,
-            "_sortVal_2": 12,
-            "_path0": 13,
-            "_path1": 14
-          }
+          "_sortedFields": null
         },
         "rowData": [
           {
@@ -1117,7 +1801,7 @@
             "Name": null,
             "Base": 3251221,
             "TCOE": 4691559,
-            "Rec": 23,
+            "Rec": 1,
             "_depth": 0,
             "_pivot": null,
             "_isRoot": 1,
@@ -1125,6 +1809,227 @@
             "_sortVal_1": 0,
             "_sortVal_2": 0,
             "_path0": null,
+            "_path1": null
+          },
+          {
+            "JobFamily": "Public Affairs & Marketing",
+            "Title": "Department Manager Gov't & Comm Rel",
+            "Union": "Non-Represented",
+            "Name": "Hamill, Kerry",
+            "Base": 130035,
+            "TCOE": 181955,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "130035",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "130035",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Safety",
+            "Title": "Chief Safety Officer",
+            "Union": "Non-Represented",
+            "Name": "Hardy, Leonard",
+            "Base": 152125,
+            "TCOE": 211941,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "152125",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "152125",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Engineering & Systems Engineering",
+            "Title": "Group Manager Systems Capital Prog",
+            "Union": "Non-Represented",
+            "Name": "Dupont, Jean-Luc",
+            "Base": 152434,
+            "TCOE": 212535,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "152434",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "152434",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Engineering & Systems Engineering",
+            "Title": "Group Manager, Capital Projects",
+            "Union": "Non-Represented",
+            "Name": "Ruffa, Frank",
+            "Base": 157300,
+            "TCOE": 209709,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "157300",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "157300",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Legal & Paralegal",
+            "Title": "Senior Attorney",
+            "Union": "Non-Represented",
+            "Name": "Nuetzel, Victoria",
+            "Base": 160289,
+            "TCOE": 220683,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "160289",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "160289",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Legal & Paralegal",
+            "Title": "Senior Attorney",
+            "Union": "Non-Represented",
+            "Name": "Lee, Thomas",
+            "Base": 165470,
+            "TCOE": 224345,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "165470",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "165470",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Transportation Operations",
+            "Title": "Chief Transportation Officer",
+            "Union": "Non-Represented",
+            "Name": "Crespo, Rodolfo",
+            "Base": 170383,
+            "TCOE": 238211,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "170383",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "170383",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Executive Management",
+            "Title": "Deputy General Manager",
+            "Union": "Non-Represented",
+            "Name": "DeVaughn, Marcia",
+            "Base": 206914,
+            "TCOE": 281548,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "206914",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "206914",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Finance & Accounting",
+            "Title": "Controller-Treasurer",
+            "Union": "Non-Represented",
+            "Name": "Schroeder, Scott",
+            "Base": 208744,
+            "TCOE": 287139,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "208744",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "208744",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Executive Management",
+            "Title": "Assistant General Manager Operations",
+            "Union": "Non-Represented",
+            "Name": "Oversier, Paul",
+            "Base": 212647,
+            "TCOE": 288160,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "212647",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "212647",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Legal & Paralegal",
+            "Title": "General Counsel",
+            "Union": "Non-Represented",
+            "Name": "Burrows, Matthew",
+            "Base": 238269,
+            "TCOE": 321543,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "238269",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "238269",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Executive Management",
+            "Title": "General Manager",
+            "Union": "Non-Represented",
+            "Name": "Dugger, Dorothy",
+            "Base": 298700,
+            "TCOE": 419661,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "298700",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "298700",
+            "_path1": null
+          },
+          {
+            "JobFamily": "Executive Management",
+            "Title": "General Manager",
+            "Union": "Non-Represented",
+            "Name": "Crunican, Grace",
+            "Base": 312461,
+            "TCOE": 399921,
+            "Rec": 1,
+            "_depth": 1,
+            "_pivot": "312461",
+            "_isRoot": 0,
+            "_sortVal_0": 1,
+            "_sortVal_1": 0,
+            "_sortVal_2": 0,
+            "_path0": "312461",
             "_path1": null
           },
           {
@@ -1136,12 +2041,12 @@
             "TCOE": 113775,
             "Rec": 1,
             "_depth": 1,
-            "_pivot": 59817,
+            "_pivot": "59817",
             "_isRoot": 0,
             "_sortVal_0": 1,
             "_sortVal_1": 0,
             "_sortVal_2": 0,
-            "_path0": 59817,
+            "_path0": "59817",
             "_path1": null
           },
           {
@@ -1153,12 +2058,12 @@
             "TCOE": 115104,
             "Rec": 1,
             "_depth": 1,
-            "_pivot": 60771,
+            "_pivot": "60771",
             "_isRoot": 0,
             "_sortVal_0": 1,
             "_sortVal_1": 0,
             "_sortVal_2": 0,
-            "_path0": 60771,
+            "_path0": "60771",
             "_path1": null
           },
           {
@@ -1170,12 +2075,12 @@
             "TCOE": 105854,
             "Rec": 1,
             "_depth": 1,
-            "_pivot": 60781,
+            "_pivot": "60781",
             "_isRoot": 0,
             "_sortVal_0": 1,
             "_sortVal_1": 0,
             "_sortVal_2": 0,
-            "_path0": 60781,
+            "_path0": "60781",
             "_path1": null
           },
           {
@@ -1187,12 +2092,12 @@
             "TCOE": 132030,
             "Rec": 1,
             "_depth": 1,
-            "_pivot": 60790,
+            "_pivot": "60790",
             "_isRoot": 0,
             "_sortVal_0": 1,
             "_sortVal_1": 0,
             "_sortVal_2": 0,
-            "_path0": 60790,
+            "_path0": "60790",
             "_path1": null
           },
           {
@@ -1204,12 +2109,12 @@
             "TCOE": 118799,
             "Rec": 1,
             "_depth": 1,
-            "_pivot": 61184,
+            "_pivot": "61184",
             "_isRoot": 0,
             "_sortVal_0": 1,
             "_sortVal_1": 0,
             "_sortVal_2": 0,
-            "_path0": 61184,
+            "_path0": "61184",
             "_path1": null
           },
           {
@@ -1221,12 +2126,12 @@
             "TCOE": 104260,
             "Rec": 1,
             "_depth": 1,
-            "_pivot": 74068,
+            "_pivot": "74068",
             "_isRoot": 0,
             "_sortVal_0": 1,
             "_sortVal_1": 0,
             "_sortVal_2": 0,
-            "_path0": 74068,
+            "_path0": "74068",
             "_path1": null
           },
           {
@@ -1238,12 +2143,12 @@
             "TCOE": 127660,
             "Rec": 1,
             "_depth": 1,
-            "_pivot": 75701,
+            "_pivot": "75701",
             "_isRoot": 0,
             "_sortVal_0": 1,
             "_sortVal_1": 0,
             "_sortVal_2": 0,
-            "_path0": 75701,
+            "_path0": "75701",
             "_path1": null
           },
           {
@@ -1260,7 +2165,7 @@
             "_sortVal_0": 1,
             "_sortVal_1": 1,
             "_sortVal_2": 0,
-            "_path0": 75701,
+            "_path0": "75701",
             "_path1": "Police"
           },
           {
@@ -1277,7 +2182,7 @@
             "_sortVal_0": 1,
             "_sortVal_1": 1,
             "_sortVal_2": 1,
-            "_path0": 75701,
+            "_path0": "75701",
             "_path1": "Police"
           },
           {
@@ -1287,14 +2192,14 @@
             "Name": null,
             "Base": 232338,
             "TCOE": 376726,
-            "Rec": 3,
+            "Rec": 1,
             "_depth": 1,
-            "_pivot": 77446,
+            "_pivot": "77446",
             "_isRoot": 0,
             "_sortVal_0": 1,
             "_sortVal_1": 0,
             "_sortVal_2": 0,
-            "_path0": 77446,
+            "_path0": "77446",
             "_path1": null
           },
           {
@@ -1304,14 +2209,14 @@
             "Name": null,
             "Base": 232338,
             "TCOE": 376726,
-            "Rec": 3,
+            "Rec": 1,
             "_depth": 2,
             "_pivot": "Maintenance, Vehicle & Facilities",
             "_isRoot": 0,
             "_sortVal_0": 1,
             "_sortVal_1": 1,
             "_sortVal_2": 0,
-            "_path0": 77446,
+            "_path0": "77446",
             "_path1": "Maintenance, Vehicle & Facilities"
           },
           {
@@ -1328,7 +2233,7 @@
             "_sortVal_0": 1,
             "_sortVal_1": 1,
             "_sortVal_2": 1,
-            "_path0": 77446,
+            "_path0": "77446",
             "_path1": "Maintenance, Vehicle & Facilities"
           },
           {
@@ -1345,7 +2250,7 @@
             "_sortVal_0": 1,
             "_sortVal_1": 1,
             "_sortVal_2": 1,
-            "_path0": 77446,
+            "_path0": "77446",
             "_path1": "Maintenance, Vehicle & Facilities"
           },
           {
@@ -1362,229 +2267,8 @@
             "_sortVal_0": 1,
             "_sortVal_1": 1,
             "_sortVal_2": 1,
-            "_path0": 77446,
+            "_path0": "77446",
             "_path1": "Maintenance, Vehicle & Facilities"
-          },
-          {
-            "JobFamily": "Public Affairs & Marketing",
-            "Title": "Department Manager Gov't & Comm Rel",
-            "Union": "Non-Represented",
-            "Name": "Hamill, Kerry",
-            "Base": 130035,
-            "TCOE": 181955,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 130035,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 130035,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Safety",
-            "Title": "Chief Safety Officer",
-            "Union": "Non-Represented",
-            "Name": "Hardy, Leonard",
-            "Base": 152125,
-            "TCOE": 211941,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 152125,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 152125,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Engineering & Systems Engineering",
-            "Title": "Group Manager Systems Capital Prog",
-            "Union": "Non-Represented",
-            "Name": "Dupont, Jean-Luc",
-            "Base": 152434,
-            "TCOE": 212535,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 152434,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 152434,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Engineering & Systems Engineering",
-            "Title": "Group Manager, Capital Projects",
-            "Union": "Non-Represented",
-            "Name": "Ruffa, Frank",
-            "Base": 157300,
-            "TCOE": 209709,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 157300,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 157300,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Legal & Paralegal",
-            "Title": "Senior Attorney",
-            "Union": "Non-Represented",
-            "Name": "Nuetzel, Victoria",
-            "Base": 160289,
-            "TCOE": 220683,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 160289,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 160289,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Legal & Paralegal",
-            "Title": "Senior Attorney",
-            "Union": "Non-Represented",
-            "Name": "Lee, Thomas",
-            "Base": 165470,
-            "TCOE": 224345,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 165470,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 165470,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Transportation Operations",
-            "Title": "Chief Transportation Officer",
-            "Union": "Non-Represented",
-            "Name": "Crespo, Rodolfo",
-            "Base": 170383,
-            "TCOE": 238211,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 170383,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 170383,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Executive Management",
-            "Title": "Deputy General Manager",
-            "Union": "Non-Represented",
-            "Name": "DeVaughn, Marcia",
-            "Base": 206914,
-            "TCOE": 281548,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 206914,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 206914,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Finance & Accounting",
-            "Title": "Controller-Treasurer",
-            "Union": "Non-Represented",
-            "Name": "Schroeder, Scott",
-            "Base": 208744,
-            "TCOE": 287139,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 208744,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 208744,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Executive Management",
-            "Title": "Assistant General Manager Operations",
-            "Union": "Non-Represented",
-            "Name": "Oversier, Paul",
-            "Base": 212647,
-            "TCOE": 288160,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 212647,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 212647,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Legal & Paralegal",
-            "Title": "General Counsel",
-            "Union": "Non-Represented",
-            "Name": "Burrows, Matthew",
-            "Base": 238269,
-            "TCOE": 321543,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 238269,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 238269,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Executive Management",
-            "Title": "General Manager",
-            "Union": "Non-Represented",
-            "Name": "Dugger, Dorothy",
-            "Base": 298700,
-            "TCOE": 419661,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 298700,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 298700,
-            "_path1": null
-          },
-          {
-            "JobFamily": "Executive Management",
-            "Title": "General Manager",
-            "Union": "Non-Represented",
-            "Name": "Crunican, Grace",
-            "Base": 312461,
-            "TCOE": 399921,
-            "Rec": 1,
-            "_depth": 1,
-            "_pivot": 312461,
-            "_isRoot": 0,
-            "_sortVal_0": 1,
-            "_sortVal_1": 0,
-            "_sortVal_2": 0,
-            "_path0": 312461,
-            "_path1": null
           }
         ]
       }

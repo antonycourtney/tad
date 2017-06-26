@@ -3,8 +3,10 @@
  * Import CSV files into sqlite
  */
 
-import type {ColumnType, ColumnMetaMap, TableInfo} from './reltab'
-import {Schema} from './reltab' // eslint-disable-line
+import type {ColumnType} from './dialects/sqlite'
+import type {TableInfo} from './dialects/base'
+import {Schema} from './dialects/base' // eslint-disable-line
+import dialect from './dialects/sqlite'
 import csv from 'fast-csv'
 import * as _ from 'lodash'
 import * as path from 'path'
@@ -67,21 +69,12 @@ function assertDefined<A> (x: ?A): A {
 }
 
 export const mkTableInfo = (md: FileMetadata): TableInfo => {
-  const extendCMap = (cmm: ColumnMetaMap,
-        cnm: string, idx: number): ColumnMetaMap => {
-    const cType = md.columnTypes[idx]
-    if (cType == null) {
-      log.error('mkTableInfo: No column type for "' + cnm + '", index: ' + idx)
-    }
-    const cmd = {
-      displayName: md.columnNames[idx],
-      type: assertDefined(cType)
-    }
-    cmm[cnm] = cmd
-    return cmm
-  }
-  const cmMap = md.columnIds.reduce(extendCMap, {})
-  const schema = new Schema(md.columnIds, cmMap)
+  const fields = md.columnIds.map((name, index) => ({
+    name,
+    displayName: md.columnNames[index],
+    type: assertDefined(md.columnTypes[index])
+  }))
+  const schema = new dialect.Schema(fields)
   return { tableName: md.tableName, schema }
 }
 
@@ -154,7 +147,7 @@ const reFindAll = (re: RegExp, str: string): Array<string> => {
  *
  */
 const MAXIDENT = 16
-const mkColId = (words: Array<string>): string => {
+const mkColName = (words: Array<string>): string => {
   return words.join('').substr(0, MAXIDENT)
 }
 
@@ -174,21 +167,21 @@ const mkColId = (words: Array<string>): string => {
 const identRE = /[a-zA-Z]\w*/g
 const genColumnIds = (headerRow: Array<string>): Array<string> => {
   let columnIds: Array<string> = []
-  let colIdMap = {}
+  let colNameMap = {}
   for (var i = 0; i < headerRow.length; i++) {
     let origHeader = headerRow[i]
     let matches = reFindAll(identRE, origHeader)
-    var colId : string = mkColId(matches) // form candidate column id
-    if ((matches.length === 0) || (colId.toLowerCase() in colIdMap)) {
-      let baseColId = 'col' + i.toString()
-      colId = baseColId
+    var colName : string = mkColName(matches) // form candidate column id
+    if ((matches.length === 0) || (colName.toLowerCase() in colNameMap)) {
+      let baseColName = 'col' + i.toString()
+      colName = baseColName
       // deal with pathological case of a previous column named 'col<i>'
-      for (let j = 2; colId.toLowerCase() in colIdMap; j++) {
-        colId = baseColId + '_' + j.toString()
+      for (let j = 2; colName.toLowerCase() in colNameMap; j++) {
+        colName = baseColName + '_' + j.toString()
       }
     }
-    columnIds.push(colId)
-    colIdMap[colId.toLowerCase()] = i
+    columnIds.push(colName)
+    colNameMap[colName.toLowerCase()] = i
   }
   return columnIds
 }

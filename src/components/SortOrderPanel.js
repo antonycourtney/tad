@@ -3,14 +3,14 @@
 import * as React from 'react'
 import ColumnList from './ColumnList'
 import { ColumnListType } from './constants'
-import { Schema } from '../reltab'
+import { Schema, Field } from '../dialects/base'
 import ViewParams from '../ViewParams'
 import * as actions from '../actions'
 
-const dirSelect = (viewParams: ViewParams, schema: Schema, cid: string, asc: boolean, updater: any) => {
+const dirSelect = (viewParams: ViewParams, schema: Schema, field: Field, asc: boolean, updater: any) => {
   const handleChange = (event) => {
     const asc = (event.target.value === 'asc')
-    actions.setSortDir(cid, asc, updater)
+    actions.setSortDir(field, asc, updater)
   }
 
   const selectVal = asc ? 'asc' : 'desc'
@@ -24,13 +24,13 @@ const dirSelect = (viewParams: ViewParams, schema: Schema, cid: string, asc: boo
   )
 }
 
-const sortKeyRowFormatter = (viewParams: ViewParams, stateRefUpdater: any) => (schema: Schema, row: [string, boolean]) => {
-  const [cid, asc] = row
-  const displayName = schema.displayName(cid)
-  const select = dirSelect(viewParams, schema, cid, asc, stateRefUpdater)
+const sortKeyRowFormatter = (viewParams: ViewParams, stateRefUpdater: any) => (schema: Schema, row: { value: [Field, boolean] }) => {
+  const [field, asc] = row.value
+  const displayName = field.displayName
+  const select = dirSelect(viewParams, schema, field, asc, stateRefUpdater)
   return ([
-    <td key={cid} className='col-colName'>{displayName}</td>,
-    <td key={'sortDir-' + cid}>{select}</td>
+    <td key={field.id} className='col-colName'>{displayName}</td>,
+    <td key={'sortDir-' + field.id}>{select}</td>
   ])
 }
 
@@ -42,10 +42,10 @@ export default class SortOrderPanel extends React.Component {
       <div className='ui-block'>
         <h6>Sort Columns <small className='ui-subtext'>(drag to reorder)</small></h6>
         <ColumnList
-          schema={this.props.baseSchema}
+          schema={this.props.schema}
           columnListType={ColumnListType.SORT}
           headerLabels={['Sort Dir']}
-          items={viewParams.sortKey}
+          items={viewParams.sortKey.map(k => ({ key: k[0].id, value: k }))}
           rowFormatter={sortKeyRowFormatter(viewParams, stateRefUpdater)}
           stateRefUpdater={stateRefUpdater} />
       </div>

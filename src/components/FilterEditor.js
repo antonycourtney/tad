@@ -1,7 +1,7 @@
 /* @flow */
 
 import * as React from 'react'
-import * as reltab from '../reltab'
+import * as baseDialect from '../dialects/base'
 import AppState from '../AppState'
 import {Button} from '@blueprintjs/core'
 import FilterEditorRow from './FilterEditorRow'
@@ -12,73 +12,67 @@ export default class FilterEditor extends React.Component {
   props: {
     appState: AppState,
     stateRefUpdater: RefUpdater,
-    schema: reltab.Schema,
-    filterExp: ?reltab.FilterExp,
+    schema: baseDialect.Schema,
+    dialect: baseDialect.Dialect,
+    condition: ?baseDialect.Condition,
     onCancel: (e: any) => void,
-    onApply: (fe: reltab.FilterExp) => void,
+    onApply: (fe: baseDialect.Condition) => void,
     onDone: () => void
   }
-  state: {op: reltab.BoolOp, opArgs: Array<?reltab.RelExp>, dirty: boolean}
+  state: {op: string, filters: Array<?baseDialect.Filter>, dirty: boolean}
 
   constructor (props: any) {
     super(props)
-    const { filterExp } = props
-    let op, opArgs
-    if (filterExp != null) {
-      ({ op, opArgs } = filterExp)
-      if (!opArgs || (opArgs.length === 0)) {
-        opArgs = [null]
-      }
-    } else {
-      op = 'AND'
-      opArgs = [null]
-    }
-    this.state = {op, opArgs, dirty: false}
+    const { condition = props.dialect.Condition() } = props
+    const { op, filters } = condition
+
+    this.state = {op, filters: filters.toArray().concat(null), dirty: false}
   }
 
   renderFilterRows () {
-    const {opArgs} = this.state
-    return opArgs.map((re, idx) => {
+    const {filters = [null]} = this.state
+    return filters.map((filter, idx) => {
       return (<FilterEditorRow
         appState={this.props.appState}
         stateRefUpdater={this.props.stateRefUpdater}
         key={'fe-row-' + idx}
         schema={this.props.schema}
-        relExp={re}
+        dialect={this.props.dialect}
+        filter={filter}
         onDeleteRow={() => this.handleDeleteRow(idx)}
-        onUpdate={(re) => this.handleUpdateRow(idx, re)}
+        onUpdate={(f) => this.handleUpdateRow(idx, f)}
       />)
     })
   }
 
   handleAddRow () {
-    const {opArgs} = this.state
-    this.setState({ opArgs: opArgs.concat(null), dirty: true })
+    const {filters} = this.state
+    this.setState({ filters: filters.concat(null), dirty: true })
   }
 
   handleDeleteRow (idx: number) {
-    const {opArgs: prevArgs} = this.state
-    const opArgs = prevArgs.slice()
-    delete opArgs[idx]  // delete, not splice, to keep React keys correct
-    this.setState({ opArgs, dirty: true })
+    const {filters: prevFilters} = this.state
+    const filters = prevFilters.slice()
+    delete filters[idx]  // delete, not splice, to keep React keys correct
+    this.setState({ filters, dirty: true })
   }
 
-  handleOpChange (op: reltab.BoolOp) {
+  handleOpChange (op: string) {
     this.setState({ op, dirty: true })
   }
 
-  handleUpdateRow (idx: number, re: ?reltab.RelExp) {
-    const {opArgs: prevArgs} = this.state
-    const opArgs = (prevArgs.slice())
-    opArgs[idx] = re
-    this.setState({ opArgs, dirty: true })
+  handleUpdateRow (idx: number, filter: ?baseDialect.Filter) {
+    const {filters: prevFilters} = this.state
+    const filters = (prevFilters.slice())
+    filters[idx] = filter
+    this.setState({ filters, dirty: true })
   }
 
   handleApply () {
-    const {op, opArgs} = this.state
-    const nnOpArgs: any = opArgs.filter(r => r != null)
-    const fe = new reltab.FilterExp(op, nnOpArgs)
-    this.props.onApply(fe)
+    const {op, filters} = this.state
+    const nnFilters: Array<baseDialect.Filter> = filters.filter(Boolean)
+    const cond = new this.props.dialect.Condition(op, nnFilters)
+    this.props.onApply(cond)
     this.setState({ dirty: false })
   }
 
@@ -97,8 +91,8 @@ export default class FilterEditor extends React.Component {
             <div className='pt-select pt-minimal'>
               <select
                 onChange={e => this.handleOpChange(e.target.value)}>
-                <option value='AND'>All Of (AND)</option>
-                <option value='OR'>Any Of (OR)</option>
+                <option value='$and'>All Of (AND)</option>
+                <option value='$or'>Any Of (OR)</option>
               </select>
             </div>
           </div>

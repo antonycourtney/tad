@@ -10,8 +10,6 @@
 
 import * as styles from '../less/easypivot.less'
 
-import * as reltab from './reltab' // eslint-disable-line
-
 import { FrozenGrid as Grid } from 'slickgrid-es6'
 
 import data from './example-data'

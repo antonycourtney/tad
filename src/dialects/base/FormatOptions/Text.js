@@ -2,14 +2,6 @@
 
 import * as Immutable from 'immutable'
 import urlRegex from 'url-regex'
-const shell = require('electron').shell
-
-// install this globally so we can access in generated a tag:
-window.tadOpenExternal = (url: string) => {
-  console.log('tadOpenExternal: ', url)
-  shell.openExternal(url)
-  return false
-}
 
 const isValidURL = s => urlRegex({exact: true}).test(s)
 

@@ -1,9 +1,9 @@
 /* @flow */
 
 import * as React from 'react'
-import * as reltab from '../reltab'
+import * as baseDialect from '../dialects/base'
 import AppState from '../AppState'
-// import type {Scalar} from '../reltab' // eslint-disable-line
+// import type {Scalar} from '../dialect' // eslint-disable-line
 import {Button, NumericInput} from '@blueprintjs/core'
 import Select from 'react-select'
 
@@ -11,119 +11,108 @@ type RefUpdater = (f: ((s: AppState) => AppState)) => void
 type Option = { value: string, label: string }
 type OptionsRet = { options: [Option] }
 type OptionsLoader = (input: string) => Promise<OptionsRet>
-const {col, constVal} = reltab
 
-type EditorRowState = {
-  columnId: ?string,
-  op: ?reltab.RelOp,
-  value: reltab.Scalar | Array<Option>
-}
+type FilterEditorRowState = { field?: baseDialect.Field, rhs?: any, op?: ?string }
 
-const validRow = (rs: EditorRowState): boolean => {
-  const {columnId, op, value} = rs
-  if (columnId != null && op != null) {
-    return (reltab.opIsUnary(op) || value != null)
-  }
-  return false
-}
-
-const mkColValsLoader = (appState: AppState, columnId: string): OptionsLoader => {
+const mkColValsLoader = (appState: AppState, field: baseDialect.Field): OptionsLoader => {
   const rtc = appState.rtc
   const baseQuery = appState.baseQuery
   return async (input:string): OptionsRet => {
-    let dq = baseQuery.distinct(columnId)
+    let dq = baseQuery.distinct(field)
     if (input.length > 0) {
-      dq = dq.filter(reltab.and().contains(col(columnId), constVal(input)))
+      dq = dq.filter(appState.dialect.Condition.and().contains(field, input))
     }
     const qres = await rtc.evalQuery(dq, 0, 50)
-    const colData = qres.rowData.map(r => r[columnId]).filter(v => v != null)
+    const colData = qres.rowData.map(r => r[field.selectableName]).filter(v => v != null)
     const options = colData.map(cv => ({value: cv, label: cv}))
     return { options }
   }
-}
-
-const mkRelExp = (rs: EditorRowState): reltab.RelExp => {
-  let ret
-  // const {columnId, op, value} = rs
-  const columnId: string = (rs.columnId: any)
-  const op: reltab.RelOp = (rs.op: any)
-  const value = (rs.value: any)
-  if (reltab.opIsUnary(op)) {
-    ret = new reltab.UnaryRelExp((op: any), reltab.col(columnId))
-  } else {
-    let expValue = value
-    if ((op === 'IN') || (op === 'NOTIN')) {
-      expValue = value.map(opt => opt.value)
-    }
-    ret = new reltab.BinRelExp((op: any), reltab.col(columnId),
-      reltab.constVal(expValue))
-  }
-  return ret
 }
 
 export default class FilterEditorRow extends React.Component {
   props: {
     appState: AppState,
     stateRefUpdater: RefUpdater,
-    schema: reltab.Schema,
-    relExp: ?reltab.RelExp,
+    dialect: baseDialect.Dialect,
+    schema: baseDialect.Schema,
     onDeleteRow: () => void,
-    onUpdate: (fe: ?reltab.RelExp) => void
+    onUpdate: (fe: ?baseDialect.Filter) => void,
+    filter: ?baseDialect.Filter
   }
-  state: EditorRowState
+  state: { filter: FilterEditorRowState }
 
   constructor (props: any) {
     super(props)
     console.log('FilterEditor: ctor: ', props)
-    const {relExp} = props
-    let rs = { columnId: null, op: null, value: null }
-    if (relExp) {
-      const columnId = relExp.lhsCol()
-      const op = relExp.op
-      const expVal = (relExp.expType === 'BinRelExp') ? relExp.rhs.val : null
-      let value = expVal
-      if (((op === 'IN') || (op === 'NOTIN')) && (expVal != null)) {
-        value = expVal.map(cv => ({value: cv, label: cv}))
+    const { filter } = props
+
+    let stateFilter = {}
+    if (filter) {
+      stateFilter = {
+        field: filter.lhsAsField(this.props.schema),
+        rhs: filter.rhs,
+        op: filter.op
       }
-      rs = { columnId, op, value }
     }
-    this.state = rs
+
+    this.state = {
+      filter: stateFilter
+    }
+  }
+
+  mkFilter (filter: FilterEditorRowState): baseDialect.Filter {
+    // This should never happen, but makes flow happy
+    if (!filter.field) {
+      throw new Error('Cannot make filter without a field')
+    }
+
+    let rhs = filter.rhs
+    if (['$in', '$nin'].includes(filter.op)) {
+      rhs = rhs && rhs.map(option => option.value)
+    }
+
+    return filter.field.filter(filter.op, rhs)
   }
 
   /* validate row and notify if valid */
-  handleUpdate (rs: EditorRowState) {
-    if (this.props.onUpdate) {
-      if (validRow(rs)) {
-        const relExp = mkRelExp(rs)
-        this.props.onUpdate(relExp)
-      } else {
-        this.props.onUpdate(null)
+  handleUpdate (filter: FilterEditorRowState) {
+    if (this.props.onUpdate && filter.field) {
+      try {
+        this.props.onUpdate(this.mkFilter(filter))
+      }
+      catch (err) {
+        if (err instanceof baseDialect.InvalidFilterError) {
+          this.props.onUpdate(null)
+        }
+        else {
+          throw err
+        }
       }
     }
   }
 
   handleColumnSelect (event: any) {
     const sval = event.target.value
-    const columnId = (sval === '') ? null : sval
-    this.setState({ columnId, op: null, value: null })
-    this.handleUpdate({ ...this.state, columnId })
+    const field = (sval === '') ? null : this.props.schema.getField(sval)
+    this.setState({ filter: { field, op: null, rhs: null } })
+    this.handleUpdate({ ...this.state.filter, field })
   }
 
   handleOpSelect (event: any) {
     const sval = event.target.value
     const op = (sval === '') ? null : sval
-    this.setState({ op })
-    this.handleUpdate({ ...this.state, op })
+    this.setState({ filter: { ...this.state.filter, op } })
+    this.handleUpdate({ ...this.state.filter, op })
   }
 
   handleSelectChange (value: Array<Option>) {
-    this.setState({ value })
-    this.handleUpdate({ ...this.state, value })
+    this.setState({ filter: { ...this.state.filter, rhs: value } })
+    this.handleUpdate({ ...this.state.filter, rhs: value })
   }
 
   handleValueChange (value: any) {
-    this.setState({ value })
-    this.handleUpdate({ ...this.state, value })
+    this.setState({ filter: { ...this.state.filter, rhs: value } })
+    this.handleUpdate({ ...this.state.filter, rhs: value })
   }
 
   handleDeleteRow () {
@@ -134,12 +123,19 @@ export default class FilterEditorRow extends React.Component {
 
   renderColumnSelect () {
     const { schema } = this.props
-    const { columnId } = this.state
-    const columnChoices = schema.sortedColumns()
-    const colOpts = columnChoices.map(cid => (
-      <option
-        key={'filterRowColSel-' + cid} value={cid}>{schema.displayName(cid)}</option>))
-    const selectVal = (columnId == null) ? '' : columnId
+    const { field } = this.state.filter
+    const fieldChoices = schema.sortedFields()
+    const colOpts = fieldChoices.map((f) => (
+        <option
+          key={'filterRowColSel-' + f.id}
+          value={f.id}
+        >
+          {f.displayName}
+        </option>
+      )
+    )
+
+    const selectVal = (field == null) ? '' : field.selectableName
     return (
       <div className='pt-select filter-row-col-select'>
         <select
@@ -153,17 +149,17 @@ export default class FilterEditorRow extends React.Component {
   }
 
   renderOpSelect () {
-    const { schema } = this.props
-    const { columnId, op } = this.state
+    const { dialect } = this.props
+    const { field, op } = this.state.filter
     let opChoices = []
     let disabled = false
-    if (columnId != null) {
-      const colType = schema.columnType(columnId)
-      const ops = reltab.columnTypeOps(colType)
+    if (field != null) {
+      const colType = field.type
+      const ops = field.availableOps(colType)
       opChoices = ops.map((opc, idx) => (
         <option
           key={'relop-' + idx}
-          value={opc}>{reltab.opDisplayName(opc)}</option>))
+          value={opc}>{dialect.Filter.opDisplayName(opc)}</option>))
     } else {
       disabled = true
     }
@@ -173,7 +169,8 @@ export default class FilterEditorRow extends React.Component {
         <select
           value={opVal}
           disabled={disabled}
-          onChange={event => this.handleOpSelect(event)} >
+          onChange={event => this.handleOpSelect(event)}
+        >
           <option value=''>Operator...</option>
           {opChoices}
         </select>
@@ -182,15 +179,15 @@ export default class FilterEditorRow extends React.Component {
   }
 
   renderValInput () {
-    const { appState, schema } = this.props
-    const { columnId, op, value } = this.state
-    let disabled = (columnId == null) ||
-      (op == null) || !(reltab.opIsBinary((op: any)))
+    const { appState, dialect } = this.props
+    const { field, op, rhs: value } = this.state.filter
+    const disabled = (field == null) ||
+      (op == null) || !(dialect.Filter.opIsBinary((op: any)))
 
     let inputComponent = null
-    if (columnId != null) {
-      const columnType = schema.columnType(columnId)
-      if (reltab.typeIsNumeric(columnType)) {
+    if (field != null) {
+      const columnType = field.type
+      if (dialect.Field.typeIsNumeric(columnType)) {
         inputComponent = (
           <NumericInput
 
@@ -202,8 +199,8 @@ export default class FilterEditorRow extends React.Component {
       }
       if (inputComponent == null) {
         const compVal = value ? value : ''  // eslint-disable-line
-        if ((op === 'IN') || (op === 'NOTIN')) {
-          const loader = mkColValsLoader(appState, columnId)
+        if ((op === '$in') || (op === '$nin')) {
+          const loader = mkColValsLoader(appState, field)
 /* Adding 'key' here as proposed workaround for
  * https://github.com/JedWatson/react-select/issues/1771
  */

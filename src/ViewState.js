@@ -14,7 +14,7 @@ import Timer from './Timer'
  * query / network / render state
  */
 export default class ViewState extends Immutable.Record({
-  viewParams: new ViewParams(),
+  viewParams: undefined,
   loadingTimer: new Timer(),
   viewportTop: 0,
   viewportBottom: 0,

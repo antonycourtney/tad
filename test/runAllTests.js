@@ -78,6 +78,7 @@ let tapeSnap = tapeSnapInit(htest)
 
 const argv = process.argv.slice(1)
 const options = commandLineArgs(optionDefinitions, argv)
+tapeSnap.recordAll(true)
 if (options.update) {
   console.log('setting tapeSnap to record-only mode')
   tapeSnap.recordAll(true)
@@ -95,4 +96,4 @@ if (options.verbose) {
 // require('./aggtreeTests')
 // require('./csvImportTests')
 require('./pathTreeTests')(htest)
-require('./reltabSqliteTests')(htest)
+require('./sqliteTests')(htest)

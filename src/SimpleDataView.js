@@ -1,10 +1,10 @@
 /* @flow */
-import * as reltab from './reltab'
+import * as baseDialect from './dialects/base'
 
 export default class SimpleDataView {
   rawData: Array<any>
   idMap: Array<any>
-  schema: ?reltab.Schema
+  schema: ?baseDialect.Schema
 
   constructor () {
     this.rawData = []

@@ -1,7 +1,7 @@
-const reltab = require('../src/reltab')
+const sqliteDialect = require('../src/dialects/sqlite').default
 const commandLineArgs = require('command-line-args')
 const getUsage = require('command-line-usage')
-const reltabSqlite = require('../src/reltab-sqlite')
+const sqliteDriver = require('../src/drivers/sqlite')
 const csvimport = require('../src/csvimport')
 const log = require('electron-log')
 
@@ -33,7 +33,7 @@ let delay = ms => {
 
 const runQuery = rtc => (queryStr, cb) => {
   try {
-    const req = reltab.deserializeQueryReq(queryStr)
+    const req = sqliteDialect.deserializeQueryReq(queryStr)
     const hrstart = process.hrtime()
     delay(0)
     .then(() => {
@@ -57,7 +57,7 @@ const runQuery = rtc => (queryStr, cb) => {
 
 const getRowCount = rtc => (queryStr, cb) => {
   try {
-    const req = reltab.deserializeQueryReq(queryStr)
+    const req = sqliteDialect.deserializeQueryReq(queryStr)
     const hrstart = process.hrtime()
     delay(0)
     .then(() => {
@@ -104,10 +104,10 @@ const initMainAsync = async (options, targetPath, srcfile) => {
     const tableSepIndex = urlPath.lastIndexOf('/')
     const tableName = urlPath.slice(tableSepIndex + 1)
     const dbFileName = urlPath.slice(0, tableSepIndex)
-    rtc = await reltabSqlite.getContext(dbFileName, rtOptions)
+    rtc = await sqliteDriver.getContext(dbFileName, rtOptions)
     ti = await rtc.getTableInfo(tableName)
   } else {
-    rtc = await reltabSqlite.getContext(':memory:', rtOptions)
+    rtc = await sqliteDriver.getContext(':memory:', rtOptions)
     let pathname = targetPath
     // check if pathname exists
     if (!fs.existsSync(pathname)) {
@@ -200,6 +200,18 @@ const optionDefinitions = [
     name: 'show-queries',
     type: Boolean,
     description: 'Show generated SQL queries on console when in foreground'
+  },
+  {
+    name: 'debug-brk',
+    type: String
+  },
+  {
+    name: 'expose_debug_as',
+    type: String
+  },
+  {
+    name: 'deb',
+    type: String
   },
   {
     name: 'version',

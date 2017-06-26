@@ -4,110 +4,101 @@ import * as Immutable from 'immutable'
 import * as _ from 'lodash'
 import PathTree from './PathTree'
 import type {Path} from './PathTree'  // eslint-disable-line
-import type {QueryExp} from './reltab'  // eslint-disable-line
-import * as reltab from './reltab' // eslint-disable-line
-import TextFormatOptions from './TextFormatOptions'
-import NumFormatOptions from './NumFormatOptions'
+import type {QueryExp} from './dialects/base'  // eslint-disable-line
+import * as baseDialect from './dialects/base' // eslint-disable-line
+import type { FormatOption } from './dialects/base/FormatOptions'
+
+const shell = require('electron').shell
+
+// install this globally so we can access in generated a tag:
+window.tadOpenExternal = (url: string) => {
+  console.log('tadOpenExternal: ', url)
+  shell.openExternal(url)
+  return false
+}
 
 /**
  * Immutable representation of user-configurable view parameters
  *
  */
 
-type AggMap = {[cid: string]: reltab.AggFn}
+type AggMap = {[cid: string]: string}
 
 // type FormatsMap = {[cid: string]: any}
-type FormatOptions = TextFormatOptions | NumFormatOptions
-type FormatsMap = Immutable.Map<string, FormatOptions>
-
-// deserialize a formatter by examining its type member:
-const deserializeFormatOptions = (jsObj: Object): ?FormatOptions => {
-  let ret
-  if (jsObj.type === 'TextFormatOptions') {
-    ret = new TextFormatOptions(jsObj)
-  } else if (jsObj.type === 'NumFormatOptions') {
-    ret = new NumFormatOptions(jsObj)
-  } else {
-    console.error('could not deserialize FormatOptions: ', jsObj)
-    ret = null
-  }
-  return ret
-}
-
-// formatting defaults, keyed by column type:
-class FormatDefaults extends Immutable.Record({
-  'text': new TextFormatOptions(),
-  'integer': new NumFormatOptions({decimalPlaces: 0}),
-  'real': new NumFormatOptions(),
-  'boolean': new NumFormatOptions({decimalPlaces: 0})  // for now...
-}) {
-  static deserialize (jsObj) {
-    const initMap = {
-      'text': new TextFormatOptions(jsObj['text']),
-      'integer': new NumFormatOptions(jsObj['integer']),
-      'real': new NumFormatOptions(jsObj['real']),
-      'boolean': new NumFormatOptions(jsObj['boolean'])
-    }
-    return new FormatDefaults(initMap)
-  }
-}
+type FormatsMap = Immutable.Map<string, FormatOption>
 
 export default class ViewParams extends Immutable.Record({
   showRoot: false,
-  displayColumns: [],
+  displayFields: [],
   vpivots: [],
-  pivotLeafColumn: null,
+  pivotLeafFieldId: null,
   sortKey: [],
   openPaths: PathTree,
   aggMap: {}, // overrides of agg fns
-  defaultFormats: new FormatDefaults(),
+  defaultFormats: new Immutable.Map(),
   columnFormats: new Immutable.Map(),
   showHiddenCols: false,
-  filterExp: new reltab.FilterExp()
+  condition: undefined,
+  dialect: undefined
 }) {
   showRoot: boolean
-  displayColumns: Array<string> // array of column ids to display, in order
-  vpivots: Array<string>  // array of columns to pivot
-  pivotLeafColumn: ?string
-  sortKey: Array<[string, boolean]>
+  displayFields: Array<baseDialect.Field> // array of column ids to display, in order
+  vpivots: Array<baseDialect.Field>  // array of columns to pivot
+  pivotLeafFieldId: ?string
+  sortKey: Array<[baseDialect.Field, boolean]>
   openPaths: PathTree
   aggMap: AggMap
-  defaultFormats: {
-    'text': TextFormatOptions,
-    'integer': NumFormatOptions,
-    'real': NumFormatOptions,
-    'boolean': NumFormatOptions
-  }
+  defaultFormats: Immutable.Map<string, FormatOption>
   columnFormats: FormatsMap
   showHiddenCols: boolean
-  filterExp: reltab.FilterExp
+  condition: baseDialect.Condition
+  dialect: baseDialect.Dialect
+
+  toJS () {
+    // $FlowFixMe
+    const callToJs = t => t.toJS()
+
+    // Ensure all arrays get toJS'd
+    // TODO: Convert vpivots, displayFields, sortKey to Immutable.Lists so we don't have to do this
+    return {
+      ...super.toJS(),
+      vpivots: this.vpivots.map(callToJs),
+      displayFields: this.displayFields.map(callToJs),
+      sortKey: this.sortKey.map(callToJs)
+    }
+  }
+
+  toJSON () {
+    return this.toJS()
+  }
 
   // toggle element membership in array:
-  toggleArrElem (propName: string, cid: string): ViewParams {
+  toggleArrElem (propName: string, field: baseDialect.Field): ViewParams {
     const arr = this.get(propName)
-    const idx = arr.indexOf(cid)
+    const idx = arr.findIndex(f => f.id === field.id)
     let nextArr
     if (idx === -1) {
       // not shown, so add it:
-      nextArr = arr.concat([cid])
+      nextArr = arr.concat([field])
     } else {
       // otherwise remove it:
       nextArr = arr.slice()
       nextArr.splice(idx, 1)
     }
-    return this.set(propName, nextArr)
+    // Strictly enforce only one column with a given selectableName being selected.
+    return this.set(propName, _.uniqBy(nextArr, f => f.selectableName))
   }
 
-  toggleShown (cid: string): ViewParams {
-    return this.toggleArrElem('displayColumns', cid)
+  toggleShown (field: baseDialect.Field): ViewParams {
+    return this.toggleArrElem('displayFields', field)
   }
 
-  togglePivot (cid: string): ViewParams {
+  togglePivot (field: baseDialect.Field): ViewParams {
     const oldPivots = this.vpivots
-    return this.toggleArrElem('vpivots', cid).trimOpenPaths(oldPivots)
+    return this.toggleArrElem('vpivots', field).trimOpenPaths(oldPivots)
   }
 
-  setVPivots (newPivots: Array<string>): ViewParams {
+  setVPivots (newPivots: Array<baseDialect.Field>): ViewParams {
     const oldPivots = this.vpivots
     return this.set('vpivots', newPivots).trimOpenPaths(oldPivots)
   }
@@ -115,18 +106,19 @@ export default class ViewParams extends Immutable.Record({
   /*
    * after updating vpivots, trim openPaths
    */
-  trimOpenPaths (oldPivots: Array<string>): ViewParams {
-    const matchDepth = _.findIndex(_.zip(this.vpivots, oldPivots), ([p1, p2]) => (p1 !== p2))
+  trimOpenPaths (oldPivots: Array<baseDialect.Field>): ViewParams {
+    console.log(oldPivots)
+    const matchDepth = _.findIndex(_.zip(this.vpivots, oldPivots), ([p1, p2]) => ((p1 && p1.id) !== (p2 && p2.id)))
     return this.set('openPaths', this.openPaths.trimToDepth(matchDepth))
   }
 
-  toggleSort (cid: string): ViewParams {
+  toggleSort (field: baseDialect.Field): ViewParams {
     const arr = this.get('sortKey')
-    const idx = arr.findIndex(entry => entry[0] === cid)
+    const idx = arr.findIndex(entry => entry[0].id === field.id)
     let nextArr
     if (idx === -1) {
       // not shown, so add it:
-      nextArr = arr.concat([[cid, true]])
+      nextArr = arr.concat([[field, true]])
     } else {
       // otherwise remove it:
       nextArr = arr.slice()
@@ -135,16 +127,16 @@ export default class ViewParams extends Immutable.Record({
     return this.set('sortKey', nextArr)
   }
 
-  setSortDir (cid: string, asc: boolean): ViewParams {
+  setSortDir (field: (baseDialect.Field), asc: boolean): ViewParams {
     const arr = this.get('sortKey')
-    const idx = arr.findIndex(entry => entry[0] === cid)
+    const idx = arr.findIndex(entry => entry[0].id === field.id)
     let nextArr
     if (idx === -1) {
-      console.warn('viewParam.setSortDir: called for non-sort col ', cid)
+      console.warn('viewParam.setSortDir: called for non-sort col ', field.displayName)
     } else {
       // otherwise remove it:
       nextArr = arr.slice()
-      nextArr[idx] = [cid, asc]
+      nextArr[idx] = [field, asc]
     }
     return this.set('sortKey', nextArr)
   }
@@ -157,59 +149,72 @@ export default class ViewParams extends Immutable.Record({
     return this.set('openPaths', this.openPaths.close(path))
   }
 
-  getAggFn (schema: reltab.Schema, cid: string): reltab.AggFn {
-    let aggFn = this.aggMap[cid]
-    if (aggFn == null) {
-      aggFn = reltab.defaultAggFn(schema.columnType(cid))
-    }
-    return aggFn
-  }
-
-  setAggFn (cid: string, cidAgg: reltab.AggFn) {
+  setAggFn (field: baseDialect.Field, agg: string) {
     const nextAggMap = {}
     Object.assign(nextAggMap, this.aggMap)
-    nextAggMap[cid] = cidAgg
+    nextAggMap[field.id] = agg
     return this.set('aggMap', nextAggMap)
   }
 
-  getColumnFormat (schema: reltab.Schema, cid: string): any {
-    let formatOpts = this.columnFormats.get(cid)
+  // Must get aggFn from agg map because fields don't retain their functions after anything
+  // that puts them in a subquery.
+  getAggFn (field: baseDialect.Field) {
+    return this.aggMap[field.selectableName] || field.aggFn()
+  }
+
+  getColumnFormat (f: baseDialect.Field): any {
+    let formatOpts = this.columnFormats.get(f.id)
     if (formatOpts == null) {
-      formatOpts = this.defaultFormats[schema.columnType(cid)]
+      formatOpts = this.defaultFormats.get(f.typeDisplayName) || f.getDefaultFormatOptions()
     }
+
+    if (formatOpts == null) {
+      throw new Error(`No default formatter for ${f}`)
+    }
+
     return formatOpts
   }
 
-  setColumnFormat (cid: string, opts: any) {
-    const nextFmts = this.columnFormats.set(cid, opts)
+  setColumnFormat (field: baseDialect.Field, opts: any) {
+    const nextFmts = this.columnFormats.set(field, opts)
     return this.set('columnFormats', nextFmts)
   }
 
+  constructor (params: Object) {
+    params.condition = params.condition || new params.dialect.Condition()
+    params.defaultFormats = Immutable.Map(params.defaultFormats)
+    super(params)
+  }
+
   static deserialize (js) {
-    const { defaultFormats, openPaths, filterExp,
-            columnFormats, ...rest } = js
-    const defaultFormatsObj = FormatDefaults.deserialize(defaultFormats)
+    const { defaultFormats, openPaths, condition,
+            columnFormats, dialect, displayFields, vpivots, sortKey, ...rest } = js
+    const defaultFormatsObj = dialect.deserializeFormats(defaultFormats)
     const openPathsObj = new PathTree(openPaths._rep)
-    let filterExpObj
-    if (filterExp) {
-      filterExpObj = reltab.FilterExp.deserialize(filterExp)
-    } else {
-      filterExpObj = new reltab.FilterExp()
+    let conditionObj
+    if (condition) {
+      conditionObj = dialect.Condition.deserialize(condition)
     }
-    const deserColumnFormats = _.mapValues(columnFormats,
-        deserializeFormatOptions)
+
+    const deserColumnFormats = dialect.deserializeFormats(columnFormats)
+
+    const reviveFields = f => dialect.queryReviver('', f)
+
     // drop column formats that we couldn't deserialize;
     // prevents us from falling over on older, malformed
     // saved per-column format options.
     const deserColumnFormatsNN = _.pickBy(deserColumnFormats)
     let columnFormatsMap = new Immutable.Map(deserColumnFormatsNN)
-    const baseVP = new ViewParams(rest)
+    const baseVP = new ViewParams({ ...rest, dialect })
     const retVP =
       baseVP
-        .set('defaultFormats', defaultFormatsObj)
+        .set('defaultFormats', new Immutable.Map(defaultFormatsObj))
         .set('openPaths', openPathsObj)
-        .set('filterExp', filterExpObj)
+        .set('condition', conditionObj)
         .set('columnFormats', columnFormatsMap)
+        .set('displayFields', displayFields.map(reviveFields))
+        .set('vpivots', vpivots.map(reviveFields))
+        .set('sortKey', sortKey.map(reviveFields))
     return retVP
   }
 }
