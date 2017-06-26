@@ -37,6 +37,7 @@
     "react-dnd": "^2.4.0",
     "react-dnd-html5-backend": "^2.4.1",
     "react-dom": "^15.5.4",
+    "react-select": "^1.0.0-rc.5",
     "react-window-resize-listener": "^1.1.0",
     "slickgrid-es6": "^2.0.5",
     "sqlite": "^2.7.0",

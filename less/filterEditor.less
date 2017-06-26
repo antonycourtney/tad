@@ -1,5 +1,5 @@
-@filter-row-value-width: 250px;
-
+@filter-row-value-width: 475px;
+@filter-row-width: 900px;
 .filter-editor {
   margin-top: 10px;
   padding-left: 16px;
@@ -25,7 +25,7 @@
 .filter-editor-scroll-pane {
   display: flex;
   height: 170px;
-  width: 675px;
+  width: @filter-row-width;
   flex: 0 0 auto;
   border: 1px solid #cacaca;
   justify-content: flex-start;
@@ -47,16 +47,19 @@
   padding: 5px;
   flex: 0 0 auto;
   padding-left: 10px;
+  height: fit-content;
 }
 
 .filter-editor-row-predicate {
   display: flex;
   justify-content: flex-start;
   flex-direction: row;
+  height: fit-content;
 }
 
 .filter-editor-value {
   width: @filter-row-value-width;
+  display: flex;
 }
 
 /*

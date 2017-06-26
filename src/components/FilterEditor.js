@@ -35,6 +35,8 @@ export default class FilterEditor extends React.Component {
     const {opArgs} = this.state
     return opArgs.map((re, idx) => {
       return (<FilterEditorRow
+        appState={this.props.appState}
+        stateRefUpdater={this.props.stateRefUpdater}
         key={'fe-row-' + idx}
         schema={this.props.schema}
         relExp={re}

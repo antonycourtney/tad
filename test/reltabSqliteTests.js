@@ -625,6 +625,18 @@ const queryGenPerfTest = async (t) => {
   t.end()
 }
 
+const distinctTest = async (t, htest) => {
+  const deepEqualSnap = tapeSnapInit(htest)
+  const tq = reltab.tableQuery('barttest').distinct('JobFamily')
+  const rtc = sharedRtc
+
+  const dres = await rtc.evalQuery(tq)
+  deepEqualSnap(t, dres, 'distinct query')
+
+  t.pass('distinct query')
+  t.end()
+}
+
 const doit = true
 
 const runTests = (htest: any) => {
@@ -661,6 +673,8 @@ const runTests = (htest: any) => {
     asyncTest(htest, 'intPivotTest', intPivotTest)
 
     asyncTest(htest, 'queryGenPerfTest', queryGenPerfTest)
+
+    asyncTest(htest, 'distinctTest', distinctTest)
   }
 
   sqliteTestShutdown(htest)

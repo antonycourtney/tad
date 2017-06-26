@@ -93,11 +93,11 @@ const deserializeValExp = (js: Object): ValExp => {
 
 export type BinRelOp = 'EQ' | 'NEQ' | 'GT' | 'GE' | 'LT' | 'LE' |
   'BEGINS' | 'NOTBEGINS' | 'ENDS' | 'NOTENDS' |
-  'CONTAINS' | 'NOTCONTAINS'
+  'CONTAINS' | 'NOTCONTAINS' | 'IN' | 'NOTIN'
 export type UnaryRelOp = 'ISNULL' | 'NOTNULL'
 export type RelOp = UnaryRelOp | BinRelOp
 
-const textOnlyBinaryOps = ['BEGINS', 'NOTBEGINS', 'ENDS', 'NOTENDS', 'CONTAINS', 'NOTCONTAINS']
+const textOnlyBinaryOps = ['IN', 'NOTIN', 'BEGINS', 'NOTBEGINS', 'ENDS', 'NOTENDS', 'CONTAINS', 'NOTCONTAINS']
 const textOnlyOpsSet = new Set(textOnlyBinaryOps)
 const textNegBinaryOps = ['NOTBEGINS', 'NOTENDS', 'NOTCONTAINS']
 const textNegOpsSet = new Set(textNegBinaryOps)
@@ -122,7 +122,9 @@ const ppOpMap = {
   'ENDS': 'ends with',
   'NOTENDS': 'does not end with',
   'CONTAINS': 'contains',
-  'NOTCONTAINS': 'does not contain'
+  'NOTCONTAINS': 'does not contain',
+  'IN': 'in...',
+  'NOTIN': 'not in...'
 }
 
 export const opIsTextOnly = (op: RelOp): boolean => {
@@ -438,6 +440,12 @@ export class QueryExp {
   join (qexp: QueryExp, on: string|Array<string>, joinType: JoinType = 'LeftOuter'): QueryExp {
     const onArg = (typeof on === 'string') ? [on] : on
     return new QueryExp('join', [joinType, onArg], [this, qexp])
+  }
+
+  // distinct values of a column
+  // just a degenerate groupBy:
+  distinct (col: string): QueryExp {
+    return this.groupBy([col], [])
   }
 
   toSql (tableMap: TableInfoMap, offset: number = -1,

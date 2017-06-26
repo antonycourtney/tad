@@ -172,3 +172,10 @@ export const setShowHiddenCols = (show: boolean, updater: RefUpdater) => {
 export const setFilter = (fe: reltab.FilterExp, updater: RefUpdater) => {
   updater(vpUpdate(viewParams => viewParams.set('filterExp', fe)))
 }
+
+export const ensureDistinctColVals = (colId: string, updater: RefUpdater) => {
+  updater(appState => {
+    const updSet = appState.requestedColumnVals.add(colId)
+    return appState.set('requestedColumnVals', updSet)
+  })
+}

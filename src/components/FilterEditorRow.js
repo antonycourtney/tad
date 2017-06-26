@@ -2,8 +2,10 @@
 
 import * as React from 'react'
 import * as reltab from '../reltab'
+import * as actions from '../actions'
 // import type {Scalar} from '../reltab' // eslint-disable-line
 import {Button, NumericInput} from '@blueprintjs/core'
+import Select from 'react-select'
 
 type EditorRowState = {
   columnId: ?string,
@@ -17,6 +19,15 @@ const validRow = (rs: EditorRowState): boolean => {
     return (reltab.opIsUnary(op) || value != null)
   }
   return false
+}
+
+// check if we need to request distinct column values
+// because user chose the IN / NOTIN operator:
+const checkNeedColVals = (rs: EditorRowState, updater): void => {
+  const {columnId, op} = rs
+  if ((op === 'IN') || (op === 'NOTIN')) {
+    actions.ensureDistinctColVals(columnId, updater)
+  }
 }
 
 const mkRelExp = (rs: EditorRowState): reltab.RelExp => {
@@ -59,6 +70,7 @@ export default class FilterEditorRow extends React.Component {
 
   /* validate row and notify if valid */
   handleUpdate (rs: EditorRowState) {
+    checkNeedColVals(rs, this.props.stateRefUpdater)
     if (this.props.onUpdate) {
       if (validRow(rs)) {
         const relExp = mkRelExp(rs)
@@ -81,6 +93,11 @@ export default class FilterEditorRow extends React.Component {
     const op = (sval === '') ? null : sval
     this.setState({ op })
     this.handleUpdate({ ...this.state, op })
+  }
+
+  handleSelectChange (value) {
+    console.log('select changed: ', value)
+    this.setState({ value })
   }
 
   handleValueChange (value: any) {
@@ -144,7 +161,7 @@ export default class FilterEditorRow extends React.Component {
   }
 
   renderValInput () {
-    const { schema } = this.props
+    const { appState, schema } = this.props
     const { columnId, op, value } = this.state
     let disabled = (columnId == null) ||
       (op == null) || !(reltab.opIsBinary((op: any)))
@@ -155,7 +172,7 @@ export default class FilterEditorRow extends React.Component {
       if (reltab.typeIsNumeric(columnType)) {
         inputComponent = (
           <NumericInput
-            className='filter-editor-value'
+
             onValueChange={v => this.handleValueChange(v)}
             placeholder='Value'
             disabled={disabled}
@@ -165,16 +182,33 @@ export default class FilterEditorRow extends React.Component {
     }
     if (inputComponent == null) {
       const compVal = value ? value : ''  // eslint-disable-line
-      inputComponent = (
-        <input
-          className='pt-input filter-editor-value'
-          type='text'
-          placeholder='Value'
-          disabled={disabled}
-          value={compVal}
-          onChange={e => this.handleValueChange(e.target.value)}
-          dir='auto'
-        />)
+      if ((op === 'IN') || (op === 'NOTIN')) {
+        // do we have distinct values for this column yet?
+        const colVals = appState.distinctColumnVals.get(columnId)
+        if (colVals != null) {
+          const options = colVals.map(cv => ({value: reltab.sqlEscapeString(cv), label: cv}))
+          inputComponent = (
+            <Select
+              className='filter-editor-value'
+              name='in-op'
+              value={compVal}
+              options={options}
+              multi
+              onChange={val => this.handleSelectChange(val)}
+            />)
+        }
+      } else {
+        inputComponent = (
+          <input
+            className='pt-input filter-editor-value'
+            type='text'
+            placeholder='Value'
+            disabled={disabled}
+            value={compVal}
+            onChange={e => this.handleValueChange(e.target.value)}
+            dir='auto'
+          />)
+      }
     }
     return inputComponent
   }
@@ -183,6 +217,7 @@ export default class FilterEditorRow extends React.Component {
     const colSelect = this.renderColumnSelect()
     const opSelect = this.renderOpSelect()
     const valInput = this.renderValInput()
+    const clearStyle = {clear: 'both'}
     return (
       <div className='filter-editor-row'>
         <div className='filter-editor-row-predicate'>
@@ -195,6 +230,7 @@ export default class FilterEditorRow extends React.Component {
           iconName='delete'
           onClick={e => this.handleDeleteRow()}
         />
+        <div id='clear' style={clearStyle} />
       </div>
     )
   }

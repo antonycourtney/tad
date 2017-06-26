@@ -58,6 +58,8 @@ export default class Footer extends React.Component {
 
     const editorComponent = this.state.expanded ? (
       <FilterEditor
+        appState={appState}
+        stateRefUpdater={this.props.stateRefUpdater}
         schema={appState.baseSchema}
         filterExp={filterExp}
         onCancel={e => this.handleFilterCancel(e)}
