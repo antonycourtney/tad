@@ -186,7 +186,8 @@ export default class FilterEditorRow extends React.Component {
         // do we have distinct values for this column yet?
         const colVals = appState.distinctColumnVals.get(columnId)
         if (colVals != null) {
-          const options = colVals.map(cv => ({value: reltab.sqlEscapeString(cv), label: cv}))
+          const nnColVals = colVals.filter(cv => cv != null)
+          const options = nnColVals.map(cv => ({value: reltab.sqlEscapeString(cv), label: cv}))
           inputComponent = (
             <Select
               className='filter-editor-value'

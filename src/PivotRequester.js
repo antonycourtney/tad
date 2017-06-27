@@ -126,7 +126,7 @@ const requestDataView = async (rt: Connection,
   return dataView
 }
 
-const DISTINCT_LIMIT = 500
+const DISTINCT_LIMIT = 501
 
 const requestDistinctColVals = async (
   rt: Connection,
@@ -207,6 +207,16 @@ export default class PivotRequester {
     const dreq = requestDistinctColVals(appState.rtc, appState.baseQuery, reqCol)
     dreq.then(colData => {
       this.pendingDistinctCol = null
+      let colMapData
+      if (colData.length < DISTINCT_LIMIT) {
+        const colMapData = colData
+      } else {
+        const errMsg = `
+Column ${reqCol} has more than ${(DISTINCT_LIMIT - 1).toString()} values.
+(The 'in' operator is not available for high cardinality columns.)`
+        remoteErrorDialog('High Cardinality Column', errMsg)
+        colMapData = null
+      }
       const nextSt = appState.update('distinctColumnVals', cvMap => cvMap.set(reqCol, colData))
       stateRef.setValue(nextSt)
     }).catch(err => {
