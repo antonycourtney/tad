@@ -154,7 +154,9 @@
     ],
     "linux": {
       "target": [
-        "deb"
+        "deb",
+        "rpm",
+        "tar.bz2"
       ]
     },
     "mac": {
