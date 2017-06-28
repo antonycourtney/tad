@@ -73,13 +73,6 @@ export const createMenu = () => {
       }
     }
   ]
-  if (!isDarwin) {
-    helpSubmenu = helpSubmenu.concat([
-      aboutTadMenuItem(),
-      separatorMenuItem,
-      checkForUpdateMenuItem()
-    ])
-  }
   const template = [
     { label: 'File', submenu: fileSubmenu },
     { label: 'Edit', submenu: editSubmenu }
