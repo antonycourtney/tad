@@ -90,7 +90,7 @@
   <div id="news" class="section news-section">
     <div class="container">
     <h3>News</h3>
-    <p class="lead">Tad 0.8.4 - May 29, 2017</p>
+    <p class="lead">Tad 0.8.5 - Jun 28, 2017</p>
     <P>
     A packaged installer for Tad is available for macOS, Linux and Windows.
     <P>
@@ -99,22 +99,24 @@
     If you're comfortable with that caveat, pick your platform and install:
     <P class="download">
       <a id="download-latest-release" class="btn btn-default"
-        href="https://github.com/antonycourtney/tad/releases/download/v0.8.4/tad-0.8.4.dmg">
+        href="https://github.com/antonycourtney/tad/releases/download/v0.8.5/tad-0.8.5.dmg">
         <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
         Download for Mac
       </a>
       <a id="download-latest-release" class="btn btn-default"
-        href="https://github.com/antonycourtney/tad/releases/download/v0.8.4/tad_0.8.4_amd64.deb"
+        href="https://github.com/antonycourtney/tad/releases/download/v0.8.5/tad_0.8.5_amd64.deb"
         >
         <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
         Download for Linux
       </a>
       <a id="download-latest-release" class="btn btn-default"
-        href="https://github.com/antonycourtney/tad/releases/download/v0.8.4/Tad.Setup.0.8.4.exe">
+        href="https://github.com/antonycourtney/tad/releases/download/v0.8.5/Tad.Setup.0.8.5.exe">
         <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
         Download for Windows
       </a>
     </P>
+    <P>
+    The above releases, along with a few additional formats (such as .rpm for RPM-based Linux Systems) are available at the <a href="https://github.com/antonycourtney/tad/releases/latest">Tad Releases Page</a> on github.
     </div>
   </div>
   <div id="contact" class="section contact-section">
@@ -153,6 +155,24 @@
   <div id="relnotes" class="section relnotes-section">
     <div class="container">
     <h3>Release Notes</h3>
+    <div class="release-section">
+      <h4>Tad 0.8.5 - June 28, 2017</h4>
+      <P>
+      <h5>New Features</h5>
+      <ul>
+        <li>European CSV support - support for <code>;</code> instead of <code>,</code> as field separator.
+        <li>IN and NOT IN operators, with interactive search and auto-complete UI.
+        <li>A <code>--no-headers</code> option for opening CSV files with no header row.
+        <li>Scientific Notation as format option for real number column type.
+      </ul>
+      <h5>Bug Fixes</h5>
+      <ul>
+        <li>Add missing negated operators (not equal, does not contain, etc.) to filter editor.
+        <li>Fix issue with Copy operation picking up incorrect cell ranges.
+        <li>Fix issue in file format when saving / loading per-column format info.
+      </ul>
+    </div>
+
     <div class="release-section">
       <h4>Tad 0.8.4 - May 29, 2017</h4>
       <P>
