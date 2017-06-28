@@ -7,10 +7,16 @@ import AppState from '../AppState'
 import {Button, NumericInput} from '@blueprintjs/core'
 import Select from 'react-select'
 
+type RefUpdater = (f: ((s: AppState) => AppState)) => void
+type Option = { value: string, label: string }
+type OptionsRet = { options: [Option] }
+type OptionsLoader = (input: string) => Promise<OptionsRet>
+const {col, constVal} = reltab
+
 type EditorRowState = {
   columnId: ?string,
   op: ?reltab.RelOp,
-  value: reltab.Scalar
+  value: reltab.Scalar | Array<Option>
 }
 
 const validRow = (rs: EditorRowState): boolean => {
@@ -20,11 +26,6 @@ const validRow = (rs: EditorRowState): boolean => {
   }
   return false
 }
-
-type Option = { value: string, label: string }
-type OptionsRet = { options: [Option] }
-type OptionsLoader = (input: string) => Promise<OptionsRet>
-const {col, constVal} = reltab
 
 const mkColValsLoader = (appState: AppState, columnId: string): OptionsLoader => {
   const rtc = appState.rtc
@@ -62,6 +63,8 @@ const mkRelExp = (rs: EditorRowState): reltab.RelExp => {
 
 export default class FilterEditorRow extends React.Component {
   props: {
+    appState: AppState,
+    stateRefUpdater: RefUpdater,
     schema: reltab.Schema,
     relExp: ?reltab.RelExp,
     onDeleteRow: () => void,
@@ -113,8 +116,7 @@ export default class FilterEditorRow extends React.Component {
     this.handleUpdate({ ...this.state, op })
   }
 
-  handleSelectChange (value) {
-    console.log('handleSelectChange: value: ', value)
+  handleSelectChange (value: Array<Option>) {
     this.setState({ value })
     this.handleUpdate({ ...this.state, value })
   }

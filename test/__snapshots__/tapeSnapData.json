@@ -1588,6 +1588,74 @@
           }
         ]
       }
+    },
+    "distinctTest": {
+      "distinct query": {
+        "schema": {
+          "columns": [
+            "JobFamily"
+          ],
+          "columnMetadata": {
+            "Name": {
+              "displayName": "Name",
+              "type": "text"
+            },
+            "Title": {
+              "displayName": "Title",
+              "type": "text"
+            },
+            "Base": {
+              "displayName": "Base",
+              "type": "integer"
+            },
+            "TCOE": {
+              "displayName": "TCOE",
+              "type": "integer"
+            },
+            "JobFamily": {
+              "displayName": "Job Family",
+              "type": "text"
+            },
+            "Union": {
+              "displayName": "Union",
+              "type": "text"
+            }
+          },
+          "_sortedColumns": null,
+          "columnIndices": {
+            "JobFamily": 0
+          }
+        },
+        "rowData": [
+          {
+            "JobFamily": "Engineering & Systems Engineering"
+          },
+          {
+            "JobFamily": "Executive Management"
+          },
+          {
+            "JobFamily": "Finance & Accounting"
+          },
+          {
+            "JobFamily": "Legal & Paralegal"
+          },
+          {
+            "JobFamily": "Maintenance, Vehicle & Facilities"
+          },
+          {
+            "JobFamily": "Police"
+          },
+          {
+            "JobFamily": "Public Affairs & Marketing"
+          },
+          {
+            "JobFamily": "Safety"
+          },
+          {
+            "JobFamily": "Transportation Operations"
+          }
+        ]
+      }
     }
   }
 }

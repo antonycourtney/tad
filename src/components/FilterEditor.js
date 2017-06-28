@@ -2,11 +2,16 @@
 
 import * as React from 'react'
 import * as reltab from '../reltab'
+import AppState from '../AppState'
 import {Button} from '@blueprintjs/core'
 import FilterEditorRow from './FilterEditorRow'
 
+type RefUpdater = (f: ((s: AppState) => AppState)) => void
+
 export default class FilterEditor extends React.Component {
   props: {
+    appState: AppState,
+    stateRefUpdater: RefUpdater,
     schema: reltab.Schema,
     filterExp: ?reltab.FilterExp,
     onCancel: (e: any) => void,
