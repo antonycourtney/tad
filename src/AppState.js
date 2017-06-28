@@ -16,9 +16,7 @@ export default class AppState extends Immutable.Record({
   targetPath: '', // path to CSV file
   baseQuery: null,
   baseSchema: null,
-  viewState: new ViewState(),
-  requestedColumnVals: Immutable.Set(),
-  distinctColumnVals: Immutable.Map()
+  viewState: new ViewState()
 }) {
   // duplicated here to allow us to write flow types:
   initialized: boolean    // Has main process initialization completed?
@@ -28,6 +26,4 @@ export default class AppState extends Immutable.Record({
   baseQuery: reltab.QueryExp
   baseSchema: reltab.Schema   // always in sync with baseQuery
   viewState: ViewState
-  requestedColumnVals: Immutable.Set<string>  // requested distinct column values
-  distinctColumnVals: Immutable.Map<string, ?Array<string>>
 }

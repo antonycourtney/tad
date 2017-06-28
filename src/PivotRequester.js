@@ -126,19 +126,6 @@ const requestDataView = async (rt: Connection,
   return dataView
 }
 
-const DISTINCT_LIMIT = 501
-
-const requestDistinctColVals = async (
-  rt: Connection,
-  baseQuery: reltab.QueryExp,
-  colId: string
-): Promise<Array<String>> => {
-  const dq = baseQuery.distinct(colId)
-  const colData = await rt.evalQuery(dq, 0, DISTINCT_LIMIT)
-  const ret = colData.rowData.map(r => r[colId])
-  return ret
-}
-
 /**
  * A PivotRequester listens for changes on the appState and viewport and
  * manages issuing of query requests
@@ -158,14 +145,12 @@ export default class PivotRequester {
   currentQueryView: ?QueryView  // set when resolved
   pendingOffset: number
   pendingLimit: number
-  pendingDistinctCol: ?string
 
   constructor (stateRef: oneref.Ref<AppState>) {
     this.pendingQueryRequest = null
     this.currentQueryView = null
     this.pendingDataRequest = null
     this.pendingViewParams = null
-    this.pendingDistinctCol = null
     stateRef.on('change', () => this.onStateChange(stateRef))
     // And invoke onStateChange initially to get things started:
     this.onStateChange(stateRef)
@@ -198,33 +183,6 @@ export default class PivotRequester {
       return dataView
     })
     return dreq
-  }
-
-  sendDistinctRequest (stateRef: oneref.Ref<AppState>, reqCol: string) {
-    const appState : AppState = stateRef.getValue()
-
-    this.pendingDistinctCol = reqCol
-    const dreq = requestDistinctColVals(appState.rtc, appState.baseQuery, reqCol)
-    dreq.then(colData => {
-      this.pendingDistinctCol = null
-      let colMapData
-      if (colData.length < DISTINCT_LIMIT) {
-        const colMapData = colData
-      } else {
-        const errMsg = `
-Column ${reqCol} has more than ${(DISTINCT_LIMIT - 1).toString()} values.
-(The 'in' operator is not available for high cardinality columns.)`
-        remoteErrorDialog('High Cardinality Column', errMsg)
-        colMapData = null
-      }
-      const nextSt = appState.update('distinctColumnVals', cvMap => cvMap.set(reqCol, colData))
-      stateRef.setValue(nextSt)
-    }).catch(err => {
-      console.error('error retrieving distinct values from column ', reqCol, ': ', err)
-      this.pendingDistinctCol = null
-      const nextSt = appState.update('distinctColumnVals', cvMap => cvMap.set(reqCol, null))
-      stateRef.setValue(nextSt)
-    })
   }
 
   onStateChange (stateRef: oneref.Ref<AppState>) {
@@ -277,7 +235,8 @@ Column ${reqCol} has more than ${(DISTINCT_LIMIT - 1).toString()} values.
       const nextAppState = appState.updateIn(['viewState', 'loadingTimer'],
         lt => lt.run(200, ltUpdater))
       stateRef.setValue(nextAppState)
-    } else if (this.currentQueryView !== null &&
+    } else {
+      if (this.currentQueryView !== null &&
         !paging.contains(this.pendingOffset, this.pendingLimit, viewState.viewportTop, viewState.viewportBottom)) {
       // No change in view parameters, but check for viewport out of range of
       // pendingOffset, pendingLimit:
@@ -286,13 +245,8 @@ Column ${reqCol} has more than ${(DISTINCT_LIMIT - 1).toString()} values.
         ', ' + (this.pendingOffset + this.pendingLimit) + ') ',
         ', viewport: ', viewState.viewportTop, viewState.viewportBottom)
 */
-      const qv : QueryView = (this.currentQueryView : any)  // Flow misses null check above!
-      this.sendDataRequest(stateRef, qv)
-    } else if (this.pendingDistinctCol == null) {
-      // check for unfulfilled requests for distinct columns:
-      const requestedCols = appState.requestedColumnVals.subtract(appState.distinctColumnVals.keys())
-      if (requestedCols.count() > 0) {
-        this.sendDistinctRequest(stateRef, requestedCols.first())
+        const qv : QueryView = (this.currentQueryView : any)  // Flow misses null check above!
+        this.sendDataRequest(stateRef, qv)
       }
     }
   }

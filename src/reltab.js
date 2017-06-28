@@ -103,7 +103,7 @@ export type RelOp = UnaryRelOp | BinRelOp
 
 const textOnlyBinaryOps = ['IN', 'NOTIN', 'BEGINS', 'NOTBEGINS', 'ENDS', 'NOTENDS', 'CONTAINS', 'NOTCONTAINS']
 const textOnlyOpsSet = new Set(textOnlyBinaryOps)
-const textNegBinaryOps = ['NOTBEGINS', 'NOTENDS', 'NOTCONTAINS']
+const textNegBinaryOps = ['NOTIN', 'NOTBEGINS', 'NOTENDS', 'NOTCONTAINS']
 const textNegOpsSet = new Set(textNegBinaryOps)
 const commonBinaryOps = ['EQ', 'NEQ', 'GT', 'GE', 'LT', 'LE']
 const binaryOps = commonBinaryOps.concat(textOnlyBinaryOps)
@@ -161,23 +161,35 @@ const textOpToSqlWhere = (lhs: ValExp, op: BinRelOp, rhs: ValExp): string => {
   if (rhs.expType !== 'ConstVal') {
     throw new Error('textOpToSqlWhere: only constants supported for rhs of text ops')
   }
-  const rhsStr : string = (rhs.val: any)
   const negStr = textNegOpsSet.has(op) ? 'NOT ' : ''
-  let matchStr = ''
-  switch (op) {
-    case 'BEGINS':
-    case 'NOTBEGINS':
-      matchStr = rhsStr + '%'
-      break
-    case 'NOTENDS':
-      matchStr = '%' + rhsStr
-      break
-    case 'CONTAINS':
-    case 'NOTCONTAINS':
-      matchStr = '%' + rhsStr + '%'
-      break
+
+  let ret
+  if ((op === 'IN') || (op === 'NOTIN')) {
+    const inVals: Array<string> = (rhs.val : any)
+    const inStr = inVals.map(sqlEscapeString).join(', ')
+    ret = lhs.toSqlWhere() + ' ' + negStr + 'IN (' + inStr + ')'
+  } else {
+    // assume match operator:
+    let matchStr = ''
+    const rhsStr : string = (rhs.val: any)
+    switch (op) {
+      case 'BEGINS':
+      case 'NOTBEGINS':
+        matchStr = rhsStr + '%'
+        break
+      case 'NOTENDS':
+        matchStr = '%' + rhsStr
+        break
+      case 'CONTAINS':
+      case 'NOTCONTAINS':
+        matchStr = '%' + rhsStr + '%'
+        break
+      default:
+        throw new Error('Unknown operator: ' + op)
+    }
+    ret = lhs.toSqlWhere() + ' ' + negStr + 'LIKE ' + sqlEscapeString(matchStr)
   }
-  return lhs.toSqlWhere() + ' ' + negStr + 'LIKE ' + sqlEscapeString(matchStr)
+  return ret
 }
 
 export class BinRelExp {
@@ -298,6 +310,9 @@ export class FilterExp {
   }
   isNotNull (arg: ValExp): FilterExp {
     return this.chainUnaryRelExp('NOTNULL', arg)
+  }
+  contains (lhs: ValExp, rhs: ValExp): FilterExp {
+    return this.chainBinRelExp('CONTAINS', lhs, rhs)
   }
 
   subExp (sub: FilterExp): FilterExp {

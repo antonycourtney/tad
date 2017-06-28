@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import * as reltab from '../reltab'
-import * as actions from '../actions'
+import AppState from '../AppState'
 // import type {Scalar} from '../reltab' // eslint-disable-line
 import {Button, NumericInput} from '@blueprintjs/core'
 import Select from 'react-select'
@@ -21,12 +21,23 @@ const validRow = (rs: EditorRowState): boolean => {
   return false
 }
 
-// check if we need to request distinct column values
-// because user chose the IN / NOTIN operator:
-const checkNeedColVals = (rs: EditorRowState, updater): void => {
-  const {columnId, op} = rs
-  if ((op === 'IN') || (op === 'NOTIN')) {
-    actions.ensureDistinctColVals(columnId, updater)
+type Option = { value: string, label: string }
+type OptionsRet = { options: [Option] }
+type OptionsLoader = (input: string) => Promise<OptionsRet>
+const {col, constVal} = reltab
+
+const mkColValsLoader = (appState: AppState, columnId: string): OptionsLoader => {
+  const rtc = appState.rtc
+  const baseQuery = appState.baseQuery
+  return async (input:string): OptionsRet => {
+    let dq = baseQuery.distinct(columnId)
+    if (input.length > 0) {
+      dq = dq.filter(reltab.and().contains(col(columnId), constVal(input)))
+    }
+    const qres = await rtc.evalQuery(dq, 0, 50)
+    const colData = qres.rowData.map(r => r[columnId]).filter(v => v != null)
+    const options = colData.map(cv => ({value: cv, label: cv}))
+    return { options }
   }
 }
 
@@ -39,8 +50,12 @@ const mkRelExp = (rs: EditorRowState): reltab.RelExp => {
   if (reltab.opIsUnary(op)) {
     ret = new reltab.UnaryRelExp((op: any), reltab.col(columnId))
   } else {
+    let expValue = value
+    if ((op === 'IN') || (op === 'NOTIN')) {
+      expValue = value.map(opt => opt.value)
+    }
     ret = new reltab.BinRelExp((op: any), reltab.col(columnId),
-      reltab.constVal(value))
+      reltab.constVal(expValue))
   }
   return ret
 }
@@ -62,7 +77,11 @@ export default class FilterEditorRow extends React.Component {
     if (relExp) {
       const columnId = relExp.lhsCol()
       const op = relExp.op
-      const value = (relExp.expType === 'BinRelExp') ? relExp.rhs.val : null
+      const expVal = (relExp.expType === 'BinRelExp') ? relExp.rhs.val : null
+      let value = expVal
+      if (((op === 'IN') || (op === 'NOTIN')) && (expVal != null)) {
+        value = expVal.map(cv => ({value: cv, label: cv}))
+      }
       rs = { columnId, op, value }
     }
     this.state = rs
@@ -70,7 +89,6 @@ export default class FilterEditorRow extends React.Component {
 
   /* validate row and notify if valid */
   handleUpdate (rs: EditorRowState) {
-    checkNeedColVals(rs, this.props.stateRefUpdater)
     if (this.props.onUpdate) {
       if (validRow(rs)) {
         const relExp = mkRelExp(rs)
@@ -96,8 +114,9 @@ export default class FilterEditorRow extends React.Component {
   }
 
   handleSelectChange (value) {
-    console.log('select changed: ', value)
+    console.log('handleSelectChange: value: ', value)
     this.setState({ value })
+    this.handleUpdate({ ...this.state, value })
   }
 
   handleValueChange (value: any) {
@@ -179,36 +198,35 @@ export default class FilterEditorRow extends React.Component {
             value={value}
           />)
       }
-    }
-    if (inputComponent == null) {
-      const compVal = value ? value : ''  // eslint-disable-line
-      if ((op === 'IN') || (op === 'NOTIN')) {
-        // do we have distinct values for this column yet?
-        const colVals = appState.distinctColumnVals.get(columnId)
-        if (colVals != null) {
-          const nnColVals = colVals.filter(cv => cv != null)
-          const options = nnColVals.map(cv => ({value: reltab.sqlEscapeString(cv), label: cv}))
+      if (inputComponent == null) {
+        const compVal = value ? value : ''  // eslint-disable-line
+        if ((op === 'IN') || (op === 'NOTIN')) {
+          const loader = mkColValsLoader(appState, columnId)
+/* Adding 'key' here as proposed workaround for
+ * https://github.com/JedWatson/react-select/issues/1771
+ */
           inputComponent = (
-            <Select
+            <Select.Async
               className='filter-editor-value'
               name='in-op'
               value={compVal}
-              options={options}
+              key={compVal.length}
               multi
+              loadOptions={loader}
               onChange={val => this.handleSelectChange(val)}
             />)
+        } else {
+          inputComponent = (
+            <input
+              className='pt-input filter-editor-value'
+              type='text'
+              placeholder='Value'
+              disabled={disabled}
+              value={compVal}
+              onChange={e => this.handleValueChange(e.target.value)}
+              dir='auto'
+            />)
         }
-      } else {
-        inputComponent = (
-          <input
-            className='pt-input filter-editor-value'
-            type='text'
-            placeholder='Value'
-            disabled={disabled}
-            value={compVal}
-            onChange={e => this.handleValueChange(e.target.value)}
-            dir='auto'
-          />)
       }
     }
     return inputComponent
