@@ -69,7 +69,7 @@ export class VPivotTree {
     outCols: Array<string>,
     rootQuery: ?QueryExp,
     sortKey: Array<[string, boolean]>,
-    inAggMap: ?{[cname: string]: baseDialect.AggFn}
+    aggMap: ?{[cname: string]: baseDialect.AggFn}
   ) {
     this.rt = rt
     this.pivotFields = pivotFields
@@ -80,7 +80,7 @@ export class VPivotTree {
     this.outCols = outCols
     this.rootQuery = rootQuery
     this.sortKey = sortKey
-    this.aggMap = inAggMap
+    this.aggMap = aggMap
   }
   /*
    * returns a query for the children of the specified path:
@@ -303,15 +303,14 @@ export const vpivot = (rt: baseDialect.Connection,
     pivotLeafFieldId: ?string,
     showRoot: boolean,
     sortKey: Array<[baseDialect.Field, boolean]>,
-    inAggMap: ?{[id: string]: string} = null
+    aggMap: ?{[id: string]: string} = null
   ): VPivotTree => {
-  const aggMap = _.mapKeys(inAggMap, (v, key) => _.last(key.split('.'))) // Strip fully qualified names
   const hiddenFields = ['_depth', '_pivot', '_isRoot']
   const baseQuery = initialBaseQuery.extend('Rec', { type: 'integer' }, 1)
+  const schema = new dialect.Schema([...baseSchema.fields, { name: 'Rec', type: 'integer'}]);
   const outFieldNames = baseQuery.getSchema().columns.concat(hiddenFields)
 
-
-  const gbFields = baseQuery.getSchema().fields.slice()
+  const gbFields = schema.fields.slice()
   const gbAggs = (aggMap != null) ? gbFields.map(field => field.aggregate(aggMap[field.id])) : gbFields
 
   let rootQuery = null
@@ -324,6 +323,6 @@ export const vpivot = (rt: baseDialect.Connection,
       .project(outFieldNames)
   }
 
-  return new VPivotTree(rt, baseQuery, baseQuery.getSchema(), dialect, pivotFields,
+  return new VPivotTree(rt, baseQuery, schema, dialect, pivotFields,
     pivotLeafFieldId, outFieldNames, rootQuery, sortKey, aggMap)
 }
