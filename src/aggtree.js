@@ -115,7 +115,7 @@ export class VPivotTree {
 
     const aggCols = this.baseSchema.fields.slice()
     const aggMap = this.aggMap
-    const gbAggs : any = (aggMap != null) ? aggCols.map(field => field.aggregate(aggMap[field.name])) : aggCols
+    const gbAggs : any = (aggMap != null) ? aggCols.map(field => field.aggregate(aggMap[field.id])) : aggCols
 
     if (path.length < this.pivotFields.length) {
       pathQuery = pathQuery
@@ -176,7 +176,7 @@ export class VPivotTree {
     const sortCols = this.sortKey.map(p => p[0] instanceof this.dialect.Field ? p[0] : this.baseSchema.getField(p[0]))
     const aggMap = this.aggMap
     console.log('sort agg')
-    const sortColAggs : any = (aggMap != null) ? sortCols.map(field => field.aggregate(aggMap[field.name])) : sortCols
+    const sortColAggs : any = (aggMap != null) ? sortCols.map(field => field.aggregate(aggMap[field.id])) : sortCols
 
     const gbCols = this.pivotFields.slice(0, depth)
 
@@ -303,15 +303,16 @@ export const vpivot = (rt: baseDialect.Connection,
     pivotLeafFieldId: ?string,
     showRoot: boolean,
     sortKey: Array<[baseDialect.Field, boolean]>,
-    inAggMap: ?{[cname: string]: string} = null
+    inAggMap: ?{[id: string]: string} = null
   ): VPivotTree => {
-  const aggMap = inAggMap // just for Flow
+  const aggMap = _.mapKeys(inAggMap, (v, key) => _.last(key.split('.'))) // Strip fully qualified names
   const hiddenFields = ['_depth', '_pivot', '_isRoot']
   const baseQuery = initialBaseQuery.extend('Rec', { type: 'integer' }, 1)
   const outFieldNames = baseQuery.getSchema().columns.concat(hiddenFields)
 
+
   const gbFields = baseQuery.getSchema().fields.slice()
-  const gbAggs = (aggMap != null) ? gbFields.map(field => field.aggregate(aggMap[field.name])) : gbFields
+  const gbAggs = (aggMap != null) ? gbFields.map(field => field.aggregate(aggMap[field.id])) : gbFields
 
   let rootQuery = null
   if (showRoot) {

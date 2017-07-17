@@ -9,6 +9,7 @@ import type { FormatOption } from './FormatOptions'
 
 class Field extends Record({
   table: undefined,
+  _id: undefined,
   name: '',
   displayName: undefined,
   type: undefined,
@@ -21,6 +22,7 @@ class Field extends Record({
 }) {
   table: string
   name: string
+  _id: string
   displayName: string
   type: string
   cast: string
@@ -116,6 +118,7 @@ class Field extends Record({
     } else {
       aggExp = {
         expression: undefined,
+        cast: this.type,
         func: this.aggFuncObj(aggFn)
       }
     }
@@ -134,7 +137,8 @@ class Field extends Record({
 
   // A unique identifier to refer to this field
   get id (): string {
-    return this.table ? this.table + '.' + this.selectableName : this.selectableName
+    // Retain ids where possible.
+    return this._id || (this.table ? this.table + '.' + this.selectableName : this.selectableName)
   }
 
   // If this field were in a subquery, what would we select it as?
@@ -151,6 +155,7 @@ class Field extends Record({
     // make sure to set it.
     if (!(params instanceof Field)) {
       params.displayName = params.displayName || params.alias || params.name
+      params.id = params._id || params.id
     }
 
     super(params)

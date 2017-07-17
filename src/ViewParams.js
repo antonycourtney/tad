@@ -159,7 +159,7 @@ export default class ViewParams extends Immutable.Record({
   // Must get aggFn from agg map because fields don't retain their functions after anything
   // that puts them in a subquery.
   getAggFn (field: baseDialect.Field) {
-    return this.aggMap[field.selectableName] || field.aggFn()
+    return this.aggMap[field.id] || field.aggFn()
   }
 
   getColumnFormat (f: baseDialect.Field): any {
