@@ -181,10 +181,10 @@ class QueryExp extends Record({
   }
 
   distinct (field: Field) {
-    return new QueryExp({
+    return new this.constructor.dialect.QueryExp({
       query: this,
       fields: [
-        field.aggregate('distinct')
+        field.aggregate('distinct').set('cast', undefined)
       ]
     })
   }

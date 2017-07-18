@@ -135,7 +135,7 @@ export default class FilterEditorRow extends React.Component {
       )
     )
 
-    const selectVal = (field == null) ? '' : field.selectableName
+    const selectVal = (field == null) ? '' : field.id
     return (
       <div className='pt-select filter-row-col-select'>
         <select

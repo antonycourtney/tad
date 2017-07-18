@@ -16,6 +16,7 @@ class SchemaError {
 
 class Schema {
   fieldMap: FieldMap
+  fieldIdMap: FieldMap
   columns: Array<string>
   fields: Array<Field>
   columnIndices:{[colId: string]: number}
@@ -35,6 +36,7 @@ class Schema {
     // These two are mostly only used by GridPane.
     this.columns = this.fields.map(f => f.selectableName)
     this.fieldMap = _.keyBy(this.fields, f => f.selectableName)
+    this.fieldIdMap = _.keyBy(this.fields, f => f.id)
 
     this._sortedFields = null
   }
@@ -55,7 +57,7 @@ class Schema {
       throw new Error(errMsg)
     }
 
-    const field = this.fieldMap[ `${colId}` ]
+    const field = this.fieldIdMap[ `${colId}` ]
     if (!field) {
       throw new Error(errMsg)
     }

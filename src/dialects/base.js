@@ -35,7 +35,8 @@ export type FieldMetadataModifier = {name?: string, type?: ColumnType, displayNa
 export type TableInfo = { tableName: string, schema: Schema }
 export type TableInfoMap = { [tableName: string]: TableInfo }
 
-export type FieldMap = {[colId: string]: Field}
+export type FieldMap = {[colName: string]: Field}
+export type FieldIdMap = {[colId: string]: Field}
 
 export interface Connection { // eslint-disable-line
   evalQuery (query: QueryExp, offset?: number, limit?: number): Promise<TableRep>;

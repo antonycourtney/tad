@@ -12,7 +12,7 @@ class Condition {
 
   static deserialize (condition) {
     const op = Object.keys(condition)[0]
-    return new this(op, condition[op].map(c => Filter.deserialize(c)))
+    return new this(op, condition[op].map(c => this.dialect.Filter.deserialize(c)))
   }
 
   static and () : Condition {
