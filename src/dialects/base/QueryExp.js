@@ -4,6 +4,7 @@ import Dialect from './Dialect'
 import Schema from './Schema'
 import Field from './Field'
 import Condition from './Condition'
+import log from 'electron-log';
 import { FieldMetadataModifier, ColumnExtendVal, Scalar } from '../base'
 import jsonify from './jsonify'
 
@@ -202,16 +203,19 @@ class QueryExp extends Record({
     const selectableFields = this.selectableFields(table)
 
     return List(
-      fields.map((colOrField) => {
-        const fName = colOrField instanceof Field ? colOrField.selectableName : colOrField
-        const field = selectableFields.find(f => f.selectableName === fName)
+      _.uniqBy(
+        fields.map((colOrField) => {
+          const fName = colOrField instanceof Field ? colOrField.selectableName : colOrField
+          const field = selectableFields.find(f => f.selectableName === fName)
 
-        if (field == null || !field.selectableName) {
-          throw new Error(`Column "${colOrField}" not found in query, should be one of ${selectableFields.map(f => f.selectableName)}`)
-        }
+          if (field == null || !field.selectableName) {
+            throw new Error(`QueryExp: Column "${colOrField}" not found in query, should be one of ${selectableFields.map(f => f.selectableName)}`)
+          }
 
-        return field
-      })
+          return field
+        }),
+        field => field.selectableName
+      )
     )
   }
 
@@ -231,10 +235,10 @@ class QueryExp extends Record({
     const alias = genAlias()
     const groupFields = this.filterSelectableFields(groupCols, alias)
 
-    // All of the agg columns fields
+    // All of the agg columns fields, ensure uniq to prevent pg error. 
     const fields = List([
       ...groupFields,
-      ...aggFields.map(field => field.isAggregated() ? field : field.aggregate())
+      ..._(aggFields).map(field => field.isAggregated() ? field : field.aggregate()).uniqBy(f => f.selectableName).value()
     ])
 
     return new this.constructor.dialect.QueryExp({

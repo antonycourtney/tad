@@ -57,7 +57,8 @@ class Schema {
       throw new Error(errMsg)
     }
 
-    const field = this.fieldIdMap[ `${colId}` ]
+    // Check both name and id
+    const field = this.fieldIdMap[ `${colId}` ] || this.fieldMap[ `${colId}` ]
     if (!field) {
       throw new Error(errMsg)
     }

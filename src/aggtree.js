@@ -123,7 +123,7 @@ export class VPivotTree {
         .mapColumnsByIndex({ '0': pivotColumnInfo })
     } else {
       // leaf level
-      const leafExp = (this.pivotLeafFieldId == null) ? null : new this.dialect.Field({ name: this.pivotLeafFieldId })
+      const leafExp = (this.pivotLeafFieldId == null) ? null : this.baseSchema.getField(this.pivotLeafFieldId)
       pathQuery = pathQuery
         .extend('_pivot', {}, leafExp)
     }
@@ -307,7 +307,7 @@ export const vpivot = (rt: baseDialect.Connection,
   ): VPivotTree => {
   const hiddenFields = ['_depth', '_pivot', '_isRoot']
   const baseQuery = initialBaseQuery.extend('Rec', { type: 'integer' }, 1)
-  const schema = new dialect.Schema([...baseSchema.fields, { name: 'Rec', type: 'integer'}]);
+  const schema = new dialect.Schema([...baseSchema.fields, { name: 'Rec', type: 'integer' }]);
   const outFieldNames = baseQuery.getSchema().columns.concat(hiddenFields)
 
   const gbFields = schema.fields.slice()

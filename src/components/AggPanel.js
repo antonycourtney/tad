@@ -50,7 +50,7 @@ const aggRowFormatter = (dialect: Dialect, viewParams: ViewParams, stateRefUpdat
 export default class AggPanel extends React.Component {
   render () {
     const {schema, viewParams, dialect, stateRefUpdater} = this.props  //eslint-disable-line
-    const fields = schema.sortedFields()
+    const fields = viewParams.displayFields
 
     return (
       <div className='ui-block'>

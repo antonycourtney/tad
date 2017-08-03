@@ -285,7 +285,11 @@ export default class GridPane extends React.Component {
     if (!this.colWidthsMap) {
       this.colWidthsMap = getInitialColWidthsMap(dataView)
     }
-    this.slickColMap = mkSlickColMap(dataView.schema, viewParams, this.colWidthsMap)
+
+    const appState = this.props.appState
+    // Create a schema with all the original fields + any additional fields from the data view
+    const schema = new appState.dialect.Schema([...appState.baseSchema.fields, ...dataView.schema.fields])
+    this.slickColMap = mkSlickColMap(schema, viewParams, this.colWidthsMap)
     const gridCols = this.getGridCols(dataView)
     if (!this.grid) {
       // console.log('updateGrid: initial update, creating grid...')

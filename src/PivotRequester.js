@@ -130,6 +130,34 @@ const requestDataView = async (rt: Connection,
   return dataView
 }
 
+class Stack<T> {
+  size: number
+  arr: Array<T>
+
+  constructor (size: number) {
+    this.size = size;
+    this.arr = []
+  }
+
+  push (elem: T): Stack<T> {
+    this.arr.push(elem)
+
+    if (this.arr.length > this.size) {
+      this.arr = this.arr.slice(1, this.arr.length)
+    }
+    
+    return this
+  }
+  
+  pop (): T {
+    return this.arr.pop()
+  }
+
+  top (): T {
+    return this.arr[this.arr.length - 1]
+  }
+}
+
 /**
  * A PivotRequester listens for changes on the appState and viewport and
  * manages issuing of query requests
@@ -143,7 +171,7 @@ export default class PivotRequester {
    * need to compare application state changes with either what's currently
    * displayed OR a pending request.
    */
-  pendingViewParams: ?ViewParams
+  pendingViewParams: Stack<?ViewParams>
   pendingQueryRequest: ?Promise<QueryView>
   pendingDataRequest: ?Promise<PagedDataView>
   currentQueryView: ?QueryView  // set when resolved
@@ -154,7 +182,7 @@ export default class PivotRequester {
     this.pendingQueryRequest = null
     this.currentQueryView = null
     this.pendingDataRequest = null
-    this.pendingViewParams = null
+    this.pendingViewParams = new Stack(5) // Keep track of 5 previous viewParams for rollback purposes.
     stateRef.on('change', () => this.onStateChange(stateRef))
     // And invoke onStateChange initially to get things started:
     this.onStateChange(stateRef)
@@ -194,15 +222,14 @@ export default class PivotRequester {
 
     const viewState = appState.viewState
     const viewParams = viewState.viewParams
-    if (viewParams !== this.pendingViewParams) {
+    if (viewParams !== this.pendingViewParams.top()) {
       // console.log('onStateChange: requesting new query: ', viewState, this.pendingViewParams)
       // Might be nice to cancel any pending request here...
       // failing that we could calculate additional pages we need
       // if viewParams are same and only page range differs.
-      const prevViewParams = this.pendingViewParams
-      this.pendingViewParams = viewParams
+      this.pendingViewParams.push(viewParams)
       const qreq = requestQueryView(appState.rtc, appState.baseQuery,
-        appState.baseSchema, appState.dialect, this.pendingViewParams)
+        appState.baseSchema, appState.dialect, viewParams)
       this.pendingQueryRequest = qreq
       this.pendingDataRequest =
         qreq.then(queryView => {
@@ -221,25 +248,29 @@ export default class PivotRequester {
               .set('viewportBottom', viewportBottom)
               .set('queryView', queryView))
             })
-          stateRef.setValue(nextSt)
+
+          const ltUpdater = util.pathUpdater(stateRef, ['viewState', 'loadingTimer'])
+          const nextAppState = nextSt.updateIn(['viewState', 'loadingTimer'],
+            lt => lt.run(200, ltUpdater))
+          stateRef.setValue(nextAppState)
+
           return this.sendDataRequest(stateRef, queryView)
         })
         .catch(err => {
           log.error('PivotRequester: caught error updating view: ', err.message, err.stack)
           remoteErrorDialog('Error constructing view', err.message)
+          // Remove this view params
+          this.pendingViewParams.pop()
+
           // Now let's try and restore to previous view params:
           const appState = stateRef.getValue()
           const nextSt = appState.update('viewState', vs => {
             return (vs
               .update('loadingTimer', lt => lt.stop())
-              .set('viewParams', prevViewParams))
+              .set('viewParams', this.pendingViewParams.pop()))
           })
           stateRef.setValue(nextSt)
         })
-      const ltUpdater = util.pathUpdater(stateRef, ['viewState', 'loadingTimer'])
-      const nextAppState = appState.updateIn(['viewState', 'loadingTimer'],
-        lt => lt.run(200, ltUpdater))
-      stateRef.setValue(nextAppState)
     } else {
       if (this.currentQueryView !== null &&
         !paging.contains(this.pendingOffset, this.pendingLimit, viewState.viewportTop, viewState.viewportBottom)) {
