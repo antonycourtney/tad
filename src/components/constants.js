@@ -7,7 +7,7 @@ export const DragItemTypes = {
 // Note: values here must be the field names of AppState:
 export const ColumnListType = {
   PIVOT: 'vpivots',
-  DISPLAY: 'displayColumns',
+  DISPLAY: 'displayFields',
   SORT: 'sortKey',
   AGG: 'aggFn'
 }
