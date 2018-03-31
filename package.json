@@ -40,7 +40,7 @@
     "react-select": "^1.0.0-rc.5",
     "react-window-resize-listener": "^1.1.0",
     "slickgrid-es6": "^2.0.5",
-    "sqlite": "^2.7.0",
+    "sqlite": "2.7.0",
     "sqlite-parser": "^1.0.0",
     "sqlite3": "git://github.com/antonycourtney/node-sqlite3.git",
     "through": "^2.3.8",
