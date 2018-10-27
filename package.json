@@ -38,7 +38,7 @@
     "react-dom": "^16.5.2",
     "react-select": "^2.1.0",
     "react-window-size-listener": "^1.2.1",
-    "slickgrid-es6": "^2.1.1",
+    "slickgrid-es6": "2.1.1",
     "sqlite": "3.0.0",
     "sqlite-parser": "^1.0.1",
     "sqlite3": "git://github.com/antonycourtney/node-sqlite3.git",
