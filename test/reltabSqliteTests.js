@@ -639,7 +639,7 @@ const distinctTest = async (t, htest) => {
 
 const doit = true
 
-const runTests = (htest: any) => {
+export default function runTests (htest: any) {
   sqliteTestSetup(htest)
 
   if (doit) {
@@ -679,5 +679,3 @@ const runTests = (htest: any) => {
 
   sqliteTestShutdown(htest)
 }
-
-module.exports = runTests

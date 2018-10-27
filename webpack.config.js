@@ -9,6 +9,7 @@ process.traceDeprecation = true
 function config(nodeEnv) {
   return {
     devtool: "source-map",
+    mode: nodeEnv,
     resolve: {
         extensions: [".webpack.js", ".web.js", ".js"]
     },
@@ -17,12 +18,11 @@ function config(nodeEnv) {
         filename: "[name].bundle.js"
     },
     module: {
-        loaders: [
+        rules: [
           { test: /\.(js|jsx)$/,
             exclude: /node_modules/,
-            loader: "babel-loader?presets[]=es2015,presets[]=react,presets[]=stage-3"
+            loader: 'babel-loader'
           },
-          { test: /\.(json)$/, loader: "json-loader" },
           {
             test: /\.less$/,
             loader: 'style-loader!css-loader!less-loader'
@@ -44,6 +44,7 @@ function config(nodeEnv) {
           }
         ]
     },
+    optimization: {},
     plugins: [
       new webpack.IgnorePlugin(/^\.\/stores\/appStore$/),
       new webpack.DefinePlugin({
@@ -63,22 +64,22 @@ function development() {
 function production () {
   var prod = config('production')
   prod.plugins.push(new webpack.optimize.OccurrenceOrderPlugin(true))
-  prod.plugins.push(new webpack.optimize.UglifyJsPlugin({
+  prod.optimization.minimize = {
     compress: {
       warnings: false
     },
     mangle: {
       except: ['module', 'exports', 'require']
     }
-  }))
+  }
   return prod
 }
 
 
 var render = {
-  target: "electron",
+  target: "electron-renderer",
   entry: {
-    renderMain: ['babel-polyfill', './src/renderMain.js']
+    renderMain: './src/renderMain.js'
   }
 }
 
@@ -93,7 +94,7 @@ fs.readdirSync('node_modules')
 nodeModules['timer'] = 'timer'
 
 var app = {
-  target: "node",
+  target: "electron-renderer",
   entry: {
     main: "./app/main.js",
     csvimport: "./src/csvimport-cli.js",

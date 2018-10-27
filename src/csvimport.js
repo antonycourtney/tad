@@ -3,7 +3,7 @@
  * Import CSV files into sqlite
  */
 
-import type {ColumnType, ColumnMetaMap, TableInfo} from './reltab'
+import type { ColumnType, ColumnMetaMap, TableInfo } from './reltab'
 import {Schema} from './reltab' // eslint-disable-line
 import csv from 'fast-csv'
 import * as _ from 'lodash'
@@ -144,7 +144,7 @@ const reFindAll = (re: RegExp, str: string): Array<string> => {
   let matches = []
   let matchInfo
   while ((matchInfo = re.exec(str)) !== null) {
-    matches.push(matchInfo[0])
+    matches.push((matchInfo[0]): any)
   }
   return matches
 }
@@ -295,7 +295,7 @@ const metaScan = (pathname: string, delimiter: string, options: CSVImportOpts): 
       })
       .on('end', () => {
         // default any remaining null column types to text:
-        const columnTypes = colTypes.map(ct => (ct == null) ? 'text' : ct)
+        const columnTypes = colTypes.map(ct => (ct == null) ? 'text' : (ct: any))
         const [es, ens] = process.hrtime(msStart)
         log.info('metascan completed in %ds %dms', es, ens / 1e6)
         resolve({columnIds, columnNames, columnTypes, rowCount, tableName, csvOptions})
@@ -395,7 +395,7 @@ const consumeStream = (s: stream.Readable,
  * returns: Promise<FileMetadata>
  */
 const importData = async (md: FileMetadata, pathname: string,
-    delimiter: string, options: CSVImportOpts): FileMetadata => {
+    delimiter: string, options: CSVImportOpts): Promise<FileMetadata> => {
   try {
     const hasHeaderRow = !options.noHeaderRow
     const isEuroFormat = (delimiter === ';')
@@ -455,7 +455,7 @@ const importData = async (md: FileMetadata, pathname: string,
  *
  */
 export const importSqlite = async (pathname: string, delimiter: string,
-    options: CSVImportOpts): FileMetadata => {
+    options: CSVImportOpts): Promise<FileMetadata> => {
   const md = await metaScan(pathname, delimiter, options)
   log.log('metascan complete. metadata:', md)
   return importData(md, pathname, delimiter, options)
@@ -521,7 +521,7 @@ const colNumStr = (len: number) => {
   return (x: number): string => 'col' + x.toString().padStart(padCount, '0')
 }
 
-export const fastImport = async (pathname: string, options: CSVImportOpts): FileMetadata => {
+export const fastImport = async (pathname: string, options: CSVImportOpts): Promise<FileMetadata> => {
   const importStart = process.hrtime()
   try {
     const sampleLines = await readSampleLines(pathname, 2)

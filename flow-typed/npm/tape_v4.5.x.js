@@ -1,7 +1,5 @@
-// flow-typed signature: 66e1c7a03f65d55587cfcf4288b6d5d1
-// flow-typed version: 94e9f7e0a4/tape_v4.5.x/flow_>=v0.25.x
-
-/* @flow */
+// flow-typed signature: 319345c7d1f795de3b740a00bf5e38f1
+// flow-typed version: 622c2ee76d/tape_v4.5.x/flow_>=v0.25.x
 
 /* eslint-disable  */
 
@@ -101,9 +99,10 @@ declare module 'tape' {
 
   declare type Tape = {
     (a: string | tape$TestOpts | tape$TestCb, b?: tape$TestCb | tape$TestOpts, c?: tape$TestCb, ...rest: Array<void>): void,
+    test: tape$TestFn,
     skip: (name: string, cb?: tape$TestCb) => void,
     createHarness: () => TestHarness,
-    createStream: (opts?: StreamOpts) => stream$Readable, 
+    createStream: (opts?: StreamOpts) => stream$Readable,
     only: (a: string | tape$TestOpts | tape$TestCb, b?: tape$TestCb | tape$TestOpts, c?: tape$TestCb, ...rest: Array<void>) => void,
   };
 

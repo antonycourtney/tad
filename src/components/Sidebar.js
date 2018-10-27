@@ -9,7 +9,7 @@ import DisplayOrderPanel from './DisplayOrderPanel'
 import SortOrderPanel from './SortOrderPanel'
 import AggPanel from './AggPanel'
 import FormatPanel from './FormatPanel'
-import { Checkbox, Tabs2, Tab2 } from '@blueprintjs/core'
+import { Checkbox, Tabs, Tab } from '@blueprintjs/core'
 
 export default class Sidebar extends React.Component {
   state: any
@@ -68,19 +68,19 @@ export default class Sidebar extends React.Component {
     return (
       <div className={'sidebar ' + expandClass}>
         <div className='sidebar-placeholder'>
-          <button type='button' className='pt-button pt-minimal pt-icon-cog'
+          <button type='button' className='bp3-button bp3-minimal bp3-icon-cog'
             onClick={e => this.onExpandClick(e)} />
         </div>
         <div className='sidebar-content'>
           <div className='sidebar-content-inner'>
             <button type='button'
-              className='pt-button pt-icon-chevron-left sidebar-collapse-button'
+              className='bp3-button bp3-icon-chevron-left sidebar-collapse-button'
               onClick={e => this.onExpandClick(e)} />
             <div className='ui-block'>
-              <h6>General</h6>
+              <h5 className='bp3-heading'>General</h5>
               <div className='root-check-group'>
                 <Checkbox
-                  className='pt-condensed'
+                  className='bp3-condensed'
                   checked={viewParams.showRoot}
                   onChange={() => actions.toggleShowRoot(refUpdater)}
                   label='Show Global Aggregations as Top Row'
@@ -88,7 +88,7 @@ export default class Sidebar extends React.Component {
               </div>
             </div>
             <div className='ui-block'>
-              <h6>Columns</h6>
+              <h5 className='bp3-heading'>Columns</h5>
               <ColumnSelector
                 onColumnClick={this.props.onColumnClick}
                 schema={this.props.baseSchema}
@@ -104,14 +104,14 @@ export default class Sidebar extends React.Component {
               />
             </div>
             <div className='ui-block addl-col-props'>
-              <h6>Additional Properties</h6>
-              <Tabs2 animate={false} id='ColumnPropTabs' >
-                <Tab2 id='shownColumnsTab' title='Order' panel={displayPanel} />
-                <Tab2 id='pivotColumnsTab' title='Pivot' panel={pivotPanel} />
-                <Tab2 id='sortColumnsTab' title='Sort' panel={sortPanel} />
-                <Tab2 id='aggColumnsTab' title='Aggregations' panel={aggPanel} />
-                <Tab2 id='formatColumnsTab' title='Format' panel={formatPanel} />
-              </Tabs2>
+              <h5 className='bp3-heading'>Additional Properties</h5>
+              <Tabs animate={false} id='ColumnPropTabs' >
+                <Tab id='shownColumnsTab' title='Order' panel={displayPanel} />
+                <Tab id='pivotColumnsTab' title='Pivot' panel={pivotPanel} />
+                <Tab id='sortColumnsTab' title='Sort' panel={sortPanel} />
+                <Tab id='aggColumnsTab' title='Aggregations' panel={aggPanel} />
+                <Tab id='formatColumnsTab' title='Format' panel={formatPanel} />
+              </Tabs>
             </div>
           </div>
         </div>

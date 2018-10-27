@@ -26,7 +26,7 @@ const aggSelect = (viewParams: ViewParams, schema: Schema, cid: string, updater:
 
   const aggOptions = aggFns(schema.columnType(cid)).map(mkOption)
   return (
-    <div className='pt-select pt-minimal'>
+    <div className='bp3-select bp3-minimal'>
       <select value={colAggFn} onChange={handleChange}>
         {aggOptions}
       </select>

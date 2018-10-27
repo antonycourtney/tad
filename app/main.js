@@ -17,9 +17,8 @@ const app = electron.app
 
 const path = require('path')
 
-const pkgInfo = require('../package.json')
+import pkgInfo from '../package.json'
 
-require('babel-polyfill')
 require('console.table')
 
 // Can insert delay in promise chain by:
@@ -136,6 +135,8 @@ const initMainAsync = async (options, targetPath, srcfile) => {
 
     const noHeaderRow = options['no-headers'] || false
     const md = await csvimport.fastImport(pathname, { noHeaderRow })
+    // const md = await csvimport.importSqlite(pathname, ',', { noHeaderRow })
+
     ti = csvimport.mkTableInfo(md)
   }
   rtc.registerTable(ti)

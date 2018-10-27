@@ -94,7 +94,7 @@ export default class FilterEditor extends React.Component {
       <div className='filter-editor'>
         <div className='filter-editor-filter-pane'>
           <div className='filter-editor-select-row'>
-            <div className='pt-select pt-minimal'>
+            <div className='bp3-select bp3-minimal'>
               <select
                 onChange={e => this.handleOpChange(e.target.value)}>
                 <option value='AND'>All Of (AND)</option>
@@ -108,8 +108,8 @@ export default class FilterEditor extends React.Component {
               <div className='filter-editor-row'>
                 <div className='filter-edit-add-row'>
                   <Button
-                    className='pt-minimal'
-                    iconName='add'
+                    className='bp3-minimal'
+                    icon='add'
                     onClick={e => this.handleAddRow()}
                   />
                 </div>
@@ -126,7 +126,7 @@ export default class FilterEditor extends React.Component {
             text='Apply'
             onClick={e => this.handleApply()} />
           <Button
-            className='pt-intent-primary'
+            className='bp3-intent-primary'
             onClick={e => this.handleDone()}
             text='Done' />
         </div>

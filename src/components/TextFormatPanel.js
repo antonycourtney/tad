@@ -18,7 +18,7 @@ export default class TextFormatPanel extends React.Component {
     return (
       <div className='format-subpanel'>
         <Checkbox
-          className='pt-condensed'
+          className='bp3-condensed'
           checked={opts.urlsAsHyperlinks}
           onChange={event => this.handleRenderHyperlinksChange(event)}
           label='Render URLs as Hyperlinks'

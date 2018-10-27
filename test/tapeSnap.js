@@ -23,7 +23,7 @@ let savedSnaps : TestMap = {}
 const snapshotPath = './test/__snapshots__/tapeSnapData.json'
 
 // read saved snapshots and install exit handler to update if needed
-const init = (htest) => {
+export default function init (htest) {
   if (initialized) {
     if (testHarness !== htest) {
       throw new Error('attempt to re-(init)ialize tape-snap with different tape harness. Not supported.')
@@ -120,4 +120,4 @@ deepEqualSnap.recordAll = function (doIt: boolean) {
 // deepEqualSnap requires an old-style module.exports.
 // TODO: Just update to new, ES6-style exports and export both entry
 // points directly
-module.exports = init
+// module.exports = init

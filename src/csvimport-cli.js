@@ -6,7 +6,9 @@ const getUsage = require('command-line-usage')
 const csvimport = require('../src/csvimport')
 const path = require('path')
 
-const pkgInfo = require('../package.json')
+//
+// const pkgInfo = require('../package.json')
+const pkgInfo = { version: '0.8.5' }
 
 const optionDefinitions = [
   {

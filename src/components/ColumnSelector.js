@@ -97,7 +97,7 @@ export default class ColumnSelector extends React.PureComponent {
     return (
       <div className='column-selector'>
         <div className='column-selector-header'>
-          <table className='table table-condensed pt-interactive column-selector-table'>
+          <table className='table table-condensed bp3-interactive column-selector-table'>
             <thead>
               <tr>
                 <th className='column-selector-th col-colName'>Column</th>

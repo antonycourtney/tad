@@ -94,7 +94,7 @@ export default class FormatPanel extends React.Component {
     return (
       <div className='ui-block'>
         <h6>Apply To</h6>
-        <div className='pt-form-group'>
+        <div className='bp3-form-group'>
           <RadioGroup
             selectedValue={this.state.formatKind}
             onChange={event => this.handleFormatKind(event)}>

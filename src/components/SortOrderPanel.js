@@ -15,7 +15,7 @@ const dirSelect = (viewParams: ViewParams, schema: Schema, cid: string, asc: boo
 
   const selectVal = asc ? 'asc' : 'desc'
   return (
-    <div className='pt-select pt-minimal'>
+    <div className='bp3-select bp3-minimal'>
       <select value={selectVal} onChange={handleChange}>
         <option value='asc'>asc</option>
         <option value='desc'>desc</option>

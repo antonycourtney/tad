@@ -23,7 +23,7 @@ require('../less/modal.less')
 require('../less/footer.less')
 require('../less/filterEditor.less')
 
-require('babel-polyfill')
+// require('babel-polyfill')
 
 const remote = require('electron').remote
 

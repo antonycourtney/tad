@@ -64,7 +64,7 @@ const mkDataView = (viewParams: ViewParams,
 const fastFilterRowCount = async (rt: Connection,
   baseRowCount: number,
   filterExp: reltab.FilterExp,
-  filterQuery: reltab.QueryExp): number => {
+  filterQuery: reltab.QueryExp): Promise<number> => {
   if (filterExp.opArgs.length === 0) {
     // short circuit!
     return baseRowCount
@@ -78,7 +78,7 @@ const fastFilterRowCount = async (rt: Connection,
 const fastViewRowCount = async (rt: Connection,
   filterRowCount: number,
   vpivots: Array<string>,
-  viewQuery: reltab.QueryExp): number => {
+  viewQuery: reltab.QueryExp): Promise<number> => {
   if (vpivots.length === 0) {
     // short circuit!
     return filterRowCount

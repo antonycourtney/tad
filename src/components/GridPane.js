@@ -5,7 +5,7 @@
 import * as React from 'react'
 import * as _ from 'lodash'
 import { Slick, Plugins } from 'slickgrid-es6'
-import { WindowResizeListener } from 'react-window-resize-listener'
+import WindowSizeListener from 'react-window-size-listener'
 import * as reltab from '../reltab'
 import * as actions from '../actions'
 import LoadingModal from './LoadingModal'
@@ -335,7 +335,7 @@ export default class GridPane extends React.Component {
     const lm = (lt.running && (lt.elapsed > 500)) ? <LoadingModal /> : null
     return (
       <div className='gridPaneOuter'>
-        <WindowResizeListener onResize={e => this.handleWindowResize(e)} />
+        <WindowSizeListener onResize={e => this.handleWindowResize(e)} />
         <div className='gridPaneInner'>
           <div id='epGrid' className='slickgrid-container full-height' />
         </div>

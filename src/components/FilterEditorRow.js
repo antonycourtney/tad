@@ -5,11 +5,11 @@ import * as reltab from '../reltab'
 import AppState from '../AppState'
 // import type {Scalar} from '../reltab' // eslint-disable-line
 import {Button, NumericInput} from '@blueprintjs/core'
-import Select from 'react-select'
+import SelectAsync from 'react-select/lib/Async'
 
 type RefUpdater = (f: ((s: AppState) => AppState)) => void
 type Option = { value: string, label: string }
-type OptionsRet = { options: [Option] }
+type OptionsRet = [Option]
 type OptionsLoader = (input: string) => Promise<OptionsRet>
 const {col, constVal} = reltab
 
@@ -30,7 +30,7 @@ const validRow = (rs: EditorRowState): boolean => {
 const mkColValsLoader = (appState: AppState, columnId: string): OptionsLoader => {
   const rtc = appState.rtc
   const baseQuery = appState.baseQuery
-  return async (input:string): OptionsRet => {
+  return async (input:string): Promise<OptionsRet> => {
     let dq = baseQuery.distinct(columnId)
     if (input.length > 0) {
       dq = dq.filter(reltab.and().contains(col(columnId), constVal(input)))
@@ -38,7 +38,8 @@ const mkColValsLoader = (appState: AppState, columnId: string): OptionsLoader =>
     const qres = await rtc.evalQuery(dq, 0, 50)
     const colData = qres.rowData.map(r => r[columnId]).filter(v => v != null)
     const options = colData.map(cv => ({value: cv, label: cv}))
-    return { options }
+    console.log('colValsLoader: input: "', input, '", returning: ', options)
+    return options
   }
 }
 
@@ -141,7 +142,7 @@ export default class FilterEditorRow extends React.Component {
         key={'filterRowColSel-' + cid} value={cid}>{schema.displayName(cid)}</option>))
     const selectVal = (columnId == null) ? '' : columnId
     return (
-      <div className='pt-select filter-row-col-select'>
+      <div className='bp3-select filter-row-col-select'>
         <select
           value={selectVal}
           onChange={event => this.handleColumnSelect(event)} >
@@ -169,7 +170,7 @@ export default class FilterEditorRow extends React.Component {
     }
     const opVal = (op === null) ? '' : op
     return (
-      <div className='pt-select filter-row-op-select'>
+      <div className='bp3-select filter-row-op-select'>
         <select
           value={opVal}
           disabled={disabled}
@@ -208,19 +209,25 @@ export default class FilterEditorRow extends React.Component {
  * https://github.com/JedWatson/react-select/issues/1771
  */
           inputComponent = (
-            <Select.Async
+            <SelectAsync
               className='filter-editor-value'
+              classNamePrefix='filter-editor-value'
               name='in-op'
               value={compVal}
               key={compVal.length}
-              multi
+              getOptionLabel={opt => opt.label}
+              getOptionValue={opt => opt.value}
+              isMulti
+              cacheOptions
+              defaultOptions
+              closeMenuOnSelect={false}
               loadOptions={loader}
               onChange={val => this.handleSelectChange(val)}
             />)
         } else {
           inputComponent = (
             <input
-              className='pt-input filter-editor-value'
+              className='bp3-input filter-editor-value'
               type='text'
               placeholder='Value'
               disabled={disabled}
@@ -247,8 +254,8 @@ export default class FilterEditorRow extends React.Component {
           {valInput}
         </div>
         <Button
-          className='pt-minimal'
-          iconName='delete'
+          className='bp3-minimal'
+          icon='delete'
           onClick={e => this.handleDeleteRow()}
         />
         <div id='clear' style={clearStyle} />

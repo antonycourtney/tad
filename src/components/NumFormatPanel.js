@@ -66,23 +66,23 @@ export default class NumFormatPanel extends React.Component {
     return (
       <div className='format-subpanel num-format-panel'>
         <Checkbox
-          className='pt-condensed'
+          className='bp3-condensed'
           checked={opts.commas}
           disabled={opts.exponential}
           onChange={event => this.handleCommasChange(event)}
           label='Use (,) as 1000s Separator'
         />
-        <label className='pt-label pt-inline'>
+        <label className='bp3-label bp3-inline'>
           Decimal Places
           <input
-            className='pt-input'
+            className='bp3-input'
             type='text'
             value={this.state.decimalsText}
             onChange={event => this.handleDecimalsChange(event)}
           />
         </label>
         <Checkbox
-          className='pt-condensed'
+          className='bp3-condensed'
           checked={opts.exponential}
           onChange={event => this.handleExponentialChange(event)}
           label='Use Scientific (exponential) Notation'

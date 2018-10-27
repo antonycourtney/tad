@@ -2,10 +2,10 @@
 import * as fs from 'fs'
 
 import 'console.table'
-require('babel-polyfill')
+// require('babel-polyfill')
 
 var test = require('tape')
-var tapeSnapInit = require('./tapeSnap')
+import tapeSnapInit from './tapeSnap'
 // var tapSpec = require('tap-spec')
 // var summarize = require('tap-summary')
 var tapDifflet = require('tap-difflet')
@@ -94,5 +94,7 @@ if (options.verbose) {
 // require('./reltabTests')
 // require('./aggtreeTests')
 // require('./csvImportTests')
-require('./pathTreeTests')(htest)
-require('./reltabSqliteTests')(htest)
+import pathTreeTests from './pathTreeTests' // require('./pathTreeTests')(htest)
+import reltabSqliteTests from './reltabSqliteTests'
+pathTreeTests(htest)
+reltabSqliteTests(htest)
