@@ -99,7 +99,7 @@
     "build:icon": "mkdirp buildRes && cp res/AppIcon.icns buildRes/icon.icns",
     "build-assets": "npm run build:html && npm run build:icon",
     "build-dev": "npm run build-assets && webpack --mode development",
-    "build-prod": "npm run build-assets && --mode production",
+    "build-prod": "npm run build-assets && webpack --mode production",
     "build-site": "mkdirp docs && cp -r src/doc/site/src/* docs",
     "clean": "rm -rf build/*",
     "csvimport": "electron build/csvimport.bundle.js",
