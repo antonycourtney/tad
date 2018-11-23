@@ -24,6 +24,7 @@
     "eslint-plugin-react": "^7.11.1",
     "fast-csv": "^2.4.1",
     "gauge": "^2.7.4",
+    "he": "^1.2.0",
     "immutable": "^3.8.2",
     "isomorphic-fetch": "^2.2.1",
     "jquery": "^3.3.1",

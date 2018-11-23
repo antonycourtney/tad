@@ -1,6 +1,7 @@
 /* @flow */
 
 import * as Immutable from 'immutable'
+import * as he from 'he'
 import urlRegex from 'url-regex'
 const shell = require('electron').shell
 
@@ -29,7 +30,7 @@ export default class TextFormatOptions extends Immutable.Record({
 `<a href="${val}" onclick='tadOpenExternal("${val}"); return false;'>${val}</a>`
         return ret
       }
-      return val
+      return val ? he.encode(val) : val
     }
     return ff
   }

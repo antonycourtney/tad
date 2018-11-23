@@ -14,6 +14,7 @@ import ViewParams from '../ViewParams'
 import * as util from '../util'
 import {clipboard} from 'electron'
 import csv from 'fast-csv'
+import * as he from 'he'
 
 const { CellRangeSelector, CellSelectionModel, CellCopyManager } = Plugins
 
@@ -122,13 +123,13 @@ const mkSlickColMap = (schema: reltab.Schema, viewParams: ViewParams, colWidths:
       let leafPivotStr = leafCid ? (' > ' + schema.displayName(leafCid)) : ''
       const pivotDisplayName = 'Pivot: ' + pivotNames.join(' > ') + leafPivotStr
       ci.cssClass = 'pivot-column'
-      ci.name = pivotDisplayName
+      ci.name = he.encode(pivotDisplayName)
       ci.toolTip = pivotDisplayName
       ci.formatter = groupCellFormatter
     } else {
       var displayName = cmd.displayName || colId
-      ci.name = displayName
-      ci.toolTip = displayName
+      ci.name = he.encode(displayName)
+      ci.toolTip = he.encode(displayName)
       ci.sortable = true
       const ff = viewParams.getColumnFormat(schema, colId).getFormatter()
       ci.formatter = (row, cell, value, columnDef, item) => ff(value)
