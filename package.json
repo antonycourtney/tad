@@ -41,9 +41,9 @@
     "slickgrid-es6": "2.1.1",
     "sqlite": "3.0.0",
     "sqlite-parser": "^1.0.1",
-    "sqlite3": "git://github.com/antonycourtney/node-sqlite3.git",
+    "sqlite3": "git+https://github.com/antonycourtney/node-sqlite3.git",
     "through": "^2.3.8",
-    "url-regex": "git://github.com/antonycourtney/url-regex.git"
+    "url-regex": "git+https://github.com/antonycourtney/url-regex.git"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.2",
