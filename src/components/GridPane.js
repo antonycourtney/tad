@@ -161,12 +161,10 @@ export default class GridPane extends React.Component {
       return
     }
     const vpivots = viewParams.vpivots
+    const depth = item._depth
     let path = []
-    for (let i = 0; i < vpivots.length; i++) {
+    for (let i = 0; i < vpivots.length && i < depth; i++) {
       let pathItem = item['_path' + i]
-      if (pathItem == null) {
-        break
-      }
       path.push(item['_path' + i])
     }
     if (item._isOpen) {
