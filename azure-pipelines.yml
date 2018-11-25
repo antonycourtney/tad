@@ -14,5 +14,7 @@ steps:
 
 - script: |
     npm install
+    npm run electron-rebuild
     npm run build-dev
-  displayName: 'npm install and build'
+    npm run unit-test
+  displayName: 'npm install, build and test'
