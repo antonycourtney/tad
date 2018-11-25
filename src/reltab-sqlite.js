@@ -27,6 +27,11 @@ class SqliteContext {
     this.tableMap[ti.tableName] = ti
   }
 
+  getSchema (query: QueryExp): Schema {
+    const schema = query.getSchema(this.tableMap)
+    return schema
+  }
+
   evalQuery (query: QueryExp, offset: number = -1, limit: number = -1): Promise<TableRep> {
     let t0 = process.hrtime()
     const schema = query.getSchema(this.tableMap)

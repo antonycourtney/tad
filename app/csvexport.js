@@ -1,4 +1,3 @@
-
 const reltab = require('../src/reltab')
 const csv = require('fast-csv')
 const fs = require('fs')
@@ -14,13 +13,19 @@ export const exportAs = async (win, saveFilename, filterRowCount, query) => {
   const writableStream = fs.createWriteStream(saveFilename)
   csvStream.pipe(writableStream)
 
+  const schema = appRtc.getSchema(query)
+  // Map entries in a row object to array of [displayName, value] pairs
+  const mapRow = row => {
+    return schema.columns.map(cid => [schema.displayName(cid), row[cid]])
+  }
+
   let offset = 0
   let percentComplete = 0
   while (offset < filterRowCount) {
     let limit = Math.min(BATCHSIZE, filterRowCount - offset)
     let res = await appRtc.evalQuery(query, offset, limit)
     res.rowData.map(row => {
-      csvStream.write(row)
+      csvStream.write(mapRow(row))
     })
     offset += res.rowData.length
     percentComplete = offset / filterRowCount
