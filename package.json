@@ -113,6 +113,7 @@
     "start": "electron .",
     "test": "flow && npm run unit-test",
     "format-test": "standard src/*.js src/js/*.js src/js/**/*.js test/*.js",
+    "electron-version": "ELECTRON_RUN_AS_NODE=true && electron --version",
     "unit-test": "ELECTRON_RUN_AS_NODE=true && electron build/allTests.bundle.js",
     "test-resnap": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && ELECTRON_RUN_AS_NODE=true && electron -- -u build/allTests.bundle.js",
     "test-babel": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/runAllTests.js",
