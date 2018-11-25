@@ -7,7 +7,8 @@ import LoadingModal from './LoadingModal'
 import Footer from './Footer'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
-import { FocusStyleManager } from '@blueprintjs/core'
+import { FocusStyleManager, Button, Dialog, Classes, ProgressBar } from '@blueprintjs/core'
+import * as actions from '../actions'
 
 /**
  * top level application pane
@@ -52,6 +53,10 @@ class AppPane extends React.Component {
     FocusStyleManager.onlyShowFocusOnTabs()
   }
 
+  handleExportDialogClose () {
+    actions.setExportDialogOpen(false, '', this.props.stateRefUpdater)
+  }
+
   render () {
     const appState = this.props.appState
 
@@ -59,6 +64,12 @@ class AppPane extends React.Component {
     if (appState.initialized) {
       const viewState = appState.viewState
       const viewParams = viewState.viewParams
+      const queryView = appState.viewState.queryView
+      let filterCountStr = ''
+      if (queryView) {
+        const { filterRowCount } = queryView
+        filterCountStr = filterRowCount.toLocaleString(undefined, {grouping: true})
+      }
       mainContents = (
         <div className='container-fluid full-height main-container'>
           <Sidebar
@@ -76,6 +87,20 @@ class AppPane extends React.Component {
               viewState={viewState}
               stateRefUpdater={this.props.stateRefUpdater} />
           </div>
+          <Dialog 
+            title='Export Filtered CSV'
+            onClose={() => this.handleExportDialogClose()}
+            isOpen={appState.exportDialogOpen}>
+            <div className={Classes.DIALOG_BODY}>
+              <p className="bp3-text-large">Exporting {filterCountStr} rows to {appState.exportFilename}</p>
+              <ProgressBar stripes={false} value={appState.exportPercent} />
+            </div>
+            <div className={Classes.DIALOG_FOOTER}>
+              <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+                <Button disabled={appState.exportPercent < 1} onClick={() => this.handleExportDialogClose()}>OK</Button>
+              </div>
+            </div>
+          </Dialog>
         </div>
       )
     } else {

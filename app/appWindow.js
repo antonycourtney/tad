@@ -7,6 +7,8 @@ const dialog = electron.dialog
 const ipcMain = electron.ipcMain
 const fs = require('fs')
 const log = require('electron-log')
+const csvexport = require('./csvexport')
+const reltab = require('../src/reltab')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -93,13 +95,17 @@ let stateRequestId = 100
 
 let pendingStateRequests = {}
 
-// deal with responses from render process for app state request:
-ipcMain.on('response-serialize-app-state', (event, response) => {
+// handle a response from renderer process by looking up Promise resolver:
+const handleResponse = (event, response) => {
   const resolve = pendingStateRequests[response.requestId]
   resolve(response.contents)
   // and clear out entry:
   delete pendingStateRequests[response.requestId]
-})
+}
+
+// deal with responses from render process for app state request:
+ipcMain.on('response-serialize-app-state', handleResponse)
+ipcMain.on('response-serialize-filter-query', handleResponse)
 
 // async function to retrieve app state from renderer process:
 export const getAppState = async (win: BrowserWindow) => {
@@ -110,6 +116,17 @@ export const getAppState = async (win: BrowserWindow) => {
     win.webContents.send('request-serialize-app-state', requestContents)
   })
 }
+
+// async function to retrieve filter query from renderer process:
+export const getFilterQuery = async (win: BrowserWindow) => {
+  return new Promise((resolve, reject) => {
+    const requestId = stateRequestId++
+    pendingStateRequests[requestId] = resolve
+    const requestContents = { windowId: win.id, requestId }
+    win.webContents.send('request-serialize-filter-query', requestContents)
+  })
+}
+
 
 const TAD_FILE_FORMAT_VERSION = 2
 
@@ -141,4 +158,23 @@ export const saveAsDialog = async () => {
     }
     log.info('succesfully saved workspace to ', saveFilename)
   })
+}
+
+export const exportFiltered = async (win: BrowserWindow) => {
+  console.log('exportFiltered')
+  const queryStr = await getFilterQuery(win)
+  const req = reltab.deserializeQueryReq(queryStr)
+  const { query, filterRowCount } = req
+  let saveFilename = null
+  saveFilename = dialog.showSaveDialog(win, {
+    title: 'Export Filtered CSV',
+    filters: [
+          {name: 'CSV Files', extensions: ['csv']}
+    ]
+  })
+  if (!saveFilename) {
+    // user cancelled save as...
+    return
+  }
+  await csvexport.exportAs( win, saveFilename, filterRowCount, query)
 }

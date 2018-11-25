@@ -40,7 +40,14 @@ export const createMenu = () => {
       click: (item, focusedWindow) => {
         appWindow.saveAsDialog()
       }
+    },
+    {
+      label: 'Export Filtered CSV...',
+      click: (item, focusedWindow) => {
+        appWindow.exportFiltered(focusedWindow)
+      }
     }
+
   ]
   if (!isDarwin) {
     fileSubmenu.push(separatorMenuItem)

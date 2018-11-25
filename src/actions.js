@@ -169,6 +169,14 @@ export const setShowHiddenCols = (show: boolean, updater: RefUpdater) => {
   updater(vpUpdate(viewParams => viewParams.set('showHiddenCols', show)))
 }
 
+export const setExportDialogOpen = (openState: boolean, saveFilename, updater: RefUpdater) => {
+  updater(s => s.set('exportDialogOpen', openState).set('exportFilename', saveFilename))
+}
+
+export const setExportProgress = (percentComplete, updater: RefUpdater) => {
+  updater(s => s.set('exportPercent', percentComplete))
+}
+
 export const setFilter = (fe: reltab.FilterExp, updater: RefUpdater) => {
   updater(vpUpdate(viewParams => viewParams.set('filterExp', fe)))
 }

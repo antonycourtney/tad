@@ -143,6 +143,7 @@ const initMainAsync = async (options, targetPath, srcfile) => {
   // Now let's place a function in global so it can be run via remote:
   global.runQuery = runQuery(rtc)
   global.getRowCount = getRowCount(rtc)
+  global.appRtc = rtc
   const tiStr = JSON.stringify(ti, null, 2)
   return tiStr
 }
