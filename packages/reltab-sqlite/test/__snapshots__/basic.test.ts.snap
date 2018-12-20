@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`t1 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "email": "john@doe.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "phoneNumber": 123456789,
+    },
+    Object {
+      "email": "jane@doe.com",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "phoneNumber": 9876543210,
+    },
+    Object {
+      "email": "james.bond@mi6.co.uk",
+      "firstName": "James",
+      "lastName": "Bond",
+      "phoneNumber": 612345678,
+    },
+  ],
+  "schema": Schema {
+    "_sortedColumns": null,
+    "columnIndices": Object {
+      "email": 2,
+      "firstName": 0,
+      "lastName": 1,
+      "phoneNumber": 3,
+    },
+    "columnMetadata": Object {
+      "email": Object {
+        "displayName": "email",
+        "type": "text",
+      },
+      "firstName": Object {
+        "displayName": "firstName",
+        "type": "text",
+      },
+      "lastName": Object {
+        "displayName": "lastName",
+        "type": "text",
+      },
+      "phoneNumber": Object {
+        "displayName": "phoneNumber",
+        "type": "integer",
+      },
+    },
+    "columns": Array [
+      "firstName",
+      "lastName",
+      "email",
+      "phoneNumber",
+    ],
+  },
+}
+`;

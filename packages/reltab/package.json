@@ -1,0 +1,24 @@
+{
+  "name": "reltab",
+  "version": "0.9.1",
+  "description": "Backend-independent library for queries on relational tables",
+  "main": "dist/reltab.js",
+  "types": "dist/reltab.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "clean": "rimraf dist",
+    "build": "tsc"
+  },
+  "keywords": [
+    "relational",
+    "sql",
+    "database"
+  ],
+  "author": "Antony Courtney <antony@antonycourtney.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/lodash": "^4.14.119",
+    "lodash": "^4.17.11"
+  },
+  "devDependencies": {}
+}
