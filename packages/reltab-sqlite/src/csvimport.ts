@@ -528,7 +528,7 @@ const colNumStr = (len: number) => {
 /*
  * TODO: rename, since this may or may not do a fast import.
  */
-export const fastImport = async (db: sqlite3.Database, pathname: string, options: ImportOpts): Promise<FileMetadata> => {
+export const fastImport = async (db: sqlite3.Database, pathname: string, options: ImportOpts = {}): Promise<FileMetadata> => {
   const importStart = process.hrtime()
   try {
     const sampleLines = await readSampleLines(pathname, 2)

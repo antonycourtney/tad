@@ -7,7 +7,7 @@ import { delimiter } from "path";
 
 let testCtx : reltabSqlite.SqliteContext;
 
-test("t0", () => {
+test("t0 - trivial query generation", () => {
   const q1 = reltab.tableQuery("barttest");
 
   expect(q1).toMatchInlineSnapshot(`
@@ -22,6 +22,13 @@ QueryExp {
 `);
 });
 
+const importCsv = async (db, path) => {
+  const md = await reltabSqlite.fastImport(db, path);
+
+  const ti = reltabSqlite.mkTableInfo(md);
+  testCtx.registerTable(ti);
+}
+
 beforeAll(async (): Promise<reltabSqlite.SqliteContext> => {
   const ctx = await reltabSqlite.getContext(":memory:");
 
@@ -29,21 +36,16 @@ beforeAll(async (): Promise<reltabSqlite.SqliteContext> => {
 
   const db = testCtx.db;
 
-  const md = await reltabSqlite.fastImport(
-    db,
-    "test/support/sample.csv",
-    {}
-  );
-
-  const ti = reltabSqlite.mkTableInfo(md);
-  testCtx.registerTable(ti);
+  await importCsv(db, 'test/support/sample.csv');
+  await importCsv(db, 'test/support/barttest.csv');
 
   return testCtx;
 })
 
-test("t1", async () => {
+test("t1 - basic sqlite tableQuery", async () => {
   const q1 = reltab.tableQuery('sample');
 
   const qres = await testCtx.evalQuery(q1);
   expect(qres).toMatchSnapshot();
 });
+

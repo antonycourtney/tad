@@ -6,3 +6,6 @@ node_modules
 *.map
 .DS_Store
 npm-debug.log
+.vscode
+lerna-debug.log
+package-lock.json

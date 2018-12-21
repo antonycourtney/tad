@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`t1 1`] = `
+exports[`t1 - basic sqlite tableQuery 1`] = `
 TableRep {
   "rowData": Array [
     Object {
