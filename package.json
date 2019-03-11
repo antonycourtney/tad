@@ -31,7 +31,7 @@
     "jsesc": "^2.5.1",
     "lodash": "^4.17.11",
     "mkdirp": "^0.5.1",
-    "oneref": "^0.3.2",
+    "oneref": "0.3.2",
     "react": "^16.5.2",
     "react-addons-css-transition-group": "^15.6.2",
     "react-dnd": "^5.0.0",
