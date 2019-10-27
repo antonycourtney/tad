@@ -105,6 +105,15 @@ export const createMenu = () => {
         { role: 'quit' }
       ]
     })
+  } else {
+    template.unshift({
+      label: 'Tad',
+      submenu: [
+        aboutTadMenuItem(),
+        separatorMenuItem,
+        { rold: 'quit' }
+      ]
+    })
   }
 
   let oldMenu = appMenu
