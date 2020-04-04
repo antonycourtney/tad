@@ -17,8 +17,10 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "@types/lodash": "^4.14.119",
     "lodash": "^4.17.11"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/lodash": "^4.14.119",
+    "typescript": "^3.8.3"
+  }
 }

@@ -234,9 +234,9 @@ const genColumnNames = (nCols: number): Array<string> => {
 /* scanTypes will read a CSV file and return a Promise<FileMetadata> */
 const metaScan = (pathname: string, delimiter: string, options: ImportOpts): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
-    log.log('starting metascan...')
+    log.debug('starting metascan...')
     const pathStats = fs.statSync(pathname)
-    log.log('file size: ', pathStats.size)
+    log.debug('file size: ', pathStats.size)
     const msStart = process.hrtime()
     let firstRow = true
     var colTypes: Array<string>
@@ -262,7 +262,7 @@ const metaScan = (pathname: string, delimiter: string, options: ImportOpts): Pro
       this.emit('data', buf)
     }, function end() {
       gauge.hide()
-      log.log('countStream: bytesRead: ', bytesRead)
+      log.debug('countStream: bytesRead: ', bytesRead)
       this.emit('end')
     })
 
@@ -376,7 +376,7 @@ const consumeStream = (s: stream.Readable,
         wrBatch(inputDone)
         resolve(writeCount)
       } else {
-        // log.log('consumeStream: readCount: ', readCount, ', writeCount: ', writeCount)
+        // log.debug('consumeStream: readCount: ', readCount, ', writeCount: ', writeCount)
       }
     }
 
@@ -431,13 +431,13 @@ const importData = async (db: sqlite3.Database, md: FileMetadata, pathname: stri
      */
     await db.run(dropStmt)
     await db.run(createStmt)
-    log.log('table created')
+    log.debug('table created')
     await db.run('begin')
     const insertStmt = await db.prepare(insertStmtStr)
     const rowCount = await consumeStream(csv.fromPath(pathname, md.csvOptions),
       insertRow(insertStmt), commitBatch, md.rowCount,
       hasHeaderRow)
-    log.log('consumeStream completed, rowCount: ', rowCount)
+    log.debug('consumeStream completed, rowCount: ', rowCount)
     insertStmt.finalize()
     return md
   } catch (err) {
@@ -455,7 +455,7 @@ const importData = async (db: sqlite3.Database, md: FileMetadata, pathname: stri
 export const importSqlite = async (db: sqlite3.Database, pathname: string, delimiter: string,
   options: ImportOpts): Promise<FileMetadata> => {
   const md = await metaScan(pathname, delimiter, options)
-  log.log('metascan complete. metadata:', md)
+  log.debug('metascan complete. metadata:', md)
   return importData(db, md, pathname, delimiter, options)
 }
 
@@ -553,7 +553,7 @@ export const fastImport = async (db: sqlite3.Database, pathname: string, options
       const res = await dbImport(db, pathname, tableName, importOpts)
       const [es, ens] = process.hrtime(importStart)
       log.info('fastImport: import completed in %ds %dms', es, ens / 1e6)
-      // log.log('import info: ', res)
+      // log.debug('import info: ', res)
       const fileMetadata = {
         columnIds: res.columnIds,
         columnNames: columnNames,

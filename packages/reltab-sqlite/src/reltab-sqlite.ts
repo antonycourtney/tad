@@ -44,8 +44,8 @@ export class SqliteContext implements Connection {
 
     if (this.showQueries) {
       log.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6);
-      log.log('SqliteContext.evalQuery: evaluating:');
-      log.log(sqlQuery);
+      log.debug('SqliteContext.evalQuery: evaluating:');
+      log.debug(sqlQuery);
     }
 
     const t2 = process.hrtime();
@@ -76,8 +76,8 @@ export class SqliteContext implements Connection {
 
     if (this.showQueries) {
       log.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6);
-      log.log('SqliteContext.evalQuery: evaluating:');
-      log.log(countSql);
+      log.debug('SqliteContext.evalQuery: evaluating:');
+      log.debug(countSql);
     }
 
     const t2 = process.hrtime();
@@ -97,7 +97,7 @@ export class SqliteContext implements Connection {
     const qp = dbAll( this.db, tiQuery);
     return qp.then(dbRows => {
       const rows = dbRows as Row[];
-      log.log('getTableInfo: ', rows);
+      log.debug('getTableInfo: ', rows);
 
       const extendCMap = (cmm: ColumnMetaMap, row: any, idx: number): ColumnMetaMap => {
         const cnm = row.name;
