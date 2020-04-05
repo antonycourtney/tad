@@ -1,0 +1,39 @@
+{
+  "name": "aggtree",
+  "version": "0.9.1",
+  "description": "pivot table built on top of reltab",
+  "author": "Antony Courtney <antony.courtney@gmail.com>",
+  "homepage": "https://github.com/antonycourtney/tad-pkg#readme",
+  "license": "MIT",
+  "main": "dist/aggtree.js",
+  "types": "dist/aggtree.d.ts",
+  "scripts": {
+    "prepublish": "npm test",
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "test": "jest --config jest.config.json"
+  },
+  "dependencies": {
+    "lodash": "^4.17.15",
+    "loglevel": "^1.6.7",
+    "reltab": "../reltab",
+    "reltab-sqlite": "../reltab-sqlite"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.11.0",
+    "babel-plugin-flow-to-typescript": "^0.6.0",
+    "console.table": "^0.10.0",
+    "jest": "^25.2.7",
+    "prettier": "^2.0.2",
+    "ts-jest": "^25.3.1",
+    "typescript": "^3.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antonycourtney/tad-pkg.git"
+  },
+  "bugs": {
+    "url": "https://github.com/antonycourtney/tad-pkg/issues"
+  }
+}

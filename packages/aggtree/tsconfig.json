@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "downlevelIteration": true,
+    "declaration": true,
+    "target": "ES5",
+    "lib": ["es6", "es2017", "dom"]
+  },
+  "include": ["./src/*"]
+}

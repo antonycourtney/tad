@@ -6,5 +6,6 @@
 		"rimraf": "^3.0.2",
 		"ts-jest": "^25.3.1",
 		"typescript": "^3.8.3"
-	}
+	},
+	"name": "tad-pkg"
 }
