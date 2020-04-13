@@ -25,18 +25,25 @@ Migration strategy: Let's get the Electron app working again, and in TypeScript,
 refactoring.
 
 - **reltab-electron-remote** - Reltab client and server between Electron renderer and app
-Then:
-- **reltab-server** - (TODO: Node.js / Express based server, derived from electron app / renderer separation)
-- **reltab-client** - WebSocket client for reltab, based on reltab-remote for Electron app
+  Then:
+- **tadweb-app** - WebSocket client for reltab, based on reltab-remote for Electron app
+- **tadweb-server** - Node.js / Express based server, derived from electron app / renderer separation
 
-
-Should finish porting over the reltab-sqlite tests Jest.  This will be key to ensuring things don't break.
+Should finish porting over the reltab-sqlite tests Jest. This will be key to ensuring things don't break.
 Then we should do:
 
 - **reltab-postgres** - Postgres driver for reltab
 - **reltab-bigquery** - Google BigQuery driver for reltab
 
 Then should think about making Tad a more full-fledged database pivot table. Want two key UI enhancements:
-   - Table Browser
-   - Multiple Tabs
-and look into doing a Node.js / Express server for Tad.
+
+- Table Browser
+- Multiple Tabs
+  and look into doing a Node.js / Express server for Tad.
+
+# Migration Notes
+
+### Punch-list items:
+
+[ ] Migrate aggtree tests
+[ ] Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app

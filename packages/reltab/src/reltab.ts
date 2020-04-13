@@ -513,7 +513,7 @@ const reviverMap = {
   'QueryExp': v => new QueryExp(v.operator, v.valArgs, v.tableArgs)
 };
 
-const queryReviver = (key: string, val: any): any => {
+export const queryReviver = (key: string, val: any): any => {
   let retVal = val;
 
   if (val != null) {
