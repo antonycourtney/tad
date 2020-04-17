@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Tad Quick Start</title>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      .code {
+        font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="container">
+        <h1>Quick Start</h1>
+        <p class="lead">Welcome to Tad!</p>
+        <p>If you are reading this message, Tad has been succesfully installed.<p>
+        <h3>Launching Tad</h3>
+        <p>There are three ways to launch Tad:
+        <ol>
+          <li>Application Icon
+          <p>You can double click on the Tad application icon to open Tad.  Use <strong>File...Open</strong> and the standard file open dialog to open a <code>.csv</code> or <code>.tad</code> file.
+          <li>Context Menu or Drag and Drop</li>
+          <p>The installation process registers Tad as a viewer for <code>.csv</code> files. On any <code>.csv</code> file in the Finder (macOS) or Explorer (Windows), use <strong>Open With...</strong> and select <strong>Tad</strong> to open the file in Tad.
+          <li>From the Command Line
+          <div id="cmdLineSetup">
+          </div>
+          <P>
+          Once Tad is installed and available on your PATH, simply type:
+<pre>
+$ tad somefile.csv
+</pre>
+          to launch Tad to explore <code>somefile.csv</code>. You can also open <code>.tad</code> files (previously saved Tad view configurations) via the command line.
+        </ol>
+        <h3>Basic Usage</h3>
+        <p>
+        You can explore the basics of Tad by opening this example CSV file (from the <a href="https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset"
+          onclick='tadOpenExternal(event,"https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a> on Kaggle)
+        included in the Tad distribution:
+        <p>
+        <button class="btn btn-primary btn-lg"
+          onclick='tadOpenExample()'>
+        Open movie_metadata.csv
+        </button>
+        <p>
+        When you open a CSV file in Tad, Tad automatically imports your CSV file into an internal in-memory SQLite database.
+        You can see the result of this import process by clicking on the gear icon on the left of the Tad window:
+        <P>
+        <img src="images/tad-quickstart-1.png"></img>
+        <P>
+        This will open the sidebar:
+        <P>
+        <img src="images/tad-quickstart-2.png"></img>
+<!--        <P>
+        The primary feature that Tad provides for exploring and analyzing files is a <emph>pivot table</emph>.
+        Briefly, a pivot table is a transformation of a table into a hiearchical <emph>tree table</emph> by grouping all rows in the source table that have the same value for some columns (the pivot columns).
+        Multiple pivot columns result in a nested hierarchical structure, with each level of the hierarchy corresponding to one pivot column. Values of cells for non-pivoted columns at higher levels of the pivot table are determined by applying an <emph>aggregate function</emph> to all leaf rows underneath that row.
+-->
+        <P>
+        Tad scans your data file during the import process makes a conservative guess at the type of each column.
+        For now the only supported types are <code>text</code>, <code>integer</code> and <code>real</code>, and there is no facility for manually overriding the inferred types.
+        <P>
+        The name and type of each column are shown in the main <strong>Column Selector</strong> above.
+        The additional controls in the column selector enable you to quickly build a
+        <a href="https://en.wikipedia.org/wiki/Pivot_table"
+          onclick='tadOpenExternal(event,"https://en.wikipedia.org/wiki/Pivot_table")'>pivot table</a>
+        to explore your data set:
+        <ul>
+          <li>Use the checkboxes under <strong>Pivot</strong> in the main column selector to choose columns for the pivot hierarchy.
+          <li>Use the checkboxes under <strong>Show</strong> in the main column selector to determine what columns are shown / hidden.
+          <li>Set the sort columns using either the checkboxes under <strong>Sort</strong> the main column selector or by clicking on column headers in the main grid.
+          </ul>
+        Additional controls for setting the order of columns, pivots and the sort key, and controlling aggregation and formatting rules are available under <strong>Additional Properties</strong> at the bottom of the side bar.
+        <h4>Filtering</h4>
+        <P>
+        Tad provides rudimentary facilities for constructing a <emph>filter</emph> to select a subset of data. A filter consists of a collection of simple predicates that compare a value in that row (identified by column name) with a constant.
+        <P>
+        Activate the filter pane by clicking the <strong>Filter</strong> link at the bottom of the window:
+        <P>
+        <img src="images/tad-quickstart-filter-1.png"></img>
+        <P>
+        When opened, a (populated) filter dialog looks like this:
+        <P>
+        <img src="images/tad-quickstart-filter-2.png"></img>
+        <P>
+        Construct the filter by selecting the logical operator (AND or OR) <strong>(1)</strong> and editing individual predicate rows <strong>(2)</strong>.
+        Add more rows by pressing the <strong>+</strong> button <strong>(3)</strong>, and delete predicates by clicking the <strong>x</strong> button <strong>(4)</strong> next to that predicate.
+        <P>
+        Discard, test or commit your changes using the three buttons in the lower right of the pane:
+        <P>
+        <img src="images/tad-quickstart-filter-3.png"></img>
+        <P>
+        <h3>Data Sources</h3>
+        <p>
+        If you work in data science, chances are you have no shortage of CSV files of your own to explore.
+        In addition to the <a href='#' onclick='tadOpenExample()'>movie_metadata.csv</a> sample file included with Tad, a few of my favorite data sources on the Internet are:
+        <ul>
+          <li><a href="https://www.kaggle.com/datasets" onclick='tadOpenExternal(event,"https://www.kaggle.com/datasets")'>Kaggle Datasets</a>. The <code>movie_metadata.csv</code> file used for many Tad examples is from the <a href="https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset"
+            onclick='tadOpenExternal(event,"https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a> on Kaggle.
+          <li><a href="https://github.com/metmuseum/openaccess" onclick='tadOpenExternal(event,"https://github.com/metmuseum/openaccess")'>Met Museum Open Access Initiative</a>. The Metropolitan Museum of Art recently made 420,000 artworks available online for unrestricted use. The catalog file <code>MetObjects.csv</code> available at the linked github repository is a good example for testing Tad's ability to handle larger CSV files. It's a 228MB CSV file with 420,000 rows of data. It takes about 13 sec to load and display this file in Tad on my late 2013 MacBook Pro.
+          <li><a href="https://data.world/" onclick='tadOpenExternal(event,"https://data.world/")'>data.world</a> is a site for sharing and exploring data on a variety of topics.
+          <li>The <a href="https://github.com/fivethirtyeight/data" onclick='tadOpenExternal(event,"https://github.com/fivethirtyeight/data")'>FiveThirtyEight github repository</a> has many CSV files providing data behind the stories and interactives on the FiveThirtyEight web site.
+        </ul>
+        <h3>Going Further (Developers and Data Hackers)</h3>
+        <P>
+        If for some reason you want to see the gnarly details of the SQL queries that Tad is constructing and executing, you can use the <code>-f</code> option on the command line to keep Tad in the foreground and <code>--show-queries</code> to get Tad to print the generated SQL queries like so:
+<pre>
+$ tad -f --show-queries somefile.csv
+</pre>
+        Not for the faint-hearted.
+        <P>
+        <h3>And Finally...</h3>
+        <P>
+        Have fun! I hope you find Tad a useful utility for viewing and analyzing data. <a href="mailto:tad-feedback@tadviewer.com" onclick='tadOpenExternal(event,"mailto:tad-feedback@tadviewer.com")'>  Feedback welcome</a>.
+        <P>
+      </div>
+    </main>
+<script src="js/clipboard.min.js"></script>
+<script>
+  function titledPanel(title,content) {
+    return `
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">${title}</h4>
+  </div>
+  <div class="panel-body">
+  ${content}
+  </div>
+</div>`
+  }
+  function unixSetup(installCmd) {
+    const title = 'macOS'
+    const content=`
+    <P>To launch tad from the command line, you need to ensure the Tad launcher shell script is on your <code>PATH</code>. If you have administrative rights on your machine, run the following command to create a symbolic link to <code>tad.sh</code> in <code>/usr/local/bin</code>:
+  <br>
+  <br>
+  <div class="input-group">
+     <input type="text" id="install-cmd" class="form-control code" value="${installCmd}"></input>
+     <span class="input-group-btn">
+       <button class="btn btn-default" type="button" data-clipboard-target="#install-cmd">
+        <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>Copy
+       </button>
+     </span>
+  </div><!-- /input-group -->
+`
+    return titledPanel(title, content)
+  }
+  function winSetup(appDir) {
+    const title='Windows'
+    const content=`
+On Windows, you should use the Control Panel to add <code>${appDir}</code> to your <code>PATH</code> environment variable.
+`
+    return titledPanel(title, content)
+  }
+  function init() {
+    new Clipboard('.btn')
+    const electron = require('electron')
+    const setupInfo = electron.remote.getGlobal('setupInfo')
+    console.log('setup info: ', setupInfo)
+    const {platform, appDir, appScriptPath, exeDir} = setupInfo
+    let installCmdHtml
+    if (platform === 'win32') {
+      installCmdHtml = winSetup(exeDir)
+    } else if (platform === 'darwin') {
+      const installCmd = `sudo ln -s ${appScriptPath} /usr/local/bin/tad`
+      installCmdHtml = unixSetup(installCmd)
+    }
+
+    const elem = document.getElementById('cmdLineSetup')
+    elem.innerHTML = installCmdHtml
+
+    // install this globally so we can access in generated a tag:
+    window.tadOpenExternal = function (event,url) {
+      event.preventDefault()
+      console.log('tadOpenExternal: ', url)
+      electron.shell.openExternal(url)
+      return false
+    }
+
+    window.tadOpenExample = function () {
+      event.preventDefault()
+      electron.remote.getGlobal('openExample')()
+    }
+  }
+  window.onload = init
+
+</script>
+</body>
+</html>

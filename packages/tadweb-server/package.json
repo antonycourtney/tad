@@ -7,7 +7,7 @@
     "prepublish": "npm test",
     "clean": "rimraf dist",
     "build": "tsc",
-    "start": "node dist/start.js csv/movie_metadata.csv",
+    "start": "node dist/start.js public/csv/movie_metadata.csv",
     "testClient": "node dist/testClient.js"
   },
   "keywords": [

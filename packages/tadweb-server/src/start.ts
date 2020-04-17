@@ -7,6 +7,7 @@ import * as reltabSqlite from "reltab-sqlite";
 import { SqliteContext } from "reltab-sqlite";
 import * as reltab from "reltab";
 import { monitorEventLoopDelay } from "perf_hooks";
+import { read } from "fs";
 
 const portNumber = 9000;
 
@@ -17,8 +18,8 @@ const optionDefinitions = [
     defaultOption: true,
     typeLabel:
       "[underline]{file}.csv or [underline]{file}.tad or sqlite://[underline]{file}/[underline]{table}",
-    description: "CSV file(.csv with header row), Tad(.tad) file to view"
-  }
+    description: "CSV file(.csv with header row), Tad(.tad) file to view",
+  },
 ];
 
 const initSqlite = async (csvFilePath: string): Promise<SqliteContext> => {
@@ -76,6 +77,12 @@ const handleGetRowCount = async (
   }
 };
 
+const viewerUrl = "/tadviewer/index.html";
+
+const rootRedirect = (req: express.Request, res: express.Response) => {
+  res.redirect(viewerUrl);
+};
+
 async function main() {
   log.setLevel(log.levels.INFO);
   const options = commandLineArgs(optionDefinitions);
@@ -88,9 +95,12 @@ async function main() {
 
   let app = express();
   app.use(express.json({ reviver: reltab.queryReviver }));
-  app.use(express.static("."));
 
-  app.get("/", (req, res) => res.send("Hello World!"));
+  // app.get("/", (req, res) => res.send("Hello World!"));
+  app.get("/", rootRedirect);
+
+  app.use(express.static("./public"));
+
   app.post("/tadweb/getRowCount", (req, res) =>
     handleGetRowCount(dbCtx, req, res)
   );
