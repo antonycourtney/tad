@@ -1,20 +1,31 @@
-import * as tp from 'typed-promisify';
-import * as sqlite3 from 'sqlite3';
-import * as log from 'loglevel';
-import { TableRep, QueryExp, Schema } from 'reltab';
-import { TableInfoMap, TableInfo, ValExp, Row, AggColSpec, SubExp, ColumnMetaMap, ColumnMapInfo, ColumnExtendVal, Connection } from 'reltab'; // eslint-disable-line
+import * as tp from "typed-promisify";
+import * as sqlite3 from "sqlite3";
+import * as log from "loglevel";
+import { TableRep, QueryExp, Schema, tableQuery } from "reltab";
+import {
+  TableInfoMap,
+  TableInfo,
+  ValExp,
+  Row,
+  AggColSpec,
+  SubExp,
+  ColumnMetaMap,
+  ColumnMapInfo,
+  ColumnExtendVal,
+  Connection,
+} from "reltab"; // eslint-disable-line
 
-export * from './csvimport';
+export * from "./csvimport";
 
 function assertDefined<A>(x: A | undefined | null): A {
   if (x == null) {
-    throw new Error('unexpected null value');
+    throw new Error("unexpected null value");
   }
 
   return x;
 }
 
-const dbAll = tp.promisify((db, query, cb) => db.all(query,cb));
+const dbAll = tp.promisify((db, query, cb) => db.all(query, cb));
 
 interface ContextOptions {
   showQueries?: boolean;
@@ -35,7 +46,11 @@ export class SqliteContext implements Connection {
     this.tableMap[ti.tableName] = ti;
   }
 
-  evalQuery(query: QueryExp, offset: number = -1, limit: number = -1): Promise<TableRep> {
+  evalQuery(
+    query: QueryExp,
+    offset: number = -1,
+    limit: number = -1
+  ): Promise<TableRep> {
     let t0 = process.hrtime();
     const schema = query.getSchema(this.tableMap);
     const sqlQuery = query.toSql(this.tableMap, offset, limit);
@@ -43,14 +58,14 @@ export class SqliteContext implements Connection {
     const [t1s, t1ns] = t1;
 
     if (this.showQueries) {
-      log.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6);
-      log.debug('SqliteContext.evalQuery: evaluating:');
+      log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
+      log.debug("SqliteContext.evalQuery: evaluating:");
       log.debug(sqlQuery);
     }
 
     const t2 = process.hrtime();
     const qp = dbAll(this.db, sqlQuery);
-    return qp.then(dbRows  => {
+    return qp.then((dbRows) => {
       const rows = dbRows as Row[];
       const t3 = process.hrtime(t2);
       const [t3s, t3ns] = t3;
@@ -60,8 +75,8 @@ export class SqliteContext implements Connection {
       const [t4s, t4ns] = t4;
 
       if (this.showQueries) {
-        log.info('time to run query: %ds %dms', t3s, t3ns / 1e6);
-        log.info('time to mk table rep: %ds %dms', t4s, t4ns / 1e6);
+        log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
+        log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
       }
 
       return ret;
@@ -75,56 +90,72 @@ export class SqliteContext implements Connection {
     const [t1s, t1ns] = t1;
 
     if (this.showQueries) {
-      log.info('time to generate sql: %ds %dms', t1s, t1ns / 1e6);
-      log.debug('SqliteContext.evalQuery: evaluating:');
+      log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
+      log.debug("SqliteContext.evalQuery: evaluating:");
       log.debug(countSql);
     }
 
     const t2 = process.hrtime();
     const qp = dbAll(this.db, countSql);
-    return qp.then(rows => {
+    return qp.then((rows) => {
       const t3 = process.hrtime(t2);
       const [t3s, t3ns] = t3;
-      log.info('time to run query: %ds %dms', t3s, t3ns / 1e6);
+      log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
       const ret = Number.parseInt(rows[0].rowCount);
       return ret;
     });
   } // use table_info pragma to construct a TableInfo:
 
-
-  getTableInfo(tableName: string): Promise<TableInfo> {
+  // Get table info directly from sqlite db
+  dbGetTableInfo(tableName: string): Promise<TableInfo> {
     const tiQuery = `PRAGMA table_info(${tableName})`;
-    const qp = dbAll( this.db, tiQuery);
-    return qp.then(dbRows => {
+    const qp = dbAll(this.db, tiQuery);
+    return qp.then((dbRows) => {
       const rows = dbRows as Row[];
-      log.debug('getTableInfo: ', rows);
+      log.debug("getTableInfo: ", rows);
 
-      const extendCMap = (cmm: ColumnMetaMap, row: any, idx: number): ColumnMetaMap => {
+      const extendCMap = (
+        cmm: ColumnMetaMap,
+        row: any,
+        idx: number
+      ): ColumnMetaMap => {
         const cnm = row.name;
         const cType = row.type.toLocaleLowerCase();
 
         if (cType == null) {
-          log.error('mkTableInfo: No column type for "' + cnm + '", index: ' + idx);
+          log.error(
+            'mkTableInfo: No column type for "' + cnm + '", index: ' + idx
+          );
         }
 
         const cmd = {
           displayName: cnm,
-          type: assertDefined(cType)
+          type: assertDefined(cType),
         };
         cmm[cnm] = cmd;
         return cmm;
       };
 
       const cmMap = rows.reduce(extendCMap, {});
-      const columnIds = rows.map(r => r.name);
+      const columnIds = rows.map((r) => r.name);
       const schema = new Schema(columnIds as string[], cmMap);
       return {
         tableName,
-        schema
+        schema,
       };
     });
   }
 
+  async getTableInfo(tableName: string): Promise<TableInfo> {
+    let ti = this.tableMap[tableName];
+    if (!ti) {
+      ti = await this.dbGetTableInfo(tableName);
+      if (ti) {
+        this.tableMap[tableName] = ti;
+      }
+    }
+    return ti;
+  }
 }
 
 // A wrapper the constructor for sqlite3.Database that returns a Promise.
@@ -135,19 +166,22 @@ const open = (filename: string, mode: number): Promise<sqlite3.Database> => {
         reject(err);
       }
       resolve(db);
-    })
+    });
   });
-}
+};
 
 const init = async (dbfile, options: Object = {}): Promise<Connection> => {
   const db = await open(dbfile, sqlite3.OPEN_READWRITE);
   const ctx = new SqliteContext(db, options);
   return ctx;
-}; 
+};
 
 // get (singleton) connection to sqlite:
 let ctxPromise: Promise<Connection> | undefined | null = null;
-export const getContext = (dbfile: string, options: Object = {}): Promise<Connection> => {
+export const getContext = (
+  dbfile: string,
+  options: Object = {}
+): Promise<Connection> => {
   if (!ctxPromise) {
     ctxPromise = init(dbfile, options);
   }

@@ -77,6 +77,23 @@ const handleGetRowCount = async (
   }
 };
 
+const handleGetTableInfo = async (
+  rtc: reltab.Connection,
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    log.info("POST getTableInfo: got request: ", req.body);
+    const tiReq = req.body;
+    const tableInfo = await rtc.getTableInfo(tiReq.tableName);
+    const resObj = { tableInfo };
+    log.info("getTableInfo: sending response: ", resObj);
+    res.json(resObj);
+  } catch (err) {
+    log.error("getTableInfo: ", err, err.stack);
+  }
+};
+
 const viewerUrl = "/tadviewer/index.html";
 
 const rootRedirect = (req: express.Request, res: express.Response) => {
@@ -103,6 +120,10 @@ async function main() {
 
   app.post("/tadweb/getRowCount", (req, res) =>
     handleGetRowCount(dbCtx, req, res)
+  );
+
+  app.post("/tadweb/getTableInfo", (req, res) =>
+    handleGetTableInfo(dbCtx, req, res)
   );
 
   const server = app.listen(portNumber, () => {

@@ -5,24 +5,35 @@ import * as log from "loglevel";
 const testBaseUrl = "http://localhost:9000";
 const testTable = "movie_metadata";
 
+async function request(path: string, args: any): Promise<any> {
+  const url = testBaseUrl + path;
+  const response = await fetch(url, {
+    method: "post",
+    body: JSON.stringify(args),
+    headers: { "Content-Type": "application/json" },
+  });
+  return response.json();
+}
+
+async function testGetRowCount() {
+  const testQuery = reltab.tableQuery(testTable);
+  const args = { query: testQuery };
+  log.info("testGetRowCount: ", args);
+  const response = await request("/tadweb/getRowCount", args);
+  log.info("testGetRowCount: got result: ", response);
+}
+
+async function testGetTableInfo() {
+  const args = { tableName: "movie_metadata" };
+  log.info("testGetTableInfo: ", args);
+  const response = await request("/tadweb/getTableInfo", args);
+  log.info("testGetTableInfo: got result: ", JSON.stringify(response, null, 2));
+}
+
 async function main() {
   log.setLevel(log.levels.INFO);
-  const testQuery = reltab.tableQuery(testTable);
-  const testUrl = testBaseUrl + "/tadweb/getRowCount";
-
-  const req = { query: testQuery };
-
-  log.info("sending request: ", req);
-
-  const response = await fetch(testUrl, {
-    method: "post",
-    body: JSON.stringify(req),
-    headers: { "Content-Type": "application/json" }
-  });
-
-  const result = await response.json();
-
-  log.info("got result: ", result);
+  await testGetRowCount();
+  await testGetTableInfo();
 }
 
 main();
