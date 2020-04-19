@@ -1,112 +1,119 @@
+import * as React from "react";
+import * as reltab from "reltab";
+import * as actions from "../actions";
+import { FilterEditor } from "./FilterEditor";
+import { AppState } from "../AppState";
+import { ViewState } from "../ViewState";
+import { StateRef } from "oneref";
+import { useState } from "react";
 
-
-import * as React from 'react'
-import * as reltab from 'reltab'
-import * as actions from '../actions'
-import { FilterEditor } from './FilterEditor'
-
-export class Footer extends React.Component {
-  state: { expanded: boolean, dirty: boolean, prevFilter: ?reltab.FilterExp }
-
-  constructor (props: any) {
-    super(props)
-    this.state = { expanded: false, dirty: false, prevFilter: null }
-  }
-
-  setExpandedState (nextState: boolean) {
-    if (nextState && !this.state.dirty) {
-      // snap current filter into prevFilter:
-      const prevFilter = this.props.appState.viewState.viewParams.filterExp
-      this.setState({expanded: nextState, prevFilter, dirty: true})
-    } else {
-      this.setState({expanded: nextState})
-    }
-    if (this.props.onFilterToggled) {
-      this.props.onFilterToggled(nextState)
-    }
-  }
-
-  handleFilterButtonClicked (event: any) {
-    event.preventDefault()
-    const nextState = !this.state.expanded
-    this.setExpandedState(nextState)
-  }
-
-  handleFilterCancel (event: any) {
-    // restore previous filter:
-    const fe = this.state.prevFilter || new reltab.FilterExp()
-    actions.setFilter(fe, this.props.stateRefUpdater)
-    this.setExpandedState(false)
-    this.setState({dirty: false, prevFilter: null})
-  }
-
-  handleFilterApply (filterExp: reltab.FilterExp) {
-    actions.setFilter(filterExp, this.props.stateRefUpdater)
-  }
-
-  handleFilterDone () {
-    this.setExpandedState(false)
-    this.setState({dirty: false, prevFilter: null})
-  }
-
-  render () {
-    const {appState} = this.props
-    const filterExp = appState.viewState.viewParams.filterExp
-    const filterStr = filterExp.toSqlWhere()
-
-    const expandClass = this.state.expanded ? 'footer-expanded' : 'footer-collapsed'
-
-    const editorComponent = this.state.expanded ? (
-      <FilterEditor
-        appState={appState}
-        stateRefUpdater={this.props.stateRefUpdater}
-        schema={appState.baseSchema}
-        filterExp={filterExp}
-        onCancel={e => this.handleFilterCancel(e)}
-        onApply={fexp => this.handleFilterApply(fexp)}
-        onDone={() => this.handleFilterDone()} />
-      ) : null
-
-    let rowCountBlock = null
-    const queryView = appState.viewState.queryView
-    if (queryView) {
-      const numFmt = num => num.toLocaleString(undefined, {grouping: true})
-
-      const {rowCount, baseRowCount, filterRowCount} = queryView
-      const rowCountStr = numFmt(rowCount)
-      const rcParts = [rowCountStr]
-      if (rowCount !== baseRowCount) {
-        rcParts.push(' (')
-        if ((filterRowCount !== baseRowCount) &&
-            (filterRowCount !== rowCount)) {
-          const filterCountStr = numFmt(filterRowCount)
-          rcParts.push(filterCountStr)
-          rcParts.push(' Filtered, ')
-        }
-        rcParts.push(numFmt(baseRowCount))
-        rcParts.push(' Total)')
-      }
-      const rcStr = rcParts.join('')
-      rowCountBlock = (
-        <div className='footer-block'>
-          <span className='footer-label'>Rows: </span>
-          <span className='footer-value'>{rcStr}</span>
-        </div>
-      )
-    }
-    return (
-      <div className={'footer ' + expandClass}>
-        <div className='footer-top-row'>
-          <div className='footer-filter-block'>
-            <a
-              onClick={(event) => this.handleFilterButtonClicked(event)}
-              tabIndex='0'>Filter</a>
-            <span className='filter-summary'> {filterStr}</span>
-          </div>
-          {rowCountBlock}
-        </div>
-        {editorComponent}
-      </div>
-    )
-  }
+export interface FooterProps {
+  appState: AppState;
+  stateRef: StateRef<AppState>;
 }
+
+export const Footer: React.FunctionComponent<FooterProps> = ({
+  appState,
+  stateRef,
+}: FooterProps) => {
+  const [expanded, setExpanded] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [prevFilter, setPrevFilter] = useState<reltab.FilterExp | null>(null);
+
+  const viewState = appState.viewState;
+
+  const setExpandedState = (nextState: boolean) => {
+    if (nextState && !dirty) {
+      // snap current filter into prevFilter:
+      setExpanded(nextState);
+      setPrevFilter(viewState.viewParams.filterExp);
+      setDirty(true);
+    } else {
+      setExpanded(nextState);
+    }
+  };
+
+  const handleFilterButtonClicked = (event: any) => {
+    event.preventDefault();
+    const nextState = !expanded;
+    setExpandedState(nextState);
+  };
+
+  const handleFilterCancel = (event: any) => {
+    // restore previous filter:
+    const fe = prevFilter || new reltab.FilterExp();
+    actions.setFilter(fe, stateRef);
+    setExpandedState(false);
+    setDirty(false);
+    setPrevFilter(null);
+  };
+
+  const handleFilterApply = (filterExp: reltab.FilterExp) => {
+    actions.setFilter(filterExp, stateRef);
+  };
+
+  const handleFilterDone = () => {
+    setExpandedState(false);
+    setDirty(false);
+    setPrevFilter(null);
+  };
+
+  const filterExp = appState.viewState.viewParams.filterExp;
+  const filterStr = filterExp.toSqlWhere();
+
+  const expandClass = expanded ? "footer-expanded" : "footer-collapsed";
+
+  const editorComponent = expanded ? (
+    <FilterEditor
+      appState={appState}
+      stateRef={stateRef}
+      schema={appState.baseSchema}
+      filterExp={filterExp}
+      onCancel={handleFilterCancel}
+      onApply={handleFilterApply}
+      onDone={handleFilterDone}
+    />
+  ) : null;
+
+  let rowCountBlock = null;
+  const queryView = appState.viewState.queryView;
+  if (queryView) {
+    const numFmt = (num: number) =>
+      num.toLocaleString(undefined, { useGrouping: true });
+
+    const { rowCount, baseRowCount, filterRowCount } = queryView;
+    const rowCountStr = numFmt(rowCount);
+    const rcParts = [rowCountStr];
+    if (rowCount !== baseRowCount) {
+      rcParts.push(" (");
+      if (filterRowCount !== baseRowCount && filterRowCount !== rowCount) {
+        const filterCountStr = numFmt(filterRowCount);
+        rcParts.push(filterCountStr);
+        rcParts.push(" Filtered, ");
+      }
+      rcParts.push(numFmt(baseRowCount));
+      rcParts.push(" Total)");
+    }
+    const rcStr = rcParts.join("");
+    rowCountBlock = (
+      <div className="footer-block">
+        <span className="footer-label">Rows: </span>
+        <span className="footer-value">{rcStr}</span>
+      </div>
+    );
+  }
+  return (
+    <div className={"footer " + expandClass}>
+      <div className="footer-top-row">
+        <div className="footer-filter-block">
+          <a onClick={(event) => handleFilterButtonClicked(event)} tabIndex={0}>
+            Filter
+          </a>
+          <span className="filter-summary"> {filterStr}</span>
+        </div>
+        {rowCountBlock}
+      </div>
+      {editorComponent}
+    </div>
+  );
+};

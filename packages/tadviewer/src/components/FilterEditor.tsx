@@ -1,136 +1,137 @@
+import * as React from "react";
+import * as reltab from "reltab";
+import { AppState } from "../AppState";
+import { Button } from "@blueprintjs/core";
+import { FilterEditorRow } from "./FilterEditorRow";
+import { StateRef } from "oneref";
+import { useState } from "react";
+import { FilterExp, SubExp } from "reltab";
 
+type RefUpdater = (f: (s: AppState) => AppState) => void;
 
-import * as React from 'react'
-import * as reltab from 'reltab'
-import { AppState } from '../AppState'
-import {Button} from '@blueprintjs/core'
-import { FilterEditorRow } from './FilterEditorRow'
+export interface FilterEditorProps {
+  appState: AppState;
+  stateRef: StateRef<AppState>;
+  schema: reltab.Schema;
+  filterExp: reltab.FilterExp | null;
+  onCancel: (e: any) => void;
+  onApply: (fe: reltab.FilterExp) => void;
+  onDone: () => void;
+}
 
-type RefUpdater = (f: ((s: AppState) => AppState)) => void
-
-export class FilterEditor extends React.Component {
-  props: {
-    appState: AppState,
-    stateRefUpdater: RefUpdater,
-    schema: reltab.Schema,
-    filterExp: ?reltab.FilterExp,
-    onCancel: (e: any) => void,
-    onApply: (fe: reltab.FilterExp) => void,
-    onDone: () => void
+const getOpArgs = (filterExp: FilterExp | null): (SubExp | null)[] => {
+  if (filterExp === null) return [null];
+  let { opArgs } = filterExp;
+  if (!opArgs || opArgs.length === 0) {
+    return [null];
   }
-  state: {op: reltab.BoolOp, opArgs: Array<?reltab.RelExp>, dirty: boolean}
+  return opArgs;
+};
 
-  constructor (props: any) {
-    super(props)
-    const { filterExp } = props
-    let op, opArgs
-    if (filterExp != null) {
-      ({ op, opArgs } = filterExp)
-      if (!opArgs || (opArgs.length === 0)) {
-        opArgs = [null]
-      }
-    } else {
-      op = 'AND'
-      opArgs = [null]
-    }
-    this.state = {op, opArgs, dirty: false}
-  }
+export const FilterEditor: React.FunctionComponent<FilterEditorProps> = ({
+  appState,
+  stateRef,
+  schema,
+  filterExp,
+  onCancel,
+  onApply,
+  onDone,
+}) => {
+  const [op, setOp] = useState(filterExp != null ? filterExp.op : "AND");
+  const [opArgs, setOpArgs] = useState(getOpArgs(filterExp));
+  const [dirty, setDirty] = useState(false);
 
-  renderFilterRows () {
-    const {opArgs} = this.state
-    return opArgs.map((re, idx) => {
-      return (<FilterEditorRow
-        appState={this.props.appState}
-        stateRefUpdater={this.props.stateRefUpdater}
-        key={'fe-row-' + idx}
-        schema={this.props.schema}
-        relExp={re}
-        onDeleteRow={() => this.handleDeleteRow(idx)}
-        onUpdate={(re) => this.handleUpdateRow(idx, re)}
-      />)
-    })
-  }
+  const handleAddRow = () => {
+    setOpArgs(opArgs.concat(null));
+    setDirty(true);
+  };
 
-  handleAddRow () {
-    const {opArgs} = this.state
-    this.setState({ opArgs: opArgs.concat(null), dirty: true })
-  }
+  const handleDeleteRow = (idx: number) => {
+    const nextOpArgs = opArgs.slice();
+    delete nextOpArgs[idx]; // delete, not splice, to keep React keys correct
+    setOpArgs(nextOpArgs);
+    setDirty(true);
+  };
 
-  handleDeleteRow (idx: number) {
-    const {opArgs: prevArgs} = this.state
-    const opArgs = prevArgs.slice()
-    delete opArgs[idx]  // delete, not splice, to keep React keys correct
-    this.setState({ opArgs, dirty: true })
-  }
+  const handleOpChange = (nextOp: reltab.BoolOp) => {
+    setOp(nextOp);
+    setDirty(true);
+  };
 
-  handleOpChange (op: reltab.BoolOp) {
-    this.setState({ op, dirty: true })
-  }
+  const handleUpdateRow = (idx: number, re: reltab.RelExp | null) => {
+    const nextOpArgs = opArgs.slice();
+    nextOpArgs[idx] = re;
+    setOpArgs(nextOpArgs);
+    setDirty(true);
+  };
 
-  handleUpdateRow (idx: number, re: ?reltab.RelExp) {
-    const {opArgs: prevArgs} = this.state
-    const opArgs = (prevArgs.slice())
-    opArgs[idx] = re
-    this.setState({ opArgs, dirty: true })
-  }
+  const handleApply = () => {
+    const nnOpArgs: any = opArgs.filter((r) => r != null);
+    const fe = new reltab.FilterExp(op, nnOpArgs);
+    onApply(fe);
+    setDirty(false);
+  };
 
-  handleApply () {
-    const {op, opArgs} = this.state
-    const nnOpArgs: any = opArgs.filter(r => r != null)
-    const fe = new reltab.FilterExp(op, nnOpArgs)
-    this.props.onApply(fe)
-    this.setState({ dirty: false })
-  }
+  const handleDone = () => {
+    handleApply();
+    onDone();
+  };
 
-  handleDone () {
-    this.handleApply()
-    this.props.onDone()
-  }
-
-  render () {
-    const feRows = this.renderFilterRows()
-
+  const feRows = opArgs.map((re, idx) => {
     return (
-      <div className='filter-editor'>
-        <div className='filter-editor-filter-pane'>
-          <div className='filter-editor-select-row'>
-            <div className='bp3-select bp3-minimal'>
-              <select
-                onChange={e => this.handleOpChange(e.target.value)}>
-                <option value='AND'>All Of (AND)</option>
-                <option value='OR'>Any Of (OR)</option>
-              </select>
-            </div>
+      <FilterEditorRow
+        appState={appState}
+        stateRef={stateRef}
+        key={"fe-row-" + idx}
+        schema={schema}
+        relExp={re as reltab.BinRelExp | reltab.UnaryRelExp}
+        onDeleteRow={() => handleDeleteRow(idx)}
+        onUpdate={(re) => handleUpdateRow(idx, re)}
+      />
+    );
+  });
+
+  return (
+    <div className="filter-editor">
+      <div className="filter-editor-filter-pane">
+        <div className="filter-editor-select-row">
+          <div className="bp3-select bp3-minimal">
+            <select
+              onChange={(e) => handleOpChange(e.target.value as reltab.BoolOp)}
+            >
+              <option value="AND">All Of (AND)</option>
+              <option value="OR">Any Of (OR)</option>
+            </select>
           </div>
-          <div className='filter-editor-edit-section'>
-            <div className='filter-editor-scroll-pane'>
-              {feRows}
-              <div className='filter-editor-row'>
-                <div className='filter-edit-add-row'>
-                  <Button
-                    className='bp3-minimal'
-                    icon='add'
-                    onClick={e => this.handleAddRow()}
-                  />
-                </div>
+        </div>
+        <div className="filter-editor-edit-section">
+          <div className="filter-editor-scroll-pane">
+            {feRows}
+            <div className="filter-editor-row">
+              <div className="filter-edit-add-row">
+                <Button
+                  className="bp3-minimal"
+                  icon="add"
+                  onClick={(e: any) => handleAddRow()}
+                />
               </div>
             </div>
           </div>
         </div>
-        <div className='filter-editor-footer'>
-          <Button
-            text='Cancel'
-            onClick={e => this.props.onCancel(e)} />
-          <Button
-            disabled={!this.state.dirty}
-            text='Apply'
-            onClick={e => this.handleApply()} />
-          <Button
-            className='bp3-intent-primary'
-            onClick={e => this.handleDone()}
-            text='Done' />
-        </div>
       </div>
-    )
-  }
-}
+      <div className="filter-editor-footer">
+        <Button text="Cancel" onClick={(e: any) => onCancel(e)} />
+        <Button
+          disabled={!dirty}
+          text="Apply"
+          onClick={(e: any) => handleApply()}
+        />
+        <Button
+          className="bp3-intent-primary"
+          onClick={(e: any) => handleDone()}
+          text="Done"
+        />
+      </div>
+    </div>
+  );
+};

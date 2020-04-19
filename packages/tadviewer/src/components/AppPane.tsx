@@ -2,11 +2,17 @@ import * as React from "react";
 /*
 import { Sidebar } from './Sidebar';
 import { GridPane } from './GridPane';
-import { Footer } from './Footer';
 // import { DragDropContext } from 'react-dnd';
 // import { HTML5Backend } from 'react-dnd-html5-backend';
-import { FocusStyleManager, Button, Dialog, Classes, ProgressBar } from '@blueprintjs/core';
 */
+import {
+  FocusStyleManager,
+  Button,
+  Dialog,
+  Classes,
+  ProgressBar,
+} from "@blueprintjs/core";
+import { Footer } from "./Footer";
 import { LoadingModal } from "./LoadingModal";
 import * as actions from "../actions";
 import { AppState } from "../AppState";

@@ -5,15 +5,14 @@ import * as reltab from "reltab";
 import * as constants from "./components/constants";
 import { Path, PathTree } from "aggtree";
 import * as aggtree from "aggtree";
-
-type RefUpdater = (f: (s: AppState) => AppState) => void; // called after main process initialization completes:
+import { StateRef, update } from "oneref";
 
 export const initAppState = async (
   rtc: reltab.Connection,
   windowTitle: string,
   baseQuery: reltab.QueryExp,
   initialViewParams: ViewParams | undefined | null,
-  updater: RefUpdater
+  stateRef: StateRef<AppState>
 ): Promise<void> => {
   const baseSchema = await aggtree.getBaseSchema(rtc, baseQuery);
 
@@ -27,16 +26,17 @@ export const initAppState = async (
     const openPaths = new PathTree();
     viewParams = new ViewParams({
       displayColumns,
-      openPaths
+      openPaths,
     });
   }
 
   const viewState = new ViewState({
-    viewParams
+    viewParams,
   }); // We explicitly set rather than merge() because merge
   // will attempt to deep convert JS objects to Immutables
 
-  updater(
+  update(
+    stateRef,
     (st: AppState): AppState =>
       st
         .set("windowTitle", windowTitle)
@@ -46,45 +46,65 @@ export const initAppState = async (
         .set("viewState", viewState)
         .set("initialized", true) as AppState
   );
-}; // helper to hoist a ViewParams => ViewParams fn to an AppState => AppState
-// Always resets the viewport
+};
 
+// helper to hoist a ViewParams => ViewParams fn to an AppState => AppState
+// Always resets the viewport
 const vpUpdate = (f: (vp: ViewParams) => ViewParams) => (
   s: AppState
 ): AppState => s.updateIn(["viewState", "viewParams"], f) as AppState;
 
-export const toggleShown = (cid: string, updater: RefUpdater): void => {
-  updater(vpUpdate(viewParams => viewParams.toggleShown(cid)));
+export const toggleShown = (
+  cid: string,
+  stateRef: StateRef<AppState>
+): void => {
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.toggleShown(cid))
+  );
 };
-export const toggleAllShown = (updater: RefUpdater): void => {
-  updater(s => {
+export const toggleAllShown = (stateRef: StateRef<AppState>): void => {
+  update(stateRef, (s) => {
     const schema = s.baseSchema;
     const viewParams = s.viewState.viewParams;
     const allShown = schema.columns.length === viewParams.displayColumns.length;
     const nextDisplayColumns = allShown ? [] : schema.columns;
     return vpUpdate(
-      viewParams =>
+      (viewParams) =>
         viewParams.set("displayColumns", nextDisplayColumns) as ViewParams
     )(s);
   });
 };
-export const togglePivot = (cid: string, updater: RefUpdater): void => {
-  updater(vpUpdate(viewParams => viewParams.togglePivot(cid)));
+export const togglePivot = (
+  cid: string,
+  stateRef: StateRef<AppState>
+): void => {
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.togglePivot(cid))
+  );
 };
-export const toggleSort = (cid: string, updater: RefUpdater): void => {
-  updater(vpUpdate(viewParams => viewParams.toggleSort(cid)));
+export const toggleSort = (cid: string, stateRef: StateRef<AppState>): void => {
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.toggleSort(cid))
+  );
 };
 export const setSortDir = (
   cid: string,
   asc: boolean,
-  updater: RefUpdater
+  stateRef: StateRef<AppState>
 ): void => {
-  updater(vpUpdate(viewParams => viewParams.setSortDir(cid, asc)));
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.setSortDir(cid, asc))
+  );
 };
-export const toggleShowRoot = (updater: RefUpdater): void => {
-  updater(
+export const toggleShowRoot = (stateRef: StateRef<AppState>): void => {
+  update(
+    stateRef,
     vpUpdate(
-      viewParams =>
+      (viewParams) =>
         viewParams.set("showRoot", !viewParams.showRoot) as ViewParams
     )
   );
@@ -99,8 +119,9 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
 
   const fieldKey = dstProps.columnListType;
   const isSortKey = fieldKey === constants.ColumnListType.SORT;
-  dstProps.stateRefUpdater(
-    vpUpdate(viewParams => {
+  update(
+    dstProps.stateRef,
+    vpUpdate((viewParams) => {
       let colList = viewParams.get(fieldKey).slice();
 
       if (isSortKey) {
@@ -156,52 +177,64 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
 
 export const setSortKey = (
   sortKey: Array<[string, boolean]>,
-  updater: RefUpdater
+  stateRef: StateRef<AppState>
 ) => {
   console.log("setSortKey: ", sortKey);
-  updater(
-    vpUpdate(viewParams => viewParams.set("sortKey", sortKey) as ViewParams)
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.set("sortKey", sortKey) as ViewParams)
   );
 };
 
 export const setColumnOrder = (
   displayColumns: Array<string>,
-  updater: RefUpdater
+  stateRef: StateRef<AppState>
 ) => {
-  updater(
+  update(
+    stateRef,
     vpUpdate(
-      viewParams =>
+      (viewParams) =>
         viewParams.set("displayColumns", displayColumns) as ViewParams
     )
   );
 };
 
-export const openPath = (path: Path, updater: RefUpdater) => {
-  updater(vpUpdate(viewParams => viewParams.openPath(path)));
+export const openPath = (path: Path, stateRef: StateRef<AppState>) => {
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.openPath(path))
+  );
 };
 
-export const closePath = (path: Path, updater: RefUpdater) => {
-  updater(vpUpdate(viewParams => viewParams.closePath(path)));
+export const closePath = (path: Path, stateRef: StateRef<AppState>) => {
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.closePath(path))
+  );
 };
 
 export const setAggFn = (
   cid: string,
   aggFn: reltab.AggFn,
-  updater: RefUpdater
+  stateRef: StateRef<AppState>
 ) => {
-  updater(vpUpdate(viewParams => viewParams.setAggFn(cid, aggFn)));
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.setAggFn(cid, aggFn))
+  );
 };
 
 export const updateViewport = (
   top: number,
   bottom: number,
-  updater: RefUpdater
+  stateRef: StateRef<AppState>
 ) => {
-  updater(
-    st =>
+  update(
+    stateRef,
+    (st) =>
       st.update(
         "viewState",
-        vs =>
+        (vs) =>
           vs.set("viewportTop", top).set("viewportBottom", bottom) as ViewState
       ) as AppState
   );
@@ -210,11 +243,12 @@ export const updateViewport = (
 export const setDefaultFormatOptions = (
   colType: string,
   opts: any,
-  updater: RefUpdater
+  stateRef: StateRef<AppState>
 ) => {
-  updater(
+  update(
+    stateRef,
     vpUpdate(
-      viewParams =>
+      (viewParams) =>
         viewParams.setIn(["defaultFormats", colType], opts) as ViewParams
     )
   );
@@ -223,24 +257,34 @@ export const setDefaultFormatOptions = (
 export const setColumnFormatOptions = (
   cid: string,
   opts: any,
-  updater: RefUpdater
+  stateRef: StateRef<AppState>
 ) => {
-  updater(vpUpdate(viewParams => viewParams.setColumnFormat(cid, opts)));
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.setColumnFormat(cid, opts))
+  );
 };
 
-export const setShowHiddenCols = (show: boolean, updater: RefUpdater) => {
-  updater(
-    vpUpdate(viewParams => viewParams.set("showHiddenCols", show) as ViewParams)
+export const setShowHiddenCols = (
+  show: boolean,
+  stateRef: StateRef<AppState>
+) => {
+  update(
+    stateRef,
+    vpUpdate(
+      (viewParams) => viewParams.set("showHiddenCols", show) as ViewParams
+    )
   );
 };
 
 export const setExportDialogOpen = (
   openState: boolean,
   saveFilename: string,
-  updater: RefUpdater
+  stateRef: StateRef<AppState>
 ) => {
-  updater(
-    s =>
+  update(
+    stateRef,
+    (s) =>
       s
         .set("exportDialogOpen", openState)
         .set("exportFilename", saveFilename) as AppState
@@ -249,21 +293,25 @@ export const setExportDialogOpen = (
 
 export const setExportProgress = (
   percentComplete: number,
-  updater: RefUpdater
+  stateRef: StateRef<AppState>
 ) => {
-  updater(s => s.set("exportPercent", percentComplete) as AppState);
+  update(stateRef, (s) => s.set("exportPercent", percentComplete) as AppState);
 };
 
-export const setFilter = (fe: reltab.FilterExp, updater: RefUpdater) => {
-  updater(
-    vpUpdate(viewParams => viewParams.set("filterExp", fe) as ViewParams)
+export const setFilter = (
+  fe: reltab.FilterExp,
+  stateRef: StateRef<AppState>
+) => {
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.set("filterExp", fe) as ViewParams)
   );
 };
 
 /*
  * TODO: dead code?
-export const ensureDistinctColVals = (colId: string, updater: RefUpdater) => {
-  updater(appState => {
+export const ensureDistinctColVals = (colId: string, stateRef: StateRef<AppState>) => {
+  update(stateRef, appState => {
     const updSet = appState.requestedColumnVals.add(colId);
     return appState.set("requestedColumnVals", updSet);
   });
