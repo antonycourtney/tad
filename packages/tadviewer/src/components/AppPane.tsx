@@ -1,7 +1,6 @@
 import * as React from "react";
 /*
 import { Sidebar } from './Sidebar';
-import { GridPane } from './GridPane';
 // import { DragDropContext } from 'react-dnd';
 // import { HTML5Backend } from 'react-dnd-html5-backend';
 */
@@ -12,11 +11,13 @@ import {
   Classes,
   ProgressBar,
 } from "@blueprintjs/core";
+import { GridPane } from "./GridPane";
 import { Footer } from "./Footer";
 import { LoadingModal } from "./LoadingModal";
 import * as actions from "../actions";
 import { AppState } from "../AppState";
 import * as oneref from "oneref";
+import { useState } from "react";
 
 /**
  * top level application pane
@@ -30,11 +31,30 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   appState,
   stateRef,
 }: AppPaneProps) => {
-  const mainContents = (
-    <div className="container-fluid full-height main-container">
-      <LoadingModal />
-    </div>
-  );
+  const [grid, setGrid] = useState<any>(null);
+  let mainContents: JSX.Element | null = null;
+
+  console.log("AppPane: ", appState.toJS());
+
+  if (appState.initialized) {
+    mainContents = (
+      <div className="center-app-pane">
+        <GridPane
+          onSlickGridCreated={(grid) => setGrid(grid)}
+          appState={appState}
+          viewState={appState.viewState}
+          stateRef={stateRef}
+        />
+        <Footer appState={appState} stateRef={stateRef} />
+      </div>
+    );
+  } else {
+    mainContents = (
+      <div className="container-fluid full-height main-container">
+        <LoadingModal />
+      </div>
+    );
+  }
   return mainContents;
 };
 

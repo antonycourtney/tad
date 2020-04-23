@@ -47,3 +47,4 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 
 [ ] Migrate aggtree tests
 [ ] Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app
+[ ] Fix clipboard write (electron based) in GridPane.tsx
