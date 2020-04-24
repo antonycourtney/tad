@@ -611,10 +611,20 @@ const tableRepReviver = (key: string, val: any): any => {
   return retVal;
 };
 
-export const deserializeTableRep = (jsonStr: string): TableRep => {
+export const deserializeTableRepStr = (jsonStr: string): TableRep => {
   const rt = JSON.parse(jsonStr, tableRepReviver);
   return rt;
 };
+
+// deserialize already decoded JSON:
+export const deserializeTableRepJson = (json: any): TableRep => {
+  const tableRepJson = json["tableRep"];
+  const schemaJson = tableRepJson["schema"];
+  const schema = new Schema(schemaJson.columns, schemaJson.columnMetadata);
+  const tableRep = new TableRep(schema, tableRepJson.rowData);
+  return tableRep;
+};
+
 type GetSchemaFunc = (tableMap: TableInfoMap, query: QueryExp) => Schema;
 type GetSchemaMap = {
   [operator: string]: GetSchemaFunc;

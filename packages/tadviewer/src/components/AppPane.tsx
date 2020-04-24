@@ -36,16 +36,20 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
 
   console.log("AppPane: ", appState.toJS());
 
-  if (appState.initialized) {
+  const { viewState } = appState;
+
+  if (appState.initialized && viewState.dataView !== null) {
     mainContents = (
-      <div className="center-app-pane">
-        <GridPane
-          onSlickGridCreated={(grid) => setGrid(grid)}
-          appState={appState}
-          viewState={appState.viewState}
-          stateRef={stateRef}
-        />
-        <Footer appState={appState} stateRef={stateRef} />
+      <div className="container-fluid full-height main-container">
+        <div className="center-app-pane">
+          <GridPane
+            onSlickGridCreated={(grid) => setGrid(grid)}
+            appState={appState}
+            viewState={appState.viewState}
+            stateRef={stateRef}
+          />
+          <Footer appState={appState} stateRef={stateRef} />
+        </div>
       </div>
     );
   } else {

@@ -45,6 +45,11 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 
 ### Punch-list items:
 
+[ ] Get rid of hard-coded testTable and testBaseUrl in webRenderMain
 [ ] Migrate aggtree tests
 [ ] Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app
 [ ] Fix clipboard write (electron based) in GridPane.tsx
+[ ] Verify that new browser-friendly export-to-csv lib works
+[ ] getTableInfo should probably move in to reltab.Connection
+[ ] Fix remoteErrorDialog in PivotRequests
+[ ] Decide what we're doing about whether DataView should ever be null in ViewState

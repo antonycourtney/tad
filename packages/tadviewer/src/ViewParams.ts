@@ -49,12 +49,12 @@ export interface FormatDefaultsProps {
 const defaultFormatDefaultProps: FormatDefaultsProps = {
   text: new TextFormatOptions(),
   integer: new NumFormatOptions({
-    decimalPlaces: 0
+    decimalPlaces: 0,
   }),
   real: new NumFormatOptions(),
   boolean: new NumFormatOptions({
-    decimalPlaces: 0
-  }) // for now...
+    decimalPlaces: 0,
+  }), // for now...
 };
 
 class FormatDefaults extends Immutable.Record(defaultFormatDefaultProps) {
@@ -63,7 +63,7 @@ class FormatDefaults extends Immutable.Record(defaultFormatDefaultProps) {
       text: new TextFormatOptions(jsObj["text"]),
       integer: new NumFormatOptions(jsObj["integer"]),
       real: new NumFormatOptions(jsObj["real"]),
-      boolean: new NumFormatOptions(jsObj["boolean"])
+      boolean: new NumFormatOptions(jsObj["boolean"]),
     };
     return new FormatDefaults(initMap);
   }
@@ -97,10 +97,10 @@ const defaultViewParamsProps: ViewParamsProps = {
   defaultFormats: new FormatDefaults(),
   columnFormats: Immutable.Map<string, FormatOptions>(),
   showHiddenCols: false,
-  filterExp: new reltab.FilterExp()
+  filterExp: new reltab.FilterExp(),
 };
 
-export class ViewParams extends Immutable.Record({})
+export class ViewParams extends Immutable.Record(defaultViewParamsProps)
   implements ViewParamsProps {
   public readonly showRoot!: boolean;
   public readonly displayColumns!: Array<string>; // array of column ids to display, in order
@@ -166,7 +166,7 @@ export class ViewParams extends Immutable.Record({})
 
   toggleSort(cid: string): ViewParams {
     const arr = this.sortKey;
-    const idx = arr.findIndex(entry => entry[0] === cid);
+    const idx = arr.findIndex((entry) => entry[0] === cid);
     let nextArr;
 
     if (idx === -1) {
@@ -183,7 +183,7 @@ export class ViewParams extends Immutable.Record({})
 
   setSortDir(cid: string, asc: boolean): ViewParams {
     const arr = this.sortKey;
-    const idx = arr.findIndex(entry => entry[0] === cid);
+    const idx = arr.findIndex((entry) => entry[0] === cid);
     let nextArr;
 
     if (idx === -1) {

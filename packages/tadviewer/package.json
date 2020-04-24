@@ -37,6 +37,7 @@
     "immutable": "^3.8.2",
     "isomorphic-fetch": "^2.2.1",
     "jsesc": "^2.5.2",
+    "loglevel": "^1.6.8",
     "oneref": "^0.7.0",
     "react": "^16.13.1",
     "react-addons-css-transition-group": "^15.6.2",

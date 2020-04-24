@@ -171,6 +171,7 @@ const open = (filename: string, mode: number): Promise<sqlite3.Database> => {
 };
 
 const init = async (dbfile, options: Object = {}): Promise<Connection> => {
+  log.setLevel(log.levels.DEBUG);
   const db = await open(dbfile, sqlite3.OPEN_READWRITE);
   const ctx = new SqliteContext(db, options);
   return ctx;
@@ -182,6 +183,7 @@ export const getContext = (
   dbfile: string,
   options: Object = {}
 ): Promise<Connection> => {
+  console.log("getContext: ", dbfile, options);
   if (!ctxPromise) {
     ctxPromise = init(dbfile, options);
   }

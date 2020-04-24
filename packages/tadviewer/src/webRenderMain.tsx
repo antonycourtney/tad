@@ -10,10 +10,13 @@ import { AppPane, AppPaneBaseProps } from "./components/AppPane";
 import { PivotRequester } from "./PivotRequester";
 import { AppState } from "./AppState";
 import { ViewParams } from "./ViewParams";
-import * as reltab from "reltab"; // eslint-disable-line
-
+import * as reltab from "reltab";
+import log from "loglevel";
 // import * as reltabElectron from "./reltab-electron";
 import * as actions from "./actions";
+import { ReltabWebConnection } from "./reltabWebClient";
+const testBaseUrl = "http://localhost:9000";
+const testTable = "movie_metadata";
 
 // was: import * as styles from "../less/app.less";
 
@@ -47,7 +50,8 @@ const openParams = {
   srcFile: null,
 };
 
-const init = () => {
+const init = async () => {
+  log.setLevel(log.levels.DEBUG);
   let targetPath: string = "";
   let srcFile = null;
   let viewParams: ViewParams | null = null;
@@ -74,21 +78,25 @@ const init = () => {
 
   ReactDOM.render(<App />, document.getElementById("app"));
 
+  const rtc = new ReltabWebConnection(testBaseUrl);
+
+  const ti = await rtc.getTableInfo(testTable);
+  const tableName = ti.tableName;
+  const baseQuery = reltab.tableQuery(tableName);
+  // const rtc = reltabElectron.init(); // module local to keep alive:
+
+  var pivotRequester: PivotRequester | undefined | null = null;
+
+  await actions.initAppState(
+    rtc,
+    ti.tableName,
+    baseQuery,
+    viewParams,
+    stateRef
+  );
+  pivotRequester = new PivotRequester(stateRef);
+
   /*
-  // and kick off main process initialization:
-  initMainProcess(targetPath, srcFile)
-    .then((ti) => {
-      const tableName = ti.tableName;
-      const baseQuery = reltab.tableQuery(tableName);
-      const rtc = reltabElectron.init(); // module local to keep alive:
-
-      var pivotRequester: PivotRequester | undefined | null = null; // eslint-disable-line
-
-      actions
-        .initAppState(rtc, ti.tableName, baseQuery, viewParams, updater)
-        .then(() => {
-          pivotRequester = new PivotRequester(stateRef); // eslint-disable-line
-
           ipcRenderer.on("request-serialize-app-state", (event, req) => {
             console.log("got request-serialize-app-state: ", req);
             const { requestId } = req;

@@ -13,7 +13,7 @@ import * as paging from "./paging";
 import * as util from "./util";
 import { ViewState } from "./ViewState";
 
-const remoteErrorDialog = require("electron").remote.getGlobal("errorDialog");
+// const remoteErrorDialog = require("electron").remote.getGlobal("errorDialog");
 /**
  * Use ViewParams to construct a PagedDataView for use with
  * SlickGrid from reltab.TableRep
@@ -63,19 +63,19 @@ const mkDataView = (
   const outSchema = tableData.schema
     .extend("_id", {
       type: "integer",
-      displayName: "_id"
+      displayName: "_id",
     })
     .extend("_parentId", {
       type: "integer",
-      displayName: "_parentId"
+      displayName: "_parentId",
     })
     .extend("_isOpen", {
       type: "integer",
-      displayName: "_isOpen"
+      displayName: "_isOpen",
     })
     .extend("_isLeaf", {
       type: "integer",
-      displayName: "_isLeaf"
+      displayName: "_isLeaf",
     });
   const dataView = new PagedDataView(outSchema, rowCount, offset, rowData);
   return dataView;
@@ -166,7 +166,7 @@ const requestQueryView = async (
     query: treeQuery,
     baseRowCount,
     filterRowCount,
-    rowCount
+    rowCount,
   });
   return ret;
 };
@@ -216,7 +216,7 @@ export class PivotRequester {
     this.pendingViewParams = null;
     this.pendingOffset = 0;
     this.pendingLimit = 0;
-    addStateChangeListener(stateRef, _ => {
+    addStateChangeListener(stateRef, (_) => {
       this.onStateChange(stateRef);
     });
 
@@ -246,16 +246,16 @@ export class PivotRequester {
       limit
     );
     this.pendingDataRequest = dreq;
-    dreq.then(dataView => {
+    dreq.then((dataView) => {
       this.pendingDataRequest = null;
       oneref.update(
         stateRef,
-        appState =>
+        (appState) =>
           appState.update(
             "viewState",
             (vs: ViewState) =>
               vs
-                .update("loadingTimer", lt => lt.stop())
+                .update("loadingTimer", (lt) => lt.stop())
                 .set("dataView", dataView) as ViewState
           ) as AppState
       );
@@ -270,7 +270,11 @@ export class PivotRequester {
     const viewParams = viewState.viewParams;
 
     if (viewParams !== this.pendingViewParams) {
-      // console.log('onStateChange: requesting new query: ', viewState, this.pendingViewParams)
+      console.log(
+        "onStateChange: requesting new query: ",
+        viewState,
+        this.pendingViewParams
+      );
       // Might be nice to cancel any pending request here...
       // failing that we could calculate additional pages we need
       // if viewParams are same and only page range differs.
@@ -284,11 +288,11 @@ export class PivotRequester {
       );
       this.pendingQueryRequest = qreq;
       this.pendingDataRequest = qreq
-        .then(queryView => {
+        .then((queryView) => {
           this.currentQueryView = queryView;
           oneref.update(
             stateRef,
-            appState =>
+            (appState) =>
               appState.update("viewState", (vs: ViewState) => {
                 /*
                  * queryView.rowCount may have changed since last data request;
@@ -307,35 +311,35 @@ export class PivotRequester {
           );
           return this.sendDataRequest(stateRef, queryView);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(
             "PivotRequester: caught error updating view: ",
             err.message,
             err.stack
           );
-          remoteErrorDialog("Error constructing view", err.message); // Now let's try and restore to previous view params:
-
+          // TODO:
+          // remoteErrorDialog("Error constructing view", err.message); // Now let's try and restore to previous view params:
           oneref.update(
             stateRef,
-            appState =>
+            (appState) =>
               appState.update(
                 "viewState",
                 (vs: ViewState) =>
                   vs
-                    .update("loadingTimer", lt => lt.stop())
+                    .update("loadingTimer", (lt) => lt.stop())
                     .set("viewParams", prevViewParams) as ViewState
               ) as AppState
           );
         });
       const ltUpdater = util.pathUpdater(stateRef, [
         "viewState",
-        "loadingTimer"
+        "loadingTimer",
       ]);
       const nextAppState = appState.updateIn(
         ["viewState", "loadingTimer"],
-        lt => lt.run(200, ltUpdater)
+        (lt) => lt.run(200, ltUpdater)
       ) as AppState;
-      oneref.update(stateRef, _ => nextAppState);
+      oneref.update(stateRef, (_) => nextAppState);
     } else {
       if (
         this.currentQueryView !== null &&

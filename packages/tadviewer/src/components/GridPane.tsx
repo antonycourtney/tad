@@ -19,6 +19,7 @@ import { AppState } from "../AppState";
 import { ViewState } from "../ViewState";
 import { StateRef } from "oneref";
 import { useState } from "react";
+import log from "loglevel";
 
 const { Slick } = SlickGrid;
 const { Plugins } = SlickGrid as any;
@@ -104,7 +105,7 @@ const getColWidth = (dataView: PagedDataView, cnm: string) => {
 
 type ColWidthMap = { [cid: string]: number };
 
-function getInitialColWidthsMap(dataView: any): ColWidthMap {
+function getInitialColWidthsMap(dataView: PagedDataView): ColWidthMap {
   // let's approximate the column width:
   var colWidths: ColWidthMap = {};
   var nRows = dataView.getLength();
@@ -379,7 +380,7 @@ const createGridState = (
   viewState: ViewState
 ): GridState => {
   const { viewParams, dataView } = viewState;
-  const colWidthsMap = getInitialColWidthsMap(dataView);
+  const colWidthsMap = getInitialColWidthsMap(dataView!);
   const slickColMap = mkSlickColMap(dataView!.schema, viewParams, colWidthsMap);
   const gs = { grid: null, colWidthsMap, slickColMap };
 
@@ -397,6 +398,8 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   const [gridState, setGridState] = useState<GridState | null>(null);
   const [prevDataView, setPrevDataView] = useState<PagedDataView | null>(null);
 
+  log.debug("RawGridPane: ", appState, viewState);
+
   React.useEffect(() => {
     let gs = gridState;
     const dataView = viewState.dataView;
@@ -409,8 +412,11 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
       setGridState(gs);
     }
     if (dataView !== prevDataView && dataView != null) {
+      log.debug("RawGridPane: updating grid");
       updateGrid(gs, viewState);
       setPrevDataView(dataView);
+    } else {
+      log.debug("RawGridPane: no view change, skipping grid update");
     }
   });
 
@@ -453,7 +459,8 @@ const shouldGridPaneUpdate = (oldProps: any, nextProps: any): boolean => {
   // shallow conversion
   const vs = _.omitBy(viewState.toObject(), omitPred);
   const nvs = _.omitBy(nextViewState.toObject(), omitPred);
-  const ret = !util.shallowEqual(vs, nvs);
+  const ret = util.shallowEqual(vs, nvs);
+  log.debug("shouldGridPaneUpdate: ", ret);
   return ret;
 };
 

@@ -23,7 +23,11 @@ const optionDefinitions = [
 ];
 
 const initSqlite = async (csvFilePath: string): Promise<SqliteContext> => {
-  const ctx = (await reltabSqlite.getContext(":memory:")) as SqliteContext;
+  const rtOptions: any = { showQueries: true };
+  const ctx = (await reltabSqlite.getContext(
+    ":memory:",
+    rtOptions
+  )) as SqliteContext;
 
   const md = await reltabSqlite.fastImport(ctx.db, csvFilePath);
   const ti = reltabSqlite.mkTableInfo(md);
@@ -53,6 +57,29 @@ const getTargetPath = (
     targetPath = filePath;
   }
   return targetPath;
+};
+
+const handleEvalQuery = async (
+  rtc: reltab.Connection,
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    log.info("POST evalQuery: got request: ", req.body);
+    const queryReq = req.body;
+    const hrstart = process.hrtime();
+    const tableRep = await (queryReq.offset !== undefined
+      ? rtc.evalQuery(queryReq.query, queryReq.offset, queryReq.limit)
+      : rtc.evalQuery(queryReq.query));
+    const [es, ens] = process.hrtime(hrstart);
+    log.info("evalQuery: evaluated query in %ds %dms", es, ens / 1e6);
+    const resObj = { tableRep };
+    log.info("sending response: ", resObj);
+    res.json(resObj);
+  } catch (err) {
+    log.error("evalQuery: ", err, err.stack);
+    // TODO: return an error
+  }
 };
 
 const handleGetRowCount = async (
@@ -117,6 +144,8 @@ async function main() {
   app.get("/", rootRedirect);
 
   app.use(express.static("./public"));
+
+  app.post("/tadweb/evalQuery", (req, res) => handleEvalQuery(dbCtx, req, res));
 
   app.post("/tadweb/getRowCount", (req, res) =>
     handleGetRowCount(dbCtx, req, res)
