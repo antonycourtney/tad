@@ -1,26 +1,22 @@
-import React from "react";
-export class IndeterminateCheckbox extends React.Component {
-  componentDidMount() {
-    this.el.indeterminate = this.props.indeterminate;
-  }
+import React, { useRef, useLayoutEffect } from "react";
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.indeterminate !== this.props.indeterminate) {
-      this.el.indeterminate = this.props.indeterminate;
-    }
-  }
-
-  render() {
-    const { indeterminate, ...attrs } = this.props; // eslint-disable-line
-
-    return (
-      <input
-        ref={el => {
-          this.el = el;
-        }}
-        type="checkbox"
-        {...attrs}
-      />
-    );
-  }
+export interface IndeterminateCheckboxProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
+  indeterminate: boolean;
 }
+
+export const IndeterminateCheckbox: React.FC<IndeterminateCheckboxProps> = (
+  props
+) => {
+  const checkboxRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const component: any = checkboxRef.current;
+    if (component !== null) {
+      component.indeterminate = props.indeterminate;
+    }
+  });
+
+  const { indeterminate, ...attrs } = props;
+  return <input ref={checkboxRef} type="checkbox" {...attrs} />;
+};

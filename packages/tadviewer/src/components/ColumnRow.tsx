@@ -1,75 +1,125 @@
+import * as React from "react";
 
-import * as React from 'react';
-import { DragItemTypes } from './constants';
-import { DragSource, DropTarget } from 'react-dnd';
-import * as actions from '../actions';
+import { DragItemType, DragItemTypes, ColumnListType } from "./defs";
+import {
+  DragSource,
+  DropTarget,
+  ConnectDragSource,
+  ConnectDropTarget,
+  DragSourceConnector,
+  DragSourceMonitor,
+  DropTargetMonitor,
+  DropTargetConnector,
+} from "react-dnd";
+import * as actions from "../actions";
+import * as reltab from "reltab";
+import { StateRef } from "oneref";
+import { Schema } from "reltab";
+import { AppState } from "../AppState";
+
+type ColumnId = string;
+export type ColumnRowData = [string, boolean] | ColumnId;
+export type ColumnRowPairFormatter = (
+  schema: Schema,
+  row: [string, boolean]
+) => JSX.Element[];
+export type ColumnRowColumnIdFormatter = (
+  schema: Schema,
+  cid: ColumnId
+) => JSX.Element[];
+export type ColumnRowFormatter =
+  | ColumnRowPairFormatter
+  | ColumnRowColumnIdFormatter;
+
+export interface ColumnRowProps {
+  columnListType: ColumnListType;
+  schema: reltab.Schema;
+  rowFormatter?: ColumnRowFormatter;
+  rowData: ColumnRowData;
+  stateRef: StateRef<AppState>;
+
+  connectDragSource: ConnectDragSource;
+  connectDropTarget: ConnectDropTarget;
+  isOver: boolean;
+}
+
 const colItemSource = {
-  beginDrag(props) {
-    console.log('beginDrag: ', props);
+  beginDrag(props: ColumnRowProps) {
+    console.log("beginDrag: ", props);
     return {
       columnListType: props.columnListType,
       rowData: props.rowData,
-      stateRefUpdater: props.stateRefUpdater
+      stateRef: props.stateRef,
     };
-  }
+  },
+};
 
-}; // collect for use as drag source:
-
-function collect(connect, monitor) {
+// collect for use as drag source:
+function collect(connect: DragSourceConnector, monitor: DragSourceMonitor) {
   return {
     connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging()
-  };
-} // for use as drop target:
-
-
-const colItemTarget = {
-  drop(props, monitor, component) {
-    const sourceItem = monitor.getItem();
-    console.log('drop: ', props, sourceItem);
-    actions.reorderColumnList(props, sourceItem);
-  }
-
-}; // coleect function for drop target:
-
-function collectDropTarget(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver()
+    isDragging: monitor.isDragging(),
   };
 }
+
+// for use as drop target:
+const colItemTarget = {
+  drop(props: ColumnRowProps, monitor: DropTargetMonitor) {
+    const sourceItem = monitor.getItem();
+    console.log("drop: ", props, sourceItem);
+    actions.reorderColumnList(props, sourceItem);
+  },
+};
+
+function collectDropTarget(
+  connect: DropTargetConnector,
+  monitor: DropTargetMonitor
+) {
+  return {
+    connectDropTarget: connect.dropTarget(),
+    isOver: monitor.isOver(),
+  };
+}
+
 /*
  * A single column row in a column list
  */
+const RawColumnRow: React.FC<ColumnRowProps> = ({
+  columnListType,
+  schema,
+  rowFormatter,
+  rowData,
+  stateRef,
+  connectDragSource,
+  connectDropTarget,
+  isOver,
+}) => {
+  const dragHoverClass = isOver ? "" : ""; // TODO
 
+  let rowFmt: JSX.Element[];
 
-class ColumnRow extends React.Component {
-  render() {
-    const {
-      connectDragSource,
-      connectDropTarget,
-      isOver
-    } = this.props;
-    const dragHoverClass = isOver ? '' : ''; // TODO
-
-    const schema = this.props.schema;
-    let rowFmt;
-
-    if (this.props.rowFormatter) {
-      rowFmt = this.props.rowFormatter(schema, this.props.rowData);
-    } else {
-      const columnId = this.props.rowData;
-      const displayName = schema.displayName(columnId);
-      rowFmt = <td className='col-colName'>{displayName}</td>;
-    }
-
-    return connectDropTarget(connectDragSource(<tr className={dragHoverClass}>
-        {rowFmt}
-      </tr>));
+  if (rowFormatter) {
+    rowFmt = rowFormatter(schema, rowData as any);
+  } else {
+    const columnId = rowData;
+    const colIdStr = columnId as string;
+    const displayName = schema.displayName(columnId as string);
+    rowFmt = [
+      <td key={"dpy-" + colIdStr} className="col-colName">
+        {displayName}
+      </td>,
+    ];
   }
 
-}
+  return connectDropTarget(
+    connectDragSource(<tr className={dragHoverClass}>{rowFmt}</tr>)
+  );
+};
 
-const DropWrap = DropTarget(DragItemTypes.COLUMN_ID, colItemTarget, collectDropTarget);
+const DropWrap = DropTarget(
+  DragItemTypes.COLUMN_ID,
+  colItemTarget,
+  collectDropTarget
+);
 const DragWrap = DragSource(DragItemTypes.COLUMN_ID, colItemSource, collect);
-export DropWrap(DragWrap(ColumnRow));
+export const ColumnRow = DropWrap(DragWrap(RawColumnRow));

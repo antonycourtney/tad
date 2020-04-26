@@ -1,21 +1,31 @@
 import * as React from "react";
 import { ColumnList } from "./ColumnList";
-import { ColumnListType } from "./constants";
-export class PivotOrderPanel extends React.Component {
-  render() {
-    const { viewParams, stateRefUpdater } = this.props;
-    return (
-      <div className="ui-block">
-        <h6>
-          Pivot Columns <small className="ui-subtext">(drag to reorder)</small>
-        </h6>
-        <ColumnList
-          schema={this.props.baseSchema}
-          columnListType={ColumnListType.PIVOT}
-          items={viewParams.vpivots}
-          stateRefUpdater={stateRefUpdater}
-        />
-      </div>
-    );
-  }
+import { ColumnListTypes } from "./defs";
+import * as reltab from "reltab";
+import { ViewParams } from "../ViewParams";
+import { StateRef } from "oneref";
+import { AppState } from "../AppState";
+
+export interface PivotOrderPanelProps {
+  schema: reltab.Schema;
+  viewParams: ViewParams;
+  stateRef: StateRef<AppState>;
 }
+
+export const PivotOrderPanel: React.FC<PivotOrderPanelProps> = ({
+  schema,
+  viewParams,
+  stateRef,
+}) => (
+  <div className="ui-block">
+    <h6>
+      Pivot Columns <small className="ui-subtext">(drag to reorder)</small>
+    </h6>
+    <ColumnList
+      schema={schema}
+      columnListType={ColumnListTypes.PIVOT}
+      items={viewParams.vpivots}
+      stateRef={stateRef}
+    />
+  </div>
+);

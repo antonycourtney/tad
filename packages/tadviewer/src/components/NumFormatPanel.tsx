@@ -1,46 +1,42 @@
 import * as React from "react";
 import { Checkbox } from "@blueprintjs/core";
-export class NumFormatPanel extends React.Component {
-  state: {
-    decimalsText: string;
+import { NumFormatOptions } from "../NumFormatOptions";
+
+export interface NumFormatPanelProps {
+  opts: NumFormatOptions;
+  onChange?: (opts: NumFormatOptions) => void;
+}
+
+export const NumFormatPanel: React.FC<NumFormatPanelProps> = ({
+  opts,
+  onChange,
+}) => {
+  const decimalsStr = opts.decimalPlaces ? opts.decimalPlaces.toString() : "";
+  const [decimalsText, setDecimalsText] = React.useState(decimalsStr);
+
+  const handleCommasChange = (event: any) => {
+    const checkVal = event.target.checked;
+    const nextOpts = opts.set("commas", checkVal) as NumFormatOptions;
+
+    if (onChange) {
+      onChange(nextOpts);
+    }
   };
 
-  constructor(props: any) {
-    super(props);
-    const opts = this.props.value;
-    this.state = {
-      decimalsText: opts.decimalPlaces.toString()
-    };
-  }
-
-  handleCommasChange(event: any) {
-    const opts = this.props.value;
+  const handleExponentialChange = (event: any) => {
     const checkVal = event.target.checked;
-    const nextOpts = opts.set("commas", checkVal);
+    const nextOpts = opts.set("exponential", checkVal) as NumFormatOptions;
 
-    if (this.props.onChange) {
-      this.props.onChange(nextOpts);
+    if (onChange) {
+      onChange(nextOpts);
     }
-  }
+  };
 
-  handleExponentialChange(event: any) {
-    const opts = this.props.value;
-    const checkVal = event.target.checked;
-    const nextOpts = opts.set("exponential", checkVal);
-
-    if (this.props.onChange) {
-      this.props.onChange(nextOpts);
-    }
-  }
-
-  handleDecimalsChange(event: any) {
-    const opts = this.props.value;
+  const handleDecimalsChange = (event: any) => {
     const nextText = event.target.value;
-    this.setState({
-      decimalsText: nextText
-    });
+    setDecimalsText(nextText);
     const decVal = Number.parseInt(nextText);
-    let nextDec;
+    let nextDec: number | null;
 
     if (nextText.length === 0 || isNaN(decVal) || decVal < 0 || decVal > 10) {
       nextDec = null;
@@ -48,17 +44,21 @@ export class NumFormatPanel extends React.Component {
       nextDec = decVal;
     }
 
-    const nextOpts = opts.set("decimalPlaces", nextDec); // explicitly check for value change
+    const nextOpts = opts.set("decimalPlaces", nextDec) as NumFormatOptions; // explicitly check for value change
 
-    if (this.props.onChange && decVal !== opts.decimalPlaces) {
-      this.props.onChange(nextOpts);
+    if (onChange && decVal !== opts.decimalPlaces) {
+      onChange(nextOpts);
     }
-  } // slightly evil way to handle this.
+  };
+
+  // slightly evil way to handle this.
   // Necessary because the same format panel object can be re-used with different props
   // when targeting a different column type or column
-
-  componentWillReceiveProps(nextProps: any) {
-    const opts = this.props.value;
+  /*
+   * AC, 4/25/20: Not clear that this is still necessary; it doesn't map nicely to hooks at all.
+   * Let's validate / debug.
+  useEffect(() => {
+    const opts = value;
     const nextOpts = nextProps.value;
     const nextDec = nextOpts.decimalPlaces;
 
@@ -68,35 +68,33 @@ export class NumFormatPanel extends React.Component {
         decimalsText: decStr
       });
     }
-  }
+  });
+  */
 
-  render() {
-    const opts = this.props.value;
-    return (
-      <div className="format-subpanel num-format-panel">
-        <Checkbox
-          className="bp3-condensed"
-          checked={opts.commas}
-          disabled={opts.exponential}
-          onChange={event => this.handleCommasChange(event)}
-          label="Use (,) as 1000s Separator"
+  return (
+    <div className="format-subpanel num-format-panel">
+      <Checkbox
+        className="bp3-condensed"
+        checked={opts.commas}
+        disabled={opts.exponential}
+        onChange={(event) => handleCommasChange(event)}
+        label="Use (,) as 1000s Separator"
+      />
+      <label className="bp3-label bp3-inline">
+        Decimal Places
+        <input
+          className="bp3-input"
+          type="text"
+          value={decimalsText}
+          onChange={(event) => handleDecimalsChange(event)}
         />
-        <label className="bp3-label bp3-inline">
-          Decimal Places
-          <input
-            className="bp3-input"
-            type="text"
-            value={this.state.decimalsText}
-            onChange={event => this.handleDecimalsChange(event)}
-          />
-        </label>
-        <Checkbox
-          className="bp3-condensed"
-          checked={opts.exponential}
-          onChange={event => this.handleExponentialChange(event)}
-          label="Use Scientific (exponential) Notation"
-        />
-      </div>
-    );
-  }
-}
+      </label>
+      <Checkbox
+        className="bp3-condensed"
+        checked={opts.exponential}
+        onChange={(event) => handleExponentialChange(event)}
+        label="Use Scientific (exponential) Notation"
+      />
+    </div>
+  );
+};

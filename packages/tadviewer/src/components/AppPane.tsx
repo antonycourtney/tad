@@ -1,9 +1,7 @@
 import * as React from "react";
-/*
-import { Sidebar } from './Sidebar';
-// import { DragDropContext } from 'react-dnd';
-// import { HTML5Backend } from 'react-dnd-html5-backend';
-*/
+import { Sidebar } from "./Sidebar";
+import { DndProvider } from "react-dnd";
+import Backend from "react-dnd-html5-backend";
 import {
   FocusStyleManager,
   Button,
@@ -41,15 +39,22 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   if (appState.initialized && viewState.dataView !== null) {
     mainContents = (
       <div className="container-fluid full-height main-container">
-        <div className="center-app-pane">
-          <GridPane
-            onSlickGridCreated={(grid) => setGrid(grid)}
-            appState={appState}
-            viewState={appState.viewState}
+        <DndProvider backend={Backend}>
+          <Sidebar
+            schema={appState.baseSchema}
+            viewParams={viewState.viewParams}
             stateRef={stateRef}
           />
-          <Footer appState={appState} stateRef={stateRef} />
-        </div>
+          <div className="center-app-pane">
+            <GridPane
+              onSlickGridCreated={(grid) => setGrid(grid)}
+              appState={appState}
+              viewState={appState.viewState}
+              stateRef={stateRef}
+            />
+            <Footer appState={appState} stateRef={stateRef} />
+          </div>
+        </DndProvider>
       </div>
     );
   } else {
@@ -105,7 +110,7 @@ class AppPane extends React.Component {
   }
 
   handleExportDialogClose() {
-    actions.setExportDialogOpen(false, '', this.props.stateRefUpdater);
+    actions.setExportDialogOpen(false, '', this.props.stateRef);
   }
 
   render() {
@@ -128,10 +133,10 @@ class AppPane extends React.Component {
       }
 
       mainContents = <div className='container-fluid full-height main-container'>
-          <Sidebar baseSchema={appState.baseSchema} viewParams={viewParams} stateRefUpdater={this.props.stateRefUpdater} />
+          <Sidebar baseSchema={appState.baseSchema} viewParams={viewParams} stateRef={this.props.stateRef} />
           <div className='center-app-pane'>
-            <GridPane onSlickGridCreated={grid => this.handleSlickGridCreated(grid)} appState={appState} viewState={viewState} stateRefUpdater={this.props.stateRefUpdater} />
-            <Footer appState={appState} viewState={viewState} stateRefUpdater={this.props.stateRefUpdater} />
+            <GridPane onSlickGridCreated={grid => this.handleSlickGridCreated(grid)} appState={appState} viewState={viewState} stateRef={this.props.stateRef} />
+            <Footer appState={appState} viewState={viewState} stateRef={this.props.stateRef} />
           </div>
           <Dialog title='Export Filtered CSV' onClose={() => this.handleExportDialogClose()} isOpen={appState.exportDialogOpen}>
             <div className={Classes.DIALOG_BODY}>

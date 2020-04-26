@@ -1,22 +1,34 @@
 import * as React from "react";
 import { ColumnList } from "./ColumnList";
-import { ColumnListType } from "./constants";
-export class DisplayOrderPanel extends React.Component {
-  render() {
-    const { viewParams, stateRefUpdater } = this.props;
-    return (
-      <div className="ui-block">
-        <h6>
-          Displayed Columns{" "}
-          <small className="ui-subtext">(drag to reorder)</small>
-        </h6>
-        <ColumnList
-          schema={this.props.baseSchema}
-          columnListType={ColumnListType.DISPLAY}
-          items={viewParams.displayColumns}
-          stateRefUpdater={stateRefUpdater}
-        />
-      </div>
-    );
-  }
+import { ColumnListTypes } from "./defs";
+import * as reltab from "reltab";
+import { ViewParams } from "../ViewParams";
+import { StateRef } from "oneref";
+import { AppState } from "../AppState";
+
+export interface DisplayOrderPanelProps {
+  schema: reltab.Schema;
+  viewParams: ViewParams;
+  stateRef: StateRef<AppState>;
 }
+
+export const DisplayOrderPanel: React.FC<DisplayOrderPanelProps> = ({
+  schema,
+  viewParams,
+  stateRef,
+}) => {
+  return (
+    <div className="ui-block">
+      <h6>
+        Displayed Columns{" "}
+        <small className="ui-subtext">(drag to reorder)</small>
+      </h6>
+      <ColumnList
+        schema={schema}
+        columnListType={ColumnListTypes.DISPLAY}
+        items={viewParams.displayColumns}
+        stateRef={stateRef}
+      />
+    </div>
+  );
+};

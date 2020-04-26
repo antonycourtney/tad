@@ -2,7 +2,7 @@ import { ViewParams } from "./ViewParams";
 import { ViewState } from "./ViewState";
 import { AppState } from "./AppState";
 import * as reltab from "reltab";
-import * as constants from "./components/constants";
+import { ColumnListTypes } from "./components/defs";
 import { Path, PathTree } from "aggtree";
 import * as aggtree from "aggtree";
 import { StateRef, update } from "oneref";
@@ -118,7 +118,7 @@ export const reorderColumnList = (dstProps: any, srcProps: any) => {
   }
 
   const fieldKey = dstProps.columnListType;
-  const isSortKey = fieldKey === constants.ColumnListType.SORT;
+  const isSortKey = fieldKey === ColumnListTypes.SORT;
   update(
     dstProps.stateRef,
     vpUpdate((viewParams) => {

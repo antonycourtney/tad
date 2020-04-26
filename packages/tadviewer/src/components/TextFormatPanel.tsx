@@ -1,27 +1,36 @@
 import * as React from "react";
 import { Checkbox } from "@blueprintjs/core";
-export class TextFormatPanel extends React.Component {
-  handleRenderHyperlinksChange(event: any) {
-    const opts = this.props.value;
-    const checkVal = event.target.checked;
-    const nextOpts = opts.set("urlsAsHyperlinks", checkVal);
+import { TextFormatOptions } from "../TextFormatOptions";
 
-    if (this.props.onChange) {
-      this.props.onChange(nextOpts);
-    }
-  }
-
-  render() {
-    const opts = this.props.value;
-    return (
-      <div className="format-subpanel">
-        <Checkbox
-          className="bp3-condensed"
-          checked={opts.urlsAsHyperlinks}
-          onChange={event => this.handleRenderHyperlinksChange(event)}
-          label="Render URLs as Hyperlinks"
-        />
-      </div>
-    );
-  }
+export interface TextFormatPanelProps {
+  opts: TextFormatOptions;
+  onChange?: (opts: TextFormatOptions) => void;
 }
+
+export const TextFormatPanel: React.FC<TextFormatPanelProps> = ({
+  opts,
+  onChange,
+}) => {
+  const handleRenderHyperlinksChange = (event: any) => {
+    const checkVal = event.target.checked;
+    const nextOpts = opts.set(
+      "urlsAsHyperlinks",
+      checkVal
+    ) as TextFormatOptions;
+
+    if (onChange) {
+      onChange(nextOpts);
+    }
+  };
+
+  return (
+    <div className="format-subpanel">
+      <Checkbox
+        className="bp3-condensed"
+        checked={opts.urlsAsHyperlinks}
+        onChange={(event) => handleRenderHyperlinksChange(event)}
+        label="Render URLs as Hyperlinks"
+      />
+    </div>
+  );
+};

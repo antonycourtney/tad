@@ -411,13 +411,16 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
       gs.grid.resizeCanvas();
       setGridState(gs);
     }
-    if (dataView !== prevDataView && dataView != null) {
+    log.debug("GridPane effect: ", prevDataView, dataView);
+    // if (dataView !== prevDataView && dataView != null) {
+    if (dataView != null) {
       log.debug("RawGridPane: updating grid");
       updateGrid(gs, viewState);
       setPrevDataView(dataView);
-    } else {
-      log.debug("RawGridPane: no view change, skipping grid update");
     }
+    // } else {
+    //   log.debug("RawGridPane: no view change, skipping grid update");
+    // }
   });
 
   const handleWindowResize = (e: any) => {
@@ -460,7 +463,6 @@ const shouldGridPaneUpdate = (oldProps: any, nextProps: any): boolean => {
   const vs = _.omitBy(viewState.toObject(), omitPred);
   const nvs = _.omitBy(nextViewState.toObject(), omitPred);
   const ret = util.shallowEqual(vs, nvs);
-  log.debug("shouldGridPaneUpdate: ", ret);
   return ret;
 };
 

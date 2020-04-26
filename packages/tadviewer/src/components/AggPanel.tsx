@@ -1,11 +1,13 @@
 import * as React from "react";
 import { ColumnList } from "./ColumnList";
-import { ColumnListType } from "./constants";
+import { ColumnListType, ColumnListTypes } from "./defs";
 import { aggFns, Schema } from "reltab";
 import { AggFn } from "reltab"; // eslint-disable-line
 
 import { ViewParams } from "../ViewParams";
 import * as actions from "../actions";
+import { StateRef } from "oneref";
+import { AppState } from "../AppState";
 
 const aggSelect = (
   viewParams: ViewParams,
@@ -45,45 +47,45 @@ const aggSelect = (
   );
 };
 
-const aggRowFormatter = (viewParams: ViewParams, stateRefUpdater: any) => (
+const aggRowFormatter = (viewParams: ViewParams, stateRef: any) => (
   schema: Schema,
   cid: string
-) => {
+): JSX.Element[] => {
   const displayName = schema.displayName(cid);
-  const select = aggSelect(viewParams, schema, cid, stateRefUpdater);
+  const select = aggSelect(viewParams, schema, cid, stateRef);
   return [
     <td key={cid} className="col-colName">
       {displayName}
     </td>,
     <td key={"aggFn-" + cid} className="aggFn">
       {select}
-    </td>
+    </td>,
   ];
 };
 
 export interface AggPanelProps {
   schema: Schema;
   viewParams: ViewParams;
-  stateRef: StateRef<TabManagerState>;
+  stateRef: StateRef<AppState>;
 }
 
-export class AggPanel extends React.Component {
-  render() {
-    const { schema, viewParams, stateRefUpdater } = this.props; //eslint-disable-line
-
-    const columnIds = schema.sortedColumns();
-    return (
-      <div className="ui-block">
-        <h6>Aggregation Functions</h6>
-        <ColumnList
-          schema={this.props.schema}
-          columnListType={ColumnListType.AGG}
-          headerLabels={["Agg Fn"]}
-          items={columnIds}
-          rowFormatter={aggRowFormatter(viewParams, stateRefUpdater)}
-          stateRefUpdater={stateRefUpdater}
-        />
-      </div>
-    );
-  }
-}
+export const AggPanel: React.FC<AggPanelProps> = ({
+  schema,
+  viewParams,
+  stateRef,
+}) => {
+  const columnIds = schema.sortedColumns();
+  return (
+    <div className="ui-block">
+      <h6>Aggregation Functions</h6>
+      <ColumnList
+        schema={schema}
+        columnListType={ColumnListTypes.AGG}
+        headerLabels={["Agg Fn"]}
+        items={columnIds}
+        rowFormatter={aggRowFormatter(viewParams, stateRef)}
+        stateRef={stateRef}
+      />
+    </div>
+  );
+};

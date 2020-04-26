@@ -53,3 +53,5 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 [ ] getTableInfo should probably move in to reltab.Connection
 [ ] Fix remoteErrorDialog in PivotRequests
 [ ] Decide what we're doing about whether DataView should ever be null in ViewState
+[ ] Validate that we can change decimal places in different columns; comment in NumFormatPanel suggests panel
+can be re-used in strange ways.
