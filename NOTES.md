@@ -47,7 +47,6 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 
 [ ] Get rid of hard-coded testTable and testBaseUrl in webRenderMain
 [ ] Migrate aggtree tests
-[ ] Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app
 [ ] Fix clipboard write (electron based) in GridPane.tsx
 [ ] Verify that new browser-friendly export-to-csv lib works
 [ ] getTableInfo should probably move in to reltab.Connection
@@ -55,3 +54,6 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 [ ] Decide what we're doing about whether DataView should ever be null in ViewState
 [ ] Validate that we can change decimal places in different columns; comment in NumFormatPanel suggests panel
 can be re-used in strange ways.
+[ ] Deal gracefully with network errors
+[ ] Electron app: port various event handlers from renderMain
+[ ] Electron app: Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app

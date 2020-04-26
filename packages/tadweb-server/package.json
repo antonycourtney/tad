@@ -2,12 +2,12 @@
   "name": "tadweb-server",
   "version": "0.9.1",
   "description": "ExpressJS based web server for Tad",
-  "main": "dist/start.js",
+  "main": "dist/server.js",
   "scripts": {
     "prepublish": "npm test",
     "clean": "rimraf dist",
     "build": "tsc",
-    "start": "node dist/start.js public/csv/movie_metadata.csv",
+    "start": "npm run build && node dist/server.js",
     "testClient": "node dist/testClient.js"
   },
   "keywords": [

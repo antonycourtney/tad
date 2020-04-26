@@ -18,11 +18,20 @@ export class ReltabWebConnection implements reltab.Connection {
     this.baseUrl = baseUrl;
   }
 
+  // import a CSV file, return table name:
+  async importFile(fileName: string): Promise<string> {
+    const args = { fileName };
+    log.debug("importFile: ", args);
+    const response = await request(this.baseUrl, "/tadweb/importFile", args);
+    log.debug("importFile: got result: ", response);
+    return response["tableName"] as string;
+  }
+
   async getTableInfo(tableName: string): Promise<reltab.TableInfo> {
     const args = { tableName };
     log.debug("getTableInfo: ", args);
     const response = await request(this.baseUrl, "/tadweb/getTableInfo", args);
-    log.debug("getTableInfo: got result: ", JSON.stringify(response, null, 2));
+    log.debug("getTableInfo: got result: ", response);
     return response["tableInfo"] as reltab.TableInfo;
   }
 
@@ -38,7 +47,7 @@ export class ReltabWebConnection implements reltab.Connection {
     }
     log.debug("evalQuery: ", args);
     const response = await request(this.baseUrl, "/tadweb/evalQuery", args);
-    log.debug("evalQuery: got result: ", JSON.stringify(response, null, 2));
+    log.debug("evalQuery: got result: ", response);
     const tableRep = reltab.deserializeTableRepJson(response);
     return tableRep;
   }
@@ -47,7 +56,7 @@ export class ReltabWebConnection implements reltab.Connection {
     let args: any = { query };
     log.debug("rowCount: ", args);
     const response = await request(this.baseUrl, "/tadweb/getRowCount", args);
-    log.debug("rowCount: got result: ", JSON.stringify(response, null, 2));
+    log.debug("rowCount: got result: ", response);
     return response["rowCount"] as number;
   }
 }

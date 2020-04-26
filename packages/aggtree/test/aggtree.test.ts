@@ -56,4 +56,9 @@ test("initial aggtree Test", async () => {
   const res0 = await testCtx.evalQuery(rq0);
   log.debug("root query result:", res0);
   util.logTable(res0);
+
+  const q1 = tree0.applyPath([]);
+  const res1 = await testCtx.evalQuery(q1);
+  log.debug("open root query:");
+  util.logTable(res1);
 });

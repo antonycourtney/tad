@@ -15,10 +15,10 @@ import log from "loglevel";
 // import * as reltabElectron from "./reltab-electron";
 import * as actions from "./actions";
 import { ReltabWebConnection } from "./reltabWebClient";
-const testBaseUrl = "http://localhost:9000";
-const testTable = "movie_metadata";
 
-// was: import * as styles from "../less/app.less";
+const testBaseUrl = "http://localhost:9000";
+// const TEST_FILE = "sample.csv";
+const TEST_FILE = "movie_metadata.csv";
 
 require("./slickgrid.scss");
 require("../less/app.less");
@@ -42,30 +42,21 @@ require("../less/filterEditor.less"); // require('babel-polyfill')
 // const remoteErrorDialog = remote.getGlobal("errorDialog");
 
 // const ipcRenderer = require("electron").ipcRenderer;
-
+/*
 const openParams = {
   fileType: "csv",
-  targetPath: "movie_metadata.csv",
+  targetPath: testTable + ".csv",
   fileContents: null,
   srcFile: null,
 };
+*/
 
+// TODO: figure out how to initialize based on saved views or different file / table names
 const init = async () => {
   log.setLevel(log.levels.DEBUG);
   let targetPath: string = "";
   let srcFile = null;
   let viewParams: ViewParams | null = null;
-
-  if (openParams.fileType === "csv") {
-    targetPath = openParams.targetPath;
-  } else if (openParams.fileType === "tad") {
-    const parsedFileState = JSON.parse(openParams.fileContents!); // This would be the right place to validate / migrate tadFileFormatVersion
-
-    const savedFileState = parsedFileState.contents;
-    targetPath = savedFileState.targetPath;
-    srcFile = openParams.srcFile;
-    viewParams = ViewParams.deserialize(savedFileState.viewParams);
-  }
 
   const appState = new AppState({
     targetPath,
@@ -80,20 +71,14 @@ const init = async () => {
 
   const rtc = new ReltabWebConnection(testBaseUrl);
 
-  const ti = await rtc.getTableInfo(testTable);
-  const tableName = ti.tableName;
+  const tableName = await rtc.importFile(TEST_FILE);
+
   const baseQuery = reltab.tableQuery(tableName);
   // const rtc = reltabElectron.init(); // module local to keep alive:
 
   var pivotRequester: PivotRequester | undefined | null = null;
 
-  await actions.initAppState(
-    rtc,
-    ti.tableName,
-    baseQuery,
-    viewParams,
-    stateRef
-  );
+  await actions.initAppState(rtc, tableName, baseQuery, viewParams, stateRef);
   pivotRequester = new PivotRequester(stateRef);
 
   /*

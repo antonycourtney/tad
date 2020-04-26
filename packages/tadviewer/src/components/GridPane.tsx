@@ -18,7 +18,7 @@ import * as he from "he";
 import { AppState } from "../AppState";
 import { ViewState } from "../ViewState";
 import { StateRef } from "oneref";
-import { useState } from "react";
+import { useState, useRef, MutableRefObject } from "react";
 import log from "loglevel";
 
 const { Slick } = SlickGrid;
@@ -198,7 +198,7 @@ export interface GridPaneProps {
 /* Create grid from the specified set of columns */
 const createGrid = (
   stateRef: StateRef<AppState>,
-  viewState: ViewState,
+  viewStateRef: MutableRefObject<ViewState>,
   columns: any,
   data: any
 ) => {
@@ -263,8 +263,11 @@ const createGrid = (
   });
 
   const onGridClick = (e: any, args: any) => {
+    log.info("onGridClick: ", e, args);
+    const viewState = viewStateRef.current;
     const viewParams = viewState.viewParams;
     var item = grid.getDataItem(args.row);
+    log.info("onGridClick: item: ", item);
     if (item._isLeaf) {
       return;
     }
@@ -275,6 +278,7 @@ const createGrid = (
       let pathItem = item["_path" + i];
       path.push(item["_path" + i]);
     }
+    log.info("onGridClick: path: ", path);
     if (item._isOpen) {
       actions.closePath(path, stateRef);
     } else {
@@ -377,15 +381,15 @@ const updateGrid = (gs: GridState, viewState: ViewState) => {
 
 const createGridState = (
   stateRef: StateRef<AppState>,
-  viewState: ViewState
+  viewStateRef: MutableRefObject<ViewState>
 ): GridState => {
-  const { viewParams, dataView } = viewState;
+  const { viewParams, dataView } = viewStateRef.current;
   const colWidthsMap = getInitialColWidthsMap(dataView!);
   const slickColMap = mkSlickColMap(dataView!.schema, viewParams, colWidthsMap);
   const gs = { grid: null, colWidthsMap, slickColMap };
 
-  const gridCols = getGridCols(gs, viewState);
-  gs.grid = createGrid(stateRef, viewState, gridCols, dataView);
+  const gridCols = getGridCols(gs, viewStateRef.current);
+  gs.grid = createGrid(stateRef, viewStateRef, gridCols, dataView);
   return gs;
 };
 
@@ -397,14 +401,16 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
 }) => {
   const [gridState, setGridState] = useState<GridState | null>(null);
   const [prevDataView, setPrevDataView] = useState<PagedDataView | null>(null);
+  const viewStateRef = useRef<ViewState>(viewState);
 
-  log.debug("RawGridPane: ", appState, viewState);
+  viewStateRef.current = viewState;
+  log.debug("RawGridPane: ", appState.toJS(), viewState.toJS());
 
   React.useEffect(() => {
     let gs = gridState;
     const dataView = viewState.dataView;
     if (gs === null) {
-      gs = createGridState(stateRef, viewState);
+      gs = createGridState(stateRef, viewStateRef);
       if (onSlickGridCreated) {
         onSlickGridCreated(gs.grid);
       }
@@ -415,7 +421,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
     // if (dataView !== prevDataView && dataView != null) {
     if (dataView != null) {
       log.debug("RawGridPane: updating grid");
-      updateGrid(gs, viewState);
+      updateGrid(gs, viewStateRef.current);
       setPrevDataView(dataView);
     }
     // } else {

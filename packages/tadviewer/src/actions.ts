@@ -6,6 +6,7 @@ import { ColumnListTypes } from "./components/defs";
 import { Path, PathTree } from "aggtree";
 import * as aggtree from "aggtree";
 import { StateRef, update } from "oneref";
+import log from "loglevel";
 
 export const initAppState = async (
   rtc: reltab.Connection,
@@ -200,6 +201,7 @@ export const setColumnOrder = (
 };
 
 export const openPath = (path: Path, stateRef: StateRef<AppState>) => {
+  log.info("openPath: opening path: ", path);
   update(
     stateRef,
     vpUpdate((viewParams) => viewParams.openPath(path))

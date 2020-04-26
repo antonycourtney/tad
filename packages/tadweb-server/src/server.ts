@@ -9,54 +9,18 @@ import * as reltab from "reltab";
 import { monitorEventLoopDelay } from "perf_hooks";
 import { read } from "fs";
 
+const SRV_DIR = "./public/csv";
+
 const portNumber = 9000;
 
-const optionDefinitions = [
-  {
-    name: "srcfile",
-    type: String,
-    defaultOption: true,
-    typeLabel:
-      "[underline]{file}.csv or [underline]{file}.tad or sqlite://[underline]{file}/[underline]{table}",
-    description: "CSV file(.csv with header row), Tad(.tad) file to view",
-  },
-];
-
-const initSqlite = async (csvFilePath: string): Promise<SqliteContext> => {
+const initSqlite = async (): Promise<SqliteContext> => {
   const rtOptions: any = { showQueries: true };
   const ctx = (await reltabSqlite.getContext(
     ":memory:",
     rtOptions
   )) as SqliteContext;
 
-  const md = await reltabSqlite.fastImport(ctx.db, csvFilePath);
-  const ti = reltabSqlite.mkTableInfo(md);
-  log.info("imported CSV, table name: ", ti.tableName);
-  ctx.registerTable(ti);
-
   return ctx;
-};
-
-// construct targetPath based on options:
-const getTargetPath = (
-  options: commandLineArgs.CommandLineOptions,
-  filePath: string
-) => {
-  let targetPath = null;
-  const srcDir = options["executed-from"];
-  if (
-    srcDir &&
-    filePath &&
-    !filePath.startsWith("/") &&
-    !filePath.startsWith("sqlite://")
-  ) {
-    // relative path -- prepend executed-from
-    targetPath = path.join(srcDir, filePath);
-  } else {
-    // absolute pathname or no srcDir:
-    targetPath = filePath;
-  }
-  return targetPath;
 };
 
 const handleEvalQuery = async (
@@ -104,6 +68,34 @@ const handleGetRowCount = async (
   }
 };
 
+// TODO: really should cache fileName to table name, so we don't have to re-import CSV file every time
+const handleImportFile = async (
+  rtc: reltab.Connection,
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const ctx = rtc as SqliteContext;
+    log.info("POST importFile: got request: ", req.body);
+    const tiReq = req.body;
+    // const tableInfo = await rtc.getTableInfo(tiReq.tableName);
+    const { fileName } = tiReq;
+    const filePath = path.join(SRV_DIR, fileName);
+    log.info("handleImportFile: importing: " + filePath);
+
+    const md = await reltabSqlite.fastImport(ctx.db, filePath);
+    const ti = reltabSqlite.mkTableInfo(md);
+    const tableName = ti.tableName;
+    log.info("imported CSV, table name: ", tableName);
+    ctx.registerTable(ti);
+    const resObj = { tableName };
+    log.info("getTableInfo: sending response: ", resObj);
+    res.json(resObj);
+  } catch (err) {
+    log.error("importFile: ", err, err.stack);
+  }
+};
+
 const handleGetTableInfo = async (
   rtc: reltab.Connection,
   req: express.Request,
@@ -129,13 +121,10 @@ const rootRedirect = (req: express.Request, res: express.Response) => {
 
 async function main() {
   log.setLevel(log.levels.INFO);
-  const options = commandLineArgs(optionDefinitions);
 
-  const targetPath = getTargetPath(options, options.srcfile);
+  const dbCtx = await initSqlite();
 
-  const dbCtx = await initSqlite(targetPath);
-
-  log.info('reltabSqlite initialized; imported CSV file "' + targetPath + '"');
+  log.info("sqlite initialization complete");
 
   let app = express();
   app.use(express.json({ reviver: reltab.queryReviver }));
@@ -153,6 +142,10 @@ async function main() {
 
   app.post("/tadweb/getTableInfo", (req, res) =>
     handleGetTableInfo(dbCtx, req, res)
+  );
+
+  app.post("/tadweb/importFile", (req, res) =>
+    handleImportFile(dbCtx, req, res)
   );
 
   const server = app.listen(portNumber, () => {
