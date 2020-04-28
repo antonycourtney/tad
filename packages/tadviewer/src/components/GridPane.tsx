@@ -418,15 +418,13 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
       setGridState(gs);
     }
     log.debug("GridPane effect: ", prevDataView, dataView);
-    // if (dataView !== prevDataView && dataView != null) {
-    if (dataView != null) {
+    if (dataView !== prevDataView && dataView != null) {
       log.debug("RawGridPane: updating grid");
       updateGrid(gs, viewStateRef.current);
       setPrevDataView(dataView);
+    } else {
+      log.debug("RawGridPane: no view change, skipping grid update");
     }
-    // } else {
-    //   log.debug("RawGridPane: no view change, skipping grid update");
-    // }
   });
 
   const handleWindowResize = (e: any) => {
