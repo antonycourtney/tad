@@ -1,31 +1,22 @@
 // webpack.config.js
 
-var pkg = require("./package.json");
 var webpack = require("webpack");
 var path = require("path");
 var fs = require("fs");
-var nodeExternals = require("webpack-node-externals");
 
 process.traceDeprecation = true;
 
 function config(nodeEnv) {
   return {
-    entry: {
-      tadviewer: "./src/tadviewer.ts",
-    },
     devtool: "source-map",
     mode: nodeEnv,
     resolve: {
       extensions: [".webpack.js", ".web.js", ".js", ".ts", ".tsx"],
     },
     output: {
-      path: path.resolve(__dirname, "dist"),
-      filename: "[name].js",
-      library: pkg.name,
-      libraryTarget: "commonjs2",
+      path: __dirname + "/dist/",
+      filename: "[name].bundle.js",
     },
-    target: "node",
-    externals: [nodeExternals()],
     module: {
       rules: [
         // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
@@ -97,9 +88,41 @@ function production() {
   return prod;
 }
 
+var webRender = {
+  entry: {
+    tadweb: "./src/webRenderMain.tsx",
+  },
+};
+
+var nodeModules = {};
+fs.readdirSync("node_modules")
+  .filter(function (x) {
+    return [".bin"].indexOf(x) === -1;
+  })
+  .forEach(function (mod) {
+    nodeModules[mod] = "commonjs " + mod;
+  });
+nodeModules["timer"] = "timer";
+
+function merge(config, env) {
+  var merged = Object.assign({}, env, config);
+  merged.plugins = (config.plugins || []).concat(env.plugins || []);
+  return merged;
+}
+
 const configMap = {
-  dev: [development()],
-  prod: [production()],
+  dev: [
+    merge(
+      webRender,
+      development()
+    ) /* merge(render, development()), merge(app, development()) */,
+  ],
+  prod: [
+    merge(
+      webRender,
+      production()
+    ) /* merge(render, production()), merge(app, production()) */,
+  ],
 };
 
 module.exports = function (env) {

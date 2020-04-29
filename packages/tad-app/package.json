@@ -1,0 +1,104 @@
+{
+  "name": "tad",
+  "version": "0.9.1",
+  "description": "Tabular data viewer desktop app",
+  "main": "dist/main.bundle.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build:dir": "mkdirp dist",
+    "build:html": "cp -r html/* dist",
+    "build:icon": "mkdirp buildRes && cp res/AppIcon.icns buildRes/icon.icns",
+    "build-assets": "npm run build:dir && npm run build:html && npm run build:icon",
+    "build-dev": "npm run build-assets && webpack --mode development",
+    "build-prod": "npm run build-assets && webpack --env prod --mode production",
+    "watch": "webpack --mode development --watch",
+    "watch-prod": "webpack --env prod --mode production --watch",
+    "dist": "build",
+    "publish": "./tools/publish.sh",
+    "electron-rebuild": "electron-rebuild -l -p -f -w sqlite3",
+    "start": "electron ."
+  },
+  "keywords": [
+    "relational",
+    "sql",
+    "database"
+  ],
+  "author": "Antony Courtney <antony@antonycourtney.com>",
+  "license": "MIT",
+  "dependencies": {
+    "aggtree": "../aggtree",
+    "reltab": "../reltab",
+    "tadviewer": "../tadviewer"
+  },
+  "devDependencies": {
+    "@blueprintjs/icons": "^3.14.0",
+    "@types/react": "^16.9.34",
+    "@types/react-dom": "^16.9.6",
+    "@types/react-select": "^3.0.11",
+    "@types/slickgrid": "^2.1.29",
+    "ajv": "^6.12.0",
+    "awesome-typescript-loader": "^5.2.1",
+    "css-loader": "^3.5.2",
+    "file-loader": "^6.0.0",
+    "image-webpack-loader": "^6.0.0",
+    "less": "^3.11.1",
+    "less-loader": "^5.0.0",
+    "node-sass": "^4.13.1",
+    "resolve-url-loader": "^3.1.1",
+    "sass-loader": "^8.0.2",
+    "source-map-loader": "^0.2.4",
+    "style-loader": "^1.1.4",
+    "webpack": "^4.42.1",
+    "webpack-bundle-analyzer": "^3.6.1",
+    "webpack-cli": "^3.3.11"
+  },
+  "build": {
+    "appId": "com.antonycourtney.tad",
+    "directories": {
+      "buildResources": "buildRes"
+    },
+    "extraResources": [
+      "tad.sh",
+      "examples"
+    ],
+    "files": [
+      "build",
+      "node_modules"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "csv",
+        "name": "Comma Separated Values",
+        "role": "Viewer"
+      },
+      {
+        "ext": "tsv",
+        "name": "Tab Separated Values",
+        "role": "Viewer"
+      },
+      {
+        "ext": "tad",
+        "name": "Tad Saved Workspace",
+        "role": "Editor"
+      }
+    ],
+    "linux": {
+      "target": [
+        "deb",
+        "rpm",
+        "tar.bz2"
+      ]
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "zip",
+        "dmg"
+      ]
+    },
+    "nodeGypRebuild": false,
+    "nsis": {
+      "perMachine": true
+    }
+  }
+}

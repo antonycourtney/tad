@@ -6,36 +6,19 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import OneRef, { mkRef, refContainer } from "oneref";
-import { AppPane, AppPaneBaseProps } from "./components/AppPane";
-import { PivotRequester } from "./PivotRequester";
-import { AppState } from "./AppState";
-import { ViewParams } from "./ViewParams";
+import { AppPane, AppPaneBaseProps } from "tadviewer";
+import { PivotRequester } from "tadviewer";
+import { AppState } from "tadviewer";
+import { ViewParams } from "tadviewer";
+import { initAppState } from "tadviewer";
 import * as reltab from "reltab";
 import log from "loglevel";
 // import * as reltabElectron from "./reltab-electron";
-import * as actions from "./actions";
 import { ReltabWebConnection } from "./reltabWebClient";
 
 const testBaseUrl = "http://localhost:9000";
 // const TEST_FILE = "sample.csv";
 const TEST_FILE = "movie_metadata.csv";
-
-require("./slickgrid.scss");
-require("../less/app.less");
-
-require("../less/sidebar.less");
-
-require("../less/columnSelector.less");
-
-require("../less/columnList.less");
-
-require("../less/singleColumnSelect.less");
-
-require("../less/modal.less");
-
-require("../less/footer.less");
-
-require("../less/filterEditor.less"); // require('babel-polyfill')
 
 // const remote = require("electron").remote;
 // const remoteInitMain = remote.getGlobal("initMain");
@@ -78,7 +61,7 @@ const init = async () => {
 
   var pivotRequester: PivotRequester | undefined | null = null;
 
-  await actions.initAppState(rtc, tableName, baseQuery, viewParams, stateRef);
+  await initAppState(rtc, tableName, baseQuery, viewParams, stateRef);
   pivotRequester = new PivotRequester(stateRef);
 
   /*

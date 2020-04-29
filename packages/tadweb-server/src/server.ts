@@ -113,7 +113,7 @@ const handleGetTableInfo = async (
   }
 };
 
-const viewerUrl = "/tadviewer/index.html";
+const viewerUrl = "/tadweb-app/index.html";
 
 const rootRedirect = (req: express.Request, res: express.Response) => {
   res.redirect(viewerUrl);

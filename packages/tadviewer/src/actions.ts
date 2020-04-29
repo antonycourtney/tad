@@ -8,13 +8,13 @@ import * as aggtree from "aggtree";
 import { StateRef, update } from "oneref";
 import log from "loglevel";
 
-export const initAppState = async (
+export async function initAppState(
   rtc: reltab.Connection,
   windowTitle: string,
   baseQuery: reltab.QueryExp,
   initialViewParams: ViewParams | undefined | null,
   stateRef: StateRef<AppState>
-): Promise<void> => {
+): Promise<void> {
   const baseSchema = await aggtree.getBaseSchema(rtc, baseQuery);
 
   // start off with all columns displayed:
@@ -47,7 +47,7 @@ export const initAppState = async (
         .set("viewState", viewState)
         .set("initialized", true) as AppState
   );
-};
+}
 
 // helper to hoist a ViewParams => ViewParams fn to an AppState => AppState
 // Always resets the viewport
