@@ -1,6 +1,6 @@
 {
-  "name": "tadweb-client",
-  "version": "0.9.1",
+  "name": "tadweb-app",
+  "version": "0.10.0",
   "description": "Tabular data viewer web app",
   "main": "dist/tadweb.bundle.js",
   "scripts": {
@@ -10,6 +10,9 @@
     "build-assets": "npm run build:dir && npm run build:html",
     "build-dev": "npm run build-assets && webpack --mode development",
     "build-prod": "npm run build-assets && webpack --env prod --mode production",
+    "build": "npm run build-prod",
+    "prepublish": "npm run build",
+    "test": "",
     "watch": "webpack --mode development --watch",
     "watch-prod": "webpack --env prod --mode production --watch"
   },
@@ -22,11 +25,11 @@
   "license": "MIT",
   "dependencies": {
     "loglevel": "^1.6.8",
+    "oneref": "^0.7.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "oneref": "^0.7.0",
-    "reltab": "../reltab",
-    "tadviewer": "../tadviewer"
+    "reltab": "^0.10.0",
+    "tadviewer": "^0.10.0"
   },
   "devDependencies": {
     "@types/react": "^16.9.34",
@@ -38,6 +41,7 @@
     "image-webpack-loader": "^6.0.0",
     "less": "^3.11.1",
     "less-loader": "^5.0.0",
+    "mkdirp": "^1.0.4",
     "node-sass": "^4.13.1",
     "resolve-url-loader": "^3.1.1",
     "sass-loader": "^8.0.2",

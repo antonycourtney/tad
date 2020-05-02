@@ -1,6 +1,6 @@
 {
   "name": "aggtree",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "pivot table built on top of reltab",
   "author": "Antony Courtney <antony.courtney@gmail.com>",
   "homepage": "https://github.com/antonycourtney/tad-pkg#readme",
@@ -8,16 +8,16 @@
   "main": "dist/aggtree.js",
   "types": "dist/aggtree.d.ts",
   "scripts": {
-    "prepublish": "npm test",
+    "prepublish": "npm run build",
     "clean": "rimraf dist",
     "build": "tsc",
     "test": "jest --config jest.config.json"
   },
   "dependencies": {
     "lodash": "^4.17.15",
-    "loglevel": "^1.6.7",
-    "reltab": "../reltab",
-    "reltab-sqlite": "../reltab-sqlite"
+    "loglevel": "^1.6.8",
+    "reltab": "^0.10.0",
+    "reltab-sqlite": "^0.10.0"
   },
   "devDependencies": {
     "@types/jest": "^25.2.1",
@@ -25,6 +25,7 @@
     "babel-plugin-flow-to-typescript": "^0.6.0",
     "console.table": "^0.10.0",
     "jest": "^25.2.7",
+    "mkdirp": "^1.0.4",
     "prettier": "^2.0.2",
     "ts-jest": "^25.3.1",
     "typescript": "^3.8.3"

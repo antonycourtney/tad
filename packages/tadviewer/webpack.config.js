@@ -25,7 +25,10 @@ function config(nodeEnv) {
       libraryTarget: "commonjs2",
     },
     target: "node",
-    externals: [nodeExternals()],
+    externals: [
+      nodeExternals(),
+      nodeExternals({ modulesDir: "../../node_modules" }),
+    ],
     module: {
       rules: [
         // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
@@ -102,14 +105,7 @@ function development() {
 function production() {
   var prod = config("production");
   prod.plugins.push(new webpack.optimize.OccurrenceOrderPlugin(true));
-  prod.optimization.minimize = {
-    compress: {
-      warnings: false,
-    },
-    mangle: {
-      except: ["module", "exports", "require"],
-    },
-  };
+  prod.optimization.minimize = true;
   return prod;
 }
 

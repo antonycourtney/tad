@@ -77,14 +77,7 @@ function development() {
 function production() {
   var prod = config("production");
   prod.plugins.push(new webpack.optimize.OccurrenceOrderPlugin(true));
-  prod.optimization.minimize = {
-    compress: {
-      warnings: false,
-    },
-    mangle: {
-      except: ["module", "exports", "require"],
-    },
-  };
+  prod.optimization.minimize = true;
   return prod;
 }
 

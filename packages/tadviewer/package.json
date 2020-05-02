@@ -1,16 +1,18 @@
 {
   "name": "tadviewer",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Tabular data viewer library",
   "main": "dist/tadviewer.js",
   "types": "dist/tadviewer.d.ts",
   "scripts": {
+    "prepublish": "npm run build",
     "clean": "rimraf dist",
     "build:dir": "mkdirp dist",
     "build:html": "cp -r html/* dist",
     "build-assets": "npm run build:dir && npm run build:html",
     "build-dev": "npm run build-assets && webpack --mode development",
     "build-prod": "npm run build-assets && webpack --env prod --mode production",
+    "build": "npm run build-prod",
     "watch": "webpack --mode development --watch",
     "watch-prod": "webpack --env prod --mode production --watch"
   },
@@ -24,7 +26,7 @@
   "dependencies": {
     "@blueprintjs/core": "^3.24.0",
     "@types/he": "^1.1.1",
-    "aggtree": "../aggtree",
+    "aggtree": "^0.10.0",
     "export-to-csv": "^0.2.1",
     "he": "^1.2.0",
     "immutable": "^3.8.2",
@@ -35,7 +37,7 @@
     "react-dnd-html5-backend": "^10.0.2",
     "react-select": "^3.1.0",
     "react-window-size-listener": "^1.5.4",
-    "reltab": "../reltab",
+    "reltab": "^0.10.0",
     "slickgrid-es6": "^3.0.3",
     "url-loader": "^4.1.0",
     "url-regex": "5.0.0"
@@ -53,6 +55,7 @@
     "image-webpack-loader": "^6.0.0",
     "less": "^3.11.1",
     "less-loader": "^5.0.0",
+    "mkdirp": "^1.0.4",
     "node-sass": "^4.13.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",

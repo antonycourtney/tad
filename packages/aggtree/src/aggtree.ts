@@ -50,7 +50,7 @@ const addPathCols = (
     retQuery = retQuery.extend(
       "_path" + i,
       {
-        type: "text"
+        type: "text",
       },
       null
     );
@@ -133,18 +133,18 @@ export class VPivotTree {
     const pivotColumnInfo: reltab.ColumnMapInfo = {
       id: "_pivot",
       type: "text",
-      displayName: "_pivot"
+      displayName: "_pivot",
     };
     const aggCols = this.baseSchema.columns;
     const aggMap = this.aggMap;
     const gbAggs: any =
-      aggMap != null ? aggCols.map(cid => [aggMap[cid], cid]) : aggCols;
+      aggMap != null ? aggCols.map((cid) => [aggMap[cid], cid]) : aggCols;
 
     if (path.length < this.pivotColumns.length) {
       pathQuery = pathQuery
         .groupBy([this.pivotColumns[path.length]], gbAggs)
         .mapColumnsByIndex({
-          "0": pivotColumnInfo
+          "0": pivotColumnInfo,
         });
     } else {
       // leaf level
@@ -155,7 +155,7 @@ export class VPivotTree {
       pathQuery = pathQuery.extend(
         "_pivot",
         {
-          type: "text"
+          type: "text",
         },
         leafExp
       );
@@ -166,14 +166,14 @@ export class VPivotTree {
       .extend(
         "_depth",
         {
-          type: "integer"
+          type: "integer",
         },
         depth
       )
       .extend(
         "_isRoot",
         {
-          type: "boolean"
+          type: "boolean",
         },
         0
       )
@@ -194,7 +194,7 @@ export class VPivotTree {
       pathQuery = pathQuery.extend(
         "_sortVal_" + i,
         {
-          type: "integer"
+          type: "integer",
         },
         depthVal
       );
@@ -213,7 +213,7 @@ export class VPivotTree {
       pathQuery = pathQuery.extend(
         "_path" + i,
         {
-          type: "text"
+          type: "text",
         },
         pathElemExp
       );
@@ -232,10 +232,10 @@ export class VPivotTree {
   getSortQuery(depth: number): QueryExp {
     let sortQuery = this.baseQuery; // recCountQuery
 
-    const sortCols = this.sortKey.map(p => p[0]);
+    const sortCols = this.sortKey.map((p) => p[0]);
     const aggMap = this.aggMap;
     const sortColAggs: any =
-      aggMap != null ? sortCols.map(cid => [aggMap[cid], cid]) : sortCols;
+      aggMap != null ? sortCols.map((cid) => [aggMap[cid], cid]) : sortCols;
     const gbCols = this.pivotColumns.slice(0, depth);
     sortQuery = sortQuery.groupBy(gbCols, sortColAggs);
     let colMap = {};
@@ -243,7 +243,7 @@ export class VPivotTree {
     for (let i = 0; i < gbCols.length; i++) {
       const pathColName = "_path" + i;
       colMap[gbCols[i]] = {
-        id: pathColName
+        id: pathColName,
       };
     }
 
@@ -255,7 +255,7 @@ export class VPivotTree {
       let colIndex = gbCols.length + i;
       let colName = "_sortVal_" + pathLevel.toString() + "_" + i.toString();
       sortColMap[colIndex.toString()] = {
-        id: colName
+        id: colName,
       };
     }
 
@@ -277,7 +277,7 @@ export class VPivotTree {
         resQuery = resQuery.extend(
           "_sortVal_" + i,
           {
-            type: "integer"
+            type: "integer",
           },
           0
         );
@@ -322,7 +322,7 @@ export class VPivotTree {
       let depth = i + 1;
       let sq = this.getSortQuery(depth);
 
-      let joinKey = _.range(0, depth).map(j => "_path" + j);
+      let joinKey = _.range(0, depth).map((j) => "_path" + j);
 
       jtq = jtq.join(sq, joinKey);
     } // Now let's work out the sort key:
@@ -334,10 +334,10 @@ export class VPivotTree {
       // should be able to do a simple tsortKey.push for next line, but flow being lame
       tsortKey = tsortKey.concat([["_sortVal_" + i.toString(), true]]); // sort keys for this depth:
 
-      let dsortKey = _.range(0, this.sortKey.length).map(j => [
-        "_sortVal_" + i + "_" + j,
-        this.sortKey[j][1]
-      ]);
+      let dsortKey: [string, boolean][] = _.range(
+        0,
+        this.sortKey.length
+      ).map((j) => ["_sortVal_" + i + "_" + j, this.sortKey[j][1]]);
 
       tsortKey = tsortKey.concat(dsortKey); // splice in path at this depth:
 
@@ -361,13 +361,13 @@ export const getBaseSchema = (
     .extend(
       "Rec",
       {
-        type: "integer"
+        type: "integer",
       },
       1
     )
     .filter(reltab.and().eq(constVal(1), constVal(0)));
   const schemap = rt.evalQuery(schemaQuery);
-  return schemap.then(schemaRes => schemaRes.schema);
+  return schemap.then((schemaRes) => schemaRes.schema);
 };
 export function vpivot(
   rt: reltab.Connection,
@@ -389,7 +389,7 @@ export function vpivot(
   baseQuery = baseQuery.extend(
     "Rec",
     {
-      type: "integer"
+      type: "integer",
     },
     1
   );
@@ -397,7 +397,7 @@ export function vpivot(
   const outCols = baseSchema.columns.concat(hiddenCols);
   const gbCols = baseSchema.columns.slice();
   const gbAggs =
-    aggMap != null ? gbCols.map(cid => [aggMap[cid], cid]) : gbCols;
+    aggMap != null ? gbCols.map((cid) => [aggMap[cid], cid]) : gbCols;
   let rootQuery = null;
 
   if (showRoot) {
@@ -406,21 +406,21 @@ export function vpivot(
       .extend(
         "_pivot",
         {
-          type: "text"
+          type: "text",
         },
         null
       )
       .extend(
         "_depth",
         {
-          type: "integer"
+          type: "integer",
         },
         0
       )
       .extend(
         "_isRoot",
         {
-          type: "boolean"
+          type: "boolean",
         },
         1
       )

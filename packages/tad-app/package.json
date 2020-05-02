@@ -1,6 +1,6 @@
 {
   "name": "tad",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Tabular data viewer desktop app, built with Electron",
   "main": "dist/main.bundle.js",
   "scripts": {
@@ -12,11 +12,13 @@
     "build-assets": "npm run build:dir && npm run build:html && npm run build:icon",
     "build-dev": "npm run build-assets && webpack --mode development",
     "build-prod": "npm run build-assets && webpack --env prod --mode production",
+    "build": "npm run electron-rebuild && npm run build-prod",
     "watch": "webpack --mode development --watch",
     "watch-prod": "webpack --env prod --mode production --watch",
     "dist": "build",
+    "prepublish": "npm run build",
     "publish": "./tools/publish.sh",
-    "electron-rebuild": "electron-rebuild -l -p -f -w sqlite3",
+    "electron-rebuild": "electron-rebuild -l -p -f -w sqlite3 --module-dir ../../node_modules/sqlite3",
     "start": "electron ."
   },
   "keywords": [
@@ -27,10 +29,10 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "aggtree": "../aggtree",
-    "reltab": "../reltab",
-    "reltab-sqlite": "../reltab-sqlite",
-    "tadviewer": "../tadviewer",
+    "aggtree": "^0.10.0",
+    "reltab": "^0.10.0",
+    "reltab-sqlite": "^0.10.0",
+    "tadviewer": "^0.10.0",
     "babel-cli": "^6.26.0",
     "babel-plugin-flow-to-typescript": "^0.6.0",
     "command-line-args": "^5.1.1",

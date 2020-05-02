@@ -1,11 +1,16 @@
 {
-	"devDependencies": {
-		"@types/jest": "^25.2.1",
-		"jest": "^25.2.7",
-		"lerna": "^3.20.2",
-		"rimraf": "^3.0.2",
-		"ts-jest": "^25.3.1",
-		"typescript": "^3.8.3"
-	},
-	"name": "tad-pkg"
+  "name": "tad-pkg",
+  "version": "0.10.0",
+  "description": "Lerna monorepo for Tabular data viewer libraries and apps",
+  "devDependencies": {
+    "@types/jest": "^25.2.1",
+    "jest": "^25.2.7",
+    "lerna": "^3.20.2",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^25.3.1",
+    "typescript": "^3.8.3"
+  },
+  "scripts": {
+    "bootstrap": "lerna bootstrap --hoist --force-local"
+  }
 }

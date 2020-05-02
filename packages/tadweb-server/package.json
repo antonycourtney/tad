@@ -1,6 +1,6 @@
 {
   "name": "tadweb-server",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "ExpressJS based web server for Tad",
   "main": "dist/server.js",
   "scripts": {
@@ -8,7 +8,8 @@
     "clean": "rimraf dist",
     "build": "tsc",
     "start": "npm run build && node dist/server.js",
-    "testClient": "node dist/testClient.js"
+    "testClient": "node dist/testClient.js",
+    "test": ""
   },
   "keywords": [
     "relational",
@@ -29,10 +30,11 @@
     "command-line-args": "^5.1.1",
     "express": "^4.17.1",
     "express-validator": "^6.4.0",
-    "loglevel": "^1.6.7",
+    "loglevel": "^1.6.8",
     "node-fetch": "^2.6.0",
-    "reltab": "../reltab",
-    "reltab-sqlite": "../reltab-sqlite",
+    "reltab": "^0.10.0",
+    "reltab-sqlite": "^0.10.0",
+    "tadweb-app": "^0.10.0",
     "typed-promisify": "^0.4.0"
   },
   "devDependencies": {
@@ -41,6 +43,7 @@
     "@types/node": "^13.11.0",
     "@types/node-fetch": "^2.5.6",
     "jest": "^25.2.7",
+    "mkdirp": "^1.0.4",
     "nodemon": "^2.0.3",
     "prettier": "^2.0.2",
     "ts-jest": "^25.3.1",
