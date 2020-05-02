@@ -6,9 +6,10 @@
   "scripts": {
     "clean": "rimraf dist",
     "build:dir": "mkdirp dist",
+    "build:tadviewer-assets": "cp -r node_modules/tadviewer/dist/public dist/public",
     "build:html": "cp -r html/* dist",
     "build:icon": "mkdirp buildRes && cp res/AppIcon.icns buildRes/icon.icns",
-    "build-assets": "npm run build:dir && npm run build:html && npm run build:icon",
+    "build-assets": "npm run build:dir && npm run build:tadviewer-assets && npm run build:html && npm run build:icon",
     "build-dev": "npm run build-assets && webpack --mode development",
     "build-prod": "npm run build-assets && webpack --env prod --mode production",
     "watch": "webpack --mode development --watch",

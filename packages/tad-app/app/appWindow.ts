@@ -53,6 +53,9 @@ export const create = (targetPath: string) => {
     title,
     x: 0,
     y: 0,
+    webPreferences: {
+      nodeIntegration: true,
+    },
   };
 
   if (openCount > 0) {

@@ -1,8 +1,8 @@
-import reltab from "reltab";
 import commandLineArgs from "command-line-args";
 import getUsage from "command-line-usage";
-import reltabSqlite from "reltab-sqlite";
 import log from "electron-log";
+import * as reltab from "reltab";
+import * as reltabSqlite from "reltab-sqlite";
 import * as setup from "./setup";
 import * as quickStart from "./quickStart";
 import * as appMenu from "./appMenu";
@@ -96,6 +96,7 @@ const initMainAsync = async (
   targetPath: string,
   srcfile: string
 ) => {
+  console.log("initMainAsync: ", options, targetPath, srcfile);
   let rtOptions: any = {};
 
   if (options["show-queries"]) {
@@ -167,6 +168,7 @@ const initMainAsync = async (
   (global as any).getRowCount = getRowCount(rtc);
   (global as any).appRtc = rtc;
   const tiStr = JSON.stringify(ti, null, 2);
+  console.log("initMainAsync: returning: ", tiStr);
   return tiStr;
 };
 

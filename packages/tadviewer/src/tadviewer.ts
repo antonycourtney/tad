@@ -1,3 +1,4 @@
+import * as actions from "./actions";
 require("./slickgrid.scss");
 require("../less/app.less");
 
@@ -20,3 +21,4 @@ export * from "./PivotRequester";
 export * from "./AppState";
 export * from "./ViewParams";
 export { initAppState } from "./actions";
+export { actions };

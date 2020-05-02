@@ -52,9 +52,18 @@ function config(nodeEnv) {
         },
         {
           test: /\.(jpe?g|png|gif|svg)$/i,
-          loaders: [
-            "file-loader?hash=sha512&digest=hex&name=[hash].[ext]",
-            "image-webpack-loader?bypassOnDebug&optipng.optimizationLevel=7&gifsicle.interlaced=false",
+          use: [
+            {
+              loader: "url-loader",
+              options: {
+                limit: 8000,
+                name: "[hash]-[name].[ext]",
+              },
+            },
+            {
+              loader:
+                "image-webpack-loader?bypassOnDebug&optipng.optimizationLevel=7&gifsicle.interlaced=false",
+            },
           ],
         },
         {

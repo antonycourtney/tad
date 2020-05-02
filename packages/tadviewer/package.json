@@ -37,6 +37,7 @@
     "react-window-size-listener": "^1.5.4",
     "reltab": "../reltab",
     "slickgrid-es6": "^3.0.3",
+    "url-loader": "^4.1.0",
     "url-regex": "5.0.0"
   },
   "devDependencies": {

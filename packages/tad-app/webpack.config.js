@@ -124,13 +124,8 @@ function merge(config, env) {
 }
 
 const configMap = {
-  dev: [
-    merge(
-      app,
-      development()
-    ) /* merge(render, development()), merge(app, development()) */,
-  ],
-  prod: [merge(app, production()) /* merge(render, production()) */],
+  dev: [merge(app, development()), merge(render, development())],
+  prod: [merge(app, production()), merge(render, production())],
 };
 
 module.exports = function (env) {
