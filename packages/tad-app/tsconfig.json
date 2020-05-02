@@ -16,7 +16,7 @@
     "noEmit": true,
     "jsx": "react",
     "downlevelIteration": true,
-    "rootDirs": ["src/ts", "stories"]
+    "rootDirs": ["src/ts", "app"]
   },
-  "include": ["./src/*"]
+  "include": ["./src/*", "./app/*"]
 }

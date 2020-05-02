@@ -88,16 +88,10 @@ function production() {
   return prod;
 }
 
-var electronRender = {
+var render = {
   target: "electron-renderer",
   entry: {
-    renderMain: "./src/electronRenderMain.tsx",
-  },
-};
-
-var webRender = {
-  entry: {
-    tadweb: "./src/webRenderMain.tsx",
+    tadweb: "./src/electronRenderMain.tsx",
   },
 };
 
@@ -111,12 +105,10 @@ fs.readdirSync("node_modules")
   });
 nodeModules["timer"] = "timer";
 
-var electronApp = {
+var app = {
   target: "electron-renderer",
   entry: {
-    main: "./app/main.js",
-    csvimport: "./src/csvimport-cli.js",
-    allTests: "./test/runAllTests.js",
+    main: "./app/main.ts",
   },
   externals: nodeModules,
   node: {
@@ -134,16 +126,11 @@ function merge(config, env) {
 const configMap = {
   dev: [
     merge(
-      webRender,
+      app,
       development()
     ) /* merge(render, development()), merge(app, development()) */,
   ],
-  prod: [
-    merge(
-      webRender,
-      production()
-    ) /* merge(render, production()), merge(app, production()) */,
-  ],
+  prod: [merge(app, production()) /* merge(render, production()) */],
 };
 
 module.exports = function (env) {

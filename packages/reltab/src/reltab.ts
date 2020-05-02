@@ -593,6 +593,7 @@ export const queryReviver = (key: string, val: any): any => {
 
 type QueryReq = {
   query: QueryExp;
+  filterRowCount: number;
   offset?: number;
   limit?: number;
 };

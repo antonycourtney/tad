@@ -46,6 +46,11 @@ export class SqliteContext implements Connection {
     this.tableMap[ti.tableName] = ti;
   }
 
+  getSchema(query: QueryExp): Schema {
+    const schema = query.getSchema(this.tableMap);
+    return schema;
+  }
+
   evalQuery(
     query: QueryExp,
     offset: number = -1,
