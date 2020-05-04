@@ -1,0 +1,35 @@
+{
+  "name": "reltab-bigquery",
+  "version": "0.10.0",
+  "description": "Google BigQuery driver for reltab",
+  "main": "dist/reltab-bigquery.js",
+  "types": "dist/reltab-biguery.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "test": "jest --config jest.config.json"
+  },
+  "keywords": [
+    "relational",
+    "sql",
+    "database",
+    "bigquery"
+  ],
+  "author": "Antony Courtney <antony@antonycourtney.com>",
+  "license": "MIT",
+  "dependencies": {
+    "loglevel": "^1.6.8",
+    "reltab": "^0.10.0",
+    "@google-cloud/bigquery": "4.7.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.11.0",
+    "jest": "^25.2.7",
+    "mkdirp": "^1.0.4",
+    "prettier": "^2.0.2",
+    "ts-jest": "^25.3.1",
+    "typescript": "^3.8.3"
+  }
+}
