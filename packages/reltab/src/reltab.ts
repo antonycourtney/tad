@@ -391,16 +391,7 @@ export type AggFn = "avg" | "count" | "min" | "max" | "sum" | "uniq" | "null"; /
 // or a pair of column name and AggFn
 
 export type AggColSpec = string | [AggFn, string];
-export type Scalar =
-  | number
-  | undefined
-  | null
-  | string
-  | undefined
-  | null
-  | boolean
-  | undefined
-  | null;
+export type Scalar = number | string | boolean | undefined | null;
 export type Row = {
   [columnId: string]: Scalar;
 }; // metadata for a single column:
@@ -981,8 +972,9 @@ const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): SQLQueryAST => {
   };
 };
 
-const quoteCol = (cid: string) => '"' + cid + '"'; // Gather map by column id of SQLSelectColExp in a SQLSelectAST
+const quoteCol = (cid: string) => '"' + cid + '"';
 
+// Gather map by column id of SQLSelectColExp in a SQLSelectAST
 const selectColsMap = (
   selExp: SQLSelectAST
 ): {
@@ -1002,8 +994,9 @@ const projectQueryToSql = (
   pq: QueryExp
 ): SQLQueryAST => {
   const projectCols = pq.valArgs[0];
-  const sqsql = queryToSql(tableMap, pq.tableArgs[0]); // rewrite an individual select statement to only select projected cols:
+  const sqsql = queryToSql(tableMap, pq.tableArgs[0]);
 
+  // rewrite an individual select statement to only select projected cols:
   const rewriteSel = (sel: SQLSelectAST): SQLSelectAST => {
     const colsMap = selectColsMap(sel);
     const outCols = projectCols.map((cid: string) => {
