@@ -238,7 +238,7 @@ export class VPivotTree {
       aggMap != null ? sortCols.map((cid) => [aggMap[cid], cid]) : sortCols;
     const gbCols = this.pivotColumns.slice(0, depth);
     sortQuery = sortQuery.groupBy(gbCols, sortColAggs);
-    let colMap = {};
+    let colMap: { [cid: string]: { id: string } } = {};
 
     for (let i = 0; i < gbCols.length; i++) {
       const pathColName = "_path" + i;
@@ -249,7 +249,7 @@ export class VPivotTree {
 
     sortQuery = sortQuery.mapColumns(colMap);
     const pathLevel = depth - 1;
-    let sortColMap = {};
+    let sortColMap: { [cid: string]: { id: string } } = {};
 
     for (let i = 0; i < sortCols.length; i++) {
       let colIndex = gbCols.length + i;
@@ -299,7 +299,7 @@ export class VPivotTree {
       resQuery = resQuery.concat(subQuery);
     }
 
-    const sortArg = [];
+    const sortArg: [string, boolean][] = [];
 
     for (let i = 0; i < maxDepth - 1; i++) {
       sortArg.push(["_path" + i, true]);

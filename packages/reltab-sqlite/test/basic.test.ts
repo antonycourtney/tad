@@ -4,12 +4,12 @@ import * as reltabSqlite from "../src/reltab-sqlite";
 import * as tp from "typed-promisify";
 import { textSpanContainsPosition } from "typescript";
 import { delimiter } from "path";
-import * as log from 'loglevel';
-import * as util from './testUtils';
+import * as log from "loglevel";
+import * as util from "./testUtils";
 
 const { col, constVal } = reltab;
 
-log.setLevel('debug');
+log.setLevel("debug");
 
 let testCtx: reltabSqlite.SqliteContext;
 
@@ -28,34 +28,36 @@ QueryExp {
 `);
 });
 
-const importCsv = async (db, path) => {
+const importCsv = async (db: sqlite3.Database, path: string) => {
   const md = await reltabSqlite.fastImport(db, path);
 
   const ti = reltabSqlite.mkTableInfo(md);
   testCtx.registerTable(ti);
-}
+};
 
-beforeAll(async (): Promise<reltabSqlite.SqliteContext> => {
-  const ctx = await reltabSqlite.getContext(":memory:");
+beforeAll(
+  async (): Promise<reltabSqlite.SqliteContext> => {
+    const ctx = await reltabSqlite.getContext(":memory:");
 
-  testCtx = (ctx as reltabSqlite.SqliteContext);
+    testCtx = ctx as reltabSqlite.SqliteContext;
 
-  const db = testCtx.db;
+    const db = testCtx.db;
 
-  await importCsv(db, 'test/support/sample.csv');
-  await importCsv(db, 'test/support/barttest.csv');
+    await importCsv(db, "test/support/sample.csv");
+    await importCsv(db, "test/support/barttest.csv");
 
-  return testCtx;
-})
+    return testCtx;
+  }
+);
 
 test("t1 - basic sqlite tableQuery", async () => {
-  const q1 = reltab.tableQuery('sample');
+  const q1 = reltab.tableQuery("sample");
 
   const qres = await testCtx.evalQuery(q1);
   expect(qres).toMatchSnapshot();
 });
 
-const bartTableQuery = reltab.tableQuery('barttest');
+const bartTableQuery = reltab.tableQuery("barttest");
 
 test("t2 - basic bart table query", async () => {
   const qres = await testCtx.evalQuery(bartTableQuery);
@@ -69,8 +71,8 @@ test("basic rowcount", async () => {
   expect(rowCount).toBe(23);
 });
 
-test('basic project operator', async () => {
-  const pcols = ['JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE']
+test("basic project operator", async () => {
+  const pcols = ["JobFamily", "Title", "Union", "Name", "Base", "TCOE"];
   const q2 = bartTableQuery.project(pcols);
 
   const qres = await testCtx.evalQuery(q2);
@@ -79,32 +81,33 @@ test('basic project operator', async () => {
   expect(qres).toMatchSnapshot();
 });
 
-test('basic groupBy', async () => {
-  const q3 = bartTableQuery.groupBy(['JobFamily', 'Title'], ['TCOE'])  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
+test("basic groupBy", async () => {
+  const q3 = bartTableQuery.groupBy(["JobFamily", "Title"], ["TCOE"]); // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
 
   // testCtx.showQueries = true;
   const qres = await testCtx.evalQuery(q3);
 
-  const expCols = ['JobFamily', 'Title', 'TCOE'];
+  const expCols = ["JobFamily", "Title", "TCOE"];
   expect(qres.schema.columns).toEqual(expCols);
 
   expect(qres.rowData.length).toBe(19);
 
   const baseRes = await testCtx.evalQuery(bartTableQuery);
-  const tcoeSum = util.columnSum(baseRes, 'TCOE');
+  const tcoeSum = util.columnSum(baseRes, "TCOE");
 
-  const groupSum = util.columnSum(qres, 'TCOE');
+  const groupSum = util.columnSum(qres, "TCOE");
   expect(groupSum).toBe(tcoeSum);
 
   expect(qres).toMatchSnapshot();
 });
 
-test('basic filter', async () => {
-  const q5 = bartTableQuery.filter(reltab.and().eq(col('JobFamily'), constVal('Executive Management')));
+test("basic filter", async () => {
+  const q5 = bartTableQuery.filter(
+    reltab.and().eq(col("JobFamily"), constVal("Executive Management"))
+  );
 
   const res = await testCtx.evalQuery(q5);
   expect(res.rowData.length).toBe(4);
 
   expect(res).toMatchSnapshot();
 });
-

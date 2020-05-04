@@ -546,18 +546,18 @@ export class QueryExp {
   }
 
   toSql(
-    tableMap: TableInfoMap,
+    tableMap: TableInfoProvider,
     offset: number = -1,
     limit: number = -1
   ): string {
     return ppSQLQuery(queryToSql(tableMap, this), offset, limit);
   }
 
-  toCountSql(tableMap: TableInfoMap): string {
+  toCountSql(tableMap: TableInfoProvider): string {
     return ppSQLQuery(queryToCountSql(tableMap, this), -1, -1);
   }
 
-  getSchema(tableMap: TableInfoMap): Schema {
+  getSchema(tableMap: TableInfoProvider): Promise<Schema> {
     return getQuerySchema(tableMap, this);
   }
 }
@@ -575,9 +575,7 @@ export const queryReviver = (key: string, val: any): any => {
 
   if (val != null) {
     if (typeof val === "object") {
-      const rf: (val: any) => any | undefined = (reviverMap as any)[
-        val.expType
-      ];
+      const rf = (reviverMap as any)[val.expType] as (v: any) => any;
 
       if (rf) {
         retVal = rf(val);
@@ -628,48 +626,65 @@ export const deserializeTableRepJson = (json: any): TableRep => {
   return tableRep;
 };
 
-type GetSchemaFunc = (tableMap: TableInfoMap, query: QueryExp) => Schema;
+type GetSchemaFunc = (
+  tableMap: TableInfoProvider,
+  query: QueryExp
+) => Promise<Schema>;
+
 type GetSchemaMap = {
   [operator: string]: GetSchemaFunc;
 };
 
-const tableGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  return tableMap[query.valArgs[0]].schema;
+const tableGetSchema = async (
+  tableMap: TableInfoProvider,
+  query: QueryExp
+): Promise<Schema> => {
+  const ti = await tableMap.getTableInfo(query.valArgs[0]);
+  return ti.schema;
 };
 
-const projectGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  const inSchema = query.tableArgs[0].getSchema(tableMap);
+const projectGetSchema = async (
+  tableMap: TableInfoProvider,
+  query: QueryExp
+): Promise<Schema> => {
+  const inSchema = await query.tableArgs[0].getSchema(tableMap);
   const projectCols = query.valArgs[0];
   return new Schema(projectCols, _.pick(inSchema.columnMetadata, projectCols));
 };
 
-const groupByGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  const [cols, aggSpecs] = query.valArgs as [string[], (string | string[])[]];
+const groupByGetSchema = async (
+  tableMap: TableInfoProvider,
+  query: QueryExp
+): Promise<Schema> => {
+  const [cols, aggSpecs] = query.valArgs;
   const aggCols: Array<string> = aggSpecs.map((aggSpec: string | string[]) =>
     typeof aggSpec === "string" ? aggSpec : aggSpec[1]
   );
-  const inSchema = query.tableArgs[0].getSchema(tableMap);
+  const inSchema = await query.tableArgs[0].getSchema(tableMap);
   const rs = new Schema(cols.concat(aggCols), inSchema.columnMetadata);
   return rs;
 };
 
-const filterGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+const filterGetSchema = (
+  tableMap: TableInfoProvider,
+  query: QueryExp
+): Promise<Schema> => {
   const inSchema = query.tableArgs[0].getSchema(tableMap);
   return inSchema;
 };
 
-const mapColumnsGetSchema = (
-  tableMap: TableInfoMap,
+const mapColumnsGetSchema = async (
+  tableMap: TableInfoProvider,
   query: QueryExp
-): Schema => {
+): Promise<Schema> => {
   // TODO: check that all columns are columns of original schema,
   // and that applying cmap will not violate any invariants on Schema....but need to nail down
   const cmap: {
     [colName: string]: ColumnMapInfo;
   } = query.valArgs[0];
-  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap);
+  const inSchema = await query.tableArgs[0].getSchema(tableMap);
   let outColumns = [];
-  let outMetadata: { [cid: string]: ColumnMetadata } = {};
+  let outMetadata: { [columnId: string]: ColumnMetadata } = {};
 
   for (let i = 0; i < inSchema.columns.length; i++) {
     let inColumnId = inSchema.columns[i];
@@ -703,17 +718,17 @@ const mapColumnsGetSchema = (
   return outSchema;
 };
 
-const mapColumnsByIndexGetSchema = (
-  tableMap: TableInfoMap,
+const mapColumnsByIndexGetSchema = async (
+  tableMap: TableInfoProvider,
   query: QueryExp
-): Schema => {
+): Promise<Schema> => {
   // TODO: try to unify with mapColumns.  Probably means mapColumns will construct an argument to
   const cmap: {
     [colName: string]: ColumnMapInfo;
   } = query.valArgs[0];
-  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap);
+  const inSchema: Schema = await query.tableArgs[0].getSchema(tableMap);
   var outColumns = [];
-  var outMetadata: { [cid: string]: ColumnMetadata } = {};
+  var outMetadata: { [columnId: string]: ColumnMetadata } = {};
 
   for (var inIndex = 0; inIndex < inSchema.columns.length; inIndex++) {
     var inColumnId = inSchema.columns[inIndex];
@@ -747,18 +762,27 @@ const mapColumnsByIndexGetSchema = (
   return outSchema;
 };
 
-const concatGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap);
+const concatGetSchema = async (
+  tableMap: TableInfoProvider,
+  query: QueryExp
+): Promise<Schema> => {
+  const inSchema: Schema = await query.tableArgs[0].getSchema(tableMap);
   return inSchema;
 };
 
-const extendGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+const extendGetSchema = async (
+  tableMap: TableInfoProvider,
+  query: QueryExp
+): Promise<Schema> => {
   const [colId, columnMetadata] = query.valArgs;
-  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap);
+  const inSchema: Schema = await query.tableArgs[0].getSchema(tableMap);
   return inSchema.extend(colId, columnMetadata);
 };
 
-const joinGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+const joinGetSchema = async (
+  tableMap: TableInfoProvider,
+  query: QueryExp
+): Promise<Schema> => {
   const [joinType, on] = query.valArgs;
   const [lhs, rhs] = query.tableArgs;
 
@@ -766,8 +790,8 @@ const joinGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
     throw new Error("unsupported join type: " + joinType);
   }
 
-  const lhsSchema = lhs.getSchema(tableMap);
-  const rhsSchema = rhs.getSchema(tableMap);
+  const lhsSchema = await lhs.getSchema(tableMap);
+  const rhsSchema = await rhs.getSchema(tableMap);
 
   const rhsCols = _.difference(
     rhsSchema.columns,
@@ -797,7 +821,10 @@ const getSchemaMap: GetSchemaMap = {
   join: joinGetSchema,
 };
 
-const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
+const getQuerySchema = (
+  tableMap: TableInfoProvider,
+  query: QueryExp
+): Promise<Schema> => {
   const gsf = getSchemaMap[query.operator];
 
   if (!gsf) {
@@ -851,7 +878,7 @@ type SQLQueryAST = {
  * form a final result string
  */
 
-type StringBuffer = Array<string>;
+type StringBuffer = string[];
 /**
  * get Column Id from a SQLSelectColExp -- essential when hoisting column names from
  * subquery
@@ -959,14 +986,17 @@ const ppSQLQuery = (
   return retStr;
 };
 
-type GenSQLFunc = (tableMap: TableInfoMap, q: QueryExp) => SQLQueryAST;
+type GenSQLFunc = (tableMap: TableInfoProvider, q: QueryExp) => SQLQueryAST;
 type GenSQLMap = {
   [operator: string]: GenSQLFunc;
 };
 
-const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): SQLQueryAST => {
+const tableQueryToSql = async (
+  tableMap: TableInfoProvider,
+  tq: QueryExp
+): Promise<SQLQueryAST> => {
   const tableName = tq.valArgs[0];
-  const schema = tableMap[tableName].schema; // apparent Flow bug request Array<any> here:
+  const schema = (await tableMap.getTableInfo(tableName)).schema;
 
   const selectCols: Array<any> = schema.columns;
   const sel = {
@@ -997,13 +1027,14 @@ const selectColsMap = (
   return ret;
 };
 
-const projectQueryToSql = (
-  tableMap: TableInfoMap,
+const projectQueryToSql = async (
+  tableMap: TableInfoProvider,
   pq: QueryExp
-): SQLQueryAST => {
+): Promise<SQLQueryAST> => {
   const projectCols = pq.valArgs[0];
-  const sqsql = queryToSql(tableMap, pq.tableArgs[0]); // rewrite an individual select statement to only select projected cols:
+  const sqsql = await queryToSql(tableMap, pq.tableArgs[0]);
 
+  // rewrite an individual select statement to only select projected cols:
   const rewriteSel = (sel: SQLSelectAST): SQLSelectAST => {
     const colsMap = selectColsMap(sel);
     const outCols = projectCols.map((cid: string) => {
@@ -1044,12 +1075,12 @@ const defaultAggs: { [CT in ColumnType]: AggFn } = {
 export const defaultAggFn = (colType: ColumnType): AggFn =>
   defaultAggs[colType];
 
-const groupByQueryToSql = (
-  tableMap: TableInfoMap,
+const groupByQueryToSql = async (
+  tableMap: TableInfoProvider,
   query: QueryExp
-): SQLQueryAST => {
+): Promise<SQLQueryAST> => {
   const [cols, aggSpecs] = query.valArgs;
-  const inSchema = query.tableArgs[0].getSchema(tableMap); // emulate the uniq and null aggregation functions:
+  const inSchema = await query.tableArgs[0].getSchema(tableMap); // emulate the uniq and null aggregation functions:
 
   const genUniq = (aggStr: string, qcid: string) =>
     `case when min(${qcid})=max(${qcid}) then min(${qcid}) else null end`;
@@ -1078,7 +1109,7 @@ const groupByQueryToSql = (
     };
   });
   const selectCols = cols.concat(aggExprs);
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]); // If sub-query is just a single select with no group by
+  const sqsql = await queryToSql(tableMap, query.tableArgs[0]); // If sub-query is just a single select with no group by
   // and where every select expression a simple column id
   // we can rewrite it:
 
@@ -1118,12 +1149,12 @@ const groupByQueryToSql = (
   };
 };
 
-const filterQueryToSql = (
-  tableMap: TableInfoMap,
+const filterQueryToSql = async (
+  tableMap: TableInfoProvider,
   query: QueryExp
-): SQLQueryAST => {
+): Promise<SQLQueryAST> => {
   const fexp: FilterExp = query.valArgs[0];
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]);
+  const sqsql = await queryToSql(tableMap, query.tableArgs[0]);
   const whereStr = fexp.toSqlWhere(); // If subquery just a single select with no where or groupBy clause, just add one:
 
   const subSel = sqsql.selectStmts[0];
@@ -1163,12 +1194,12 @@ const filterQueryToSql = (
  * Note: this implements both mapColumns and mapColumsByIndex
  */
 
-const mapColumnsQueryToSql = (byIndex: boolean) => (
-  tableMap: TableInfoMap,
+const mapColumnsQueryToSql = (byIndex: boolean) => async (
+  tableMap: TableInfoProvider,
   query: QueryExp
-): SQLQueryAST => {
+): Promise<SQLQueryAST> => {
   const cMap = query.valArgs[0];
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]); // apply renaming to invididual select expression:
+  const sqsql = await queryToSql(tableMap, query.tableArgs[0]); // apply renaming to invididual select expression:
 
   const applyColRename = (
     cexp: SQLSelectColExp,
@@ -1207,28 +1238,32 @@ const mapColumnsQueryToSql = (byIndex: boolean) => (
   return ret;
 };
 
-const concatQueryToSql = (
-  tableMap: TableInfoMap,
+const concatQueryToSql = async (
+  tableMap: TableInfoProvider,
   query: QueryExp
-): SQLQueryAST => {
-  const sqSqls = query.tableArgs.map((tq) => queryToSql(tableMap, tq));
+): Promise<SQLQueryAST> => {
+  const sqSqls = await Promise.all(
+    query.tableArgs.map((tq) => queryToSql(tableMap, tq))
+  );
   const allSelStmts = sqSqls.map((q) => q.selectStmts);
   return {
     selectStmts: _.flatten(allSelStmts),
   };
 };
 
-const sortQueryToSql = (
-  tableMap: TableInfoMap,
+const sortQueryToSql = async (
+  tableMap: TableInfoProvider,
   query: QueryExp
-): SQLQueryAST => {
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]);
+): Promise<SQLQueryAST> => {
+  const sqsql = await queryToSql(tableMap, query.tableArgs[0]);
   const orderBy = (query.valArgs[0] as [string, boolean][]).map(
     ([col, asc]) => ({
       col,
       asc,
     })
-  ); // If subquery just a single select with no orderBy clause, just add one:
+  );
+
+  // If subquery just a single select with no orderBy clause, just add one:
 
   const subSel = sqsql.selectStmts[0];
   let retSel: SQLSelectAST;
@@ -1287,14 +1322,16 @@ const isConstantExpr = (expr: string): boolean => {
   return ret;
 };
 
-const extendQueryToSql = (
-  tableMap: TableInfoMap,
+const extendQueryToSql = async (
+  tableMap: TableInfoProvider,
   query: QueryExp
-): SQLQueryAST => {
+): Promise<SQLQueryAST> => {
   const as = query.valArgs[0];
   const colExp = query.valArgs[2];
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]);
-  const subSel = sqsql.selectStmts[0]; // Note: We only want to extract the column ids from subquery for use at this level; we
+  const sqsql = await queryToSql(tableMap, query.tableArgs[0]);
+  const subSel = sqsql.selectStmts[0];
+
+  // Note: We only want to extract the column ids from subquery for use at this level; we
   // want to skip any calculated expressions or aggregate functions
 
   const isConst = isConstantExpr(colExp);
@@ -1337,15 +1374,15 @@ const extendQueryToSql = (
   };
 };
 
-const joinQueryToSql = (
-  tableMap: TableInfoMap,
+const joinQueryToSql = async (
+  tableMap: TableInfoProvider,
   query: QueryExp
-): SQLQueryAST => {
+): Promise<SQLQueryAST> => {
   const [joinType, on] = query.valArgs;
   const [lhsQuery, rhsQuery] = query.tableArgs;
-  const lhs = queryToSql(tableMap, lhsQuery);
-  const rhs = queryToSql(tableMap, rhsQuery);
-  const outSchema = query.getSchema(tableMap); // any type here is flow bug workaround
+  const lhs = await queryToSql(tableMap, lhsQuery);
+  const rhs = await queryToSql(tableMap, rhsQuery);
+  const outSchema = await query.getSchema(tableMap); // any type here is flow bug workaround
 
   const selectCols: Array<any> = outSchema.columns;
   const from: SQLFromJoin = {
@@ -1380,7 +1417,10 @@ const genSqlMap: GenSQLMap = {
   join: joinQueryToSql,
 };
 
-const queryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
+const queryToSql = (
+  tableMap: TableInfoProvider,
+  query: QueryExp
+): Promise<SQLQueryAST> => {
   const gen = genSqlMap[query.operator];
 
   if (!gen) {
@@ -1394,9 +1434,9 @@ const queryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
 }; // Generate a count(*) as rowCount wrapper around a query:
 
 const queryToCountSql = (
-  tableMap: TableInfoMap,
+  tableMap: TableInfoProvider,
   query: QueryExp
-): SQLQueryAST => {
+): Promise<SQLQueryAST> => {
   const sqsql = queryToSql(tableMap, query);
   const colExp = "count(*)";
   const as = "rowCount";
@@ -1452,7 +1492,7 @@ export class Schema {
     this.columns = columns;
     this.columnMetadata = columnMetadata;
     this._sortedColumns = null;
-    var columnIndices: { [colId: string]: number } = {};
+    var columnIndices = {};
 
     for (var i = 0; i < columns.length; i++) {
       var col = columns[i];
@@ -1524,7 +1564,7 @@ export class Schema {
 
   rowMapFromRow(rowArray: Array<any>): Object {
     var columnIds = this.columns;
-    var rowMap: { [cid: string]: any } = {};
+    var rowMap = {};
 
     for (var col = 0; col < rowArray.length; col++) {
       rowMap[columnIds[col]] = rowArray[col];
@@ -1535,7 +1575,7 @@ export class Schema {
 
   extend(colId: string, columnMetadata: ColumnMetadata): Schema {
     var outCols = this.columns.concat([colId]);
-    let cMap: { [cid: string]: ColumnMetadata } = {};
+    let cMap = {};
     cMap[colId] = columnMetadata;
 
     var outMetadata = _.extend(cMap, this.columnMetadata);
@@ -1566,6 +1606,10 @@ export type TableInfo = {
 export type TableInfoMap = {
   [tableName: string]: TableInfo;
 };
+export interface TableInfoProvider {
+  getTableInfo(tableName: string): Promise<TableInfo>;
+}
+
 export class TableRep {
   schema: Schema;
   rowData: Array<Row>;

@@ -7,7 +7,7 @@
   "scripts": {
     "prepublish": "npm run build",
     "clean": "rimraf dist",
-    "build": "tsc",
+    "build": "tsc -p tsconfig-build.json",
     "test": "jest --config jest.config.json"
   },
   "keywords": [
@@ -32,6 +32,7 @@
     "typed-promisify": "^0.4.0"
   },
   "devDependencies": {
+    "@types/byline": "^4.2.31",
     "@types/jest": "^25.2.1",
     "@types/node": "^13.11.0",
     "jest": "^25.2.7",

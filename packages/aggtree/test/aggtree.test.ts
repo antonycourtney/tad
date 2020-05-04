@@ -1,3 +1,4 @@
+import * as sqlite3 from "sqlite3";
 import * as reltab from "reltab";
 import * as aggtree from "../src/aggtree";
 import * as reltabSqlite from "reltab-sqlite";
@@ -10,7 +11,7 @@ log.setLevel("debug");
 
 let testCtx: reltabSqlite.SqliteContext;
 
-const importCsv = async (db, path) => {
+const importCsv = async (db: sqlite3.Database, path: string) => {
   const md = await reltabSqlite.fastImport(db, path);
 
   const ti = reltabSqlite.mkTableInfo(md);
@@ -53,7 +54,7 @@ test("initial aggtree Test", async () => {
   const rq0 = tree0.rootQuery;
   log.debug("root query exp: ", rq0);
 
-  const res0 = await testCtx.evalQuery(rq0);
+  const res0 = await testCtx.evalQuery(rq0!);
   log.debug("root query result:", res0);
   util.logTable(res0);
 

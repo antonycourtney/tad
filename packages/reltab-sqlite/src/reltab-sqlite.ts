@@ -25,7 +25,10 @@ function assertDefined<A>(x: A | undefined | null): A {
   return x;
 }
 
-const dbAll = tp.promisify((db, query, cb) => db.all(query, cb));
+const dbAll = tp.promisify(
+  (db: sqlite3.Database, query: string, cb: (err: any, res: any) => void) =>
+    db.all(query, cb)
+);
 
 interface ContextOptions {
   showQueries?: boolean;
@@ -39,7 +42,10 @@ export class SqliteContext implements Connection {
   constructor(db: any, options: ContextOptions) {
     this.db = db;
     this.tableMap = {};
-    this.showQueries = options && options.showQueries;
+    this.showQueries =
+      options != null && options.showQueries != null
+        ? options.showQueries
+        : false;
   }
 
   registerTable(ti: TableInfo) {
@@ -166,7 +172,7 @@ export class SqliteContext implements Connection {
 // A wrapper the constructor for sqlite3.Database that returns a Promise.
 const open = (filename: string, mode: number): Promise<sqlite3.Database> => {
   return new Promise((resolve, reject) => {
-    const db = new sqlite3.Database(filename, mode, (err: Error) => {
+    const db = new sqlite3.Database(filename, mode, (err: Error | null) => {
       if (err) {
         reject(err);
       }
@@ -175,7 +181,10 @@ const open = (filename: string, mode: number): Promise<sqlite3.Database> => {
   });
 };
 
-const init = async (dbfile, options: Object = {}): Promise<Connection> => {
+const init = async (
+  dbfile: string,
+  options: Object = {}
+): Promise<Connection> => {
   log.setLevel(log.levels.DEBUG);
   const db = await open(dbfile, sqlite3.OPEN_READWRITE);
   const ctx = new SqliteContext(db, options);

@@ -24,7 +24,7 @@ type NodeMap = {
 }; // internal rep, not exported
 
 const mkPathObj = (path: Path, idx: number = 0): NodeMap => {
-  let ret = {};
+  let ret: NodeMap = {};
 
   if (idx === path.length - 1) {
     ret[JSON.stringify(path[idx])] = {};
@@ -46,7 +46,7 @@ const extendNodeMap = (nm: NodeMap, path: Path): NodeMap => {
   const rest = path.slice(1);
   const subMap = nm[head];
   const restMap = subMap ? extendNodeMap(subMap, rest) : mkPathObj(rest);
-  const headObj = {};
+  const headObj: NodeMap = {};
   headObj[head] = restMap;
   return _.defaults(nm, headObj);
 }; // remove path from node map:
@@ -83,7 +83,7 @@ const trimNodeMapToDepth = (nodeMap: NodeMap, depth: number): NodeMap => {
     return {};
   }
 
-  let ret = {};
+  let ret: NodeMap = {};
 
   for (let elem in nodeMap) {
     ret[elem] = trimNodeMapToDepth(nodeMap[elem], depth - 1);

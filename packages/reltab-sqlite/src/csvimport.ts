@@ -9,12 +9,14 @@ import * as path from "path";
 import * as stream from "stream";
 import * as through from "through";
 import * as fs from "fs";
-import * as byline from "byline";
-import * as Gauge from "gauge";
 import * as sqlite3 from "sqlite3";
 import * as tp from "typed-promisify";
 import * as log from "loglevel";
-import * as CSVSnifferModule from "csv-sniffer";
+
+// No typing info for these guys yet:
+const byline = require("byline");
+const Gauge = require("gauge");
+const CSVSnifferModule = require("csv-sniffer");
 
 const CSVSniffer = CSVSnifferModule();
 const delimChars = [",", "\t", "|", ";"];
@@ -29,7 +31,7 @@ const usRealRE = /[-+]?[$]?[0-9,]*\.?[0-9]+([eE][-+]?[0-9]+)?/;
 
 const usNumREs = {
   intRE: usIntRE,
-  realRE: usRealRE
+  realRE: usRealRE,
 };
 
 // adaptations of these REs for European format, where the
@@ -39,7 +41,7 @@ const eurRealRE = /[-+]?[$]?[0-9.]*,?[0-9]+([eE][-+]?[0-9]+)?/;
 
 const eurNumREs = {
   intRE: eurIntRE,
-  realRE: eurRealRE
+  realRE: eurRealRE,
 };
 
 /*
@@ -76,7 +78,7 @@ export const mkTableInfo = (md: FileMetadata): TableInfo => {
     }
     const cmd = {
       displayName: md.columnNames[idx],
-      type: assertDefined(cType)
+      type: assertDefined(cType),
     };
     cmm[cnm] = cmd;
     return cmm;
@@ -92,7 +94,7 @@ export const mkTableInfo = (md: FileMetadata): TableInfo => {
  * We use the order int <: real <: text, and a guess will only become more general.
  * TODO: support various date formats
  */
-const guessColumnType = numREs => (
+const guessColumnType = (numREs: { [tname: string]: RegExp }) => (
   cg: ColumnType | null | undefined,
   cs: string | null | undefined
 ): ColumnType | null | undefined => {
@@ -182,7 +184,7 @@ const mkColId = (words: Array<string>): string => {
 const identRE = /[a-zA-Z]\w*/g;
 const genColumnIds = (headerRow: Array<string>): Array<string> => {
   let columnIds: Array<string> = [];
-  let colIdMap = {};
+  let colIdMap: { [cid: string]: number } = {};
   for (var i = 0; i < headerRow.length; i++) {
     let origHeader = headerRow[i];
     let matches = reFindAll(identRE, origHeader);
@@ -201,7 +203,7 @@ const genColumnIds = (headerRow: Array<string>): Array<string> => {
   return columnIds;
 };
 
-let uniqMap = {};
+let uniqMap: { [cid: string]: number } = {};
 
 /* add a numeric _N suffix to an identifer to make it unique */
 const uniquify = (src: string): string => {
@@ -237,7 +239,7 @@ const genTableName = (pathname: string): string => {
 
 const genColumnNames = (nCols: number): Array<string> => {
   const fmtNum = colNumStr(nCols);
-  const columnNames = _.range(nCols).map(x => fmtNum(x));
+  const columnNames = _.range(nCols).map((x) => fmtNum(x));
   return columnNames;
 };
 
@@ -253,7 +255,7 @@ const metaScan = (
     log.debug("file size: ", pathStats.size);
     const msStart = process.hrtime();
     let firstRow = true;
-    var colTypes: Array<string>;
+    var colTypes: Array<ColumnType>;
     let rowCount = 0;
     // extract table name from file path:
     const tableName = genTableName(pathname);
@@ -269,14 +271,14 @@ const metaScan = (
     gauge.show("scanning...", 0);
     let bytesRead = 0;
     const countStream = through(
-      function write(buf) {
+      function write(this: any, buf) {
         bytesRead += buf.length;
         const pctComplete = bytesRead / pathStats.size;
         const msg = "scanning... ( " + Math.round(pctComplete * 100) + "%)";
         gauge.show(msg, pctComplete);
         this.emit("data", buf);
       },
-      function end() {
+      function end(this: any) {
         gauge.hide();
         log.debug("countStream: bytesRead: ", bytesRead);
         this.emit("end");
@@ -284,12 +286,12 @@ const metaScan = (
     );
 
     const hasHeaderRow = !options.noHeaderRow;
-    let columnNames;
-    let columnIds;
+    let columnNames: string[];
+    let columnIds: string[];
 
     const csvStream = csv
       .parse(csvOptions)
-      .on("data", row => {
+      .on("data", (row) => {
         if (firstRow && hasHeaderRow) {
           columnNames = row;
           columnIds = genColumnIds(columnNames);
@@ -302,13 +304,13 @@ const metaScan = (
             colTypes = Array(columnIds.length).fill(null);
             firstRow = false;
           }
-          colTypes = _.zipWith(colTypes, row, guessFunc);
+          colTypes = _.zipWith(colTypes, row, guessFunc) as ColumnType[];
           rowCount++;
         }
       })
       .on("end", () => {
         // default any remaining null column types to text:
-        const columnTypes = colTypes.map(ct =>
+        const columnTypes = colTypes.map((ct) =>
           ct == null ? "text" : (ct as any)
         );
         const [es, ens] = process.hrtime(msStart);
@@ -319,7 +321,7 @@ const metaScan = (
           columnTypes,
           rowCount,
           tableName,
-          csvOptions
+          csvOptions,
         });
       });
 
@@ -357,7 +359,7 @@ const consumeStream = (
     gauge.show("loading data...", 0);
     const pctCount = Math.ceil(totalItems / 100);
 
-    const onData = row => {
+    const onData = (row: any) => {
       if (firstItem) {
         firstItem = false;
         if (skipFirst) {
@@ -398,7 +400,7 @@ const consumeStream = (
             resolve(writeCount);
           }
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     };
@@ -419,7 +421,10 @@ const consumeStream = (
   });
 };
 
-const dbRun = tp.promisify((db, query, cb) => db.run(query, cb));
+const dbRun = tp.promisify(
+  (db: sqlite3.Database, query: string, cb: (err: any, res: any) => void) =>
+    db.run(query, cb)
+);
 
 /**
  * Use metadata to create and populate sqlite table from CSV data
@@ -449,7 +454,7 @@ const importData = async (
     const qs = Array(md.columnNames.length).fill("?");
     const insertStmtStr =
       "insert into " + qTableName + " values (" + qs.join(", ") + ")";
-    const insertRow = insertStmt => row => {
+    const insertRow = (insertStmt: any) => (row: any) => {
       let rowVals = [];
       for (let i = 0; i < row.length; i++) {
         const t = md.columnTypes[i];
@@ -459,7 +464,7 @@ const importData = async (
       return insertStmt.run(rowVals);
     };
 
-    const commitBatch = isFinal => {
+    const commitBatch = (isFinal: boolean) => {
       const retp = dbRun(db, "commit").then(() =>
         isFinal ? null : db.run("begin")
       );
@@ -515,7 +520,7 @@ const readSampleLines = (
   lcount: number
 ): Promise<Array<string>> => {
   return new Promise((resolve, reject) => {
-    const ret = [];
+    const ret: string[] = [];
     const fstream = fs.createReadStream(path, { encoding: "utf8" });
     const lstream = byline(fstream);
     let linesRead = 0;
@@ -549,7 +554,7 @@ const extractRowData = (
   return new Promise((resolve, reject) => {
     csv
       .parseString(headerLine, { headers: false, delimiter })
-      .on("data", data => {
+      .on("data", (data) => {
         resolve(data);
       });
   });
@@ -573,8 +578,16 @@ const dbImport: (
   fnm: string,
   tnm: string,
   opts: ImportOpts
-) => Promise<ImportResult> = tp.promisify((db, fnm, tnm, opts, cb) =>
-  db.import(fnm, tnm, opts, cb)
+) => Promise<
+  ImportResult
+> = tp.promisify(
+  (
+    db: sqlite3.Database,
+    fnm: string,
+    tnm: string,
+    opts: any,
+    cb: (err: any, res: any) => void
+  ) => (db as any).import(fnm, tnm, opts, cb)
 );
 
 // Construct a function to format a number with leading 0s for reasonable alpha sort
@@ -622,7 +635,7 @@ export const fastImport = async (
         columnTypes: res.columnTypes,
         rowCount: res.rowCount,
         tableName: res.tableName,
-        csvOptions: {}
+        csvOptions: {},
       };
       return fileMetadata;
     }

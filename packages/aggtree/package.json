@@ -10,7 +10,7 @@
   "scripts": {
     "prepublish": "npm run build",
     "clean": "rimraf dist",
-    "build": "tsc",
+    "build": "tsc -p tsconfig-build.json",
     "test": "jest --config jest.config.json"
   },
   "dependencies": {

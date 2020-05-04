@@ -1,15 +1,10 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist",
-        "declaration": true,
-        "target": "ES5",
-        "lib": [
-            "es6",
-            "es2017",
-            "dom"
-        ]    
-    },
-    "include": [
-        "./src/*"
-    ]
+  "compilerOptions": {
+    "outDir": "./dist",
+    "declaration": true,
+    "target": "ES5",
+    "strict": true,
+    "lib": ["es6", "es2017", "dom"]
+  },
+  "include": ["./src/*", "./test/*.ts"]
 }
