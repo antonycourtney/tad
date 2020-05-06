@@ -2,6 +2,7 @@ import * as tp from "typed-promisify";
 import * as sqlite3 from "sqlite3";
 import * as log from "loglevel";
 import { TableRep, QueryExp, Schema, tableQuery } from "reltab";
+import { SQLiteDialect } from "reltab";
 import {
   TableInfoMap,
   TableInfo,
@@ -46,6 +47,9 @@ export class SqliteContext implements Connection {
       options != null && options.showQueries != null
         ? options.showQueries
         : false;
+    if (this.showQueries) {
+      log.info("SqliteContext: showQueries enabled");
+    }
   }
 
   registerTable(ti: TableInfo) {
@@ -64,14 +68,19 @@ export class SqliteContext implements Connection {
   ): Promise<TableRep> {
     let t0 = process.hrtime();
     const schema = query.getSchema(this.tableMap);
-    const sqlQuery = query.toSql(this.tableMap, offset, limit);
+    const sqlQuery = query.toSql(
+      SQLiteDialect.getInstance(),
+      this.tableMap,
+      offset,
+      limit
+    );
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
     if (this.showQueries) {
       log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("SqliteContext.evalQuery: evaluating:");
-      log.debug(sqlQuery);
+      log.info("SqliteContext.evalQuery: evaluating:");
+      log.info(sqlQuery);
     }
 
     const t2 = process.hrtime();
@@ -96,7 +105,10 @@ export class SqliteContext implements Connection {
 
   rowCount(query: QueryExp): Promise<number> {
     let t0 = process.hrtime();
-    const countSql = query.toCountSql(this.tableMap);
+    const countSql = query.toCountSql(
+      SQLiteDialect.getInstance(),
+      this.tableMap
+    );
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
@@ -111,7 +123,9 @@ export class SqliteContext implements Connection {
     return qp.then((rows) => {
       const t3 = process.hrtime(t2);
       const [t3s, t3ns] = t3;
-      log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
+      if (this.showQueries) {
+        log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
+      }
       const ret = Number.parseInt(rows[0].rowCount);
       return ret;
     });
@@ -185,7 +199,6 @@ const init = async (
   dbfile: string,
   options: Object = {}
 ): Promise<Connection> => {
-  log.setLevel(log.levels.DEBUG);
   const db = await open(dbfile, sqlite3.OPEN_READWRITE);
   const ctx = new SqliteContext(db, options);
   return ctx;
@@ -197,7 +210,6 @@ export const getContext = (
   dbfile: string,
   options: Object = {}
 ): Promise<Connection> => {
-  console.log("getContext: ", dbfile, options);
   if (!ctxPromise) {
     ctxPromise = init(dbfile, options);
   }

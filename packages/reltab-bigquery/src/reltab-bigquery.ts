@@ -11,6 +11,7 @@ import {
   ColumnMapInfo,
   ColumnExtendVal,
   Connection,
+  BigQueryDialect,
 } from "reltab";
 import { BigQuery, Dataset } from "@google-cloud/bigquery";
 
@@ -31,6 +32,7 @@ export class BigQueryConnection implements Connection {
   projectId: string;
   datasetName: string;
   bigquery: BigQuery;
+  bigquery_meta: BigQuery;
   dataset: Dataset;
   tableMap: TableInfoMap;
   showQueries: boolean;
@@ -43,8 +45,9 @@ export class BigQueryConnection implements Connection {
     this.projectId = projectId;
     this.datasetName = datasetName;
 
-    this.bigquery = new BigQuery({ projectId, location: LOCATION });
-    this.dataset = this.bigquery.dataset(datasetName);
+    this.bigquery = new BigQuery();
+    this.bigquery_meta = new BigQuery({ projectId, location: LOCATION });
+    this.dataset = this.bigquery_meta.dataset(datasetName);
     this.tableMap = {};
     this.showQueries =
       options != null && options.showQueries != null
@@ -59,7 +62,12 @@ export class BigQueryConnection implements Connection {
   ): Promise<TableRep> {
     let t0 = process.hrtime();
     const schema = query.getSchema(this.tableMap);
-    const sqlQuery = query.toSql(this.tableMap, offset, limit);
+    const sqlQuery = query.toSql(
+      BigQueryDialect.getInstance(),
+      this.tableMap,
+      offset,
+      limit
+    );
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
@@ -92,7 +100,10 @@ export class BigQueryConnection implements Connection {
 
   async rowCount(query: QueryExp): Promise<number> {
     let t0 = process.hrtime();
-    const countSql = query.toCountSql(this.tableMap);
+    const countSql = query.toCountSql(
+      BigQueryDialect.getInstance(),
+      this.tableMap
+    );
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 

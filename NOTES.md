@@ -55,5 +55,22 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 [ ] Validate that we can change decimal places in different columns; comment in NumFormatPanel suggests panel
 can be re-used in strange ways.
 [ ] Deal gracefully with network errors
-[ ] Electron app: port various event handlers from renderMain
-[ ] Electron app: Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app
+[ ] Electron app: port various event handlers from renderMain to web app
+[ ] Electron app: Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app in web app
+[ ] Migrate reltab AST to use typescript tagged unions (kill tableArgs / valArgs)
+[ ] Need to account for constant expressions (numbers and string literals) vs column references coming from an extend
+operation that can end up in a SQL select column expression. Probably time for a tagged union!
+[ ] static analysis of tables mentioned in a query
+
+### Features to add before next release:
+
+[ ] Multiple database support (at least bigquery)
+[ ] Web server running publicly
+[ ] Datasets and table selector UI
+[ ] Font size preferences
+[ ] horizontal pivots
+[ ] heat maps
+[ ] spark lines
+[ ] column extensions
+[ ] date and time columns
+[ ] large text rendering

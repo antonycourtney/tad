@@ -1,4 +1,10 @@
 import * as _ from "lodash";
+import { SQLDialect } from "./dialect";
+import { BigQueryDialect } from "./dialects/BigQueryDialect";
+import { SQLiteDialect } from "./dialects/SQLiteDialect";
+export { BigQueryDialect, SQLiteDialect };
+
+const defaultDialect = SQLiteDialect.getInstance();
 
 /**
  * AST for filter expressions, consisting of a tree of
@@ -387,9 +393,10 @@ type QueryOp =
   | "sort"
   | "extend"
   | "join";
-export type AggFn = "avg" | "count" | "min" | "max" | "sum" | "uniq" | "null"; // An AggColSpec is either a column name (for default aggregation based on column type
-// or a pair of column name and AggFn
+export type AggFn = "avg" | "count" | "min" | "max" | "sum" | "uniq" | "null";
 
+// An AggColSpec is either a column name (for default aggregation based on column type
+// or a pair of column name and AggFn
 export type AggColSpec = string | [AggFn, string];
 export type Scalar = number | string | boolean | undefined | null;
 export type Row = {
@@ -481,14 +488,7 @@ export class QueryExp {
   project(cols: Array<string>): QueryExp {
     return new QueryExp("project", [cols], [this]);
   }
-  /* We'd like to use Array<AggColSpec> as arg to groupBy but
-   * that causes Flow to get confused. We can probably fix
-   * by changing QueryExp to be a Disjoint Union type instead
-   * of current untyped args arrays (which predates adding Flow annotations):
-   * https://flow.org/en/docs/types/unions/#toc-disjoint-unions
-   */
-
-  groupBy(cols: Array<string>, aggs: Array<any>): QueryExp {
+  groupBy(cols: string[], aggs: AggColSpec[]): QueryExp {
     const gbArgs: Array<any> = [cols];
     gbArgs.push(aggs);
     return new QueryExp("groupBy", gbArgs, [this]);
@@ -537,15 +537,16 @@ export class QueryExp {
   }
 
   toSql(
+    dialect: SQLDialect,
     tableMap: TableInfoMap,
     offset: number = -1,
     limit: number = -1
   ): string {
-    return ppSQLQuery(queryToSql(tableMap, this), offset, limit);
+    return ppSQLQuery(dialect, queryToSql(tableMap, this), offset, limit);
   }
 
-  toCountSql(tableMap: TableInfoMap): string {
-    return ppSQLQuery(queryToCountSql(tableMap, this), -1, -1);
+  toCountSql(dialect: SQLDialect, tableMap: TableInfoMap): string {
+    return ppSQLQuery(dialect, queryToCountSql(tableMap, this), -1, -1);
   }
 
   getSchema(tableMap: TableInfoMap): Schema {
@@ -806,12 +807,10 @@ const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
  */
 
 /* AST for generating SQL queries */
-
-type SQLSelectAsExp = {
-  colExp: string;
-  as: string;
+type SQLSelectColExp = {
+  colExp: AggColSpec;
+  as?: string;
 };
-type SQLSelectColExp = string | SQLSelectAsExp;
 type SQLSortColExp = {
   col: string;
   asc: boolean;
@@ -847,57 +846,104 @@ type StringBuffer = Array<string>;
  * get Column Id from a SQLSelectColExp -- essential when hoisting column names from
  * subquery
  */
-
 const getColId = (cexp: SQLSelectColExp): string => {
-  return typeof cexp === "string" ? cexp : cexp.as;
+  let ret: string;
+  if (cexp.as != null) {
+    ret = cexp.as;
+  } else {
+    const { colExp } = cexp;
+    if (typeof colExp === "string") {
+      ret = colExp;
+    } else {
+      const [aggFn, _] = colExp;
+      ret = aggFn;
+    }
+  }
+  return ret;
 };
 /*
  * not-so-pretty print a SQL query
  */
-
-const ppSelColExp = (exp: SQLSelectColExp): string => {
-  if (typeof exp === "string") {
-    return quoteCol(exp);
-  }
-
-  return `${exp.colExp} as ${quoteCol(exp.as)}`;
-};
-
-const ppSortColExp = (exp: SQLSortColExp): string => {
-  const optDescStr = exp.asc ? "" : " desc";
-  return `${quoteCol(exp.col)}${optDescStr}`;
-};
-
 const ppOut = (dst: StringBuffer, depth: number, str: string): void => {
   const indentStr = "  ".repeat(depth);
   dst.push(indentStr);
   dst.push(str);
 };
 
-const ppSQLSelect = (dst: StringBuffer, depth: number, ss: SQLSelectAST) => {
-  const selColStr = ss.selectCols.map(ppSelColExp).join(", ");
+const genUniq = (aggStr: string, qcid: string) =>
+  `case when min(${qcid})=max(${qcid}) then min(${qcid}) else null end`;
+const genNull = (aggStr: string, qcid: string) => "null";
+const genAgg = (aggStr: string, qcid: string) => aggStr + "(" + qcid + ")";
+
+const ppCol = (dialect: SQLDialect, cid: string): string => {
+  let ret: string;
+  if (cid === "*") {
+    ret = "*";
+  } else {
+    ret = dialect.quoteCol(cid);
+  }
+  return ret;
+};
+
+const ppAggColSpec = (dialect: SQLDialect, cexp: AggColSpec): string => {
+  let ret: string;
+  if (typeof cexp === "string") {
+    ret = ppCol(dialect, cexp);
+  } else {
+    const [aggStr, cid] = cexp;
+    const aggFn =
+      aggStr === "uniq" ? genUniq : aggStr === "null" ? genNull : genAgg;
+
+    ret = aggFn(aggStr, ppCol(dialect, cid));
+  }
+  return ret;
+};
+
+const ppSelColExp = (dialect: SQLDialect, exp: SQLSelectColExp): string => {
+  let ret: string;
+  ret = ppAggColSpec(dialect, exp.colExp);
+  if (exp.as != null) {
+    ret += ` as ${dialect.quoteCol(exp.as)}`;
+  }
+  return ret;
+};
+
+const ppSortColExp = (dialect: SQLDialect, exp: SQLSortColExp): string => {
+  const optDescStr = exp.asc ? "" : " desc";
+  return `${dialect.quoteCol(exp.col)}${optDescStr}`;
+};
+
+const ppSQLSelect = (
+  dialect: SQLDialect,
+  dst: StringBuffer,
+  depth: number,
+  ss: SQLSelectAST
+) => {
+  const selColStr = ss.selectCols
+    .map((exp) => ppSelColExp(dialect, exp))
+    .join(", ");
   ppOut(dst, depth, `SELECT ${selColStr}\n`);
   ppOut(dst, depth, "FROM ");
   const fromVal = ss.from;
 
   if (typeof fromVal === "string") {
-    dst.push("'" + fromVal + "'\n");
+    dst.push(dialect.quoteCol(fromVal) + "\n");
   } else if (fromVal.kind === "join") {
     // join condition:
     const { lhs, rhs } = fromVal;
     dst.push("(\n");
-    auxPPSQLQuery(dst, depth + 1, lhs);
+    auxPPSQLQuery(dialect, dst, depth + 1, lhs);
     dst.push(") LEFT OUTER JOIN (\n");
-    auxPPSQLQuery(dst, depth + 1, rhs);
+    auxPPSQLQuery(dialect, dst, depth + 1, rhs);
     dst.push(")\n");
 
     if (ss.on) {
-      const qcols = ss.on.map(quoteCol);
+      const qcols = ss.on.map(dialect.quoteCol);
       dst.push("USING (" + qcols.join(", ") + ")\n");
     }
   } else {
     dst.push("(\n");
-    auxPPSQLQuery(dst, depth + 1, fromVal.query);
+    auxPPSQLQuery(dialect, dst, depth + 1, fromVal.query);
     ppOut(dst, depth, ")\n");
   }
 
@@ -906,23 +952,26 @@ const ppSQLSelect = (dst: StringBuffer, depth: number, ss: SQLSelectAST) => {
   }
 
   if (ss.groupBy.length > 0) {
-    const gbStr = ss.groupBy.map(quoteCol).join(", ");
+    const gbStr = ss.groupBy.map(dialect.quoteCol).join(", ");
     ppOut(dst, depth, `GROUP BY ${gbStr}\n`);
   }
 
   if (ss.orderBy.length > 0) {
-    const obStr = ss.orderBy.map(ppSortColExp).join(", ");
+    const obStr = ss.orderBy
+      .map((exp) => ppSortColExp(dialect, exp))
+      .join(", ");
     ppOut(dst, depth, `ORDER BY ${obStr}\n`);
   }
 }; // internal, recursive function:
 
 const auxPPSQLQuery = (
+  dialect: SQLDialect,
   dst: StringBuffer,
   depth: number,
   query: SQLQueryAST
 ) => {
   query.selectStmts.forEach((selStmt, idx) => {
-    ppSQLSelect(dst, depth, selStmt);
+    ppSQLSelect(dialect, dst, depth, selStmt);
 
     if (idx < query.selectStmts.length - 1) {
       ppOut(dst, depth, "UNION ALL\n");
@@ -931,12 +980,13 @@ const auxPPSQLQuery = (
 }; // external (top-level) function:
 
 const ppSQLQuery = (
+  dialect: SQLDialect,
   query: SQLQueryAST,
   offset: number,
   limit: number
 ): string => {
   let strBuf: StringBuffer = [];
-  auxPPSQLQuery(strBuf, 0, query);
+  auxPPSQLQuery(dialect, strBuf, 0, query);
 
   if (offset !== -1) {
     ppOut(strBuf, 0, "LIMIT ");
@@ -959,9 +1009,9 @@ const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): SQLQueryAST => {
   const tableName = tq.valArgs[0];
   const schema = tableMap[tableName].schema; // apparent Flow bug request Array<any> here:
 
-  const selectCols: Array<any> = schema.columns;
+  const selectCols = schema.columns;
   const sel = {
-    selectCols,
+    selectCols: selectCols.map((cid) => ({ colExp: cid })),
     from: tableName,
     where: "",
     groupBy: [],
@@ -971,8 +1021,6 @@ const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): SQLQueryAST => {
     selectStmts: [sel],
   };
 };
-
-const quoteCol = (cid: string) => '"' + cid + '"';
 
 // Gather map by column id of SQLSelectColExp in a SQLSelectAST
 const selectColsMap = (
@@ -1003,10 +1051,10 @@ const projectQueryToSql = (
       let outCol = colsMap[cid];
 
       if (outCol === undefined) {
-        const sqStr = ppSQLQuery(sqsql, -1, -1);
+        const sqStr = ppSQLQuery(defaultDialect, sqsql, -1, -1);
         throw new Error(
           "projectQueryToSql: no such column " +
-            quoteCol(cid) +
+            defaultDialect.quoteCol(cid) +
             " in subquery:  " +
             sqStr
         );
@@ -1041,18 +1089,13 @@ const groupByQueryToSql = (
   tableMap: TableInfoMap,
   query: QueryExp
 ): SQLQueryAST => {
-  const [cols, aggSpecs] = query.valArgs;
-  const inSchema = query.tableArgs[0].getSchema(tableMap); // emulate the uniq and null aggregation functions:
+  const cols: string[] = query.valArgs[0];
+  const aggSpecs: AggColSpec[] = query.valArgs[1];
+  const inSchema = query.tableArgs[0].getSchema(tableMap);
 
-  const genUniq = (aggStr: string, qcid: string) =>
-    `case when min(${qcid})=max(${qcid}) then min(${qcid}) else null end`;
-
-  const genNull = (aggStr: string, qcid: string) => "null";
-
-  const genAgg = (aggStr: string, qcid: string) => aggStr + "(" + qcid + ")"; // Get the aggregation expressions for each aggCol:
-
-  const aggExprs = aggSpecs.map((aggSpec: string | string[]) => {
-    let aggStr;
+  // emulate the uniq and null aggregation functions:
+  const aggExprs: SQLSelectColExp[] = aggSpecs.map((aggSpec) => {
+    let aggStr: AggFn;
     let cid;
 
     if (typeof aggSpec === "string") {
@@ -1063,15 +1106,17 @@ const groupByQueryToSql = (
       [aggStr, cid] = aggSpec;
     }
 
-    const aggFn =
-      aggStr === "uniq" ? genUniq : aggStr === "null" ? genNull : genAgg;
     return {
-      colExp: aggFn(aggStr, quoteCol(cid)),
+      colExp: [aggStr, cid],
       as: cid,
     };
   });
-  const selectCols = cols.concat(aggExprs);
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]); // If sub-query is just a single select with no group by
+
+  const selectGbCols: SQLSelectColExp[] = cols.map((cid) => ({ colExp: cid }));
+  const selectCols = selectGbCols.concat(aggExprs);
+  const sqsql = queryToSql(tableMap, query.tableArgs[0]);
+
+  // If sub-query is just a single select with no group by
   // and where every select expression a simple column id
   // we can rewrite it:
 
@@ -1080,7 +1125,10 @@ const groupByQueryToSql = (
 
   if (
     sqsql.selectStmts.length === 1 &&
-    _.every(subSel.selectCols, (sc) => typeof sc === "string") &&
+    _.every(
+      subSel.selectCols,
+      (sc) => typeof sc.colExp === "string" && sc.as === undefined
+    ) &&
     subSel.where.length === 0 &&
     subSel.groupBy.length === 0 &&
     subSel.orderBy.length === 0
@@ -1140,7 +1188,7 @@ const filterQueryToSql = (
       query: sqsql,
     };
     retSel = {
-      selectCols,
+      selectCols: selectCols.map((cid: string) => ({ colExp: cid })),
       from,
       where: whereStr,
       groupBy: [],
@@ -1167,23 +1215,17 @@ const mapColumnsQueryToSql = (byIndex: boolean) => (
     cexp: SQLSelectColExp,
     index: number
   ): SQLSelectColExp => {
-    const inCid = typeof cexp === "string" ? cexp : cexp.as;
+    const inCid = cexp.as != null ? cexp.as : (cexp.colExp as string);
     const mapKey = byIndex ? index.toString() : inCid;
     const outCid = cMap.hasOwnProperty(mapKey) ? cMap[mapKey].id : inCid;
-
-    if (typeof cexp === "string") {
-      return {
-        colExp: quoteCol(cexp),
-        as: outCid,
-      };
-    } // Otherwise it's a SQLSelectAsExp -- apply rename to 'as' part:
 
     return {
       colExp: cexp.colExp,
       as: outCid,
     };
-  }; // rewrite an individual select statement by applying rename mapping:
+  };
 
+  // rewrite an individual select statement by applying rename mapping:
   const rewriteSel = (sel: SQLSelectAST): SQLSelectAST => {
     const selectCols = sel.selectCols.map(applyColRename);
     return _.defaults(
@@ -1240,7 +1282,7 @@ const sortQueryToSql = (
       query: sqsql,
     };
     retSel = {
-      selectCols,
+      selectCols: selectCols.map((cid) => ({ colExp: cid })),
       from,
       where: "",
       groupBy: [],
@@ -1307,7 +1349,8 @@ const extendQueryToSql = (
       subSel
     );
   } else {
-    let selectCols: SQLSelectColExp[] = subSel.selectCols.map(getColId);
+    let colIds = subSel.selectCols.map(getColId);
+    let selectCols: SQLSelectColExp[] = colIds.map((cid) => ({ colExp: cid }));
     selectCols.push({
       colExp,
       as,
@@ -1324,6 +1367,11 @@ const extendQueryToSql = (
       orderBy: [],
     };
   }
+
+  console.log(
+    "extendQueryToSql: selectCols: ",
+    JSON.stringify(retSel, undefined, 2)
+  );
 
   return {
     selectStmts: [retSel],
@@ -1384,14 +1432,15 @@ const queryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
 
   const ret = gen(tableMap, query);
   return ret;
-}; // Generate a count(*) as rowCount wrapper around a query:
+};
 
+// Generate a count(*) as rowCount wrapper around a query:
 const queryToCountSql = (
   tableMap: TableInfoMap,
   query: QueryExp
 ): SQLQueryAST => {
   const sqsql = queryToSql(tableMap, query);
-  const colExp = "count(*)";
+  const colExp: AggColSpec = ["count", "*"];
   const as = "rowCount";
   const selectCols = [
     {

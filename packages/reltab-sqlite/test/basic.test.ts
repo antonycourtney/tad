@@ -9,8 +9,6 @@ import * as util from "./testUtils";
 
 const { col, constVal } = reltab;
 
-log.setLevel("debug");
-
 let testCtx: reltabSqlite.SqliteContext;
 
 test("t0 - trivial query generation", () => {
@@ -37,7 +35,11 @@ const importCsv = async (db: sqlite3.Database, path: string) => {
 
 beforeAll(
   async (): Promise<reltabSqlite.SqliteContext> => {
-    const ctx = await reltabSqlite.getContext(":memory:");
+    // log.setLevel("debug");
+    const showQueries = false;
+    const ctx = await reltabSqlite.getContext(":memory:", {
+      showQueries,
+    });
 
     testCtx = ctx as reltabSqlite.SqliteContext;
 

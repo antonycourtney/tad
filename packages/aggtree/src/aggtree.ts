@@ -1,7 +1,7 @@
 import * as reltab from "reltab";
 import * as _ from "lodash";
 import { Path, PathTree } from "./PathTree";
-import { Connection, QueryExp, Schema } from "reltab"; // eslint-disable-line
+import { Connection, QueryExp, Schema, AggColSpec } from "reltab"; // eslint-disable-line
 
 export * from "./PathTree";
 
@@ -396,7 +396,7 @@ export function vpivot(
   const hiddenCols = ["_depth", "_pivot", "_isRoot"];
   const outCols = baseSchema.columns.concat(hiddenCols);
   const gbCols = baseSchema.columns.slice();
-  const gbAggs =
+  const gbAggs: AggColSpec[] =
     aggMap != null ? gbCols.map((cid) => [aggMap[cid], cid]) : gbCols;
   let rootQuery = null;
 

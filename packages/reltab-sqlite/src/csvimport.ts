@@ -627,7 +627,7 @@ export const fastImport = async (
       const importOpts = { columnIds, delimiter, noHeaderRow };
       const res = await dbImport(db, pathname, tableName, importOpts);
       const [es, ens] = process.hrtime(importStart);
-      log.info("fastImport: import completed in %ds %dms", es, ens / 1e6);
+      log.debug("fastImport: import completed in %ds %dms", es, ens / 1e6);
       // log.debug('import info: ', res)
       const fileMetadata = {
         columnIds: res.columnIds,
