@@ -1,6 +1,7 @@
 import commandLineArgs from "command-line-args";
 import getUsage from "command-line-usage";
 import log from "electron-log";
+import * as logLevel from "loglevel";
 import * as reltab from "reltab";
 import * as reltabSqlite from "reltab-sqlite";
 import * as setup from "./setup";
@@ -101,6 +102,9 @@ const initMainAsync = async (
 
   if (options["show-queries"]) {
     rtOptions.showQueries = true;
+    // *sigh*: This doesn't seem to propapagate to reltab-sqlite...npm duplication issue?
+    logLevel.setLevel(logLevel.levels.INFO);
+    log.info("initMainAsync: set log level to INFO");
   }
 
   let rtc: reltabSqlite.SqliteContext;

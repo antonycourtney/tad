@@ -175,3 +175,31 @@ test("concat", async () => {
   const jobs = _.sortedUniq(jobCol);
   expect(jobs).toEqual(["Executive Management", "Safety"]);
 });
+
+const q9 = q8.sort([["Name", true]]);
+
+test("basic sort", async () => {
+  const res = await testCtx.evalQuery(q9);
+  expect(res).toMatchSnapshot();
+});
+
+const q10 = q8.sort([
+  ["JobFamily", true],
+  ["TCOE", false],
+]);
+
+test("compound key sort", async () => {
+  const res = await testCtx.evalQuery(q10);
+  expect(res).toMatchSnapshot();
+});
+
+/*
+ * We'd need to put back expression syntax in extend first:
+const q11 = q8.extend('ExtraComp', {type: 'integer'}, col('TCOE - Base'));
+const dbTest11 = (htest) => {
+  sqliteQueryTest(htest, 'extend with expression', q11, (t, res) => {
+    util.logTable(res)
+    t.end()
+  })
+}
+*/

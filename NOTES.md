@@ -65,12 +65,12 @@ operation that can end up in a SQL select column expression. Probably time for a
 ### Features to add before next release:
 
 [ ] Multiple database support (at least bigquery)
+[ ] column extensions
+[ ] date and time columns
+[ ] large text rendering
 [ ] Web server running publicly
 [ ] Datasets and table selector UI
 [ ] Font size preferences
 [ ] horizontal pivots
 [ ] heat maps
 [ ] spark lines
-[ ] column extensions
-[ ] date and time columns
-[ ] large text rendering

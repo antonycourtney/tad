@@ -461,6 +461,190 @@ TableRep {
 }
 `;
 
+exports[`basic sort 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 312461,
+      "JobFamily": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 206914,
+      "JobFamily": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 298700,
+      "JobFamily": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 152125,
+      "JobFamily": "Safety",
+      "Name": "Hardy, Leonard",
+      "TCOE": 211941,
+      "Title": "Chief Safety Officer",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 212647,
+      "JobFamily": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+    },
+  ],
+  "schema": Schema {
+    "_sortedColumns": null,
+    "columnIndices": Object {
+      "Base": 2,
+      "JobFamily": 4,
+      "Name": 0,
+      "TCOE": 3,
+      "Title": 1,
+      "Union": 5,
+    },
+    "columnMetadata": Object {
+      "Base": Object {
+        "displayName": "Base",
+        "type": "integer",
+      },
+      "JobFamily": Object {
+        "displayName": "Job Family",
+        "type": "text",
+      },
+      "Name": Object {
+        "displayName": "Name",
+        "type": "text",
+      },
+      "TCOE": Object {
+        "displayName": "TCOE",
+        "type": "integer",
+      },
+      "Title": Object {
+        "displayName": "Title",
+        "type": "text",
+      },
+      "Union": Object {
+        "displayName": "Union",
+        "type": "text",
+      },
+    },
+    "columns": Array [
+      "Name",
+      "Title",
+      "Base",
+      "TCOE",
+      "JobFamily",
+      "Union",
+    ],
+  },
+}
+`;
+
+exports[`compound key sort 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 298700,
+      "JobFamily": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 312461,
+      "JobFamily": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 212647,
+      "JobFamily": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 206914,
+      "JobFamily": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 152125,
+      "JobFamily": "Safety",
+      "Name": "Hardy, Leonard",
+      "TCOE": 211941,
+      "Title": "Chief Safety Officer",
+      "Union": "Non-Represented",
+    },
+  ],
+  "schema": Schema {
+    "_sortedColumns": null,
+    "columnIndices": Object {
+      "Base": 2,
+      "JobFamily": 4,
+      "Name": 0,
+      "TCOE": 3,
+      "Title": 1,
+      "Union": 5,
+    },
+    "columnMetadata": Object {
+      "Base": Object {
+        "displayName": "Base",
+        "type": "integer",
+      },
+      "JobFamily": Object {
+        "displayName": "Job Family",
+        "type": "text",
+      },
+      "Name": Object {
+        "displayName": "Name",
+        "type": "text",
+      },
+      "TCOE": Object {
+        "displayName": "TCOE",
+        "type": "integer",
+      },
+      "Title": Object {
+        "displayName": "Title",
+        "type": "text",
+      },
+      "Union": Object {
+        "displayName": "Union",
+        "type": "text",
+      },
+    },
+    "columns": Array [
+      "Name",
+      "Title",
+      "Base",
+      "TCOE",
+      "JobFamily",
+      "Union",
+    ],
+  },
+}
+`;
+
 exports[`t1 - basic sqlite tableQuery 1`] = `
 TableRep {
   "rowData": Array [

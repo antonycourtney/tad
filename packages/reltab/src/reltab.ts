@@ -1046,19 +1046,27 @@ const ppSQLQuery = (
   offset: number,
   limit: number
 ): string => {
-  let strBuf: StringBuffer = [];
-  auxPPSQLQuery(dialect, strBuf, 0, query);
+  try {
+    let strBuf: StringBuffer = [];
+    auxPPSQLQuery(dialect, strBuf, 0, query);
 
-  if (offset !== -1) {
-    ppOut(strBuf, 0, "LIMIT ");
-    ppOut(strBuf, 0, limit.toString());
-    ppOut(strBuf, 0, " OFFSET ");
-    ppOut(strBuf, 0, offset.toString());
-    ppOut(strBuf, 0, "\n");
+    if (offset !== -1) {
+      ppOut(strBuf, 0, "LIMIT ");
+      ppOut(strBuf, 0, limit.toString());
+      ppOut(strBuf, 0, " OFFSET ");
+      ppOut(strBuf, 0, offset.toString());
+      ppOut(strBuf, 0, "\n");
+    }
+
+    const retStr = strBuf.join("");
+    return retStr;
+  } catch (err) {
+    console.error(
+      "ppSQLQuery: Caught exception pretty printing SQLQuery: ",
+      JSON.stringify(query, undefined, 2)
+    );
+    throw err;
   }
-
-  const retStr = strBuf.join("");
-  return retStr;
 };
 
 type GenSQLFunc = (tableMap: TableInfoMap, q: QueryExp) => SQLQueryAST;
@@ -1068,7 +1076,7 @@ type GenSQLMap = {
 
 const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): SQLQueryAST => {
   const tableName = tq.valArgs[0];
-  const schema = tableMap[tableName].schema; // apparent Flow bug request Array<any> here:
+  const schema = tableMap[tableName].schema;
 
   const selectCols = schema.columns;
   const sel = {
@@ -1448,7 +1456,7 @@ const joinQueryToSql = (
   const rhs = queryToSql(tableMap, rhsQuery);
   const outSchema = query.getSchema(tableMap); // any type here is flow bug workaround
 
-  const selectCols: Array<any> = outSchema.columns;
+  const selectCols: SQLSelectListItem[] = outSchema.columns.map(mkColSelItem);
   const from: SQLFromJoin = {
     expType: "join",
     joinType,

@@ -43,6 +43,9 @@ export class SqliteContext implements Connection {
         ? options.showQueries
         : false;
     if (this.showQueries) {
+      log.setLevel(
+        Math.min(log.getLevel(), log.levels.INFO) as log.LogLevelDesc
+      );
       log.info("SqliteContext: showQueries enabled");
     }
   }
@@ -192,21 +195,25 @@ const open = (filename: string, mode: number): Promise<sqlite3.Database> => {
 
 const init = async (
   dbfile: string,
-  options: Object = {}
+  options: ContextOptions = {}
 ): Promise<Connection> => {
   const db = await open(dbfile, sqlite3.OPEN_READWRITE);
   const ctx = new SqliteContext(db, options);
   return ctx;
 };
 
-// get (singleton) connection to sqlite:
-let ctxPromise: Promise<Connection> | undefined | null = null;
+let ctxCache: { [key: string]: Promise<Connection> } = {};
+
 export const getContext = (
   dbfile: string,
-  options: Object = {}
+  options: ContextOptions = {}
 ): Promise<Connection> => {
+  let ctxPromise: Promise<Connection> | undefined;
+  const key = JSON.stringify({ dbfile, options });
+  ctxPromise = ctxCache[key];
   if (!ctxPromise) {
     ctxPromise = init(dbfile, options);
+    ctxCache[key] = ctxPromise;
   }
 
   return ctxPromise;

@@ -13,7 +13,7 @@ log.setLevel("debug");
 
 let testCtx: reltabSqlite.SqliteContext;
 
-const importCsv = async (db: sqlite3.Database, path: string) => {
+const impotestCtxsv = async (db: sqlite3.Database, path: string) => {
   const md = await reltabSqlite.fastImport(db, path);
 
   const ti = reltabSqlite.mkTableInfo(md);
@@ -30,8 +30,8 @@ beforeAll(
 
     const db = testCtx.db;
 
-    await importCsv(db, "../reltab-sqlite/test/support/sample.csv");
-    await importCsv(db, "../reltab-sqlite/test/support/barttest.csv");
+    await impotestCtxsv(db, "../reltab-sqlite/test/support/sample.csv");
+    await impotestCtxsv(db, "../reltab-sqlite/test/support/barttest.csv");
 
     return testCtx;
   }
@@ -114,4 +114,50 @@ test("initial aggtree Test", async () => {
 
   console.log("after treeQuery for path /Executive Management: ");
   util.logTable(res4);
+});
+
+// Based on aggTreeTest1 from original Tad test suite:
+test("basic sorted aggTree test", async () => {
+  const q0 = reltab.tableQuery("barttest").project(pcols);
+  const schema = await aggtree.getBaseSchema(testCtx, q0);
+  const tree0 = aggtree.vpivot(
+    testCtx,
+    q0,
+    schema,
+    ["JobFamily", "Title"],
+    "Name",
+    true,
+    [
+      ["TCOE", false],
+      ["Base", true],
+      ["Title", true],
+    ]
+  );
+
+  console.log("vpivot initial promise resolved...");
+
+  const sq1 = tree0.getSortQuery(1);
+
+  const res = await testCtx.evalQuery(sq1);
+  console.log("sort query depth 1: ");
+  util.logTable(res);
+
+  expect(res).toMatchSnapshot();
+
+  const sq2 = tree0.getSortQuery(2);
+
+  const res2 = await testCtx.evalQuery(sq2);
+  console.log("sort query depth 2: ");
+  util.logTable(res2);
+  expect(res2).toMatchSnapshot();
+
+  const q1 = tree0.applyPath([]);
+
+  console.log("got depth 1 query and sortQuery, joining...: ");
+  const jq1 = q1.join(sq1, "_path0");
+  const jres = await testCtx.evalQuery(jq1);
+
+  console.log("result of join query: ");
+  util.logTable(jres);
+  expect(jres).toMatchSnapshot();
 });
