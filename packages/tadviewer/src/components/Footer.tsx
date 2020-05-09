@@ -6,6 +6,7 @@ import { AppState } from "../AppState";
 import { ViewState } from "../ViewState";
 import { StateRef } from "oneref";
 import { useState } from "react";
+import { defaultDialect } from "reltab";
 
 export interface FooterProps {
   appState: AppState;
@@ -61,7 +62,7 @@ export const Footer: React.FunctionComponent<FooterProps> = ({
   };
 
   const filterExp = appState.viewState.viewParams.filterExp;
-  const filterStr = filterExp.toSqlWhere();
+  const filterStr = filterExp.toSqlWhere(defaultDialect);
 
   const expandClass = expanded ? "footer-expanded" : "footer-collapsed";
 
