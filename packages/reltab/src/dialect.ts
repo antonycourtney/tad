@@ -4,4 +4,5 @@
 
 export interface SQLDialect {
   stringType: string; // name of the string type: "TEXT" for SQLite, "STRING" for BigQuery,...
+  quoteCol(cid: string): string;
 }

@@ -127,6 +127,14 @@ test("escaped literal string filter", async () => {
   expect(res.rowData.length).toBe(1);
 });
 
+test("empty and filter", async () => {
+  const q5c = q1.filter(reltab.and());
+
+  const res = await testCtx.evalQuery(q5c);
+  console.log("empty filter, result row count: ", res.rowData.length);
+  util.logTable(res);
+});
+
 test("query deserialization", async () => {
   let req: Object = { query: q5 };
   const ser5 = JSON.stringify(req, null, 2);

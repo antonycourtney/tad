@@ -46,9 +46,7 @@ export const col = (colName: string): ColRef => ({
 
 export type ValExp = ConstVal | ColRef;
 
-const quoteCol = (cid: string): string => `"${cid}"`;
-
-const valExpToSqlStr = (vexp: ValExp): string => {
+const valExpToSqlStr = (dialect: SQLDialect, vexp: ValExp): string => {
   let ret: string;
   switch (vexp.expType) {
     case "ConstVal":
@@ -60,7 +58,7 @@ const valExpToSqlStr = (vexp: ValExp): string => {
           : vexp.val.toString();
       break;
     case "ColRef":
-      ret = quoteCol(vexp.colName);
+      ret = dialect.quoteCol(vexp.colName);
       break;
     default:
       const invalid: never = vexp;
@@ -88,10 +86,12 @@ const colExtendExpToSqlStr = (
   let ret: string;
   switch (cexp.expType) {
     case "ColAsString":
-      ret = `CAST(${valExpToSqlStr(cexp.colRef)} AS ${dialect.stringType})`;
+      ret = `CAST(${valExpToSqlStr(dialect, cexp.colRef)} AS ${
+        dialect.stringType
+      })`;
       break;
     default:
-      ret = valExpToSqlStr(cexp);
+      ret = valExpToSqlStr(dialect, cexp);
   }
   return ret;
 };
@@ -232,7 +232,12 @@ export const opDisplayName = (op: RelOp): string => {
   return ppOpMap[op];
 };
 
-const textOpToSqlWhere = (lhs: ValExp, op: BinRelOp, rhs: ValExp): string => {
+const textOpToSqlWhere = (
+  dialect: SQLDialect,
+  lhs: ValExp,
+  op: BinRelOp,
+  rhs: ValExp
+): string => {
   if (rhs.expType !== "ConstVal") {
     throw new Error(
       "textOpToSqlWhere: only constants supported for rhs of text ops"
@@ -245,7 +250,7 @@ const textOpToSqlWhere = (lhs: ValExp, op: BinRelOp, rhs: ValExp): string => {
   if (op === "IN" || op === "NOTIN") {
     const inVals: Array<string> = rhs.val as any;
     const inStr = inVals.map(sqlEscapeString).join(", ");
-    ret = valExpToSqlStr(lhs) + " " + negStr + "IN (" + inStr + ")";
+    ret = valExpToSqlStr(dialect, lhs) + " " + negStr + "IN (" + inStr + ")";
   } else {
     // assume match operator:
     let matchStr = "";
@@ -271,7 +276,11 @@ const textOpToSqlWhere = (lhs: ValExp, op: BinRelOp, rhs: ValExp): string => {
     }
 
     ret =
-      valExpToSqlStr(lhs) + " " + negStr + "LIKE " + sqlEscapeString(matchStr);
+      valExpToSqlStr(dialect, lhs) +
+      " " +
+      negStr +
+      "LIKE " +
+      sqlEscapeString(matchStr);
   }
 
   return ret;
@@ -290,13 +299,15 @@ export class BinRelExp {
     this.rhs = rhs;
   }
 
-  toSqlWhere(): string {
+  toSqlWhere(dialect: SQLDialect): string {
     if (opIsTextOnly(this.op)) {
-      return textOpToSqlWhere(this.lhs, this.op, this.rhs);
+      return textOpToSqlWhere(dialect, this.lhs, this.op, this.rhs);
     }
 
     return (
-      valExpToSqlStr(this.lhs) + ppOpMap[this.op] + valExpToSqlStr(this.rhs)
+      valExpToSqlStr(dialect, this.lhs) +
+      ppOpMap[this.op] +
+      valExpToSqlStr(dialect, this.rhs)
     );
   }
 
@@ -319,8 +330,8 @@ export class UnaryRelExp {
     this.arg = arg;
   }
 
-  toSqlWhere(): string {
-    return valExpToSqlStr(this.arg) + " " + ppOpMap[this.op];
+  toSqlWhere(dialect: SQLDialect): string {
+    return valExpToSqlStr(dialect, this.arg) + " " + ppOpMap[this.op];
   }
 
   lhsCol(): string {
@@ -411,9 +422,9 @@ export class FilterExp {
     return new FilterExp(this.op, extOpArgs);
   }
 
-  toSqlWhere(): string {
+  toSqlWhere(dialect: SQLDialect): string {
     const strs = this.opArgs.map((subExp) => {
-      const subStr = subExp.toSqlWhere();
+      const subStr = subExp.toSqlWhere(dialect);
 
       if (subExp.expType === "FilterExp") {
         return "(" + subStr + ")";
@@ -885,7 +896,7 @@ type SQLSelectAST = {
   selectCols: Array<SQLSelectListItem>;
   from: string | SQLFromQuery | SQLFromJoin;
   on?: Array<string>;
-  where: string;
+  where?: FilterExp;
   groupBy: Array<string>;
   orderBy: Array<SQLSortColExp>;
 };
@@ -964,14 +975,14 @@ const ppSelListItem = (
   }
   ret = ppValExp(dialect, item.colExp);
   if (item.as != null) {
-    ret += ` as ${quoteCol(item.as)}`;
+    ret += ` as ${dialect.quoteCol(item.as)}`;
   }
   return ret;
 };
 
 const ppSortColExp = (dialect: SQLDialect, exp: SQLSortColExp): string => {
   const optDescStr = exp.asc ? "" : " desc";
-  return `${quoteCol(exp.col)}${optDescStr}`;
+  return `${dialect.quoteCol(exp.col)}${optDescStr}`;
 };
 
 const ppSQLSelect = (
@@ -988,7 +999,7 @@ const ppSQLSelect = (
   const fromVal = ss.from;
 
   if (typeof fromVal === "string") {
-    dst.push(quoteCol(fromVal) + "\n");
+    dst.push(dialect.quoteCol(fromVal) + "\n");
   } else if (fromVal.expType === "join") {
     // join condition:
     const { lhs, rhs } = fromVal;
@@ -999,7 +1010,7 @@ const ppSQLSelect = (
     dst.push(")\n");
 
     if (ss.on) {
-      const qcols = ss.on.map(quoteCol);
+      const qcols = ss.on.map(dialect.quoteCol);
       dst.push("USING (" + qcols.join(", ") + ")\n");
     }
   } else {
@@ -1008,12 +1019,15 @@ const ppSQLSelect = (
     ppOut(dst, depth, ")\n");
   }
 
-  if (ss.where.length > 0) {
-    ppOut(dst, depth, `WHERE ${ss.where}\n`);
+  if (ss.where) {
+    const sqlWhereStr = ss.where.toSqlWhere(dialect);
+    if (sqlWhereStr.length > 0) {
+      ppOut(dst, depth, `WHERE ${sqlWhereStr}\n`);
+    }
   }
 
   if (ss.groupBy.length > 0) {
-    const gbStr = ss.groupBy.map(quoteCol).join(", ");
+    const gbStr = ss.groupBy.map(dialect.quoteCol).join(", ");
     ppOut(dst, depth, `GROUP BY ${gbStr}\n`);
   }
 
@@ -1082,7 +1096,6 @@ const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): SQLQueryAST => {
   const sel = {
     selectCols: selectCols.map(mkColSelItem),
     from: tableName,
-    where: "",
     groupBy: [],
     orderBy: [],
   };
@@ -1123,7 +1136,7 @@ const projectQueryToSql = (
         const sqStr = ppSQLQuery(defaultDialect, sqsql, -1, -1);
         throw new Error(
           "projectQueryToSql: no such column " +
-            quoteCol(cid) +
+            defaultDialect.quoteCol(cid) +
             " in subquery:  " +
             sqStr
         );
@@ -1199,7 +1212,7 @@ const groupByQueryToSql = (
       subSel.selectCols,
       (sc) => typeof sc.colExp === "string" && sc.as === undefined
     ) &&
-    subSel.where.length === 0 &&
+    subSel.where === undefined &&
     subSel.groupBy.length === 0 &&
     subSel.orderBy.length === 0
   ) {
@@ -1219,7 +1232,6 @@ const groupByQueryToSql = (
       selectCols,
       from,
       groupBy: cols,
-      where: "",
       orderBy: [],
     };
   }
@@ -1235,19 +1247,17 @@ const filterQueryToSql = (
 ): SQLQueryAST => {
   const fexp: FilterExp = query.valArgs[0];
   const sqsql = queryToSql(tableMap, query.tableArgs[0]);
-  const whereStr = fexp.toSqlWhere(); // If subquery just a single select with no where or groupBy clause, just add one:
 
   const subSel = sqsql.selectStmts[0];
   let retSel: SQLSelectAST;
-
   if (
     sqsql.selectStmts.length === 1 &&
-    subSel.where.length === 0 &&
+    subSel.where === undefined &&
     subSel.groupBy.length === 0
   ) {
     retSel = _.defaults(
       {
-        where: whereStr,
+        where: fexp,
       },
       subSel
     );
@@ -1260,7 +1270,7 @@ const filterQueryToSql = (
     retSel = {
       selectCols: selectCols.map(mkColSelItem),
       from,
-      where: whereStr,
+      where: fexp,
       groupBy: [],
       orderBy: [],
     };
@@ -1354,7 +1364,6 @@ const sortQueryToSql = (
     retSel = {
       selectCols: selectCols.map(mkColSelItem),
       from,
-      where: "",
       groupBy: [],
       orderBy,
     };
@@ -1435,7 +1444,6 @@ const extendQueryToSql = (
     retSel = {
       selectCols,
       from,
-      where: "",
       groupBy: [],
       orderBy: [],
     };
@@ -1467,7 +1475,6 @@ const joinQueryToSql = (
     selectCols,
     from,
     on,
-    where: "",
     groupBy: [],
     orderBy: [],
   };
@@ -1523,7 +1530,6 @@ const queryToCountSql = (
   const retSel: SQLSelectAST = {
     selectCols,
     from,
-    where: "",
     groupBy: [],
     orderBy: [],
   };

@@ -22,6 +22,6 @@ test("t0 - basic functionality", async () => {
 
   console.log("basic table query:");
   const q1 = reltab.tableQuery("bigquery-public-data.covid19_jhu_csse.summary");
-  const q1res = await rtc.evalQuery(q1, 0, 100);
+  const q1res = await rtc.evalQuery(q1, 0, 10);
   console.log("q1 query result: ", q1res);
 });

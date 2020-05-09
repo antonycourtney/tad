@@ -29,7 +29,10 @@ const handleEvalQuery = async (
   res: express.Response
 ) => {
   try {
-    log.info("POST evalQuery: got request: ", req.body);
+    log.info(
+      "POST evalQuery: got request: ",
+      JSON.stringify(req.body, undefined, 2)
+    );
     const queryReq = req.body;
     const hrstart = process.hrtime();
     const tableRep = await (queryReq.offset !== undefined
@@ -52,8 +55,10 @@ const handleGetRowCount = async (
   res: express.Response
 ) => {
   try {
-    log.info("POST getRowcount: got request: ", req.body);
-    // const queryReq = reltab.deserializeQueryReq(req.body); // now done by Express
+    log.info(
+      "POST getRowcount: got request: ",
+      JSON.stringify(req.body, undefined, 2)
+    );
     const queryReq = req.body;
     const hrstart = process.hrtime();
     const rowCount = await rtc.rowCount(queryReq.query);
