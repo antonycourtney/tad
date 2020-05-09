@@ -6,14 +6,15 @@ import { textSpanContainsPosition } from "typescript";
 import { delimiter } from "path";
 import * as log from "loglevel";
 import * as util from "./testUtils";
+import * as _ from "lodash";
 
 const { col, constVal } = reltab;
 
 let testCtx: reltabSqlite.SqliteContext;
 
-test("t0 - trivial query generation", () => {
-  const q1 = reltab.tableQuery("barttest");
+const q1 = reltab.tableQuery("barttest");
 
+test("t0 - trivial query generation", () => {
   expect(q1).toMatchInlineSnapshot(`
 QueryExp {
   "expType": "QueryExp",
@@ -35,8 +36,8 @@ const importCsv = async (db: sqlite3.Database, path: string) => {
 
 beforeAll(
   async (): Promise<reltabSqlite.SqliteContext> => {
-    // log.setLevel("debug");
-    const showQueries = false;
+    log.setLevel("info"); // use "debug" for even more verbosity
+    const showQueries = true;
     const ctx = await reltabSqlite.getContext(":memory:", {
       showQueries,
     });
@@ -54,7 +55,6 @@ beforeAll(
 
 test("t1 - basic sqlite tableQuery", async () => {
   const q1 = reltab.tableQuery("sample");
-
   const qres = await testCtx.evalQuery(q1);
   expect(qres).toMatchSnapshot();
 });
@@ -73,10 +73,10 @@ test("basic rowcount", async () => {
   expect(rowCount).toBe(23);
 });
 
-test("basic project operator", async () => {
-  const pcols = ["JobFamily", "Title", "Union", "Name", "Base", "TCOE"];
-  const q2 = bartTableQuery.project(pcols);
+const pcols = ["JobFamily", "Title", "Union", "Name", "Base", "TCOE"];
+const q2 = bartTableQuery.project(pcols);
 
+test("basic project operator", async () => {
   const qres = await testCtx.evalQuery(q2);
   expect(qres.schema.columns).toEqual(pcols);
 
@@ -103,13 +103,75 @@ test("basic groupBy", async () => {
   expect(qres).toMatchSnapshot();
 });
 
-test("basic filter", async () => {
-  const q5 = bartTableQuery.filter(
-    reltab.and().eq(col("JobFamily"), constVal("Executive Management"))
-  );
+const q5 = bartTableQuery.filter(
+  reltab.and().eq(col("JobFamily"), constVal("Executive Management"))
+);
 
+test("basic filter", async () => {
   const res = await testCtx.evalQuery(q5);
   expect(res.rowData.length).toBe(4);
 
   expect(res).toMatchSnapshot();
+});
+
+test("escaped literal string filter", async () => {
+  // Test for literal string with single quote (which must be escaped):
+  const q5b = q1.filter(
+    reltab
+      .and()
+      .eq(col("Title"), constVal("Department Manager Gov't & Comm Rel"))
+  );
+
+  const res = await testCtx.evalQuery(q5b);
+
+  expect(res.rowData.length).toBe(1);
+});
+
+test("query deserialization", async () => {
+  let req: Object = { query: q5 };
+  const ser5 = JSON.stringify(req, null, 2);
+  console.log("serialized query");
+  console.log(ser5);
+  const dq5 = reltab.deserializeQueryReq(ser5);
+  console.log("deserialized query: ", dq5);
+  const rtc = testCtx;
+  const res = await rtc.evalQuery(dq5.query);
+  console.log("got results of evaluating deserialized query");
+  // util.logTable(res);
+  expect(res.rowData.length).toBe(4);
+});
+
+const q6 = q1.mapColumns({
+  Name: { id: "EmpName", displayName: "Employee Name" },
+});
+
+test("mapColumns", async () => {
+  const res = await testCtx.evalQuery(q6);
+  const rs = res.schema;
+  expect(rs.columns[0]).toBe("EmpName");
+  const em = rs.columnMetadata["EmpName"];
+  expect(em).toEqual({ type: "text", displayName: "Employee Name" });
+  expect(res.rowData.length).toBe(23);
+});
+
+const q7 = q1.mapColumnsByIndex({ "0": { id: "EmpName" } });
+
+test("mapColumnsByIndex", async () => {
+  const res = await testCtx.evalQuery(q7);
+  const rs = res.schema;
+  expect(rs.columns[0]).toBe("EmpName");
+  const em = rs.columnMetadata["EmpName"];
+  expect(res.rowData.length).toBe(23);
+});
+
+const q8 = q5.concat(
+  q1.filter(reltab.and().eq(col("JobFamily"), constVal("Safety")))
+);
+
+test("concat", async () => {
+  const res = await testCtx.evalQuery(q8);
+  expect(res.rowData.length).toBe(5);
+  const jobCol = res.getColumn("JobFamily");
+  const jobs = _.sortedUniq(jobCol);
+  expect(jobs).toEqual(["Executive Management", "Safety"]);
 });

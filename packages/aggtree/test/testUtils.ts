@@ -16,7 +16,7 @@ export const columnSum = (
 type Handler = (err: any) => void;
 
 export const mkAsyncErrHandler = (t: any, msg: string): Handler => {
-  return err => {
+  return (err) => {
     console.error("caught async promise exception: ", err.stack);
     t.fail(msg + ": " + err);
   };
@@ -39,5 +39,6 @@ export const logTable = (
       ? table.rowData.slice(0, options.maxRows)
       : table.rowData;
 
-  ctf(table.schema.columns, rowData);
+  // ctf(table.schema.columns, rowData);
+  ctf(rowData);
 };

@@ -1,0 +1,281 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`initial aggtree Test 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 212647,
+      "JobFamily": "Executive Management",
+      "Name": "Oversier, Paul",
+      "Rec": 1,
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+      "_depth": 2,
+      "_isRoot": 0,
+      "_path0": "Executive Management",
+      "_path1": "Assistant General Manager Operations",
+      "_pivot": "Assistant General Manager Operations",
+      "_sortVal_0": 1,
+      "_sortVal_1": 1,
+      "_sortVal_2": 0,
+    },
+    Object {
+      "Base": 206914,
+      "JobFamily": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "Rec": 1,
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+      "_depth": 2,
+      "_isRoot": 0,
+      "_path0": "Executive Management",
+      "_path1": "Deputy General Manager",
+      "_pivot": "Deputy General Manager",
+      "_sortVal_0": 1,
+      "_sortVal_1": 1,
+      "_sortVal_2": 0,
+    },
+    Object {
+      "Base": 611161,
+      "JobFamily": "Executive Management",
+      "Name": null,
+      "Rec": 2,
+      "TCOE": 819582,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+      "_depth": 2,
+      "_isRoot": 0,
+      "_path0": "Executive Management",
+      "_path1": "General Manager",
+      "_pivot": "General Manager",
+      "_sortVal_0": 1,
+      "_sortVal_1": 1,
+      "_sortVal_2": 0,
+    },
+  ],
+  "schema": Schema {
+    "_sortedColumns": null,
+    "columnIndices": Object {
+      "Base": 4,
+      "JobFamily": 0,
+      "Name": 3,
+      "Rec": 6,
+      "TCOE": 5,
+      "Title": 1,
+      "Union": 2,
+      "_depth": 7,
+      "_isRoot": 9,
+      "_path0": 13,
+      "_path1": 14,
+      "_pivot": 8,
+      "_sortVal_0": 10,
+      "_sortVal_1": 11,
+      "_sortVal_2": 12,
+    },
+    "columnMetadata": Object {
+      "Base": Object {
+        "displayName": "Base",
+        "type": "integer",
+      },
+      "JobFamily": Object {
+        "displayName": "Job Family",
+        "type": "text",
+      },
+      "Name": Object {
+        "displayName": "Name",
+        "type": "text",
+      },
+      "Rec": Object {
+        "type": "integer",
+      },
+      "TCOE": Object {
+        "displayName": "TCOE",
+        "type": "integer",
+      },
+      "Title": Object {
+        "displayName": "Title",
+        "type": "text",
+      },
+      "Union": Object {
+        "displayName": "Union",
+        "type": "text",
+      },
+      "_depth": Object {
+        "type": "integer",
+      },
+      "_isRoot": Object {
+        "type": "boolean",
+      },
+      "_path0": Object {
+        "type": "text",
+      },
+      "_path1": Object {
+        "type": "text",
+      },
+      "_pivot": Object {
+        "displayName": "_pivot",
+        "type": "text",
+      },
+      "_sortVal_0": Object {
+        "type": "integer",
+      },
+      "_sortVal_1": Object {
+        "type": "integer",
+      },
+      "_sortVal_2": Object {
+        "type": "integer",
+      },
+    },
+    "columns": Array [
+      "JobFamily",
+      "Title",
+      "Union",
+      "Name",
+      "Base",
+      "TCOE",
+      "Rec",
+      "_depth",
+      "_pivot",
+      "_isRoot",
+      "_sortVal_0",
+      "_sortVal_1",
+      "_sortVal_2",
+      "_path0",
+      "_path1",
+    ],
+  },
+}
+`;
+
+exports[`initial aggtree Test 2`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 312461,
+      "JobFamily": "Executive Management",
+      "Name": "Crunican, Grace",
+      "Rec": 1,
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+      "_depth": 3,
+      "_isRoot": 0,
+      "_path0": "Executive Management",
+      "_path1": "General Manager",
+      "_pivot": "Crunican, Grace",
+      "_sortVal_0": 1,
+      "_sortVal_1": 1,
+      "_sortVal_2": 1,
+    },
+    Object {
+      "Base": 298700,
+      "JobFamily": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "Rec": 1,
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+      "_depth": 3,
+      "_isRoot": 0,
+      "_path0": "Executive Management",
+      "_path1": "General Manager",
+      "_pivot": "Dugger, Dorothy",
+      "_sortVal_0": 1,
+      "_sortVal_1": 1,
+      "_sortVal_2": 1,
+    },
+  ],
+  "schema": Schema {
+    "_sortedColumns": null,
+    "columnIndices": Object {
+      "Base": 4,
+      "JobFamily": 0,
+      "Name": 3,
+      "Rec": 6,
+      "TCOE": 5,
+      "Title": 1,
+      "Union": 2,
+      "_depth": 7,
+      "_isRoot": 9,
+      "_path0": 13,
+      "_path1": 14,
+      "_pivot": 8,
+      "_sortVal_0": 10,
+      "_sortVal_1": 11,
+      "_sortVal_2": 12,
+    },
+    "columnMetadata": Object {
+      "Base": Object {
+        "displayName": "Base",
+        "type": "integer",
+      },
+      "JobFamily": Object {
+        "displayName": "Job Family",
+        "type": "text",
+      },
+      "Name": Object {
+        "displayName": "Name",
+        "type": "text",
+      },
+      "Rec": Object {
+        "type": "integer",
+      },
+      "TCOE": Object {
+        "displayName": "TCOE",
+        "type": "integer",
+      },
+      "Title": Object {
+        "displayName": "Title",
+        "type": "text",
+      },
+      "Union": Object {
+        "displayName": "Union",
+        "type": "text",
+      },
+      "_depth": Object {
+        "type": "integer",
+      },
+      "_isRoot": Object {
+        "type": "boolean",
+      },
+      "_path0": Object {
+        "type": "text",
+      },
+      "_path1": Object {
+        "type": "text",
+      },
+      "_pivot": Object {
+        "type": "text",
+      },
+      "_sortVal_0": Object {
+        "type": "integer",
+      },
+      "_sortVal_1": Object {
+        "type": "integer",
+      },
+      "_sortVal_2": Object {
+        "type": "integer",
+      },
+    },
+    "columns": Array [
+      "JobFamily",
+      "Title",
+      "Union",
+      "Name",
+      "Base",
+      "TCOE",
+      "Rec",
+      "_depth",
+      "_pivot",
+      "_isRoot",
+      "_sortVal_0",
+      "_sortVal_1",
+      "_sortVal_2",
+      "_path0",
+      "_path1",
+    ],
+  },
+}
+`;

@@ -1,18 +1,13 @@
 import * as tp from "typed-promisify";
 import * as sqlite3 from "sqlite3";
 import * as log from "loglevel";
-import { TableRep, QueryExp, Schema, tableQuery } from "reltab";
+import { TableRep, QueryExp, Schema } from "reltab";
 import { SQLiteDialect } from "reltab";
 import {
   TableInfoMap,
   TableInfo,
-  ValExp,
   Row,
-  AggColSpec,
-  SubExp,
   ColumnMetaMap,
-  ColumnMapInfo,
-  ColumnExtendVal,
   Connection,
 } from "reltab"; // eslint-disable-line
 

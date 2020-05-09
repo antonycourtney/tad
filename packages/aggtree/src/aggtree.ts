@@ -1,7 +1,14 @@
 import * as reltab from "reltab";
 import * as _ from "lodash";
 import { Path, PathTree } from "./PathTree";
-import { Connection, QueryExp, Schema, AggColSpec } from "reltab"; // eslint-disable-line
+import {
+  Connection,
+  QueryExp,
+  Schema,
+  AggColSpec,
+  colAsString,
+  ValExp,
+} from "reltab"; // eslint-disable-line
 
 export * from "./PathTree";
 
@@ -52,7 +59,7 @@ const addPathCols = (
       {
         type: "text",
       },
-      null
+      constVal(null)
     );
   }
 
@@ -150,8 +157,8 @@ export class VPivotTree {
       // leaf level
       const leafExp =
         this.pivotLeafColumn == null
-          ? "''"
-          : 'CAST("' + this.pivotLeafColumn + '" as TEXT)';
+          ? constVal("")
+          : colAsString(col(this.pivotLeafColumn!));
       pathQuery = pathQuery.extend(
         "_pivot",
         {
@@ -168,14 +175,14 @@ export class VPivotTree {
         {
           type: "integer",
         },
-        depth
+        constVal(depth)
       )
       .extend(
         "_isRoot",
         {
           type: "boolean",
         },
-        0
+        constVal(0)
       )
       .project(this.outCols);
     /*
@@ -196,18 +203,19 @@ export class VPivotTree {
         {
           type: "integer",
         },
-        depthVal
+        constVal(depthVal)
       );
     }
 
     for (let i = 0; i < this.pivotColumns.length; i++) {
-      let pathElemExp = null;
+      let pathElemExp: ValExp = constVal(null);
 
       if (i < path.length) {
         let colType = this.baseSchema.columnType(this.pivotColumns[i]);
-        pathElemExp = reltab.sqlLiteralVal(colType, path[i]);
+        // pathElemExp = reltab.sqlLiteralVal(colType, path[i]);
+        pathElemExp = constVal(path[i]);
       } else if (i === path.length) {
-        pathElemExp = '"_pivot"'; // N.B. Not a literal; SQL expression referring to _pivot column
+        pathElemExp = col("_pivot"); // SQL expression referring to _pivot column
       }
 
       pathQuery = pathQuery.extend(
@@ -217,7 +225,9 @@ export class VPivotTree {
         },
         pathElemExp
       );
-    } // TODO: Should we optionally also insert _childCount and _leafCount ?
+    }
+
+    // TODO: Should we optionally also insert _childCount and _leafCount ?
     // _childCount would count next level of groupBy,
     // _leafCount would do count() at point of calculating
     // filter for current path (before doing groupBy).
@@ -279,7 +289,7 @@ export class VPivotTree {
           {
             type: "integer",
           },
-          0
+          constVal(0)
         );
       }
 
@@ -363,7 +373,7 @@ export const getBaseSchema = (
       {
         type: "integer",
       },
-      1
+      constVal(1)
     )
     .filter(reltab.and().eq(constVal(1), constVal(0)));
   const schemap = rt.evalQuery(schemaQuery);
@@ -391,7 +401,7 @@ export function vpivot(
     {
       type: "integer",
     },
-    1
+    constVal(1)
   );
   const hiddenCols = ["_depth", "_pivot", "_isRoot"];
   const outCols = baseSchema.columns.concat(hiddenCols);
@@ -408,21 +418,21 @@ export function vpivot(
         {
           type: "text",
         },
-        null
+        constVal(null)
       )
       .extend(
         "_depth",
         {
           type: "integer",
         },
-        0
+        constVal(0)
       )
       .extend(
         "_isRoot",
         {
           type: "boolean",
         },
-        1
+        constVal(1)
       )
       .project(outCols);
   }

@@ -24,25 +24,78 @@ const defaultDialect = SQLiteDialect.getInstance();
  *             | Const Literal
  * data Literal = LitNum Number | LitStr String
  */
+export type Scalar = number | string | boolean | null;
 
-export type ValExp = ColRef | ConstVal;
+interface ConstVal {
+  expType: "ConstVal";
+  val: Scalar;
+}
+export const constVal = (val: Scalar): ConstVal => ({
+  expType: "ConstVal",
+  val,
+});
 
-class ColRef {
+interface ColRef {
   expType: "ColRef";
   colName: string;
-
-  constructor(colName: string) {
-    this.expType = "ColRef";
-    this.colName = colName;
-  }
-
-  toSqlWhere(): string {
-    return '"' + this.colName + '"';
-  }
 }
+export const col = (colName: string): ColRef => ({
+  expType: "ColRef",
+  colName,
+});
 
-export const col = (colName: string) => new ColRef(colName);
-type ValType = number | string | Date;
+export type ValExp = ConstVal | ColRef;
+
+const quoteCol = (cid: string): string => `"${cid}"`;
+
+const valExpToSqlStr = (vexp: ValExp): string => {
+  let ret: string;
+  switch (vexp.expType) {
+    case "ConstVal":
+      ret =
+        vexp.val == null
+          ? "null"
+          : typeof vexp.val === "string"
+          ? sqlEscapeString(vexp.val)
+          : vexp.val.toString();
+      break;
+    case "ColRef":
+      ret = quoteCol(vexp.colName);
+      break;
+    default:
+      const invalid: never = vexp;
+      throw new Error(`Unknown value expression expType: ${invalid}`);
+  }
+  return ret;
+};
+
+// A text cast operator applied to a column:
+interface ColAsString {
+  expType: "ColAsString";
+  colRef: ColRef;
+}
+export const colAsString = (colRef: ColRef): ColAsString => ({
+  expType: "ColAsString",
+  colRef,
+});
+
+export type ColumnExtendExp = ValExp | ColAsString;
+
+const colExtendExpToSqlStr = (
+  dialect: SQLDialect,
+  cexp: ColumnExtendExp
+): string => {
+  let ret: string;
+  switch (cexp.expType) {
+    case "ColAsString":
+      ret = `CAST(${valExpToSqlStr(cexp.colRef)} AS ${dialect.stringType})`;
+      break;
+    default:
+      ret = valExpToSqlStr(cexp);
+  }
+  return ret;
+};
+
 const escRegEx = /[\0\n\r\b\t'"\x1a]/g;
 export const sqlEscapeMbString = (
   inStr: string | undefined | null
@@ -82,31 +135,20 @@ export const sqlEscapeString = (inStr: string): string => {
   });
   return ["'", outStr, "'"].join("");
 };
-export class ConstVal {
-  expType: "ConstVal";
-  val: ValType;
 
-  constructor(val: ValType) {
-    this.expType = "ConstVal";
-    this.val = val;
-  }
-
-  toSqlWhere(): string {
-    if (typeof this.val === "string") {
-      return sqlEscapeString(this.val);
-    }
-
-    return String(this.val);
-  }
-}
-export const constVal = (val: ValType) => new ConstVal(val);
-
-// TODO: Can probably give argument a more precise type
 const deserializeValExp = (js: any): ValExp => {
-  if (js.expType === "ConstVal") {
-    return new ConstVal(js.val);
+  // attempt to deal with migration from v0.9 format,
+  // where the discriminator was called "expType" instead of "expType"
+  // and we used classes rather than tagged unions.
+  if (js.hasOwnProperty("expType")) {
+    if (js.expType === "ConstVal") {
+      return constVal(js.val);
+    } else {
+      return col(js.colName);
+    }
   } else {
-    return new ColRef(js.colName);
+    // tagged union format should just serialize as itself
+    return js as ValExp;
   }
 };
 
@@ -203,7 +245,7 @@ const textOpToSqlWhere = (lhs: ValExp, op: BinRelOp, rhs: ValExp): string => {
   if (op === "IN" || op === "NOTIN") {
     const inVals: Array<string> = rhs.val as any;
     const inStr = inVals.map(sqlEscapeString).join(", ");
-    ret = lhs.toSqlWhere() + " " + negStr + "IN (" + inStr + ")";
+    ret = valExpToSqlStr(lhs) + " " + negStr + "IN (" + inStr + ")";
   } else {
     // assume match operator:
     let matchStr = "";
@@ -228,7 +270,8 @@ const textOpToSqlWhere = (lhs: ValExp, op: BinRelOp, rhs: ValExp): string => {
         throw new Error("Unknown operator: " + op);
     }
 
-    ret = lhs.toSqlWhere() + " " + negStr + "LIKE " + sqlEscapeString(matchStr);
+    ret =
+      valExpToSqlStr(lhs) + " " + negStr + "LIKE " + sqlEscapeString(matchStr);
   }
 
   return ret;
@@ -252,7 +295,9 @@ export class BinRelExp {
       return textOpToSqlWhere(this.lhs, this.op, this.rhs);
     }
 
-    return this.lhs.toSqlWhere() + ppOpMap[this.op] + this.rhs.toSqlWhere();
+    return (
+      valExpToSqlStr(this.lhs) + ppOpMap[this.op] + valExpToSqlStr(this.rhs)
+    );
   }
 
   lhsCol(): string {
@@ -275,7 +320,7 @@ export class UnaryRelExp {
   }
 
   toSqlWhere(): string {
-    return this.arg.toSqlWhere() + " " + ppOpMap[this.op];
+    return valExpToSqlStr(this.arg) + " " + ppOpMap[this.op];
   }
 
   lhsCol(): string {
@@ -398,12 +443,12 @@ export type AggFn = "avg" | "count" | "min" | "max" | "sum" | "uniq" | "null";
 // An AggColSpec is either a column name (for default aggregation based on column type
 // or a pair of column name and AggFn
 export type AggColSpec = string | [AggFn, string];
-export type Scalar = number | string | boolean | undefined | null;
 export type Row = {
   [columnId: string]: Scalar;
-}; // metadata for a single column:
-// TODO: date, time, datetime, URL, ...
+};
 
+// metadata for a single column:
+// TODO: date, time, datetime, URL, ...
 export type ColumnType = "integer" | "real" | "text" | "boolean";
 export type ColumnMetadata = {
   displayName: string;
@@ -447,14 +492,6 @@ export const sqlLiteralVal = (ct: ColumnType, jsVal: any): string => {
 
   return ret;
 };
-/*
- * A ColumnExtendVal is either a simple scalar or a function from a row object
- * to a scalar.
- */
-
-type ExtendFunc = (row: Row) => Scalar; // eslint-disable-line
-
-export type ColumnExtendVal = Scalar | ExtendFunc; // eslint-disable-line
 
 /*
  * Could almost use an intersection type of {id,type} & ColumnMetadata, but
@@ -517,7 +554,7 @@ export class QueryExp {
   extend(
     colId: string,
     columnMetadata: ColumnMapInfo,
-    colVal: ColumnExtendVal
+    colVal: ColumnExtendExp
   ): QueryExp {
     return new QueryExp("extend", [colId, columnMetadata, colVal], [this]);
   } // join to another QueryExp
@@ -554,8 +591,8 @@ export class QueryExp {
   }
 }
 const reviverMap = {
-  ColRef: (v: any) => new ColRef(v.colName),
-  ConstVal: (v: any) => new ConstVal(v.val),
+  ColRef: (v: any) => col(v.colName),
+  ConstVal: (v: any) => constVal(v.val),
   BinRelExp: (v: any) => new BinRelExp(v.op, v.lhs, v.rhs),
   UnaryRelExp: (v: any) => new UnaryRelExp(v.op, v.arg),
   FilterExp: (v: any) => new FilterExp(v.op, v.opArgs),
@@ -807,26 +844,45 @@ const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
  */
 
 /* AST for generating SQL queries */
-type SQLSelectColExp = {
-  colExp: AggColSpec;
+
+interface SQLAggExp {
+  expType: "agg";
+  aggFn: AggFn;
+  exp: ValExp;
+}
+const mkAggExp = (aggFn: AggFn, exp: ValExp): SQLAggExp => ({
+  expType: "agg",
+  aggFn,
+  exp,
+});
+
+type SQLValExp = ColumnExtendExp | SQLAggExp;
+
+type SQLSelectListItem = {
+  colExp: SQLValExp; // was: AggColSpec;
   as?: string;
 };
+
+const mkColSelItem = (cid: string): SQLSelectListItem => ({
+  colExp: col(cid),
+});
+
 type SQLSortColExp = {
   col: string;
   asc: boolean;
 };
 type SQLFromJoin = {
-  kind: "join";
+  expType: "join";
   joinType: JoinType;
   lhs: SQLQueryAST;
   rhs: SQLQueryAST;
 };
 type SQLFromQuery = {
-  kind: "query";
+  expType: "query";
   query: SQLQueryAST;
 };
 type SQLSelectAST = {
-  selectCols: Array<SQLSelectColExp>;
+  selectCols: Array<SQLSelectListItem>;
   from: string | SQLFromQuery | SQLFromJoin;
   on?: Array<string>;
   where: string;
@@ -843,20 +899,28 @@ type SQLQueryAST = {
 
 type StringBuffer = Array<string>;
 /**
- * get Column Id from a SQLSelectColExp -- essential when hoisting column names from
+ * get Column Id from a SQLSelectListItem -- essential when hoisting column names from
  * subquery
+ * Throws if column id not explicit
  */
-const getColId = (cexp: SQLSelectColExp): string => {
+const getColId = (cexp: SQLSelectListItem): string => {
   let ret: string;
   if (cexp.as != null) {
     ret = cexp.as;
   } else {
     const { colExp } = cexp;
-    if (typeof colExp === "string") {
-      ret = colExp;
-    } else {
-      const [aggFn, _] = colExp;
-      ret = aggFn;
+    switch (colExp.expType) {
+      case "ColRef":
+        ret = colExp.colName;
+        break;
+      case "agg":
+        ret = colExp.aggFn;
+        break;
+      default:
+        throw new Error(
+          `getColId: could not determine column id from select list item of expType ${colExp.expType}: ` +
+            colExp.toString()
+        );
     }
   }
   return ret;
@@ -875,42 +939,39 @@ const genUniq = (aggStr: string, qcid: string) =>
 const genNull = (aggStr: string, qcid: string) => "null";
 const genAgg = (aggStr: string, qcid: string) => aggStr + "(" + qcid + ")";
 
-const ppCol = (dialect: SQLDialect, cid: string): string => {
+const ppValExp = (dialect: SQLDialect, vexp: SQLValExp): string => {
   let ret: string;
-  if (cid === "*") {
-    ret = "*";
-  } else {
-    ret = dialect.quoteCol(cid);
+  switch (vexp.expType) {
+    case "agg":
+      const aggStr = vexp.aggFn;
+      const aggFn =
+        aggStr === "uniq" ? genUniq : aggStr === "null" ? genNull : genAgg;
+      ret = aggFn(aggStr, colExtendExpToSqlStr(dialect, vexp.exp));
+      break;
+    default:
+      ret = colExtendExpToSqlStr(dialect, vexp);
   }
   return ret;
 };
 
-const ppAggColSpec = (dialect: SQLDialect, cexp: AggColSpec): string => {
+const ppSelListItem = (
+  dialect: SQLDialect,
+  item: SQLSelectListItem
+): string => {
   let ret: string;
-  if (typeof cexp === "string") {
-    ret = ppCol(dialect, cexp);
-  } else {
-    const [aggStr, cid] = cexp;
-    const aggFn =
-      aggStr === "uniq" ? genUniq : aggStr === "null" ? genNull : genAgg;
-
-    ret = aggFn(aggStr, ppCol(dialect, cid));
+  if (item.colExp == null) {
+    throw new Error("ppSelListItem fail: " + item.toString());
   }
-  return ret;
-};
-
-const ppSelColExp = (dialect: SQLDialect, exp: SQLSelectColExp): string => {
-  let ret: string;
-  ret = ppAggColSpec(dialect, exp.colExp);
-  if (exp.as != null) {
-    ret += ` as ${dialect.quoteCol(exp.as)}`;
+  ret = ppValExp(dialect, item.colExp);
+  if (item.as != null) {
+    ret += ` as ${quoteCol(item.as)}`;
   }
   return ret;
 };
 
 const ppSortColExp = (dialect: SQLDialect, exp: SQLSortColExp): string => {
   const optDescStr = exp.asc ? "" : " desc";
-  return `${dialect.quoteCol(exp.col)}${optDescStr}`;
+  return `${quoteCol(exp.col)}${optDescStr}`;
 };
 
 const ppSQLSelect = (
@@ -920,15 +981,15 @@ const ppSQLSelect = (
   ss: SQLSelectAST
 ) => {
   const selColStr = ss.selectCols
-    .map((exp) => ppSelColExp(dialect, exp))
+    .map((exp) => ppSelListItem(dialect, exp))
     .join(", ");
   ppOut(dst, depth, `SELECT ${selColStr}\n`);
   ppOut(dst, depth, "FROM ");
   const fromVal = ss.from;
 
   if (typeof fromVal === "string") {
-    dst.push(dialect.quoteCol(fromVal) + "\n");
-  } else if (fromVal.kind === "join") {
+    dst.push(quoteCol(fromVal) + "\n");
+  } else if (fromVal.expType === "join") {
     // join condition:
     const { lhs, rhs } = fromVal;
     dst.push("(\n");
@@ -938,7 +999,7 @@ const ppSQLSelect = (
     dst.push(")\n");
 
     if (ss.on) {
-      const qcols = ss.on.map(dialect.quoteCol);
+      const qcols = ss.on.map(quoteCol);
       dst.push("USING (" + qcols.join(", ") + ")\n");
     }
   } else {
@@ -952,7 +1013,7 @@ const ppSQLSelect = (
   }
 
   if (ss.groupBy.length > 0) {
-    const gbStr = ss.groupBy.map(dialect.quoteCol).join(", ");
+    const gbStr = ss.groupBy.map(quoteCol).join(", ");
     ppOut(dst, depth, `GROUP BY ${gbStr}\n`);
   }
 
@@ -1011,7 +1072,7 @@ const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): SQLQueryAST => {
 
   const selectCols = schema.columns;
   const sel = {
-    selectCols: selectCols.map((cid) => ({ colExp: cid })),
+    selectCols: selectCols.map(mkColSelItem),
     from: tableName,
     where: "",
     groupBy: [],
@@ -1022,13 +1083,13 @@ const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): SQLQueryAST => {
   };
 };
 
-// Gather map by column id of SQLSelectColExp in a SQLSelectAST
+// Gather map by column id of SQLSelectListItem in a SQLSelectAST
 const selectColsMap = (
   selExp: SQLSelectAST
 ): {
-  [cid: string]: SQLSelectColExp;
+  [cid: string]: SQLSelectListItem;
 } => {
-  let ret: { [cid: string]: SQLSelectColExp } = {};
+  let ret: { [cid: string]: SQLSelectListItem } = {};
 
   for (let cexp of selExp.selectCols) {
     ret[getColId(cexp)] = cexp;
@@ -1041,7 +1102,7 @@ const projectQueryToSql = (
   tableMap: TableInfoMap,
   pq: QueryExp
 ): SQLQueryAST => {
-  const projectCols = pq.valArgs[0];
+  const projectCols: string[] = pq.valArgs[0];
   const sqsql = queryToSql(tableMap, pq.tableArgs[0]);
 
   // rewrite an individual select statement to only select projected cols:
@@ -1054,7 +1115,7 @@ const projectQueryToSql = (
         const sqStr = ppSQLQuery(defaultDialect, sqsql, -1, -1);
         throw new Error(
           "projectQueryToSql: no such column " +
-            defaultDialect.quoteCol(cid) +
+            quoteCol(cid) +
             " in subquery:  " +
             sqStr
         );
@@ -1094,9 +1155,10 @@ const groupByQueryToSql = (
   const inSchema = query.tableArgs[0].getSchema(tableMap);
 
   // emulate the uniq and null aggregation functions:
-  const aggExprs: SQLSelectColExp[] = aggSpecs.map((aggSpec) => {
+  const aggExprs: SQLSelectListItem[] = aggSpecs.map((aggSpec) => {
     let aggStr: AggFn;
     let cid;
+    let colExp: SQLValExp;
 
     if (typeof aggSpec === "string") {
       cid = aggSpec;
@@ -1107,12 +1169,12 @@ const groupByQueryToSql = (
     }
 
     return {
-      colExp: [aggStr, cid],
+      colExp: { expType: "agg", aggFn: aggStr, exp: col(cid) },
       as: cid,
     };
   });
 
-  const selectGbCols: SQLSelectColExp[] = cols.map((cid) => ({ colExp: cid }));
+  const selectGbCols: SQLSelectListItem[] = cols.map(mkColSelItem);
   const selectCols = selectGbCols.concat(aggExprs);
   const sqsql = queryToSql(tableMap, query.tableArgs[0]);
 
@@ -1142,7 +1204,7 @@ const groupByQueryToSql = (
     );
   } else {
     const from: SQLFromQuery = {
-      kind: "query",
+      expType: "query",
       query: sqsql,
     };
     retSel = {
@@ -1184,11 +1246,11 @@ const filterQueryToSql = (
   } else {
     const selectCols = subSel.selectCols.map(getColId);
     const from: SQLFromQuery = {
-      kind: "query",
+      expType: "query",
       query: sqsql,
     };
     retSel = {
-      selectCols: selectCols.map((cid: string) => ({ colExp: cid })),
+      selectCols: selectCols.map(mkColSelItem),
       from,
       where: whereStr,
       groupBy: [],
@@ -1212,10 +1274,10 @@ const mapColumnsQueryToSql = (byIndex: boolean) => (
   const sqsql = queryToSql(tableMap, query.tableArgs[0]); // apply renaming to invididual select expression:
 
   const applyColRename = (
-    cexp: SQLSelectColExp,
+    cexp: SQLSelectListItem,
     index: number
-  ): SQLSelectColExp => {
-    const inCid = cexp.as != null ? cexp.as : (cexp.colExp as string);
+  ): SQLSelectListItem => {
+    const inCid = getColId(cexp);
     const mapKey = byIndex ? index.toString() : inCid;
     const outCid = cMap.hasOwnProperty(mapKey) ? cMap[mapKey].id : inCid;
 
@@ -1278,11 +1340,11 @@ const sortQueryToSql = (
   } else {
     let selectCols = subSel.selectCols.map(getColId);
     const from: SQLFromQuery = {
-      kind: "query",
+      expType: "query",
       query: sqsql,
     };
     retSel = {
-      selectCols: selectCols.map((cid) => ({ colExp: cid })),
+      selectCols: selectCols.map(mkColSelItem),
       from,
       where: "",
       groupBy: [],
@@ -1294,6 +1356,7 @@ const sortQueryToSql = (
     selectStmts: [retSel],
   };
 };
+
 /*
 const intRE = /^[-+]?[$]?[0-9,]+$/
 const strLitRE = /^'[^']*'$/
@@ -1327,12 +1390,14 @@ const extendQueryToSql = (
   query: QueryExp
 ): SQLQueryAST => {
   const as = query.valArgs[0];
-  const colExp = query.valArgs[2];
+  const colExp: ColumnExtendExp = query.valArgs[2];
   const sqsql = queryToSql(tableMap, query.tableArgs[0]);
-  const subSel = sqsql.selectStmts[0]; // Note: We only want to extract the column ids from subquery for use at this level; we
+  const subSel = sqsql.selectStmts[0];
+
+  // Note: We only want to extract the column ids from subquery for use at this level; we
   // want to skip any calculated expressions or aggregate functions
 
-  const isConst = isConstantExpr(colExp);
+  const isConst = colExp.expType === "ConstVal";
   let retSel: SQLSelectAST;
 
   if (isConst && sqsql.selectStmts.length === 1) {
@@ -1350,13 +1415,13 @@ const extendQueryToSql = (
     );
   } else {
     let colIds = subSel.selectCols.map(getColId);
-    let selectCols: SQLSelectColExp[] = colIds.map((cid) => ({ colExp: cid }));
+    let selectCols: SQLSelectListItem[] = colIds.map(mkColSelItem);
     selectCols.push({
       colExp,
       as,
     });
     const from: SQLFromQuery = {
-      kind: "query",
+      expType: "query",
       query: sqsql,
     };
     retSel = {
@@ -1367,11 +1432,6 @@ const extendQueryToSql = (
       orderBy: [],
     };
   }
-
-  console.log(
-    "extendQueryToSql: selectCols: ",
-    JSON.stringify(retSel, undefined, 2)
-  );
 
   return {
     selectStmts: [retSel],
@@ -1390,7 +1450,7 @@ const joinQueryToSql = (
 
   const selectCols: Array<any> = outSchema.columns;
   const from: SQLFromJoin = {
-    kind: "join",
+    expType: "join",
     joinType,
     lhs,
     rhs,
@@ -1440,7 +1500,7 @@ const queryToCountSql = (
   query: QueryExp
 ): SQLQueryAST => {
   const sqsql = queryToSql(tableMap, query);
-  const colExp: AggColSpec = ["count", "*"];
+  const colExp = mkAggExp("count", constVal("*"));
   const as = "rowCount";
   const selectCols = [
     {
@@ -1449,7 +1509,7 @@ const queryToCountSql = (
     },
   ];
   const from: SQLFromQuery = {
-    kind: "query",
+    expType: "query",
     query: sqsql,
   };
   const retSel: SQLSelectAST = {

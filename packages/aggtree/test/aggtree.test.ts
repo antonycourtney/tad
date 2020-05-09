@@ -1,11 +1,13 @@
 import * as sqlite3 from "sqlite3";
 import * as reltab from "reltab";
 import * as aggtree from "../src/aggtree";
+import { PathTree } from "../src/PathTree";
 import * as reltabSqlite from "reltab-sqlite";
 import { textSpanContainsPosition, textSpanContainsTextSpan } from "typescript";
 import { delimiter } from "path";
 import * as log from "loglevel";
 import * as util from "./testUtils";
+import { executionAsyncId } from "async_hooks";
 
 log.setLevel("debug");
 
@@ -20,7 +22,9 @@ const importCsv = async (db: sqlite3.Database, path: string) => {
 
 beforeAll(
   async (): Promise<reltabSqlite.SqliteContext> => {
-    const ctx = await reltabSqlite.getContext(":memory:");
+    // log.setLevel("info"); // use "debug" for even more verbosity
+    const showQueries = true;
+    const ctx = await reltabSqlite.getContext(":memory:", { showQueries });
 
     testCtx = ctx as reltabSqlite.SqliteContext;
 
@@ -50,7 +54,6 @@ test("initial aggtree Test", async () => {
     true,
     []
   );
-  log.debug("vpivot initial promise resolved...");
   const rq0 = tree0.rootQuery;
   log.debug("root query exp: ", rq0);
 
@@ -62,4 +65,53 @@ test("initial aggtree Test", async () => {
   const res1 = await testCtx.evalQuery(q1);
   log.debug("open root query:");
   util.logTable(res1);
+
+  const expCols = [
+    "JobFamily",
+    "Title",
+    "Union",
+    "Name",
+    "Base",
+    "TCOE",
+    "Rec",
+    "_depth",
+    "_pivot",
+    "_isRoot",
+    "_sortVal_0",
+    "_sortVal_1",
+    "_sortVal_2",
+    "_path0",
+    "_path1",
+  ];
+
+  expect(res1.schema.columns).toEqual(expCols);
+  expect(res1.rowData.length).toBe(9);
+
+  const actSum = util.columnSum(res1, "TCOE");
+
+  expect(actSum).toBe(4691559);
+
+  const q2 = tree0.applyPath(["Executive Management"]);
+
+  console.log("after opening node: q2: ", JSON.stringify(q2, null, 2));
+
+  const res2 = await testCtx.evalQuery(q2);
+
+  console.log('after applying path ["Executive Management"]:');
+  util.logTable(res2);
+  expect(res2).toMatchSnapshot();
+
+  const q3 = tree0.applyPath(["Executive Management", "General Manager"]);
+  const res3 = await testCtx.evalQuery(q3);
+
+  console.log("after applying path /Executive Management/General Manager:");
+  util.logTable(res3);
+  expect(res3).toMatchSnapshot();
+
+  const openPaths = new PathTree({ '"Executive Management"': {} });
+  const q4 = tree0.getTreeQuery(openPaths);
+  const res4 = await testCtx.evalQuery(q4);
+
+  console.log("after treeQuery for path /Executive Management: ");
+  util.logTable(res4);
 });

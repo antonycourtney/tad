@@ -9,7 +9,6 @@ import {
   SubExp,
   ColumnMetaMap,
   ColumnMapInfo,
-  ColumnExtendVal,
   Connection,
   BigQueryDialect,
 } from "reltab";
