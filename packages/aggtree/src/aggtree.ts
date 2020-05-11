@@ -6,7 +6,7 @@ import {
   QueryExp,
   Schema,
   AggColSpec,
-  colAsString,
+  asString,
   ValExp,
 } from "reltab"; // eslint-disable-line
 
@@ -59,7 +59,7 @@ const addPathCols = (
       {
         type: "text",
       },
-      constVal(null)
+      asString(constVal(null))
     );
   }
 
@@ -161,7 +161,7 @@ export class VPivotTree {
         .extend(
           "_pivot",
           { displayName: "_pivot", type: "text" },
-          colAsString(col(this.pivotColumns[path.length]))
+          asString(col(this.pivotColumns[path.length]))
         )
         .groupBy(["_pivot"], gbAggs);
     } else {
@@ -169,7 +169,7 @@ export class VPivotTree {
       const leafExp =
         this.pivotLeafColumn == null
           ? constVal("")
-          : colAsString(col(this.pivotLeafColumn!));
+          : asString(col(this.pivotLeafColumn!));
       pathQuery = pathQuery.extend(
         "_pivot",
         {
@@ -223,7 +223,6 @@ export class VPivotTree {
 
       if (i < path.length) {
         let colType = this.baseSchema.columnType(this.pivotColumns[i]);
-        // pathElemExp = reltab.sqlLiteralVal(colType, path[i]);
         pathElemExp = constVal(path[i]);
       } else if (i === path.length) {
         pathElemExp = col("_pivot"); // SQL expression referring to _pivot column
@@ -234,7 +233,7 @@ export class VPivotTree {
         {
           type: "text",
         },
-        pathElemExp
+        asString(pathElemExp)
       );
     }
 
@@ -429,7 +428,7 @@ export function vpivot(
         {
           type: "text",
         },
-        constVal(null)
+        asString(constVal(null))
       )
       .extend(
         "_depth",

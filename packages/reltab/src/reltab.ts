@@ -70,17 +70,17 @@ const valExpToSqlStr = (dialect: SQLDialect, vexp: ValExp): string => {
   return ret;
 };
 
-// A text cast operator applied to a column:
-interface ColAsString {
-  expType: "ColAsString";
-  colRef: ColRef;
+// A text cast operator applied to a ValExp:
+interface AsString {
+  expType: "AsString";
+  valExp: ValExp;
 }
-export const colAsString = (colRef: ColRef): ColAsString => ({
-  expType: "ColAsString",
-  colRef,
+export const asString = (valExp: ValExp): AsString => ({
+  expType: "AsString",
+  valExp,
 });
 
-export type ColumnExtendExp = ValExp | ColAsString;
+export type ColumnExtendExp = ValExp | AsString;
 
 const colExtendExpToSqlStr = (
   dialect: SQLDialect,
@@ -88,8 +88,8 @@ const colExtendExpToSqlStr = (
 ): string => {
   let ret: string;
   switch (cexp.expType) {
-    case "ColAsString":
-      ret = `CAST(${valExpToSqlStr(dialect, cexp.colRef)} AS ${
+    case "AsString":
+      ret = `CAST(${valExpToSqlStr(dialect, cexp.valExp)} AS ${
         dialect.stringType
       })`;
       break;
@@ -452,7 +452,18 @@ type QueryOp =
   | "sort"
   | "extend"
   | "join";
-export type AggFn = "avg" | "count" | "min" | "max" | "sum" | "uniq" | "null";
+
+// We'll add "nullstr" here, but don't expect it to show up in any UI; generated
+// during toSql elaboration step.
+export type AggFn =
+  | "avg"
+  | "count"
+  | "min"
+  | "max"
+  | "sum"
+  | "uniq"
+  | "null"
+  | "nullstr";
 
 // An AggColSpec is either a column name (for default aggregation based on column type
 // or a pair of column name and AggFn
@@ -463,7 +474,8 @@ export type Row = {
 
 // metadata for a single column:
 // TODO: date, time, datetime, URL, ...
-export type ColumnType = "integer" | "real" | "text" | "boolean";
+// TODO: need to think about what we're doing with string / text types and how they map to SQL.
+export type ColumnType = "integer" | "real" | "text" | "string" | "boolean";
 export type ColumnMetadata = {
   displayName: string;
   type: ColumnType;
@@ -480,6 +492,9 @@ const numericAggFns: AggFn[] = [
 ];
 export const typeIsNumeric = (ct: ColumnType): boolean => {
   return ct === "integer" || ct === "real";
+};
+export const typeIsString = (ct: ColumnType): boolean => {
+  return ct === "text";
 };
 export const aggFns = (ct: ColumnType): Array<AggFn> => {
   if (ct === "text") {
@@ -516,7 +531,7 @@ export type ColumnMapInfo = {
   id?: string;
   type?: ColumnType;
   displayName?: string;
-}; 
+};
 
 // Join types:  For now: only left outer
 export type JoinType = "LeftOuter";
@@ -949,19 +964,33 @@ const ppOut = (dst: StringBuffer, depth: number, str: string): void => {
   dst.push(str);
 };
 
-const genUniq = (aggStr: string, qcid: string) =>
+type PPAggFn = (dialect: SQLDialect, aggStr: string, qcid: string) => string;
+const ppAggUniq = (dialect: SQLDialect, aggStr: string, qcid: string) =>
   `case when min(${qcid})=max(${qcid}) then min(${qcid}) else null end`;
-const genNull = (aggStr: string, qcid: string) => "null";
-const genAgg = (aggStr: string, qcid: string) => aggStr + "(" + qcid + ")";
+const ppAggNull = (dialect: SQLDialect, aggStr: string, qcid: string) => "null";
+const ppAggNullStr = (dialect: SQLDialect, aggStr: string, qcid: string) =>
+  ppValExp(dialect, asString(constVal(null)));
+const ppAggDefault = (dialect: SQLDialect, aggStr: string, qcid: string) =>
+  aggStr + "(" + qcid + ")";
+
+const ppAggMap: { [aggStr: string]: PPAggFn } = {
+  uniq: ppAggUniq,
+  null: ppAggNull,
+  nullstr: ppAggNullStr,
+};
+
+const getPPAggFn = (fnm: string): PPAggFn => {
+  const ppfn = ppAggMap[fnm];
+  return ppfn != null ? ppfn : ppAggDefault;
+};
 
 const ppValExp = (dialect: SQLDialect, vexp: SQLValExp): string => {
   let ret: string;
   switch (vexp.expType) {
     case "agg":
       const aggStr = vexp.aggFn;
-      const aggFn =
-        aggStr === "uniq" ? genUniq : aggStr === "null" ? genNull : genAgg;
-      ret = aggFn(aggStr, colExtendExpToSqlStr(dialect, vexp.exp));
+      const ppAggFn = getPPAggFn(aggStr);
+      ret = ppAggFn(dialect, aggStr, colExtendExpToSqlStr(dialect, vexp.exp));
       break;
     default:
       ret = colExtendExpToSqlStr(dialect, vexp);
@@ -1165,6 +1194,7 @@ const defaultAggs: { [CT in ColumnType]: AggFn } = {
   integer: "sum",
   real: "sum",
   text: "uniq",
+  string: "uniq",
   boolean: "uniq",
 };
 
@@ -1174,7 +1204,7 @@ export const defaultAggFn = (colType: ColumnType): AggFn => {
     afn = "null";
   }
   return afn;
-}
+};
 
 const groupByQueryToSql = (
   tableMap: TableInfoMap,
@@ -1196,6 +1226,12 @@ const groupByQueryToSql = (
       aggStr = defaultAggFn(colType);
     } else {
       [aggStr, cid] = aggSpec;
+    }
+
+    if (aggStr == "null") {
+      if (typeIsString(inSchema.columnType(cid))) {
+        aggStr = "nullstr";
+      }
     }
 
     return {
@@ -1416,6 +1452,7 @@ const extendQueryToSql = (
   query: QueryExp
 ): SQLQueryAST => {
   const as = query.valArgs[0];
+  const colMetadata: ColumnMapInfo = query.valArgs[1];
   const colExp: ColumnExtendExp = query.valArgs[2];
   const sqsql = queryToSql(tableMap, query.tableArgs[0]);
   const subSel = sqsql.selectStmts[0];
