@@ -13,18 +13,14 @@ import { ViewParams } from "tadviewer";
 import { initAppState } from "tadviewer";
 import * as reltab from "reltab";
 import log from "loglevel";
-// import * as reltabElectron from "./reltab-electron";
 import { ReltabWebConnection } from "./reltabWebClient";
 
 const testBaseUrl = "http://localhost:9000";
 // const TEST_FILE = "sample.csv";
-const TEST_FILE = "movie_metadata.csv";
+//const TEST_FILE = "movie_metadata.csv";
 
-// const remote = require("electron").remote;
-// const remoteInitMain = remote.getGlobal("initMain");
-// const remoteErrorDialog = remote.getGlobal("errorDialog");
+const TEST_TABLE = "bigquery-public-data.covid19_jhu_csse.summary";
 
-// const ipcRenderer = require("electron").ipcRenderer;
 /*
 const openParams = {
   fileType: "csv",
@@ -54,7 +50,8 @@ const init = async () => {
 
   const rtc = new ReltabWebConnection(testBaseUrl);
 
-  const tableName = await rtc.importFile(TEST_FILE);
+  // const tableName = await rtc.importFile(TEST_FILE);
+  const tableName = TEST_TABLE;
 
   const baseQuery = reltab.tableQuery(tableName);
   // const rtc = reltabElectron.init(); // module local to keep alive:

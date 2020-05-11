@@ -13,6 +13,7 @@ import {
   BigQueryDialect,
 } from "reltab";
 import { BigQuery, Dataset } from "@google-cloud/bigquery";
+import path = require("path");
 
 const LOCATION = "US";
 
@@ -23,6 +24,25 @@ function assertDefined<A>(x: A | undefined | null): A {
 
   return x;
 }
+
+const mapIdent = (src: string): string => {
+  const ret = src.replace(/[^a-z0-9_]/gi, "_");
+  return ret;
+};
+
+const isAlpha = (ch: string): boolean => /^[A-Z]$/i.test(ch);
+
+/* generate a SQL table name from pathname */
+const genTableName = (pathname: string): string => {
+  const extName = path.extname(pathname);
+  const baseName = path.basename(pathname, extName);
+  let baseIdent = mapIdent(baseName);
+  if (!isAlpha(baseIdent[0])) {
+    baseIdent = "t_" + baseIdent;
+  }
+  const tableName = baseIdent;
+  return tableName;
+};
 
 export interface BigQueryConnectionOptions {
   showQueries?: boolean;
@@ -72,8 +92,8 @@ export class BigQueryConnection implements Connection {
 
     if (this.showQueries) {
       log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("SqliteContext.evalQuery: evaluating:");
-      log.debug(sqlQuery);
+      log.info("SqliteContext.evalQuery: evaluating:");
+      log.info(sqlQuery);
     }
 
     const t2 = process.hrtime();
@@ -108,8 +128,8 @@ export class BigQueryConnection implements Connection {
 
     if (this.showQueries) {
       log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("SqliteContext.evalQuery: evaluating:");
-      log.debug(countSql);
+      log.info("SqliteContext.evalQuery: evaluating:");
+      log.info(countSql);
     }
 
     const t2 = process.hrtime();
@@ -122,6 +142,15 @@ export class BigQueryConnection implements Connection {
     log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
     const ret = Number.parseInt(dbRows[0].rowCount);
     return ret;
+  }
+
+  async importCsv(pathname: string, metadata: any): Promise<void> {
+    const tableName = genTableName(pathname);
+    const [job] = await this.dataset.table(tableName).load(pathname, metadata);
+    console.log(
+      "importCsv: load completed: ",
+      JSON.stringify(job, undefined, 2)
+    );
   }
 
   async dbGetTableInfo(

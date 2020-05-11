@@ -100,6 +100,11 @@ const defaultViewParamsProps: ViewParamsProps = {
   filterExp: new reltab.FilterExp(),
 };
 
+type CellFormatter = (val?: any) => string | undefined | null;
+
+const defaultCellFormatter: CellFormatter = (val?: any) =>
+  val != null ? val.toString() : "";
+
 export class ViewParams extends Immutable.Record(defaultViewParamsProps)
   implements ViewParamsProps {
   public readonly showRoot!: boolean;
@@ -222,8 +227,8 @@ export class ViewParams extends Immutable.Record(defaultViewParamsProps)
     return this.set("aggMap", nextAggMap) as ViewParams;
   }
 
-  getColumnFormat(schema: reltab.Schema, cid: string): FormatOptions {
-    let formatOpts = this.columnFormats.get(cid);
+  getColumnFormat(schema: reltab.Schema, cid: string): FormatOptions | null {
+    let formatOpts: FormatOptions | undefined = this.columnFormats.get(cid);
 
     if (formatOpts == null) {
       formatOpts = this.defaultFormats.get(
@@ -232,6 +237,13 @@ export class ViewParams extends Immutable.Record(defaultViewParamsProps)
     }
 
     return formatOpts;
+  }
+
+  getColumnFormatter(schema: reltab.Schema, cid: string): CellFormatter {
+    const cf = this.getColumnFormat(schema, cid);
+    const ff: CellFormatter =
+      cf != null ? cf.getFormatter() : defaultCellFormatter;
+    return ff;
   }
 
   setColumnFormat(cid: string, opts: any): ViewParams {

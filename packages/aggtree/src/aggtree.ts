@@ -148,11 +148,22 @@ export class VPivotTree {
       aggMap != null ? aggCols.map((cid) => [aggMap[cid], cid]) : aggCols;
 
     if (path.length < this.pivotColumns.length) {
+      /* was: 
       pathQuery = pathQuery
         .groupBy([this.pivotColumns[path.length]], gbAggs)
         .mapColumnsByIndex({
           "0": pivotColumnInfo,
         });
+        ...but this leads to ambiguity in the use of the pivot column name, that some SQL engines (BigQuery) don't like,
+        so we'll push the definition of _pivot column inside the GroupBy:
+      */
+      pathQuery = pathQuery
+        .extend(
+          "_pivot",
+          { displayName: "_pivot", type: "text" },
+          colAsString(col(this.pivotColumns[path.length]))
+        )
+        .groupBy(["_pivot"], gbAggs);
     } else {
       // leaf level
       const leafExp =

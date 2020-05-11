@@ -13,7 +13,7 @@ log.setLevel("debug");
 
 let testCtx: reltabSqlite.SqliteContext;
 
-const impotestCtxsv = async (db: sqlite3.Database, path: string) => {
+const importCsv = async (db: sqlite3.Database, path: string) => {
   const md = await reltabSqlite.fastImport(db, path);
 
   const ti = reltabSqlite.mkTableInfo(md);
@@ -30,8 +30,8 @@ beforeAll(
 
     const db = testCtx.db;
 
-    await impotestCtxsv(db, "../reltab-sqlite/test/support/sample.csv");
-    await impotestCtxsv(db, "../reltab-sqlite/test/support/barttest.csv");
+    await importCsv(db, "../reltab-sqlite/test/support/sample.csv");
+    await importCsv(db, "../reltab-sqlite/test/support/barttest.csv");
 
     return testCtx;
   }

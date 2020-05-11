@@ -11,7 +11,7 @@ const defaultNumFormatOptionsProps: NumFormatOptionsProps = {
   type: "NumFormatOptions",
   commas: true,
   decimalPlaces: 2,
-  exponential: false
+  exponential: false,
 };
 
 export class NumFormatOptions
@@ -26,10 +26,10 @@ export class NumFormatOptions
     const fmtOpts = {
       minimumFractionDigits: this.decimalPlaces,
       maximumFractionDigits: this.decimalPlaces,
-      useGrouping: this.commas
+      useGrouping: this.commas,
     };
 
-    const ff = (val?: number | null): string | undefined | null => {
+    const ff = (val?: any): string | undefined | null => {
       if (val == null) {
         return null;
       }

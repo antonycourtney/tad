@@ -516,8 +516,9 @@ export type ColumnMapInfo = {
   id?: string;
   type?: ColumnType;
   displayName?: string;
-}; // Join types:  For now: only left outer
+}; 
 
+// Join types:  For now: only left outer
 export type JoinType = "LeftOuter";
 export class QueryExp {
   expType: "QueryExp";
@@ -1167,8 +1168,13 @@ const defaultAggs: { [CT in ColumnType]: AggFn } = {
   boolean: "uniq",
 };
 
-export const defaultAggFn = (colType: ColumnType): AggFn =>
-  defaultAggs[colType];
+export const defaultAggFn = (colType: ColumnType): AggFn => {
+  let afn: AggFn | undefined = defaultAggs[colType];
+  if (afn == null) {
+    afn = "null";
+  }
+  return afn;
+}
 
 const groupByQueryToSql = (
   tableMap: TableInfoMap,
@@ -1187,7 +1193,7 @@ const groupByQueryToSql = (
     if (typeof aggSpec === "string") {
       cid = aggSpec;
       const colType = inSchema.columnType(cid);
-      aggStr = defaultAggs[colType];
+      aggStr = defaultAggFn(colType);
     } else {
       [aggStr, cid] = aggSpec;
     }

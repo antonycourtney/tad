@@ -169,7 +169,7 @@ const mkSlickColMap = (
       ci.name = he.encode(displayName);
       ci.toolTip = he.encode(displayName);
       ci.sortable = true;
-      const ff = viewParams.getColumnFormat(schema, colId).getFormatter();
+      const ff = viewParams.getColumnFormatter(schema, colId);
       ci.formatter = (
         row: any,
         cell: any,

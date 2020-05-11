@@ -5,6 +5,7 @@ import { AddressInfo } from "net";
 import * as path from "path";
 import * as reltabSqlite from "reltab-sqlite";
 import { SqliteContext } from "reltab-sqlite";
+import { BigQueryConnection } from "reltab-bigquery";
 import * as reltab from "reltab";
 import { monitorEventLoopDelay } from "perf_hooks";
 import { read } from "fs";
@@ -127,9 +128,19 @@ const rootRedirect = (req: express.Request, res: express.Response) => {
 async function main() {
   log.setLevel(log.levels.INFO);
 
-  const dbCtx = await initSqlite();
+  // const dbCtx = await initSqlite();
+  const dbCtx = new BigQueryConnection(
+    "bigquery-public-data",
+    "covid19_jhu_csse",
+    { showQueries: true }
+  );
 
-  log.info("sqlite initialization complete");
+  const ti = await dbCtx.getTableInfo(
+    "bigquery-public-data.covid19_jhu_csse.summary"
+  );
+  console.log("tableInfo: ", ti);
+
+  log.info("db initialization complete");
 
   let app = express();
   app.use(express.json({ reviver: reltab.queryReviver }));
