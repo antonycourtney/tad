@@ -1,6 +1,4 @@
 import * as reltab from "reltab";
-import "console.table";
-
 export const columnSum = (
   tableData: reltab.TableRep,
   columnId: string

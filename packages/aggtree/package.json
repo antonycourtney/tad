@@ -23,7 +23,6 @@
     "@types/jest": "^25.2.1",
     "@types/node": "^13.11.0",
     "babel-plugin-flow-to-typescript": "^0.6.0",
-    "console.table": "^0.10.0",
     "jest": "^25.2.7",
     "mkdirp": "^1.0.4",
     "prettier": "^2.0.2",
