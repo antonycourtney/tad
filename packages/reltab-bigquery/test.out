@@ -1,0 +1,2154 @@
+
+> reltab-bigquery@0.10.0 test /Users/antony/home/src/tad-pkg/packages/reltab-bigquery
+> jest --config jest.config.json
+
+  console.log
+    importCsv: load completed:  {
+      "kind": "bigquery#job",
+      "etag": "V7J4aoMplA350NZxXnREUw==",
+      "id": "bigquery-test-project-276102:US.213ed9c6-bdb4-455e-9653-d55a6e419160",
+      "selfLink": "https://bigquery.googleapis.com/bigquery/v2/projects/bigquery-test-project-276102/jobs/213ed9c6-bdb4-455e-9653-d55a6e419160?location=US",
+      "user_email": "bigquery-test@bigquery-test-project-276102.iam.gserviceaccount.com",
+      "configuration": {
+        "load": {
+          "schema": {
+            "fields": [
+              {
+                "name": "Name",
+                "type": "STRING"
+              },
+              {
+                "name": "Title",
+                "type": "STRING"
+              },
+              {
+                "name": "Base",
+                "type": "INTEGER"
+              },
+              {
+                "name": "TCOE",
+                "type": "INTEGER"
+              },
+              {
+                "name": "JobFamily",
+                "type": "STRING"
+              },
+              {
+                "name": "Union",
+                "type": "STRING"
+              }
+            ]
+          },
+          "destinationTable": {
+            "projectId": "bigquery-test-project-276102",
+            "datasetId": "test_dataset",
+            "tableId": "barttest"
+          },
+          "writeDisposition": "WRITE_TRUNCATE",
+          "skipLeadingRows": 1,
+          "sourceFormat": "CSV"
+        },
+        "jobType": "LOAD"
+      },
+      "jobReference": {
+        "projectId": "bigquery-test-project-276102",
+        "jobId": "213ed9c6-bdb4-455e-9653-d55a6e419160",
+        "location": "US"
+      },
+      "statistics": {
+        "creationTime": "1589429949527",
+        "startTime": "1589429949948",
+        "endTime": "1589429951254",
+        "completionRatio": 1,
+        "load": {
+          "inputFiles": "1",
+          "inputFileBytes": "2036",
+          "outputRows": "23",
+          "outputBytes": "2126",
+          "badRecords": "0"
+        },
+        "totalSlotMs": "301",
+        "reservationUsage": [
+          {
+            "name": "default-pipeline",
+            "slotMs": "301"
+          }
+        ],
+        "reservation_id": "default-pipeline"
+      },
+      "status": {
+        "state": "DONE"
+      }
+    }
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:150:13)
+
+  console.log
+    done importing barttest
+
+      at test/basic.test.ts:42:11
+
+  console.log
+    metadata:  {
+      "kind": "bigquery#table",
+      "etag": "MGd2rcDn78xBTos0Z7YO8A==",
+      "id": "bigquery-test-project-276102:test_dataset.barttest",
+      "selfLink": "https://bigquery.googleapis.com/bigquery/v2/projects/bigquery-test-project-276102/datasets/test_dataset/tables/barttest",
+      "tableReference": {
+        "projectId": "bigquery-test-project-276102",
+        "datasetId": "test_dataset",
+        "tableId": "barttest"
+      },
+      "schema": {
+        "fields": [
+          {
+            "name": "Name",
+            "type": "STRING"
+          },
+          {
+            "name": "Title",
+            "type": "STRING"
+          },
+          {
+            "name": "Base",
+            "type": "INTEGER"
+          },
+          {
+            "name": "TCOE",
+            "type": "INTEGER"
+          },
+          {
+            "name": "JobFamily",
+            "type": "STRING"
+          },
+          {
+            "name": "Union",
+            "type": "STRING"
+          }
+        ]
+      },
+      "numBytes": "2126",
+      "numLongTermBytes": "0",
+      "numRows": "23",
+      "creationTime": "1589091342856",
+      "lastModifiedTime": "1589429951201",
+      "type": "TABLE",
+      "location": "US"
+    }
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:170:13)
+
+  console.log
+    barttest tableInfo:  {
+      "tableName": "bigquery-test-project-276102.test_dataset.barttest",
+      "schema": {
+        "columns": [
+          "Name",
+          "Title",
+          "Base",
+          "TCOE",
+          "JobFamily",
+          "Union"
+        ],
+        "columnMetadata": {
+          "Name": {
+            "displayName": "Name",
+            "type": "string"
+          },
+          "Title": {
+            "displayName": "Title",
+            "type": "string"
+          },
+          "Base": {
+            "displayName": "Base",
+            "type": "integer"
+          },
+          "TCOE": {
+            "displayName": "TCOE",
+            "type": "integer"
+          },
+          "JobFamily": {
+            "displayName": "JobFamily",
+            "type": "string"
+          },
+          "Union": {
+            "displayName": "Union",
+            "type": "string"
+          }
+        },
+        "_sortedColumns": null,
+        "columnIndices": {
+          "Name": 0,
+          "Title": 1,
+          "Base": 2,
+          "TCOE": 3,
+          "JobFamily": 4,
+          "Union": 5
+        }
+      }
+    }
+
+      at test/basic.test.ts:47:11
+
+  console.log
+    metadata:  {
+      "kind": "bigquery#table",
+      "etag": "rsouE31Bc8mxUedtcFtj+Q==",
+      "id": "bigquery-public-data:covid19_jhu_csse.summary",
+      "selfLink": "https://bigquery.googleapis.com/bigquery/v2/projects/bigquery-public-data/datasets/covid19_jhu_csse/tables/summary",
+      "tableReference": {
+        "projectId": "bigquery-public-data",
+        "datasetId": "covid19_jhu_csse",
+        "tableId": "summary"
+      },
+      "description": "Summary COVID-19 cases, aggregated by country/region and province/state. See the original source files here: https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/",
+      "labels": {
+        "freebqcovid": ""
+      },
+      "schema": {
+        "fields": [
+          {
+            "name": "province_state",
+            "type": "STRING",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "country_region",
+            "type": "STRING",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "date",
+            "type": "DATE",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "latitude",
+            "type": "FLOAT",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "longitude",
+            "type": "FLOAT",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "location_geom",
+            "type": "GEOGRAPHY",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "confirmed",
+            "type": "INTEGER",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "deaths",
+            "type": "INTEGER",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "recovered",
+            "type": "INTEGER",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "active",
+            "type": "INTEGER",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "fips",
+            "type": "STRING",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "admin2",
+            "type": "STRING",
+            "mode": "NULLABLE"
+          },
+          {
+            "name": "combined_key",
+            "type": "STRING",
+            "mode": "NULLABLE"
+          }
+        ]
+      },
+      "numBytes": "27522831",
+      "numLongTermBytes": "0",
+      "numRows": "171876",
+      "creationTime": "1585581319801",
+      "lastModifiedTime": "1589429306969",
+      "type": "TABLE",
+      "location": "US"
+    }
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:170:13)
+
+  console.log
+    tableInfo:  {
+      "tableName": "bigquery-public-data.covid19_jhu_csse.summary",
+      "schema": {
+        "columns": [
+          "province_state",
+          "country_region",
+          "date",
+          "latitude",
+          "longitude",
+          "location_geom",
+          "confirmed",
+          "deaths",
+          "recovered",
+          "active",
+          "fips",
+          "admin2",
+          "combined_key"
+        ],
+        "columnMetadata": {
+          "province_state": {
+            "displayName": "province_state",
+            "type": "string"
+          },
+          "country_region": {
+            "displayName": "country_region",
+            "type": "string"
+          },
+          "date": {
+            "displayName": "date",
+            "type": "date"
+          },
+          "latitude": {
+            "displayName": "latitude",
+            "type": "float"
+          },
+          "longitude": {
+            "displayName": "longitude",
+            "type": "float"
+          },
+          "location_geom": {
+            "displayName": "location_geom",
+            "type": "geography"
+          },
+          "confirmed": {
+            "displayName": "confirmed",
+            "type": "integer"
+          },
+          "deaths": {
+            "displayName": "deaths",
+            "type": "integer"
+          },
+          "recovered": {
+            "displayName": "recovered",
+            "type": "integer"
+          },
+          "active": {
+            "displayName": "active",
+            "type": "integer"
+          },
+          "fips": {
+            "displayName": "fips",
+            "type": "string"
+          },
+          "admin2": {
+            "displayName": "admin2",
+            "type": "string"
+          },
+          "combined_key": {
+            "displayName": "combined_key",
+            "type": "string"
+          }
+        },
+        "_sortedColumns": null,
+        "columnIndices": {
+          "province_state": 0,
+          "country_region": 1,
+          "date": 2,
+          "latitude": 3,
+          "longitude": 4,
+          "location_geom": 5,
+          "confirmed": 6,
+          "deaths": 7,
+          "recovered": 8,
+          "active": 9,
+          "fips": 10,
+          "admin2": 11,
+          "combined_key": 12
+        }
+      }
+    }
+
+      at test/basic.test.ts:60:11
+
+  console.log
+    basic table query:
+
+      at test/basic.test.ts:62:11
+
+  console.info
+    time to generate sql: 0s 0.651073ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `province_state`, `country_region`, `date`, `latitude`, `longitude`, `location_geom`, `confirmed`, `deaths`, `recovered`, `active`, `fips`, `admin2`, `combined_key`
+    FROM `bigquery-public-data.covid19_jhu_csse.summary`
+    LIMIT 10 OFFSET 0
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 1s 209.527815ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.029311ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    q1 query result: row 0:  {
+      province_state: null,
+      country_region: 'Chad',
+      date: BigQueryDate { value: '2020-04-26' },
+      latitude: 15.4542,
+      longitude: 18.7322,
+      location_geom: Geography { value: 'POINT(18.7322 15.4542)' },
+      confirmed: 46,
+      deaths: 0,
+      recovered: 15,
+      active: 31,
+      fips: null,
+      admin2: null,
+      combined_key: 'Chad'
+    } ...
+
+      at test/basic.test.ts:65:11
+
+  console.info
+    time to generate sql: 0s 0.036028ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `Name`, `Title`, `Base`, `TCOE`, `JobFamily`, `Union`
+    FROM `bigquery-test-project-276102.test_dataset.barttest`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 957.84733ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.00556ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.info
+    time to generate sql: 0s 0.260859ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:130:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:131:11)
+
+  console.info
+    SELECT count('*') as `rowCount`
+    FROM (
+      SELECT `Name`, `Title`, `Base`, `TCOE`, `JobFamily`, `Union`
+      FROM `bigquery-test-project-276102.test_dataset.barttest`
+    )
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:132:11)
+
+  console.info
+    time to run query: 0s 588.089758ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:142:9)
+
+  console.info
+    time to generate sql: 0s 1.088929ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`
+    FROM `bigquery-test-project-276102.test_dataset.barttest`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 772.841032ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.004161ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.info
+    time to generate sql: 0s 0.329943ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, sum(`TCOE`) as `TCOE`
+    FROM (
+      SELECT `Name`, `Title`, `Base`, `TCOE`, `JobFamily`, `Union`
+      FROM `bigquery-test-project-276102.test_dataset.barttest`
+    )
+    GROUP BY `JobFamily`, `Title`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 1s 18.710581ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.00266ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.info
+    time to generate sql: 0s 0.030767ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `Name`, `Title`, `Base`, `TCOE`, `JobFamily`, `Union`
+    FROM `bigquery-test-project-276102.test_dataset.barttest`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 768.106085ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.002454ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬────────────────────────────────────────┬────────┐
+    │ (index) │              JobFamily              │                 Title                  │  TCOE  │
+    ├─────────┼─────────────────────────────────────┼────────────────────────────────────────┼────────┤
+    │    0    │              'Police'               │       'Revenue Protection Guard'       │ 127660 │
+    │    1    │              'Safety'               │         'Chief Safety Officer'         │ 211941 │
+    │    2    │         'Legal & Paralegal'         │           'General Counsel'            │ 321543 │
+    │    3    │         'Legal & Paralegal'         │           'Senior Attorney'            │ 445028 │
+    │    4    │       'Executive Management'        │           'General Manager'            │ 819582 │
+    │    5    │       'Executive Management'        │ 'Assistant General Manager Operations' │ 288160 │
+    │    6    │       'Executive Management'        │        'Deputy General Manager'        │ 281548 │
+    │    7    │       'Finance & Accounting'        │         'Controller-Treasurer'         │ 287139 │
+    │    8    │     'Transportation Operations'     │     'Chief Transportation Officer'     │ 238211 │
+    │    9    │     'Transportation Operations'     │            'Train Operator'            │ 118799 │
+    │   10    │     'Transportation Operations'     │            'Station Agent'             │ 352988 │
+    │   11    │    'Public Affairs & Marketing'     │ "Department Manager Gov't & Comm Rel"  │ 181955 │
+    │   12    │ 'Engineering & Systems Engineering' │   'Group Manager, Capital Projects'    │ 209709 │
+    │   13    │ 'Engineering & Systems Engineering' │  'Group Manager Systems Capital Prog'  │ 212535 │
+    │   14    │ 'Maintenance, Vehicle & Facilities' │          'Wayside Inspector'           │ 128332 │
+    │   15    │ 'Maintenance, Vehicle & Facilities' │         'Structures Inspector'         │ 124962 │
+    │   16    │ 'Maintenance, Vehicle & Facilities' │          'Vehicle Inspector'           │ 123432 │
+    │   17    │ 'Maintenance, Vehicle & Facilities' │       'Transit Vehicle Mechanic'       │ 104260 │
+    │   18    │ 'Maintenance, Vehicle & Facilities' │             'Electrician'              │ 113775 │
+    └─────────┴─────────────────────────────────────┴────────────────────────────────────────┴────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 0.314153ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily` as `_pivot`, `Title` as `Title`, sum(`TCOE`) as `TCOE`
+    FROM (
+      SELECT `Name`, `Title`, `Base`, `TCOE`, `JobFamily`, `Union`
+      FROM `bigquery-test-project-276102.test_dataset.barttest`
+    )
+    GROUP BY `JobFamily`, `Title`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 817.432767ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.004095ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    groupBy plus mapColumns:
+
+      at test/basic.test.ts:124:11
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬────────────────────────────────────────┬────────┐
+    │ (index) │               _pivot                │                 Title                  │  TCOE  │
+    ├─────────┼─────────────────────────────────────┼────────────────────────────────────────┼────────┤
+    │    0    │              'Police'               │       'Revenue Protection Guard'       │ 127660 │
+    │    1    │              'Safety'               │         'Chief Safety Officer'         │ 211941 │
+    │    2    │         'Legal & Paralegal'         │           'General Counsel'            │ 321543 │
+    │    3    │         'Legal & Paralegal'         │           'Senior Attorney'            │ 445028 │
+    │    4    │       'Executive Management'        │           'General Manager'            │ 819582 │
+    │    5    │       'Executive Management'        │ 'Assistant General Manager Operations' │ 288160 │
+    │    6    │       'Executive Management'        │        'Deputy General Manager'        │ 281548 │
+    │    7    │       'Finance & Accounting'        │         'Controller-Treasurer'         │ 287139 │
+    │    8    │     'Transportation Operations'     │     'Chief Transportation Officer'     │ 238211 │
+    │    9    │     'Transportation Operations'     │            'Train Operator'            │ 118799 │
+    │   10    │     'Transportation Operations'     │            'Station Agent'             │ 352988 │
+    │   11    │    'Public Affairs & Marketing'     │ "Department Manager Gov't & Comm Rel"  │ 181955 │
+    │   12    │ 'Engineering & Systems Engineering' │   'Group Manager, Capital Projects'    │ 209709 │
+    │   13    │ 'Engineering & Systems Engineering' │  'Group Manager Systems Capital Prog'  │ 212535 │
+    │   14    │ 'Maintenance, Vehicle & Facilities' │          'Wayside Inspector'           │ 128332 │
+    │   15    │ 'Maintenance, Vehicle & Facilities' │         'Structures Inspector'         │ 124962 │
+    │   16    │ 'Maintenance, Vehicle & Facilities' │          'Vehicle Inspector'           │ 123432 │
+    │   17    │ 'Maintenance, Vehicle & Facilities' │       'Transit Vehicle Mechanic'       │ 104260 │
+    │   18    │ 'Maintenance, Vehicle & Facilities' │             'Electrician'              │ 113775 │
+    └─────────┴─────────────────────────────────────┴────────────────────────────────────────┴────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 0.614173ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+    FROM `bigquery-test-project-276102.test_dataset.barttest`
+    WHERE 1=0
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 513.001668ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.00397ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    got schema:  Schema {
+      columns: [ 'JobFamily', 'Title', 'Union', 'Name', 'Base', 'TCOE', 'Rec' ],
+      columnMetadata: {
+        Rec: { type: 'integer' },
+        JobFamily: { displayName: 'JobFamily', type: 'string' },
+        Title: { displayName: 'Title', type: 'string' },
+        Union: { displayName: 'Union', type: 'string' },
+        Name: { displayName: 'Name', type: 'string' },
+        Base: { displayName: 'Base', type: 'integer' },
+        TCOE: { displayName: 'TCOE', type: 'integer' }
+      },
+      _sortedColumns: null,
+      columnIndices: {
+        JobFamily: 0,
+        Title: 1,
+        Union: 2,
+        Name: 3,
+        Base: 4,
+        TCOE: 5,
+        Rec: 6
+      }
+    }
+
+      at test/basic.test.ts:146:7
+
+  console.log
+    root query exp:  QueryExp {
+      expType: 'QueryExp',
+      operator: 'project',
+      valArgs: [
+        [
+          'JobFamily', 'Title',
+          'Union',     'Name',
+          'Base',      'TCOE',
+          'Rec',       '_depth',
+          '_pivot',    '_isRoot'
+        ]
+      ],
+      tableArgs: [
+        QueryExp {
+          expType: 'QueryExp',
+          operator: 'extend',
+          valArgs: [Array],
+          tableArgs: [Array]
+        }
+      ]
+    }
+
+      at test/basic.test.ts:158:7
+
+  console.info
+    time to generate sql: 0s 0.437648ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, 0 as `_depth`, CAST(null AS STRING) as `_pivot`, 1 as `_isRoot`
+    FROM (
+      SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+        FROM `bigquery-test-project-276102.test_dataset.barttest`
+      )
+    )
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 909.748212ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.003375ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    root query result: TableRep {
+      schema: Schema {
+        columns: [
+          'JobFamily', 'Title',
+          'Union',     'Name',
+          'Base',      'TCOE',
+          'Rec',       '_depth',
+          '_pivot',    '_isRoot'
+        ],
+        columnMetadata: {
+          JobFamily: [Object],
+          Title: [Object],
+          Union: [Object],
+          Name: [Object],
+          Base: [Object],
+          TCOE: [Object],
+          Rec: [Object],
+          _depth: [Object],
+          _pivot: [Object],
+          _isRoot: [Object]
+        },
+        _sortedColumns: null,
+        columnIndices: {
+          JobFamily: 0,
+          Title: 1,
+          Union: 2,
+          Name: 3,
+          Base: 4,
+          TCOE: 5,
+          Rec: 6,
+          _depth: 7,
+          _pivot: 8,
+          _isRoot: 9
+        }
+      },
+      rowData: [
+        {
+          JobFamily: null,
+          Title: null,
+          Union: null,
+          Name: null,
+          Base: 3251221,
+          TCOE: 4691559,
+          Rec: 23,
+          _depth: 0,
+          _pivot: null,
+          _isRoot: 1
+        }
+      ]
+    }
+
+      at test/basic.test.ts:161:7
+
+  console.log
+    ┌─────────┬───────────┬───────┬───────┬──────┬─────────┬─────────┬─────┬────────┬────────┬─────────┐
+    │ (index) │ JobFamily │ Title │ Union │ Name │  Base   │  TCOE   │ Rec │ _depth │ _pivot │ _isRoot │
+    ├─────────┼───────────┼───────┼───────┼──────┼─────────┼─────────┼─────┼────────┼────────┼─────────┤
+    │    0    │   null    │ null  │ null  │ null │ 3251221 │ 4691559 │ 23  │   0    │  null  │    1    │
+    └─────────┴───────────┴───────┴───────┴──────┴─────────┴─────────┴─────┴────────┴────────┴─────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 0.53413ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(null AS STRING) as `_path1`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST(`_pivot` AS STRING) as `_path0`
+      FROM (
+        SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 1 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 0 as `_sortVal_1`, 0 as `_sortVal_2`
+        FROM (
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`JobFamily` AS STRING) as `_pivot`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+            FROM `bigquery-test-project-276102.test_dataset.barttest`
+          )
+        )
+        GROUP BY `_pivot`
+      )
+    )
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 872.974316ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.002939ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    open root query:
+
+      at test/basic.test.ts:166:7
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬───────────────────────────────────────┬───────────────────┬────────────────────┬─────────┬─────────┬─────┬────────┬─────────────────────────────────────┬─────────┬────────────┬────────────┬────────────┬─────────────────────────────────────┬────────┐
+    │ (index) │              JobFamily              │                 Title                 │       Union       │        Name        │  Base   │  TCOE   │ Rec │ _depth │               _pivot                │ _isRoot │ _sortVal_0 │ _sortVal_1 │ _sortVal_2 │               _path0                │ _path1 │
+    ├─────────┼─────────────────────────────────────┼───────────────────────────────────────┼───────────────────┼────────────────────┼─────────┼─────────┼─────┼────────┼─────────────────────────────────────┼─────────┼────────────┼────────────┼────────────┼─────────────────────────────────────┼────────┤
+    │    0    │              'Police'               │      'Revenue Protection Guard'       │      'BPOA'       │ 'Ornellas, Robert' │  75701  │ 127660  │  1  │   1    │              'Police'               │    0    │     1      │     0      │     0      │              'Police'               │  null  │
+    │    1    │              'Safety'               │        'Chief Safety Officer'         │ 'Non-Represented' │  'Hardy, Leonard'  │ 152125  │ 211941  │  1  │   1    │              'Safety'               │    0    │     1      │     0      │     0      │              'Safety'               │  null  │
+    │    2    │         'Legal & Paralegal'         │                 null                  │ 'Non-Represented' │        null        │ 564028  │ 766571  │  3  │   1    │         'Legal & Paralegal'         │    0    │     1      │     0      │     0      │         'Legal & Paralegal'         │  null  │
+    │    3    │       'Executive Management'        │                 null                  │ 'Non-Represented' │        null        │ 1030722 │ 1389290 │  4  │   1    │       'Executive Management'        │    0    │     1      │     0      │     0      │       'Executive Management'        │  null  │
+    │    4    │       'Finance & Accounting'        │        'Controller-Treasurer'         │ 'Non-Represented' │ 'Schroeder, Scott' │ 208744  │ 287139  │  1  │   1    │       'Finance & Accounting'        │    0    │     1      │     0      │     0      │       'Finance & Accounting'        │  null  │
+    │    5    │     'Transportation Operations'     │                 null                  │       null        │        null        │ 413909  │ 709998  │  5  │   1    │     'Transportation Operations'     │    0    │     1      │     0      │     0      │     'Transportation Operations'     │  null  │
+    │    6    │    'Public Affairs & Marketing'     │ "Department Manager Gov't & Comm Rel" │ 'Non-Represented' │  'Hamill, Kerry'   │ 130035  │ 181955  │  1  │   1    │    'Public Affairs & Marketing'     │    0    │     1      │     0      │     0      │    'Public Affairs & Marketing'     │  null  │
+    │    7    │ 'Engineering & Systems Engineering' │                 null                  │ 'Non-Represented' │        null        │ 309734  │ 422244  │  2  │   1    │ 'Engineering & Systems Engineering' │    0    │     1      │     0      │     0      │ 'Engineering & Systems Engineering' │  null  │
+    │    8    │ 'Maintenance, Vehicle & Facilities' │                 null                  │      'SEIU'       │        null        │ 366223  │ 594761  │  5  │   1    │ 'Maintenance, Vehicle & Facilities' │    0    │     1      │     0      │     0      │ 'Maintenance, Vehicle & Facilities' │  null  │
+    └─────────┴─────────────────────────────────────┴───────────────────────────────────────┴───────────────────┴────────────────────┴─────────┴─────────┴─────┴────────┴─────────────────────────────────────┴─────────┴────────────┴────────────┴────────────┴─────────────────────────────────────┴────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.log
+    after opening node: q2:  {
+      "expType": "QueryExp",
+      "operator": "extend",
+      "valArgs": [
+        "_path1",
+        {
+          "type": "text"
+        },
+        {
+          "expType": "AsString",
+          "valExp": {
+            "expType": "ColRef",
+            "colName": "_pivot"
+          }
+        }
+      ],
+      "tableArgs": [
+        {
+          "expType": "QueryExp",
+          "operator": "extend",
+          "valArgs": [
+            "_path0",
+            {
+              "type": "text"
+            },
+            {
+              "expType": "AsString",
+              "valExp": {
+                "expType": "ConstVal",
+                "val": "Executive Management"
+              }
+            }
+          ],
+          "tableArgs": [
+            {
+              "expType": "QueryExp",
+              "operator": "extend",
+              "valArgs": [
+                "_sortVal_2",
+                {
+                  "type": "integer"
+                },
+                {
+                  "expType": "ConstVal",
+                  "val": 0
+                }
+              ],
+              "tableArgs": [
+                {
+                  "expType": "QueryExp",
+                  "operator": "extend",
+                  "valArgs": [
+                    "_sortVal_1",
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "expType": "ConstVal",
+                      "val": 1
+                    }
+                  ],
+                  "tableArgs": [
+                    {
+                      "expType": "QueryExp",
+                      "operator": "extend",
+                      "valArgs": [
+                        "_sortVal_0",
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "expType": "ConstVal",
+                          "val": 1
+                        }
+                      ],
+                      "tableArgs": [
+                        {
+                          "expType": "QueryExp",
+                          "operator": "project",
+                          "valArgs": [
+                            [
+                              "JobFamily",
+                              "Title",
+                              "Union",
+                              "Name",
+                              "Base",
+                              "TCOE",
+                              "Rec",
+                              "_depth",
+                              "_pivot",
+                              "_isRoot"
+                            ]
+                          ],
+                          "tableArgs": [
+                            {
+                              "expType": "QueryExp",
+                              "operator": "extend",
+                              "valArgs": [
+                                "_isRoot",
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "expType": "ConstVal",
+                                  "val": 0
+                                }
+                              ],
+                              "tableArgs": [
+                                {
+                                  "expType": "QueryExp",
+                                  "operator": "extend",
+                                  "valArgs": [
+                                    "_depth",
+                                    {
+                                      "type": "integer"
+                                    },
+                                    {
+                                      "expType": "ConstVal",
+                                      "val": 2
+                                    }
+                                  ],
+                                  "tableArgs": [
+                                    {
+                                      "expType": "QueryExp",
+                                      "operator": "groupBy",
+                                      "valArgs": [
+                                        [
+                                          "_pivot"
+                                        ],
+                                        [
+                                          "JobFamily",
+                                          "Title",
+                                          "Union",
+                                          "Name",
+                                          "Base",
+                                          "TCOE",
+                                          "Rec"
+                                        ]
+                                      ],
+                                      "tableArgs": [
+                                        {
+                                          "expType": "QueryExp",
+                                          "operator": "extend",
+                                          "valArgs": [
+                                            "_pivot",
+                                            {
+                                              "displayName": "_pivot",
+                                              "type": "text"
+                                            },
+                                            {
+                                              "expType": "AsString",
+                                              "valExp": {
+                                                "expType": "ColRef",
+                                                "colName": "Title"
+                                              }
+                                            }
+                                          ],
+                                          "tableArgs": [
+                                            {
+                                              "expType": "QueryExp",
+                                              "operator": "filter",
+                                              "valArgs": [
+                                                {
+                                                  "expType": "FilterExp",
+                                                  "op": "AND",
+                                                  "opArgs": [
+                                                    {
+                                                      "expType": "BinRelExp",
+                                                      "op": "EQ",
+                                                      "lhs": {
+                                                        "expType": "ColRef",
+                                                        "colName": "JobFamily"
+                                                      },
+                                                      "rhs": {
+                                                        "expType": "ConstVal",
+                                                        "val": "Executive Management"
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              ],
+                                              "tableArgs": [
+                                                {
+                                                  "expType": "QueryExp",
+                                                  "operator": "extend",
+                                                  "valArgs": [
+                                                    "Rec",
+                                                    {
+                                                      "type": "integer"
+                                                    },
+                                                    {
+                                                      "expType": "ConstVal",
+                                                      "val": 1
+                                                    }
+                                                  ],
+                                                  "tableArgs": [
+                                                    {
+                                                      "expType": "QueryExp",
+                                                      "operator": "project",
+                                                      "valArgs": [
+                                                        [
+                                                          "JobFamily",
+                                                          "Title",
+                                                          "Union",
+                                                          "Name",
+                                                          "Base",
+                                                          "TCOE"
+                                                        ]
+                                                      ],
+                                                      "tableArgs": [
+                                                        {
+                                                          "expType": "QueryExp",
+                                                          "operator": "table",
+                                                          "valArgs": [
+                                                            "bigquery-test-project-276102.test_dataset.barttest"
+                                                          ],
+                                                          "tableArgs": []
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+
+      at test/basic.test.ts:196:11
+
+  console.info
+    time to generate sql: 0s 0.406319ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(`_pivot` AS STRING) as `_path1`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Executive Management' AS STRING) as `_path0`
+      FROM (
+        SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 2 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 0 as `_sortVal_2`
+        FROM (
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`Title` AS STRING) as `_pivot`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+            FROM `bigquery-test-project-276102.test_dataset.barttest`
+            WHERE `JobFamily`='Executive Management'
+          )
+        )
+        GROUP BY `_pivot`
+      )
+    )
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 913.949098ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.00291ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    after applying path ["Executive Management"]:
+
+      at test/basic.test.ts:200:11
+
+  console.log
+    ┌─────────┬────────────────────────┬────────────────────────────────────────┬───────────────────┬────────────────────┬────────┬────────┬─────┬────────┬────────────────────────────────────────┬─────────┬────────────┬────────────┬────────────┬────────────────────────┬────────────────────────────────────────┐
+    │ (index) │       JobFamily        │                 Title                  │       Union       │        Name        │  Base  │  TCOE  │ Rec │ _depth │                 _pivot                 │ _isRoot │ _sortVal_0 │ _sortVal_1 │ _sortVal_2 │         _path0         │                 _path1                 │
+    ├─────────┼────────────────────────┼────────────────────────────────────────┼───────────────────┼────────────────────┼────────┼────────┼─────┼────────┼────────────────────────────────────────┼─────────┼────────────┼────────────┼────────────┼────────────────────────┼────────────────────────────────────────┤
+    │    0    │ 'Executive Management' │           'General Manager'            │ 'Non-Represented' │        null        │ 611161 │ 819582 │  2  │   2    │           'General Manager'            │    0    │     1      │     1      │     0      │ 'Executive Management' │           'General Manager'            │
+    │    1    │ 'Executive Management' │ 'Assistant General Manager Operations' │ 'Non-Represented' │  'Oversier, Paul'  │ 212647 │ 288160 │  1  │   2    │ 'Assistant General Manager Operations' │    0    │     1      │     1      │     0      │ 'Executive Management' │ 'Assistant General Manager Operations' │
+    │    2    │ 'Executive Management' │        'Deputy General Manager'        │ 'Non-Represented' │ 'DeVaughn, Marcia' │ 206914 │ 281548 │  1  │   2    │        'Deputy General Manager'        │    0    │     1      │     1      │     0      │ 'Executive Management' │        'Deputy General Manager'        │
+    └─────────┴────────────────────────┴────────────────────────────────────────┴───────────────────┴────────────────────┴────────┴────────┴─────┴────────┴────────────────────────────────────────┴─────────┴────────────┴────────────┴────────────┴────────────────────────┴────────────────────────────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 0.32416ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST('General Manager' AS STRING) as `_path1`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Executive Management' AS STRING) as `_path0`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, 3 as `_depth`, CAST(`Name` AS STRING) as `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 1 as `_sortVal_2`
+        FROM (
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+          FROM `bigquery-test-project-276102.test_dataset.barttest`
+          WHERE `JobFamily`='Executive Management' AND `Title`='General Manager'
+        )
+      )
+    )
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 821.787341ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.002747ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    after applying path /Executive Management/General Manager:
+
+      at test/basic.test.ts:207:11
+
+  console.log
+    ┌─────────┬────────────────────────┬───────────────────┬───────────────────┬───────────────────┬────────┬────────┬─────┬────────┬───────────────────┬─────────┬────────────┬────────────┬────────────┬────────────────────────┬───────────────────┐
+    │ (index) │       JobFamily        │       Title       │       Union       │       Name        │  Base  │  TCOE  │ Rec │ _depth │      _pivot       │ _isRoot │ _sortVal_0 │ _sortVal_1 │ _sortVal_2 │         _path0         │      _path1       │
+    ├─────────┼────────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────┼────────┼─────┼────────┼───────────────────┼─────────┼────────────┼────────────┼────────────┼────────────────────────┼───────────────────┤
+    │    0    │ 'Executive Management' │ 'General Manager' │ 'Non-Represented' │ 'Crunican, Grace' │ 312461 │ 399921 │  1  │   3    │ 'Crunican, Grace' │    0    │     1      │     1      │     1      │ 'Executive Management' │ 'General Manager' │
+    │    1    │ 'Executive Management' │ 'General Manager' │ 'Non-Represented' │ 'Dugger, Dorothy' │ 298700 │ 419661 │  1  │   3    │ 'Dugger, Dorothy' │    0    │     1      │     1      │     1      │ 'Executive Management' │ 'General Manager' │
+    └─────────┴────────────────────────┴───────────────────┴───────────────────┴───────────────────┴────────┴────────┴─────┴────────┴───────────────────┴─────────┴────────────┴────────────┴────────────┴────────────────────────┴───────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 0.892559ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, `_path1`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(null AS STRING) as `_path1`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST(null AS STRING) as `_path0`
+        FROM (
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, 0 as `_depth`, CAST(null AS STRING) as `_pivot`, 1 as `_isRoot`, 0 as `_sortVal_0`, 0 as `_sortVal_1`, 0 as `_sortVal_2`
+          FROM (
+            SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+              FROM `bigquery-test-project-276102.test_dataset.barttest`
+            )
+          )
+        )
+      )
+      UNION ALL
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(null AS STRING) as `_path1`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST(`_pivot` AS STRING) as `_path0`
+        FROM (
+          SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 1 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 0 as `_sortVal_1`, 0 as `_sortVal_2`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`JobFamily` AS STRING) as `_pivot`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+              FROM `bigquery-test-project-276102.test_dataset.barttest`
+            )
+          )
+          GROUP BY `_pivot`
+        )
+      )
+      UNION ALL
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(`_pivot` AS STRING) as `_path1`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Executive Management' AS STRING) as `_path0`
+        FROM (
+          SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 2 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 0 as `_sortVal_2`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`Title` AS STRING) as `_pivot`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+              FROM `bigquery-test-project-276102.test_dataset.barttest`
+              WHERE `JobFamily`='Executive Management'
+            )
+          )
+          GROUP BY `_pivot`
+        )
+      )
+    )
+    ORDER BY `_path0`, `_path1`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 1s 107.064633ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.003441ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    after treeQuery for path /Executive Management:
+
+      at test/basic.test.ts:215:11
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬────────────────────────────────────────┬───────────────────┬────────────────────┬─────────┬─────────┬─────┬────────┬────────────────────────────────────────┬─────────┬────────────┬────────────┬────────────┬─────────────────────────────────────┬────────────────────────────────────────┐
+    │ (index) │              JobFamily              │                 Title                  │       Union       │        Name        │  Base   │  TCOE   │ Rec │ _depth │                 _pivot                 │ _isRoot │ _sortVal_0 │ _sortVal_1 │ _sortVal_2 │               _path0                │                 _path1                 │
+    ├─────────┼─────────────────────────────────────┼────────────────────────────────────────┼───────────────────┼────────────────────┼─────────┼─────────┼─────┼────────┼────────────────────────────────────────┼─────────┼────────────┼────────────┼────────────┼─────────────────────────────────────┼────────────────────────────────────────┤
+    │    0    │                null                 │                  null                  │       null        │        null        │ 3251221 │ 4691559 │ 23  │   0    │                  null                  │    1    │     0      │     0      │     0      │                null                 │                  null                  │
+    │    1    │ 'Engineering & Systems Engineering' │                  null                  │ 'Non-Represented' │        null        │ 309734  │ 422244  │  2  │   1    │  'Engineering & Systems Engineering'   │    0    │     1      │     0      │     0      │ 'Engineering & Systems Engineering' │                  null                  │
+    │    2    │       'Executive Management'        │                  null                  │ 'Non-Represented' │        null        │ 1030722 │ 1389290 │  4  │   1    │         'Executive Management'         │    0    │     1      │     0      │     0      │       'Executive Management'        │                  null                  │
+    │    3    │       'Executive Management'        │ 'Assistant General Manager Operations' │ 'Non-Represented' │  'Oversier, Paul'  │ 212647  │ 288160  │  1  │   2    │ 'Assistant General Manager Operations' │    0    │     1      │     1      │     0      │       'Executive Management'        │ 'Assistant General Manager Operations' │
+    │    4    │       'Executive Management'        │        'Deputy General Manager'        │ 'Non-Represented' │ 'DeVaughn, Marcia' │ 206914  │ 281548  │  1  │   2    │        'Deputy General Manager'        │    0    │     1      │     1      │     0      │       'Executive Management'        │        'Deputy General Manager'        │
+    │    5    │       'Executive Management'        │           'General Manager'            │ 'Non-Represented' │        null        │ 611161  │ 819582  │  2  │   2    │           'General Manager'            │    0    │     1      │     1      │     0      │       'Executive Management'        │           'General Manager'            │
+    │    6    │       'Finance & Accounting'        │         'Controller-Treasurer'         │ 'Non-Represented' │ 'Schroeder, Scott' │ 208744  │ 287139  │  1  │   1    │         'Finance & Accounting'         │    0    │     1      │     0      │     0      │       'Finance & Accounting'        │                  null                  │
+    │    7    │         'Legal & Paralegal'         │                  null                  │ 'Non-Represented' │        null        │ 564028  │ 766571  │  3  │   1    │          'Legal & Paralegal'           │    0    │     1      │     0      │     0      │         'Legal & Paralegal'         │                  null                  │
+    │    8    │ 'Maintenance, Vehicle & Facilities' │                  null                  │      'SEIU'       │        null        │ 366223  │ 594761  │  5  │   1    │  'Maintenance, Vehicle & Facilities'   │    0    │     1      │     0      │     0      │ 'Maintenance, Vehicle & Facilities' │                  null                  │
+    │    9    │              'Police'               │       'Revenue Protection Guard'       │      'BPOA'       │ 'Ornellas, Robert' │  75701  │ 127660  │  1  │   1    │                'Police'                │    0    │     1      │     0      │     0      │              'Police'               │                  null                  │
+    │   10    │    'Public Affairs & Marketing'     │ "Department Manager Gov't & Comm Rel"  │ 'Non-Represented' │  'Hamill, Kerry'   │ 130035  │ 181955  │  1  │   1    │      'Public Affairs & Marketing'      │    0    │     1      │     0      │     0      │    'Public Affairs & Marketing'     │                  null                  │
+    │   11    │              'Safety'               │         'Chief Safety Officer'         │ 'Non-Represented' │  'Hardy, Leonard'  │ 152125  │ 211941  │  1  │   1    │                'Safety'                │    0    │     1      │     0      │     0      │              'Safety'               │                  null                  │
+    │   12    │     'Transportation Operations'     │                  null                  │       null        │        null        │ 413909  │ 709998  │  5  │   1    │      'Transportation Operations'       │    0    │     1      │     0      │     0      │     'Transportation Operations'     │                  null                  │
+    └─────────┴─────────────────────────────────────┴────────────────────────────────────────┴───────────────────┴────────────────────┴─────────┴─────────┴─────┴────────┴────────────────────────────────────────┴─────────┴────────────┴────────────┴────────────┴─────────────────────────────────────┴────────────────────────────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 0.133257ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+    FROM `bigquery-test-project-276102.test_dataset.barttest`
+    WHERE 1=0
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 469.728235ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.00591ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    vpivot initial promise resolved...
+
+      at test/basic.test.ts:237:11
+
+  console.info
+    time to generate sql: 0s 0.348021ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily` as `_path0`, sum(`TCOE`) as `_sortVal_0_0`, sum(`Base`) as `_sortVal_0_1`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `_sortVal_0_2`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+      FROM `bigquery-test-project-276102.test_dataset.barttest`
+    )
+    GROUP BY `JobFamily`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 1s 2.265242ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.002828ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    sort query depth 1:
+
+      at test/basic.test.ts:242:11
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬──────────────┬──────────────┬───────────────────────────────────────┐
+    │ (index) │               _path0                │ _sortVal_0_0 │ _sortVal_0_1 │             _sortVal_0_2              │
+    ├─────────┼─────────────────────────────────────┼──────────────┼──────────────┼───────────────────────────────────────┤
+    │    0    │              'Police'               │    127660    │    75701     │      'Revenue Protection Guard'       │
+    │    1    │              'Safety'               │    211941    │    152125    │        'Chief Safety Officer'         │
+    │    2    │         'Legal & Paralegal'         │    766571    │    564028    │                 null                  │
+    │    3    │       'Executive Management'        │   1389290    │   1030722    │                 null                  │
+    │    4    │       'Finance & Accounting'        │    287139    │    208744    │        'Controller-Treasurer'         │
+    │    5    │     'Transportation Operations'     │    709998    │    413909    │                 null                  │
+    │    6    │    'Public Affairs & Marketing'     │    181955    │    130035    │ "Department Manager Gov't & Comm Rel" │
+    │    7    │ 'Engineering & Systems Engineering' │    422244    │    309734    │                 null                  │
+    │    8    │ 'Maintenance, Vehicle & Facilities' │    594761    │    366223    │                 null                  │
+    └─────────┴─────────────────────────────────────┴──────────────┴──────────────┴───────────────────────────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 0.285774ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily` as `_path0`, `Title` as `_path1`, sum(`TCOE`) as `_sortVal_1_0`, sum(`Base`) as `_sortVal_1_1`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `_sortVal_1_2`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+      FROM `bigquery-test-project-276102.test_dataset.barttest`
+    )
+    GROUP BY `JobFamily`, `Title`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 930.725372ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.002554ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    sort query depth 2:
+
+      at test/basic.test.ts:250:11
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬────────────────────────────────────────┬──────────────┬──────────────┬────────────────────────────────────────┐
+    │ (index) │               _path0                │                 _path1                 │ _sortVal_1_0 │ _sortVal_1_1 │              _sortVal_1_2              │
+    ├─────────┼─────────────────────────────────────┼────────────────────────────────────────┼──────────────┼──────────────┼────────────────────────────────────────┤
+    │    0    │              'Police'               │       'Revenue Protection Guard'       │    127660    │    75701     │       'Revenue Protection Guard'       │
+    │    1    │              'Safety'               │         'Chief Safety Officer'         │    211941    │    152125    │         'Chief Safety Officer'         │
+    │    2    │         'Legal & Paralegal'         │           'General Counsel'            │    321543    │    238269    │           'General Counsel'            │
+    │    3    │         'Legal & Paralegal'         │           'Senior Attorney'            │    445028    │    325759    │           'Senior Attorney'            │
+    │    4    │       'Executive Management'        │           'General Manager'            │    819582    │    611161    │           'General Manager'            │
+    │    5    │       'Executive Management'        │ 'Assistant General Manager Operations' │    288160    │    212647    │ 'Assistant General Manager Operations' │
+    │    6    │       'Executive Management'        │        'Deputy General Manager'        │    281548    │    206914    │        'Deputy General Manager'        │
+    │    7    │       'Finance & Accounting'        │         'Controller-Treasurer'         │    287139    │    208744    │         'Controller-Treasurer'         │
+    │    8    │     'Transportation Operations'     │     'Chief Transportation Officer'     │    238211    │    170383    │     'Chief Transportation Officer'     │
+    │    9    │     'Transportation Operations'     │            'Train Operator'            │    118799    │    61184     │            'Train Operator'            │
+    │   10    │     'Transportation Operations'     │            'Station Agent'             │    352988    │    182342    │            'Station Agent'             │
+    │   11    │    'Public Affairs & Marketing'     │ "Department Manager Gov't & Comm Rel"  │    181955    │    130035    │ "Department Manager Gov't & Comm Rel"  │
+    │   12    │ 'Engineering & Systems Engineering' │   'Group Manager, Capital Projects'    │    209709    │    157300    │   'Group Manager, Capital Projects'    │
+    │   13    │ 'Engineering & Systems Engineering' │  'Group Manager Systems Capital Prog'  │    212535    │    152434    │  'Group Manager Systems Capital Prog'  │
+    │   14    │ 'Maintenance, Vehicle & Facilities' │          'Wayside Inspector'           │    128332    │    77446     │          'Wayside Inspector'           │
+    │   15    │ 'Maintenance, Vehicle & Facilities' │         'Structures Inspector'         │    124962    │    77446     │         'Structures Inspector'         │
+    │   16    │ 'Maintenance, Vehicle & Facilities' │          'Vehicle Inspector'           │    123432    │    77446     │          'Vehicle Inspector'           │
+    │   17    │ 'Maintenance, Vehicle & Facilities' │       'Transit Vehicle Mechanic'       │    104260    │    74068     │       'Transit Vehicle Mechanic'       │
+    │   18    │ 'Maintenance, Vehicle & Facilities' │             'Electrician'              │    113775    │    59817     │             'Electrician'              │
+    └─────────┴─────────────────────────────────────┴────────────────────────────────────────┴──────────────┴──────────────┴────────────────────────────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.log
+    got depth 1 query and sortQuery, joining...:
+
+      at test/basic.test.ts:256:11
+
+  console.info
+    time to generate sql: 0s 1.431973ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, `_path1`, `_sortVal_0_0`, `_sortVal_0_1`, `_sortVal_0_2`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(null AS STRING) as `_path1`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST(`_pivot` AS STRING) as `_path0`
+        FROM (
+          SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 1 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 0 as `_sortVal_1`, 0 as `_sortVal_2`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`JobFamily` AS STRING) as `_pivot`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+              FROM `bigquery-test-project-276102.test_dataset.barttest`
+            )
+          )
+          GROUP BY `_pivot`
+        )
+      )
+    ) LEFT OUTER JOIN (
+      SELECT `JobFamily` as `_path0`, sum(`TCOE`) as `_sortVal_0_0`, sum(`Base`) as `_sortVal_0_1`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `_sortVal_0_2`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+        FROM `bigquery-test-project-276102.test_dataset.barttest`
+      )
+      GROUP BY `JobFamily`
+    )
+    USING (`_path0`)
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 1s 206.394525ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.003674ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    result of join query:
+
+      at test/basic.test.ts:260:11
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬───────────────────────────────────────┬───────────────────┬────────────────────┬─────────┬─────────┬─────┬────────┬─────────────────────────────────────┬─────────┬────────────┬────────────┬────────────┬─────────────────────────────────────┬────────┬──────────────┬──────────────┬───────────────────────────────────────┐
+    │ (index) │              JobFamily              │                 Title                 │       Union       │        Name        │  Base   │  TCOE   │ Rec │ _depth │               _pivot                │ _isRoot │ _sortVal_0 │ _sortVal_1 │ _sortVal_2 │               _path0                │ _path1 │ _sortVal_0_0 │ _sortVal_0_1 │             _sortVal_0_2              │
+    ├─────────┼─────────────────────────────────────┼───────────────────────────────────────┼───────────────────┼────────────────────┼─────────┼─────────┼─────┼────────┼─────────────────────────────────────┼─────────┼────────────┼────────────┼────────────┼─────────────────────────────────────┼────────┼──────────────┼──────────────┼───────────────────────────────────────┤
+    │    0    │              'Police'               │      'Revenue Protection Guard'       │      'BPOA'       │ 'Ornellas, Robert' │  75701  │ 127660  │  1  │   1    │              'Police'               │    0    │     1      │     0      │     0      │              'Police'               │  null  │    127660    │    75701     │      'Revenue Protection Guard'       │
+    │    1    │              'Safety'               │        'Chief Safety Officer'         │ 'Non-Represented' │  'Hardy, Leonard'  │ 152125  │ 211941  │  1  │   1    │              'Safety'               │    0    │     1      │     0      │     0      │              'Safety'               │  null  │    211941    │    152125    │        'Chief Safety Officer'         │
+    │    2    │         'Legal & Paralegal'         │                 null                  │ 'Non-Represented' │        null        │ 564028  │ 766571  │  3  │   1    │         'Legal & Paralegal'         │    0    │     1      │     0      │     0      │         'Legal & Paralegal'         │  null  │    766571    │    564028    │                 null                  │
+    │    3    │       'Executive Management'        │                 null                  │ 'Non-Represented' │        null        │ 1030722 │ 1389290 │  4  │   1    │       'Executive Management'        │    0    │     1      │     0      │     0      │       'Executive Management'        │  null  │   1389290    │   1030722    │                 null                  │
+    │    4    │       'Finance & Accounting'        │        'Controller-Treasurer'         │ 'Non-Represented' │ 'Schroeder, Scott' │ 208744  │ 287139  │  1  │   1    │       'Finance & Accounting'        │    0    │     1      │     0      │     0      │       'Finance & Accounting'        │  null  │    287139    │    208744    │        'Controller-Treasurer'         │
+    │    5    │     'Transportation Operations'     │                 null                  │       null        │        null        │ 413909  │ 709998  │  5  │   1    │     'Transportation Operations'     │    0    │     1      │     0      │     0      │     'Transportation Operations'     │  null  │    709998    │    413909    │                 null                  │
+    │    6    │    'Public Affairs & Marketing'     │ "Department Manager Gov't & Comm Rel" │ 'Non-Represented' │  'Hamill, Kerry'   │ 130035  │ 181955  │  1  │   1    │    'Public Affairs & Marketing'     │    0    │     1      │     0      │     0      │    'Public Affairs & Marketing'     │  null  │    181955    │    130035    │ "Department Manager Gov't & Comm Rel" │
+    │    7    │ 'Engineering & Systems Engineering' │                 null                  │ 'Non-Represented' │        null        │ 309734  │ 422244  │  2  │   1    │ 'Engineering & Systems Engineering' │    0    │     1      │     0      │     0      │ 'Engineering & Systems Engineering' │  null  │    422244    │    309734    │                 null                  │
+    │    8    │ 'Maintenance, Vehicle & Facilities' │                 null                  │      'SEIU'       │        null        │ 366223  │ 594761  │  5  │   1    │ 'Maintenance, Vehicle & Facilities' │    0    │     1      │     0      │     0      │ 'Maintenance, Vehicle & Facilities' │  null  │    594761    │    366223    │                 null                  │
+    └─────────┴─────────────────────────────────────┴───────────────────────────────────────┴───────────────────┴────────────────────┴─────────┴─────────┴─────┴────────┴─────────────────────────────────────┴─────────┴────────────┴────────────┴────────────┴─────────────────────────────────────┴────────┴──────────────┴──────────────┴───────────────────────────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 0.145099ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+    FROM `bigquery-test-project-276102.test_dataset.barttest`
+    WHERE 1=0
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 592.230433ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.002411ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.info
+    time to generate sql: 0s 1.56109ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, `_path1`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(null AS STRING) as `_path1`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST(null AS STRING) as `_path0`
+        FROM (
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, 0 as `_depth`, CAST(null AS STRING) as `_pivot`, 1 as `_isRoot`, 0 as `_sortVal_0`, 0 as `_sortVal_1`, 0 as `_sortVal_2`
+          FROM (
+            SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+              FROM `bigquery-test-project-276102.test_dataset.barttest`
+            )
+          )
+        )
+      )
+      UNION ALL
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(null AS STRING) as `_path1`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST(`_pivot` AS STRING) as `_path0`
+        FROM (
+          SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 1 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 0 as `_sortVal_1`, 0 as `_sortVal_2`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`JobFamily` AS STRING) as `_pivot`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+              FROM `bigquery-test-project-276102.test_dataset.barttest`
+            )
+          )
+          GROUP BY `_pivot`
+        )
+      )
+      UNION ALL
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(`_pivot` AS STRING) as `_path1`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Executive Management' AS STRING) as `_path0`
+        FROM (
+          SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 2 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 0 as `_sortVal_2`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`Title` AS STRING) as `_pivot`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+              FROM `bigquery-test-project-276102.test_dataset.barttest`
+              WHERE `JobFamily`='Executive Management'
+            )
+          )
+          GROUP BY `_pivot`
+        )
+      )
+      UNION ALL
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST('General Manager' AS STRING) as `_path1`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Executive Management' AS STRING) as `_path0`
+        FROM (
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, 3 as `_depth`, CAST(`Name` AS STRING) as `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 1 as `_sortVal_2`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+            FROM `bigquery-test-project-276102.test_dataset.barttest`
+            WHERE `JobFamily`='Executive Management' AND `Title`='General Manager'
+          )
+        )
+      )
+      UNION ALL
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(`_pivot` AS STRING) as `_path1`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Safety' AS STRING) as `_path0`
+        FROM (
+          SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 2 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 0 as `_sortVal_2`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`Title` AS STRING) as `_pivot`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+              FROM `bigquery-test-project-276102.test_dataset.barttest`
+              WHERE `JobFamily`='Safety'
+            )
+          )
+          GROUP BY `_pivot`
+        )
+      )
+    )
+    ORDER BY `_path0`, `_path1`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 1s 17.161334ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.005146ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    tree query after opening paths:
+
+      at test/basic.test.ts:289:11
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬────────────────────────────────────────┬───────────────────┬────────────────────┬─────────┬─────────┬─────┬────────┬────────────────────────────────────────┬─────────┬────────────┬────────────┬────────────┬─────────────────────────────────────┬────────────────────────────────────────┐
+    │ (index) │              JobFamily              │                 Title                  │       Union       │        Name        │  Base   │  TCOE   │ Rec │ _depth │                 _pivot                 │ _isRoot │ _sortVal_0 │ _sortVal_1 │ _sortVal_2 │               _path0                │                 _path1                 │
+    ├─────────┼─────────────────────────────────────┼────────────────────────────────────────┼───────────────────┼────────────────────┼─────────┼─────────┼─────┼────────┼────────────────────────────────────────┼─────────┼────────────┼────────────┼────────────┼─────────────────────────────────────┼────────────────────────────────────────┤
+    │    0    │                null                 │                  null                  │       null        │        null        │ 3251221 │ 4691559 │ 23  │   0    │                  null                  │    1    │     0      │     0      │     0      │                null                 │                  null                  │
+    │    1    │ 'Engineering & Systems Engineering' │                  null                  │ 'Non-Represented' │        null        │ 309734  │ 422244  │  2  │   1    │  'Engineering & Systems Engineering'   │    0    │     1      │     0      │     0      │ 'Engineering & Systems Engineering' │                  null                  │
+    │    2    │       'Executive Management'        │                  null                  │ 'Non-Represented' │        null        │ 1030722 │ 1389290 │  4  │   1    │         'Executive Management'         │    0    │     1      │     0      │     0      │       'Executive Management'        │                  null                  │
+    │    3    │       'Executive Management'        │ 'Assistant General Manager Operations' │ 'Non-Represented' │  'Oversier, Paul'  │ 212647  │ 288160  │  1  │   2    │ 'Assistant General Manager Operations' │    0    │     1      │     1      │     0      │       'Executive Management'        │ 'Assistant General Manager Operations' │
+    │    4    │       'Executive Management'        │        'Deputy General Manager'        │ 'Non-Represented' │ 'DeVaughn, Marcia' │ 206914  │ 281548  │  1  │   2    │        'Deputy General Manager'        │    0    │     1      │     1      │     0      │       'Executive Management'        │        'Deputy General Manager'        │
+    │    5    │       'Executive Management'        │           'General Manager'            │ 'Non-Represented' │        null        │ 611161  │ 819582  │  2  │   2    │           'General Manager'            │    0    │     1      │     1      │     0      │       'Executive Management'        │           'General Manager'            │
+    │    6    │       'Executive Management'        │           'General Manager'            │ 'Non-Represented' │ 'Crunican, Grace'  │ 312461  │ 399921  │  1  │   3    │           'Crunican, Grace'            │    0    │     1      │     1      │     1      │       'Executive Management'        │           'General Manager'            │
+    │    7    │       'Executive Management'        │           'General Manager'            │ 'Non-Represented' │ 'Dugger, Dorothy'  │ 298700  │ 419661  │  1  │   3    │           'Dugger, Dorothy'            │    0    │     1      │     1      │     1      │       'Executive Management'        │           'General Manager'            │
+    │    8    │       'Finance & Accounting'        │         'Controller-Treasurer'         │ 'Non-Represented' │ 'Schroeder, Scott' │ 208744  │ 287139  │  1  │   1    │         'Finance & Accounting'         │    0    │     1      │     0      │     0      │       'Finance & Accounting'        │                  null                  │
+    │    9    │         'Legal & Paralegal'         │                  null                  │ 'Non-Represented' │        null        │ 564028  │ 766571  │  3  │   1    │          'Legal & Paralegal'           │    0    │     1      │     0      │     0      │         'Legal & Paralegal'         │                  null                  │
+    │   10    │ 'Maintenance, Vehicle & Facilities' │                  null                  │      'SEIU'       │        null        │ 366223  │ 594761  │  5  │   1    │  'Maintenance, Vehicle & Facilities'   │    0    │     1      │     0      │     0      │ 'Maintenance, Vehicle & Facilities' │                  null                  │
+    │   11    │              'Police'               │       'Revenue Protection Guard'       │      'BPOA'       │ 'Ornellas, Robert' │  75701  │ 127660  │  1  │   1    │                'Police'                │    0    │     1      │     0      │     0      │              'Police'               │                  null                  │
+    │   12    │    'Public Affairs & Marketing'     │ "Department Manager Gov't & Comm Rel"  │ 'Non-Represented' │  'Hamill, Kerry'   │ 130035  │ 181955  │  1  │   1    │      'Public Affairs & Marketing'      │    0    │     1      │     0      │     0      │    'Public Affairs & Marketing'     │                  null                  │
+    │   13    │              'Safety'               │         'Chief Safety Officer'         │ 'Non-Represented' │  'Hardy, Leonard'  │ 152125  │ 211941  │  1  │   1    │                'Safety'                │    0    │     1      │     0      │     0      │              'Safety'               │                  null                  │
+    │   14    │              'Safety'               │         'Chief Safety Officer'         │ 'Non-Represented' │  'Hardy, Leonard'  │ 152125  │ 211941  │  1  │   2    │         'Chief Safety Officer'         │    0    │     1      │     1      │     0      │              'Safety'               │         'Chief Safety Officer'         │
+    │   15    │     'Transportation Operations'     │                  null                  │       null        │        null        │ 413909  │ 709998  │  5  │   1    │      'Transportation Operations'       │    0    │     1      │     0      │     0      │     'Transportation Operations'     │                  null                  │
+    └─────────┴─────────────────────────────────────┴────────────────────────────────────────┴───────────────────┴────────────────────┴─────────┴─────────┴─────┴────────┴────────────────────────────────────────┴─────────┴────────────┴────────────┴────────────┴─────────────────────────────────────┴────────────────────────────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 0.220176ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily` as `_path0`, sum(`TCOE`) as `_sortVal_0_0`, sum(`Base`) as `_sortVal_0_1`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `_sortVal_0_2`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+      FROM `bigquery-test-project-276102.test_dataset.barttest`
+    )
+    GROUP BY `JobFamily`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 1s 27.662871ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.00271ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    sort query depth 1:
+
+      at test/basic.test.ts:295:11
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬──────────────┬──────────────┬───────────────────────────────────────┐
+    │ (index) │               _path0                │ _sortVal_0_0 │ _sortVal_0_1 │             _sortVal_0_2              │
+    ├─────────┼─────────────────────────────────────┼──────────────┼──────────────┼───────────────────────────────────────┤
+    │    0    │              'Police'               │    127660    │    75701     │      'Revenue Protection Guard'       │
+    │    1    │              'Safety'               │    211941    │    152125    │        'Chief Safety Officer'         │
+    │    2    │         'Legal & Paralegal'         │    766571    │    564028    │                 null                  │
+    │    3    │       'Executive Management'        │   1389290    │   1030722    │                 null                  │
+    │    4    │       'Finance & Accounting'        │    287139    │    208744    │        'Controller-Treasurer'         │
+    │    5    │     'Transportation Operations'     │    709998    │    413909    │                 null                  │
+    │    6    │    'Public Affairs & Marketing'     │    181955    │    130035    │ "Department Manager Gov't & Comm Rel" │
+    │    7    │ 'Engineering & Systems Engineering' │    422244    │    309734    │                 null                  │
+    │    8    │ 'Maintenance, Vehicle & Facilities' │    594761    │    366223    │                 null                  │
+    └─────────┴─────────────────────────────────────┴──────────────┴──────────────┴───────────────────────────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 0.204785ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily` as `_path0`, `Title` as `_path1`, sum(`TCOE`) as `_sortVal_1_0`, sum(`Base`) as `_sortVal_1_1`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `_sortVal_1_2`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+      FROM `bigquery-test-project-276102.test_dataset.barttest`
+    )
+    GROUP BY `JobFamily`, `Title`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 0s 570.229796ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.002751ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    sort query depth 2:
+
+      at test/basic.test.ts:302:11
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬────────────────────────────────────────┬──────────────┬──────────────┬────────────────────────────────────────┐
+    │ (index) │               _path0                │                 _path1                 │ _sortVal_1_0 │ _sortVal_1_1 │              _sortVal_1_2              │
+    ├─────────┼─────────────────────────────────────┼────────────────────────────────────────┼──────────────┼──────────────┼────────────────────────────────────────┤
+    │    0    │              'Police'               │       'Revenue Protection Guard'       │    127660    │    75701     │       'Revenue Protection Guard'       │
+    │    1    │              'Safety'               │         'Chief Safety Officer'         │    211941    │    152125    │         'Chief Safety Officer'         │
+    │    2    │         'Legal & Paralegal'         │           'General Counsel'            │    321543    │    238269    │           'General Counsel'            │
+    │    3    │         'Legal & Paralegal'         │           'Senior Attorney'            │    445028    │    325759    │           'Senior Attorney'            │
+    │    4    │       'Executive Management'        │           'General Manager'            │    819582    │    611161    │           'General Manager'            │
+    │    5    │       'Executive Management'        │ 'Assistant General Manager Operations' │    288160    │    212647    │ 'Assistant General Manager Operations' │
+    │    6    │       'Executive Management'        │        'Deputy General Manager'        │    281548    │    206914    │        'Deputy General Manager'        │
+    │    7    │       'Finance & Accounting'        │         'Controller-Treasurer'         │    287139    │    208744    │         'Controller-Treasurer'         │
+    │    8    │     'Transportation Operations'     │     'Chief Transportation Officer'     │    238211    │    170383    │     'Chief Transportation Officer'     │
+    │    9    │     'Transportation Operations'     │            'Train Operator'            │    118799    │    61184     │            'Train Operator'            │
+    │   10    │     'Transportation Operations'     │            'Station Agent'             │    352988    │    182342    │            'Station Agent'             │
+    │   11    │    'Public Affairs & Marketing'     │ "Department Manager Gov't & Comm Rel"  │    181955    │    130035    │ "Department Manager Gov't & Comm Rel"  │
+    │   12    │ 'Engineering & Systems Engineering' │   'Group Manager, Capital Projects'    │    209709    │    157300    │   'Group Manager, Capital Projects'    │
+    │   13    │ 'Engineering & Systems Engineering' │  'Group Manager Systems Capital Prog'  │    212535    │    152434    │  'Group Manager Systems Capital Prog'  │
+    │   14    │ 'Maintenance, Vehicle & Facilities' │          'Wayside Inspector'           │    128332    │    77446     │          'Wayside Inspector'           │
+    │   15    │ 'Maintenance, Vehicle & Facilities' │         'Structures Inspector'         │    124962    │    77446     │         'Structures Inspector'         │
+    │   16    │ 'Maintenance, Vehicle & Facilities' │          'Vehicle Inspector'           │    123432    │    77446     │          'Vehicle Inspector'           │
+    │   17    │ 'Maintenance, Vehicle & Facilities' │       'Transit Vehicle Mechanic'       │    104260    │    74068     │       'Transit Vehicle Mechanic'       │
+    │   18    │ 'Maintenance, Vehicle & Facilities' │             'Electrician'              │    113775    │    59817     │             'Electrician'              │
+    └─────────┴─────────────────────────────────────┴────────────────────────────────────────┴──────────────┴──────────────┴────────────────────────────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 1.819379ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, `_path1`, `_sortVal_0_0`, `_sortVal_0_1`, `_sortVal_0_2`, `_sortVal_1_0`, `_sortVal_1_1`, `_sortVal_1_2`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, `_path1`, `_sortVal_0_0`, `_sortVal_0_1`, `_sortVal_0_2`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, `_path1`
+        FROM (
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(null AS STRING) as `_path1`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST(null AS STRING) as `_path0`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, 0 as `_depth`, CAST(null AS STRING) as `_pivot`, 1 as `_isRoot`, 0 as `_sortVal_0`, 0 as `_sortVal_1`, 0 as `_sortVal_2`
+              FROM (
+                SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`
+                FROM (
+                  SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+                  FROM `bigquery-test-project-276102.test_dataset.barttest`
+                )
+              )
+            )
+          )
+          UNION ALL
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(null AS STRING) as `_path1`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST(`_pivot` AS STRING) as `_path0`
+            FROM (
+              SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 1 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 0 as `_sortVal_1`, 0 as `_sortVal_2`
+              FROM (
+                SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`JobFamily` AS STRING) as `_pivot`
+                FROM (
+                  SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+                  FROM `bigquery-test-project-276102.test_dataset.barttest`
+                )
+              )
+              GROUP BY `_pivot`
+            )
+          )
+          UNION ALL
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(`_pivot` AS STRING) as `_path1`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Executive Management' AS STRING) as `_path0`
+            FROM (
+              SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 2 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 0 as `_sortVal_2`
+              FROM (
+                SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`Title` AS STRING) as `_pivot`
+                FROM (
+                  SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+                  FROM `bigquery-test-project-276102.test_dataset.barttest`
+                  WHERE `JobFamily`='Executive Management'
+                )
+              )
+              GROUP BY `_pivot`
+            )
+          )
+          UNION ALL
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST('General Manager' AS STRING) as `_path1`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Executive Management' AS STRING) as `_path0`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, 3 as `_depth`, CAST(`Name` AS STRING) as `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 1 as `_sortVal_2`
+              FROM (
+                SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+                FROM `bigquery-test-project-276102.test_dataset.barttest`
+                WHERE `JobFamily`='Executive Management' AND `Title`='General Manager'
+              )
+            )
+          )
+          UNION ALL
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(`_pivot` AS STRING) as `_path1`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Safety' AS STRING) as `_path0`
+            FROM (
+              SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 2 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 0 as `_sortVal_2`
+              FROM (
+                SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`Title` AS STRING) as `_pivot`
+                FROM (
+                  SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+                  FROM `bigquery-test-project-276102.test_dataset.barttest`
+                  WHERE `JobFamily`='Safety'
+                )
+              )
+              GROUP BY `_pivot`
+            )
+          )
+        )
+        ORDER BY `_path0`, `_path1`
+    ) LEFT OUTER JOIN (
+        SELECT `JobFamily` as `_path0`, sum(`TCOE`) as `_sortVal_0_0`, sum(`Base`) as `_sortVal_0_1`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `_sortVal_0_2`
+        FROM (
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+          FROM `bigquery-test-project-276102.test_dataset.barttest`
+        )
+        GROUP BY `JobFamily`
+    )
+    USING (`_path0`)
+    ) LEFT OUTER JOIN (
+      SELECT `JobFamily` as `_path0`, `Title` as `_path1`, sum(`TCOE`) as `_sortVal_1_0`, sum(`Base`) as `_sortVal_1_1`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `_sortVal_1_2`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+        FROM `bigquery-test-project-276102.test_dataset.barttest`
+      )
+      GROUP BY `JobFamily`, `Title`
+    )
+    USING (`_path0`, `_path1`)
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 1s 383.357687ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.002797ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    tree query after sort joins:
+
+      at test/basic.test.ts:309:11
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬────────────────────────────────────────┬───────────────────┬────────────────────┬─────────┬─────────┬─────┬────────┬────────────────────────────────────────┬─────────┬────────────┬────────────┬────────────┬─────────────────────────────────────┬────────────────────────────────────────┬──────────────┬──────────────┬───────────────────────────────────────┬──────────────┬──────────────┬────────────────────────────────────────┐
+    │ (index) │              JobFamily              │                 Title                  │       Union       │        Name        │  Base   │  TCOE   │ Rec │ _depth │                 _pivot                 │ _isRoot │ _sortVal_0 │ _sortVal_1 │ _sortVal_2 │               _path0                │                 _path1                 │ _sortVal_0_0 │ _sortVal_0_1 │             _sortVal_0_2              │ _sortVal_1_0 │ _sortVal_1_1 │              _sortVal_1_2              │
+    ├─────────┼─────────────────────────────────────┼────────────────────────────────────────┼───────────────────┼────────────────────┼─────────┼─────────┼─────┼────────┼────────────────────────────────────────┼─────────┼────────────┼────────────┼────────────┼─────────────────────────────────────┼────────────────────────────────────────┼──────────────┼──────────────┼───────────────────────────────────────┼──────────────┼──────────────┼────────────────────────────────────────┤
+    │    0    │              'Police'               │       'Revenue Protection Guard'       │      'BPOA'       │ 'Ornellas, Robert' │  75701  │ 127660  │  1  │   1    │                'Police'                │    0    │     1      │     0      │     0      │              'Police'               │                  null                  │    127660    │    75701     │      'Revenue Protection Guard'       │     null     │     null     │                  null                  │
+    │    1    │              'Safety'               │         'Chief Safety Officer'         │ 'Non-Represented' │  'Hardy, Leonard'  │ 152125  │ 211941  │  1  │   1    │                'Safety'                │    0    │     1      │     0      │     0      │              'Safety'               │                  null                  │    211941    │    152125    │        'Chief Safety Officer'         │     null     │     null     │                  null                  │
+    │    2    │         'Legal & Paralegal'         │                  null                  │ 'Non-Represented' │        null        │ 564028  │ 766571  │  3  │   1    │          'Legal & Paralegal'           │    0    │     1      │     0      │     0      │         'Legal & Paralegal'         │                  null                  │    766571    │    564028    │                 null                  │     null     │     null     │                  null                  │
+    │    3    │       'Executive Management'        │                  null                  │ 'Non-Represented' │        null        │ 1030722 │ 1389290 │  4  │   1    │         'Executive Management'         │    0    │     1      │     0      │     0      │       'Executive Management'        │                  null                  │   1389290    │   1030722    │                 null                  │     null     │     null     │                  null                  │
+    │    4    │       'Finance & Accounting'        │         'Controller-Treasurer'         │ 'Non-Represented' │ 'Schroeder, Scott' │ 208744  │ 287139  │  1  │   1    │         'Finance & Accounting'         │    0    │     1      │     0      │     0      │       'Finance & Accounting'        │                  null                  │    287139    │    208744    │        'Controller-Treasurer'         │     null     │     null     │                  null                  │
+    │    5    │     'Transportation Operations'     │                  null                  │       null        │        null        │ 413909  │ 709998  │  5  │   1    │      'Transportation Operations'       │    0    │     1      │     0      │     0      │     'Transportation Operations'     │                  null                  │    709998    │    413909    │                 null                  │     null     │     null     │                  null                  │
+    │    6    │    'Public Affairs & Marketing'     │ "Department Manager Gov't & Comm Rel"  │ 'Non-Represented' │  'Hamill, Kerry'   │ 130035  │ 181955  │  1  │   1    │      'Public Affairs & Marketing'      │    0    │     1      │     0      │     0      │    'Public Affairs & Marketing'     │                  null                  │    181955    │    130035    │ "Department Manager Gov't & Comm Rel" │     null     │     null     │                  null                  │
+    │    7    │ 'Engineering & Systems Engineering' │                  null                  │ 'Non-Represented' │        null        │ 309734  │ 422244  │  2  │   1    │  'Engineering & Systems Engineering'   │    0    │     1      │     0      │     0      │ 'Engineering & Systems Engineering' │                  null                  │    422244    │    309734    │                 null                  │     null     │     null     │                  null                  │
+    │    8    │ 'Maintenance, Vehicle & Facilities' │                  null                  │      'SEIU'       │        null        │ 366223  │ 594761  │  5  │   1    │  'Maintenance, Vehicle & Facilities'   │    0    │     1      │     0      │     0      │ 'Maintenance, Vehicle & Facilities' │                  null                  │    594761    │    366223    │                 null                  │     null     │     null     │                  null                  │
+    │    9    │       'Executive Management'        │           'General Manager'            │ 'Non-Represented' │ 'Crunican, Grace'  │ 312461  │ 399921  │  1  │   3    │           'Crunican, Grace'            │    0    │     1      │     1      │     1      │       'Executive Management'        │           'General Manager'            │   1389290    │   1030722    │                 null                  │    819582    │    611161    │           'General Manager'            │
+    │   10    │       'Executive Management'        │           'General Manager'            │ 'Non-Represented' │ 'Dugger, Dorothy'  │ 298700  │ 419661  │  1  │   3    │           'Dugger, Dorothy'            │    0    │     1      │     1      │     1      │       'Executive Management'        │           'General Manager'            │   1389290    │   1030722    │                 null                  │    819582    │    611161    │           'General Manager'            │
+    │   11    │                null                 │                  null                  │       null        │        null        │ 3251221 │ 4691559 │ 23  │   0    │                  null                  │    1    │     0      │     0      │     0      │                null                 │                  null                  │     null     │     null     │                 null                  │     null     │     null     │                  null                  │
+    │   12    │       'Executive Management'        │           'General Manager'            │ 'Non-Represented' │        null        │ 611161  │ 819582  │  2  │   2    │           'General Manager'            │    0    │     1      │     1      │     0      │       'Executive Management'        │           'General Manager'            │   1389290    │   1030722    │                 null                  │    819582    │    611161    │           'General Manager'            │
+    │   13    │       'Executive Management'        │ 'Assistant General Manager Operations' │ 'Non-Represented' │  'Oversier, Paul'  │ 212647  │ 288160  │  1  │   2    │ 'Assistant General Manager Operations' │    0    │     1      │     1      │     0      │       'Executive Management'        │ 'Assistant General Manager Operations' │   1389290    │   1030722    │                 null                  │    288160    │    212647    │ 'Assistant General Manager Operations' │
+    │   14    │       'Executive Management'        │        'Deputy General Manager'        │ 'Non-Represented' │ 'DeVaughn, Marcia' │ 206914  │ 281548  │  1  │   2    │        'Deputy General Manager'        │    0    │     1      │     1      │     0      │       'Executive Management'        │        'Deputy General Manager'        │   1389290    │   1030722    │                 null                  │    281548    │    206914    │        'Deputy General Manager'        │
+    │   15    │              'Safety'               │         'Chief Safety Officer'         │ 'Non-Represented' │  'Hardy, Leonard'  │ 152125  │ 211941  │  1  │   2    │         'Chief Safety Officer'         │    0    │     1      │     1      │     0      │              'Safety'               │         'Chief Safety Officer'         │    211941    │    152125    │        'Chief Safety Officer'         │    211941    │    152125    │         'Chief Safety Officer'         │
+    └─────────┴─────────────────────────────────────┴────────────────────────────────────────┴───────────────────┴────────────────────┴─────────┴─────────┴─────┴────────┴────────────────────────────────────────┴─────────┴────────────┴────────────┴────────────┴─────────────────────────────────────┴────────────────────────────────────────┴──────────────┴──────────────┴───────────────────────────────────────┴──────────────┴──────────────┴────────────────────────────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
+  console.info
+    time to generate sql: 0s 2.59062ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:94:11)
+
+  console.info
+    SqliteContext.evalQuery: evaluating:
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:95:11)
+
+  console.info
+    SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, `_path1`, `_sortVal_0_0`, `_sortVal_0_1`, `_sortVal_0_2`, `_sortVal_1_0`, `_sortVal_1_1`, `_sortVal_1_2`
+    FROM (
+      SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, `_path1`, `_sortVal_0_0`, `_sortVal_0_1`, `_sortVal_0_2`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, `_path1`
+        FROM (
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(null AS STRING) as `_path1`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST(null AS STRING) as `_path0`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, 0 as `_depth`, CAST(null AS STRING) as `_pivot`, 1 as `_isRoot`, 0 as `_sortVal_0`, 0 as `_sortVal_1`, 0 as `_sortVal_2`
+              FROM (
+                SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`
+                FROM (
+                  SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+                  FROM `bigquery-test-project-276102.test_dataset.barttest`
+                )
+              )
+            )
+          )
+          UNION ALL
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(null AS STRING) as `_path1`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST(`_pivot` AS STRING) as `_path0`
+            FROM (
+              SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 1 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 0 as `_sortVal_1`, 0 as `_sortVal_2`
+              FROM (
+                SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`JobFamily` AS STRING) as `_pivot`
+                FROM (
+                  SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+                  FROM `bigquery-test-project-276102.test_dataset.barttest`
+                )
+              )
+              GROUP BY `_pivot`
+            )
+          )
+          UNION ALL
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(`_pivot` AS STRING) as `_path1`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Executive Management' AS STRING) as `_path0`
+            FROM (
+              SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 2 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 0 as `_sortVal_2`
+              FROM (
+                SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`Title` AS STRING) as `_pivot`
+                FROM (
+                  SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+                  FROM `bigquery-test-project-276102.test_dataset.barttest`
+                  WHERE `JobFamily`='Executive Management'
+                )
+              )
+              GROUP BY `_pivot`
+            )
+          )
+          UNION ALL
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST('General Manager' AS STRING) as `_path1`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Executive Management' AS STRING) as `_path0`
+            FROM (
+              SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, 3 as `_depth`, CAST(`Name` AS STRING) as `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 1 as `_sortVal_2`
+              FROM (
+                SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+                FROM `bigquery-test-project-276102.test_dataset.barttest`
+                WHERE `JobFamily`='Executive Management' AND `Title`='General Manager'
+              )
+            )
+          )
+          UNION ALL
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, `_path0`, CAST(`_pivot` AS STRING) as `_path1`
+          FROM (
+            SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, `_depth`, `_pivot`, `_isRoot`, `_sortVal_0`, `_sortVal_1`, `_sortVal_2`, CAST('Safety' AS STRING) as `_path0`
+            FROM (
+              SELECT case when min(`JobFamily`)=max(`JobFamily`) then min(`JobFamily`) else null end as `JobFamily`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `Title`, case when min(`Union`)=max(`Union`) then min(`Union`) else null end as `Union`, case when min(`Name`)=max(`Name`) then min(`Name`) else null end as `Name`, sum(`Base`) as `Base`, sum(`TCOE`) as `TCOE`, sum(`Rec`) as `Rec`, 2 as `_depth`, `_pivot`, 0 as `_isRoot`, 1 as `_sortVal_0`, 1 as `_sortVal_1`, 0 as `_sortVal_2`
+              FROM (
+                SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, `Rec`, CAST(`Title` AS STRING) as `_pivot`
+                FROM (
+                  SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+                  FROM `bigquery-test-project-276102.test_dataset.barttest`
+                  WHERE `JobFamily`='Safety'
+                )
+              )
+              GROUP BY `_pivot`
+            )
+          )
+        )
+        ORDER BY `_path0`, `_path1`
+    ) LEFT OUTER JOIN (
+        SELECT `JobFamily` as `_path0`, sum(`TCOE`) as `_sortVal_0_0`, sum(`Base`) as `_sortVal_0_1`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `_sortVal_0_2`
+        FROM (
+          SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+          FROM `bigquery-test-project-276102.test_dataset.barttest`
+        )
+        GROUP BY `JobFamily`
+    )
+    USING (`_path0`)
+    ) LEFT OUTER JOIN (
+      SELECT `JobFamily` as `_path0`, `Title` as `_path1`, sum(`TCOE`) as `_sortVal_1_0`, sum(`Base`) as `_sortVal_1_1`, case when min(`Title`)=max(`Title`) then min(`Title`) else null end as `_sortVal_1_2`
+      FROM (
+        SELECT `JobFamily`, `Title`, `Union`, `Name`, `Base`, `TCOE`, 1 as `Rec`
+        FROM `bigquery-test-project-276102.test_dataset.barttest`
+      )
+      GROUP BY `JobFamily`, `Title`
+    )
+    USING (`_path0`, `_path1`)
+    ORDER BY `_isRoot` desc, `_sortVal_0`, `_sortVal_0_0` desc, `_sortVal_0_1`, `_sortVal_0_2`, `_path0`, `_sortVal_1`, `_sortVal_1_0` desc, `_sortVal_1_1`, `_sortVal_1_2`, `_path1`, `_sortVal_2`, `TCOE` desc, `Base`, `Title`
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:96:11)
+
+  console.info
+    time to run query: 1s 335.984089ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:113:11)
+
+  console.info
+    time to mk table rep: 0s 0.001958ms
+
+      at BigQueryConnection.<anonymous> (src/reltab-bigquery.ts:114:11)
+
+  console.log
+    result of sorted tree query:
+
+      at test/basic.test.ts:316:11
+
+  console.log
+    ┌─────────┬─────────────────────────────────────┬────────────────────────────────────────┬───────────────────┬────────────────────┬─────────┬─────────┬─────┬────────┬────────────────────────────────────────┬─────────┬────────────┬────────────┬────────────┬─────────────────────────────────────┬────────────────────────────────────────┬──────────────┬──────────────┬───────────────────────────────────────┬──────────────┬──────────────┬────────────────────────────────────────┐
+    │ (index) │              JobFamily              │                 Title                  │       Union       │        Name        │  Base   │  TCOE   │ Rec │ _depth │                 _pivot                 │ _isRoot │ _sortVal_0 │ _sortVal_1 │ _sortVal_2 │               _path0                │                 _path1                 │ _sortVal_0_0 │ _sortVal_0_1 │             _sortVal_0_2              │ _sortVal_1_0 │ _sortVal_1_1 │              _sortVal_1_2              │
+    ├─────────┼─────────────────────────────────────┼────────────────────────────────────────┼───────────────────┼────────────────────┼─────────┼─────────┼─────┼────────┼────────────────────────────────────────┼─────────┼────────────┼────────────┼────────────┼─────────────────────────────────────┼────────────────────────────────────────┼──────────────┼──────────────┼───────────────────────────────────────┼──────────────┼──────────────┼────────────────────────────────────────┤
+    │    0    │                null                 │                  null                  │       null        │        null        │ 3251221 │ 4691559 │ 23  │   0    │                  null                  │    1    │     0      │     0      │     0      │                null                 │                  null                  │     null     │     null     │                 null                  │     null     │     null     │                  null                  │
+    │    1    │       'Executive Management'        │                  null                  │ 'Non-Represented' │        null        │ 1030722 │ 1389290 │  4  │   1    │         'Executive Management'         │    0    │     1      │     0      │     0      │       'Executive Management'        │                  null                  │   1389290    │   1030722    │                 null                  │     null     │     null     │                  null                  │
+    │    2    │       'Executive Management'        │           'General Manager'            │ 'Non-Represented' │        null        │ 611161  │ 819582  │  2  │   2    │           'General Manager'            │    0    │     1      │     1      │     0      │       'Executive Management'        │           'General Manager'            │   1389290    │   1030722    │                 null                  │    819582    │    611161    │           'General Manager'            │
+    │    3    │       'Executive Management'        │           'General Manager'            │ 'Non-Represented' │ 'Dugger, Dorothy'  │ 298700  │ 419661  │  1  │   3    │           'Dugger, Dorothy'            │    0    │     1      │     1      │     1      │       'Executive Management'        │           'General Manager'            │   1389290    │   1030722    │                 null                  │    819582    │    611161    │           'General Manager'            │
+    │    4    │       'Executive Management'        │           'General Manager'            │ 'Non-Represented' │ 'Crunican, Grace'  │ 312461  │ 399921  │  1  │   3    │           'Crunican, Grace'            │    0    │     1      │     1      │     1      │       'Executive Management'        │           'General Manager'            │   1389290    │   1030722    │                 null                  │    819582    │    611161    │           'General Manager'            │
+    │    5    │       'Executive Management'        │ 'Assistant General Manager Operations' │ 'Non-Represented' │  'Oversier, Paul'  │ 212647  │ 288160  │  1  │   2    │ 'Assistant General Manager Operations' │    0    │     1      │     1      │     0      │       'Executive Management'        │ 'Assistant General Manager Operations' │   1389290    │   1030722    │                 null                  │    288160    │    212647    │ 'Assistant General Manager Operations' │
+    │    6    │       'Executive Management'        │        'Deputy General Manager'        │ 'Non-Represented' │ 'DeVaughn, Marcia' │ 206914  │ 281548  │  1  │   2    │        'Deputy General Manager'        │    0    │     1      │     1      │     0      │       'Executive Management'        │        'Deputy General Manager'        │   1389290    │   1030722    │                 null                  │    281548    │    206914    │        'Deputy General Manager'        │
+    │    7    │         'Legal & Paralegal'         │                  null                  │ 'Non-Represented' │        null        │ 564028  │ 766571  │  3  │   1    │          'Legal & Paralegal'           │    0    │     1      │     0      │     0      │         'Legal & Paralegal'         │                  null                  │    766571    │    564028    │                 null                  │     null     │     null     │                  null                  │
+    │    8    │     'Transportation Operations'     │                  null                  │       null        │        null        │ 413909  │ 709998  │  5  │   1    │      'Transportation Operations'       │    0    │     1      │     0      │     0      │     'Transportation Operations'     │                  null                  │    709998    │    413909    │                 null                  │     null     │     null     │                  null                  │
+    │    9    │ 'Maintenance, Vehicle & Facilities' │                  null                  │      'SEIU'       │        null        │ 366223  │ 594761  │  5  │   1    │  'Maintenance, Vehicle & Facilities'   │    0    │     1      │     0      │     0      │ 'Maintenance, Vehicle & Facilities' │                  null                  │    594761    │    366223    │                 null                  │     null     │     null     │                  null                  │
+    │   10    │ 'Engineering & Systems Engineering' │                  null                  │ 'Non-Represented' │        null        │ 309734  │ 422244  │  2  │   1    │  'Engineering & Systems Engineering'   │    0    │     1      │     0      │     0      │ 'Engineering & Systems Engineering' │                  null                  │    422244    │    309734    │                 null                  │     null     │     null     │                  null                  │
+    │   11    │       'Finance & Accounting'        │         'Controller-Treasurer'         │ 'Non-Represented' │ 'Schroeder, Scott' │ 208744  │ 287139  │  1  │   1    │         'Finance & Accounting'         │    0    │     1      │     0      │     0      │       'Finance & Accounting'        │                  null                  │    287139    │    208744    │        'Controller-Treasurer'         │     null     │     null     │                  null                  │
+    │   12    │              'Safety'               │         'Chief Safety Officer'         │ 'Non-Represented' │  'Hardy, Leonard'  │ 152125  │ 211941  │  1  │   1    │                'Safety'                │    0    │     1      │     0      │     0      │              'Safety'               │                  null                  │    211941    │    152125    │        'Chief Safety Officer'         │     null     │     null     │                  null                  │
+    │   13    │              'Safety'               │         'Chief Safety Officer'         │ 'Non-Represented' │  'Hardy, Leonard'  │ 152125  │ 211941  │  1  │   2    │         'Chief Safety Officer'         │    0    │     1      │     1      │     0      │              'Safety'               │         'Chief Safety Officer'         │    211941    │    152125    │        'Chief Safety Officer'         │    211941    │    152125    │         'Chief Safety Officer'         │
+    │   14    │    'Public Affairs & Marketing'     │ "Department Manager Gov't & Comm Rel"  │ 'Non-Represented' │  'Hamill, Kerry'   │ 130035  │ 181955  │  1  │   1    │      'Public Affairs & Marketing'      │    0    │     1      │     0      │     0      │    'Public Affairs & Marketing'     │                  null                  │    181955    │    130035    │ "Department Manager Gov't & Comm Rel" │     null     │     null     │                  null                  │
+    │   15    │              'Police'               │       'Revenue Protection Guard'       │      'BPOA'       │ 'Ornellas, Robert' │  75701  │ 127660  │  1  │   1    │                'Police'                │    0    │     1      │     0      │     0      │              'Police'               │                  null                  │    127660    │    75701     │      'Revenue Protection Guard'       │     null     │     null     │                  null                  │
+    └─────────┴─────────────────────────────────────┴────────────────────────────────────────┴───────────────────┴────────────────────┴─────────┴─────────┴─────┴────────┴────────────────────────────────────────┴─────────┴────────────┴────────────┴────────────┴─────────────────────────────────────┴────────────────────────────────────────┴──────────────┴──────────────┴───────────────────────────────────────┴──────────────┴──────────────┴────────────────────────────────────────┘
+
+      at Object.exports.logTable (test/testUtils.ts:41:3)
+
