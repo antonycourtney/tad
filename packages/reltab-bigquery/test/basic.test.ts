@@ -118,7 +118,7 @@ test("extended groupBy", async () => {
   // Let's also try mapping the pivot column to be named "_pivot":
   const q3 = bartTableQuery.groupBy(["JobFamily", "Title"], ["TCOE"]); // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
 
-  const q4 = q3.mapColumns({ JobFamily: { id: "_pivot" } });
+  const q4 = q3.mapColumns({ JobFamily: { id: "_pivot", type: "string" } });
 
   const q4res = await testCtx.evalQuery(q4);
 

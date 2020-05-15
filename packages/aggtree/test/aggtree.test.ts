@@ -9,7 +9,7 @@ import * as log from "loglevel";
 import * as util from "./testUtils";
 import { executionAsyncId } from "async_hooks";
 
-log.setLevel("debug");
+log.setLevel("info");
 
 let testCtx: reltabSqlite.SqliteContext;
 
@@ -23,7 +23,7 @@ const importCsv = async (db: sqlite3.Database, path: string) => {
 beforeAll(
   async (): Promise<reltabSqlite.SqliteContext> => {
     // log.setLevel("info"); // use "debug" for even more verbosity
-    const showQueries = true;
+    const showQueries = false;
     const ctx = await reltabSqlite.getContext(":memory:", { showQueries });
 
     testCtx = ctx as reltabSqlite.SqliteContext;
@@ -93,26 +93,26 @@ test("initial aggtree Test", async () => {
 
   const q2 = tree0.applyPath(["Executive Management"]);
 
-  console.log("after opening node: q2: ", JSON.stringify(q2, null, 2));
+  // console.log("after opening node: q2: ", JSON.stringify(q2, null, 2));
 
   const res2 = await testCtx.evalQuery(q2);
 
-  console.log('after applying path ["Executive Management"]:');
-  util.logTable(res2);
+  // console.log('after applying path ["Executive Management"]:');
+  // util.logTable(res2);
   expect(res2).toMatchSnapshot();
 
   const q3 = tree0.applyPath(["Executive Management", "General Manager"]);
   const res3 = await testCtx.evalQuery(q3);
 
-  console.log("after applying path /Executive Management/General Manager:");
-  util.logTable(res3);
+  // console.log("after applying path /Executive Management/General Manager:");
+  // util.logTable(res3);
   expect(res3).toMatchSnapshot();
 
   const openPaths = new PathTree({ '"Executive Management"': {} });
   const q4 = tree0.getTreeQuery(openPaths);
   const res4 = await testCtx.evalQuery(q4);
 
-  console.log("after treeQuery for path /Executive Management: ");
+  // console.log("after treeQuery for path /Executive Management: ");
   util.logTable(res4);
 });
 
@@ -134,31 +134,31 @@ test("basic sorted aggTree test", async () => {
     ]
   );
 
-  console.log("vpivot initial promise resolved...");
+  // console.log("vpivot initial promise resolved...");
 
   const sq1 = tree0.getSortQuery(1);
 
   const res = await testCtx.evalQuery(sq1);
-  console.log("sort query depth 1: ");
-  util.logTable(res);
+  // console.log("sort query depth 1: ");
+  // util.logTable(res);
 
   expect(res).toMatchSnapshot();
 
   const sq2 = tree0.getSortQuery(2);
 
   const res2 = await testCtx.evalQuery(sq2);
-  console.log("sort query depth 2: ");
-  util.logTable(res2);
+  // console.log("sort query depth 2: ");
+  // util.logTable(res2);
   expect(res2).toMatchSnapshot();
 
   const q1 = tree0.applyPath([]);
 
-  console.log("got depth 1 query and sortQuery, joining...: ");
+  // console.log("got depth 1 query and sortQuery, joining...: ");
   const jq1 = q1.join(sq1, "_path0");
   const jres = await testCtx.evalQuery(jq1);
 
-  console.log("result of join query: ");
-  util.logTable(jres);
+  // console.log("result of join query: ");
+  // util.logTable(jres);
   expect(jres).toMatchSnapshot();
 });
 
@@ -186,34 +186,34 @@ test("async aggTree sortedTreeQuery test", async () => {
   const q4 = tree0.getTreeQuery(openPaths);
   const res4 = await rtc.evalQuery(q4);
 
-  console.log("tree query after opening paths:");
-  util.logTable(res4, { maxRows: 50 });
+  // console.log("tree query after opening paths:");
+  // util.logTable(res4, { maxRows: 50 });
 
   const sq1 = tree0.getSortQuery(1);
 
   const res = await testCtx.evalQuery(sq1);
-  console.log("sort query depth 1: ");
-  util.logTable(res);
+  // console.log("sort query depth 1: ");
+  // util.logTable(res);
 
   expect(res).toMatchSnapshot();
   const sq2 = tree0.getSortQuery(2);
 
   const res2 = await testCtx.evalQuery(sq2);
-  console.log("sort query depth 2: ");
-  util.logTable(res2);
+  // console.log("sort query depth 2: ");
+  // util.logTable(res2);
   expect(res2).toMatchSnapshot();
 
   const jq4 = q4.join(sq1, ["_path0"]).join(sq2, ["_path0", "_path1"]);
   const jres4 = await rtc.evalQuery(jq4);
 
-  console.log("tree query after sort joins:");
-  util.logTable(jres4, { maxRows: 50 });
+  // console.log("tree query after sort joins:");
+  // util.logTable(jres4, { maxRows: 50 });
   expect(jres4).toMatchSnapshot();
 
   const stq = tree0.getSortedTreeQuery(openPaths);
   const sres = await rtc.evalQuery(stq);
 
-  console.log("result of sorted tree query:");
-  util.logTable(sres, { maxRows: 50 });
+  // console.log("result of sorted tree query:");
+  // util.logTable(sres, { maxRows: 50 });
   expect(sres).toMatchSnapshot();
 });

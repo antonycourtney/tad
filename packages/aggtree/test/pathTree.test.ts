@@ -13,18 +13,18 @@ test("basic pathTree", () => {
 
   const pt1 = pt0.open(["foo", "bar", "baz"]);
 
-  console.log("pt1: ", pt1._rep);
+  log.debug("pt1: ", pt1._rep);
 
   const pt2 = pt1.open(["foo", "bar", "blech"]).open(["a", "b", "c"]);
 
-  console.log("pt2: ", pt2._rep);
+  log.debug("pt2: ", pt2._rep);
 
   for (let path of pt2.iter()) {
-    console.log(path);
+    log.debug(path);
   }
 
   const pt2Paths = Array.from(pt2.iter());
-  console.log("pt2Paths: ", pt2Paths);
+  log.debug("pt2Paths: ", pt2Paths);
   expect(pt2Paths).toMatchInlineSnapshot(`
     Array [
       Array [

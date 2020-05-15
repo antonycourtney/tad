@@ -1,6 +1,7 @@
 import { AggFn, JoinType } from "./QueryExp";
 import { ValExp, ColumnExtendExp, col } from "./defs";
 import { FilterExp } from "./FilterExp";
+import { ColumnType } from "./Schema";
 
 /* AST for generating SQL queries */
 /* internal only -- should not be re-exported from reltab */
@@ -19,12 +20,17 @@ export const mkAggExp = (aggFn: AggFn, exp: ValExp): SQLAggExp => ({
 export type SQLValExp = ColumnExtendExp | SQLAggExp;
 
 export type SQLSelectListItem = {
-  colExp: SQLValExp; // was: AggColSpec;
+  colExp: SQLValExp;
+  colType: ColumnType; // needed by some dialects, like BigQuery
   as?: string;
 };
 
-export const mkColSelItem = (cid: string): SQLSelectListItem => ({
+export const mkColSelItem = (
+  cid: string,
+  colType: ColumnType
+): SQLSelectListItem => ({
   colExp: col(cid),
+  colType,
 });
 
 export type SQLSortColExp = {
@@ -80,3 +86,40 @@ export const getColId = (cexp: SQLSelectListItem): string => {
   }
   return ret;
 };
+
+/**
+ * Turn a SelectListItem from a query into a SelectListItem for use by an outer query:
+ */
+const subSelectListItem = (cexp: SQLSelectListItem): SQLSelectListItem => {
+  let cid: string;
+  if (cexp.as != null) {
+    cid = cexp.as;
+  } else {
+    const { colExp } = cexp;
+    switch (colExp.expType) {
+      case "ColRef":
+        cid = colExp.colName;
+        break;
+      case "agg":
+        cid = colExp.aggFn;
+        break;
+      default:
+        throw new Error(
+          `getColId: could not determine column id from select list item of expType ${colExp.expType}: ` +
+            colExp.toString()
+        );
+    }
+  }
+  const ret = {
+    colExp: col(cid),
+    colType: cexp.colType,
+  };
+  return ret;
+};
+
+/*
+ * We make this an explicit function to allow returning some rep of 'select *' in future:
+ */
+export const mkSubSelectList = (
+  selectCols: SQLSelectListItem[]
+): SQLSelectListItem[] => selectCols.map(subSelectListItem);

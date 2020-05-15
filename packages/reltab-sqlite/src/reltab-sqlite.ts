@@ -76,9 +76,8 @@ export class SqliteContext implements Connection {
     const [t1s, t1ns] = t1;
 
     if (this.showQueries) {
-      log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.info("SqliteContext.evalQuery: evaluating:");
-      log.info(sqlQuery);
+      // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
+      log.info("SqliteContext.evalQuery: evaluating:\n" + sqlQuery);
     }
 
     const t2 = process.hrtime();
@@ -92,10 +91,12 @@ export class SqliteContext implements Connection {
       const t4 = process.hrtime(t4pre);
       const [t4s, t4ns] = t4;
 
+      /*
       if (this.showQueries) {
         log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
         log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
       }
+      */
 
       return ret;
     });
@@ -111,9 +112,8 @@ export class SqliteContext implements Connection {
     const [t1s, t1ns] = t1;
 
     if (this.showQueries) {
-      log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("SqliteContext.evalQuery: evaluating:");
-      log.debug(countSql);
+      // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
+      log.debug("SqliteContext.rowCount: evaluating: \n" + countSql);
     }
 
     const t2 = process.hrtime();
@@ -121,9 +121,11 @@ export class SqliteContext implements Connection {
     return qp.then((rows) => {
       const t3 = process.hrtime(t2);
       const [t3s, t3ns] = t3;
+      /*
       if (this.showQueries) {
         log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
       }
+      */
       const ret = Number.parseInt(rows[0].rowCount);
       return ret;
     });

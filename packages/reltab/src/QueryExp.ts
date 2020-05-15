@@ -22,6 +22,7 @@ import {
   SQLFromQuery,
   SQLFromJoin,
   mkAggExp,
+  mkSubSelectList,
 } from "./SQLQuery";
 
 type QueryOp =
@@ -153,6 +154,8 @@ export class QueryExp {
     return new QueryExp("sort", [keys], [this]);
   } // extend by adding a single column
 
+  // TODO: Should probably use a distinct type from ColumnMapInfo where
+  // type is mandatory:
   extend(
     colId: string,
     columnMetadata: ColumnMapInfo,
@@ -451,7 +454,9 @@ const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): SQLQueryAST => {
 
   const selectCols = schema.columns;
   const sel = {
-    selectCols: selectCols.map(mkColSelItem),
+    selectCols: selectCols.map((cid) =>
+      mkColSelItem(cid, schema.columnType(cid))
+    ),
     from: tableName,
     groupBy: [],
     orderBy: [],
@@ -544,12 +549,14 @@ const groupByQueryToSql = (
     let cid;
     let colExp: SQLValExp;
 
+    let colType: ColumnType;
     if (typeof aggSpec === "string") {
       cid = aggSpec;
-      const colType = inSchema.columnType(cid);
+      colType = inSchema.columnType(cid);
       aggStr = defaultAggFn(colType);
     } else {
       [aggStr, cid] = aggSpec;
+      colType = inSchema.columnType(cid);
     }
 
     if (aggStr == "null") {
@@ -560,11 +567,14 @@ const groupByQueryToSql = (
 
     return {
       colExp: { expType: "agg", aggFn: aggStr, exp: col(cid) },
+      colType,
       as: cid,
     };
   });
 
-  const selectGbCols: SQLSelectListItem[] = cols.map(mkColSelItem);
+  const selectGbCols: SQLSelectListItem[] = cols.map((cid) =>
+    mkColSelItem(cid, inSchema.columnType(cid))
+  );
   const selectCols = selectGbCols.concat(aggExprs);
   const sqsql = queryToSql(tableMap, query.tableArgs[0]);
 
@@ -631,13 +641,12 @@ const filterQueryToSql = (
       subSel
     );
   } else {
-    const selectCols = subSel.selectCols.map(getColId);
     const from: SQLFromQuery = {
       expType: "query",
       query: sqsql,
     };
     retSel = {
-      selectCols: selectCols.map(mkColSelItem),
+      selectCols: mkSubSelectList(subSel.selectCols),
       from,
       where: fexp,
       groupBy: [],
@@ -670,6 +679,7 @@ const mapColumnsQueryToSql = (byIndex: boolean) => (
 
     return {
       colExp: cexp.colExp,
+      colType: cexp.colType,
       as: outCid,
     };
   };
@@ -725,13 +735,12 @@ const sortQueryToSql = (
       subSel
     );
   } else {
-    let selectCols = subSel.selectCols.map(getColId);
     const from: SQLFromQuery = {
       expType: "query",
       query: sqsql,
     };
     retSel = {
-      selectCols: selectCols.map(mkColSelItem),
+      selectCols: mkSubSelectList(subSel.selectCols),
       from,
       groupBy: [],
       orderBy,
@@ -787,11 +796,21 @@ const extendQueryToSql = (
   const isConst = colExp.expType === "ConstVal";
   let retSel: SQLSelectAST;
 
+  let colType: ColumnType;
+
+  if (colMetadata.type == null) {
+    const msg = `extend query: column '${as}': type required in column metadata in extend operation`;
+    console.error(msg);
+    throw new Error(msg);
+  }
+  colType = colMetadata.type;
+
   if (isConst && sqsql.selectStmts.length === 1) {
     // just append our column to existing selectCols list:
     const outSel = subSel.selectCols.slice();
     outSel.push({
       colExp,
+      colType,
       as,
     });
     retSel = _.defaults(
@@ -801,10 +820,10 @@ const extendQueryToSql = (
       subSel
     );
   } else {
-    let colIds = subSel.selectCols.map(getColId);
-    let selectCols: SQLSelectListItem[] = colIds.map(mkColSelItem);
+    let selectCols: SQLSelectListItem[] = mkSubSelectList(subSel.selectCols);
     selectCols.push({
       colExp,
+      colType: colMetadata.type,
       as,
     });
     const from: SQLFromQuery = {
@@ -832,9 +851,11 @@ const joinQueryToSql = (
   const [lhsQuery, rhsQuery] = query.tableArgs;
   const lhs = queryToSql(tableMap, lhsQuery);
   const rhs = queryToSql(tableMap, rhsQuery);
-  const outSchema = query.getSchema(tableMap); // any type here is flow bug workaround
+  const outSchema = query.getSchema(tableMap);
 
-  const selectCols: SQLSelectListItem[] = outSchema.columns.map(mkColSelItem);
+  const selectCols: SQLSelectListItem[] = outSchema.columns.map((cid) =>
+    mkColSelItem(cid, outSchema.columnType(cid))
+  );
   const from: SQLFromJoin = {
     expType: "join",
     joinType,
@@ -887,9 +908,10 @@ const queryToCountSql = (
   const sqsql = queryToSql(tableMap, query);
   const colExp = mkAggExp("count", constVal("*"));
   const as = "rowCount";
-  const selectCols = [
+  const selectCols: SQLSelectListItem[] = [
     {
       colExp,
+      colType: "integer",
       as,
     },
   ];

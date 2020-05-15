@@ -7,6 +7,7 @@ import { delimiter } from "path";
 import * as log from "loglevel";
 import * as util from "./testUtils";
 import * as _ from "lodash";
+import { asString } from "reltab";
 
 const { col, constVal } = reltab;
 
@@ -16,15 +17,15 @@ const q1 = reltab.tableQuery("barttest");
 
 test("t0 - trivial query generation", () => {
   expect(q1).toMatchInlineSnapshot(`
-QueryExp {
-  "expType": "QueryExp",
-  "operator": "table",
-  "tableArgs": Array [],
-  "valArgs": Array [
-    "barttest",
-  ],
-}
-`);
+    QueryExp {
+      "expType": "QueryExp",
+      "operator": "table",
+      "tableArgs": Array [],
+      "valArgs": Array [
+        "barttest",
+      ],
+    }
+  `);
 });
 
 const importCsv = async (db: sqlite3.Database, path: string) => {
@@ -131,26 +132,25 @@ test("empty and filter", async () => {
   const q5c = q1.filter(reltab.and());
 
   const res = await testCtx.evalQuery(q5c);
-  console.log("empty filter, result row count: ", res.rowData.length);
-  util.logTable(res);
+  expect(res.rowData.length).toBe(23);
 });
 
 test("query deserialization", async () => {
   let req: Object = { query: q5 };
   const ser5 = JSON.stringify(req, null, 2);
-  console.log("serialized query");
-  console.log(ser5);
+  // console.log("serialized query");
+  // console.log(ser5);
   const dq5 = reltab.deserializeQueryReq(ser5);
-  console.log("deserialized query: ", dq5);
+  // console.log("deserialized query: ", dq5);
   const rtc = testCtx;
   const res = await rtc.evalQuery(dq5.query);
-  console.log("got results of evaluating deserialized query");
+  // console.log("got results of evaluating deserialized query");
   // util.logTable(res);
   expect(res.rowData.length).toBe(4);
 });
 
 const q6 = q1.mapColumns({
-  Name: { id: "EmpName", displayName: "Employee Name" },
+  Name: { id: "EmpName", type: "text", displayName: "Employee Name" },
 });
 
 test("mapColumns", async () => {
@@ -162,7 +162,7 @@ test("mapColumns", async () => {
   expect(res.rowData.length).toBe(23);
 });
 
-const q7 = q1.mapColumnsByIndex({ "0": { id: "EmpName" } });
+const q7 = q1.mapColumnsByIndex({ "0": { id: "EmpName", type: "string" } });
 
 test("mapColumnsByIndex", async () => {
   const res = await testCtx.evalQuery(q7);
@@ -198,6 +198,60 @@ const q10 = q8.sort([
 
 test("compound key sort", async () => {
   const res = await testCtx.evalQuery(q10);
+  expect(res).toMatchSnapshot();
+});
+
+const qex1 = q8.extend(
+  "_depth",
+  {
+    type: "integer",
+  },
+  constVal(0)
+);
+test("basic extend with const col", async () => {
+  const res = await testCtx.evalQuery(qex1);
+  expect(res).toMatchSnapshot();
+});
+
+const qex2 = qex1.project(["Name", "Title", "JobFamily", "TCOE", "_depth"]);
+test("basic extend composed with project", async () => {
+  const res = await testCtx.evalQuery(qex2);
+  expect(res).toMatchSnapshot();
+});
+
+const qex3 = q1
+  .extend(
+    "_pivot",
+    {
+      type: "text",
+    },
+    asString(constVal(null))
+  )
+  .extend(
+    "_depth",
+    {
+      type: "integer",
+    },
+    constVal(0)
+  );
+
+test("chained extend", async () => {
+  // console.log("chained extend: query: ", JSON.stringify(qex3, undefined, 2));
+  const res = await testCtx.evalQuery(qex3);
+  // util.logTable(res);
+  expect(res).toMatchSnapshot();
+});
+
+const qex4 = q1.extend(
+  "_pivot",
+  {
+    type: "text",
+  },
+  asString(constVal(null))
+);
+test("null const extend", async () => {
+  const res = await testCtx.evalQuery(qex4);
+  // util.logTable(res);
   expect(res).toMatchSnapshot();
 });
 
