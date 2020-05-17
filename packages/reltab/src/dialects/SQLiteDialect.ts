@@ -1,4 +1,5 @@
 import { SQLDialect } from "../dialect";
+import { ColumnType } from "../Schema";
 
 export class SQLiteDialect implements SQLDialect {
   private static instance: SQLiteDialect;
@@ -6,6 +7,10 @@ export class SQLiteDialect implements SQLDialect {
 
   quoteCol(cid: string): string {
     return '"' + cid + '"';
+  }
+
+  ppAggNull(aggStr: string, subExpStr: string, expType: ColumnType): string {
+    return "null";
   }
 
   static getInstance(): SQLiteDialect {

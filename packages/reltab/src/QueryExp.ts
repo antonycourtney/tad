@@ -106,74 +106,163 @@ export type ColumnMapInfo = {
   displayName?: string;
 };
 
+export type ColumnExtendOptions = {
+  displayName?: string;
+};
+
+interface TableQueryRep {
+  operator: "table";
+  tableName: string;
+}
+interface ProjectQueryRep {
+  operator: "project";
+  cols: string[];
+  from: QueryRep;
+}
+interface GroupByQueryRep {
+  operator: "groupBy";
+  cols: string[];
+  aggs: AggColSpec[];
+  from: QueryRep;
+}
+interface FilterQueryRep {
+  operator: "filter";
+  fexp: FilterExp;
+  from: QueryRep;
+}
+interface MapColumnsQueryRep {
+  operator: "mapColumns";
+  cmap: { [colName: string]: ColumnMapInfo };
+  from: QueryRep;
+}
+interface MapColumnsByIndexQueryRep {
+  operator: "mapColumnsByIndex";
+  cmap: { [colIndex: number]: ColumnMapInfo };
+  from: QueryRep;
+}
+interface ConcatQueryRep {
+  operator: "concat";
+  target: QueryRep;
+  from: QueryRep;
+}
+interface SortQueryRep {
+  operator: "sort";
+  keys: [string, boolean][];
+  from: QueryRep;
+}
+interface ExtendQueryRep {
+  operator: "extend";
+  colId: string;
+  colType: ColumnType;
+  colExp: ColumnExtendExp;
+  opts: ColumnExtendOptions;
+  from: QueryRep;
+}
 // Join types:  For now: only left outer
 export type JoinType = "LeftOuter";
+interface JoinQueryRep {
+  operator: "join";
+  rhs: QueryRep;
+  on: string | string[];
+  joinType: JoinType;
+  lhs: QueryRep;
+}
+type QueryRep =
+  | TableQueryRep
+  | ProjectQueryRep
+  | GroupByQueryRep
+  | FilterQueryRep
+  | MapColumnsQueryRep
+  | MapColumnsByIndexQueryRep
+  | ConcatQueryRep
+  | SortQueryRep
+  | ExtendQueryRep
+  | JoinQueryRep;
+
+// A QueryExp is the builder interface we export from reltab.
+// The only things clients of the interface can do with a QueryExp are chain it
+// to produce new queries, or pass it to functions like Connection.query()
 export class QueryExp {
   expType: "QueryExp";
-  operator: string;
-  valArgs: Array<any>;
-  tableArgs: Array<QueryExp>;
+  private readonly _rep: QueryRep;
 
-  constructor(
-    operator: QueryOp,
-    valArgs: Array<any>,
-    tableArgs: Array<QueryExp> = []
-  ) {
+  constructor(rep: QueryRep) {
     this.expType = "QueryExp";
-    this.operator = operator;
-    this.valArgs = valArgs.slice();
-    this.tableArgs = tableArgs.slice();
-  } // operator chaining methods:
+    this._rep = rep;
+  }
 
+  // operator chaining methods:
   project(cols: Array<string>): QueryExp {
-    return new QueryExp("project", [cols], [this]);
+    return new QueryExp({ operator: "project", cols, from: this._rep });
   }
   groupBy(cols: string[], aggs: AggColSpec[]): QueryExp {
-    const gbArgs: Array<any> = [cols];
-    gbArgs.push(aggs);
-    return new QueryExp("groupBy", gbArgs, [this]);
+    return new QueryExp({ operator: "groupBy", cols, aggs, from: this._rep });
   }
 
   filter(fexp: FilterExp): QueryExp {
-    return new QueryExp("filter", [fexp], [this]);
+    return new QueryExp({ operator: "filter", fexp, from: this._rep });
   }
 
   mapColumns(cmap: { [colName: string]: ColumnMapInfo }): QueryExp {
-    return new QueryExp("mapColumns", [cmap], [this]);
-  } // colIndex is a string here because Flow doesn't support non-string keys in object literals
+    return new QueryExp({ operator: "mapColumns", cmap, from: this._rep });
+  }
 
-  mapColumnsByIndex(cmap: { [colIndex: string]: ColumnMapInfo }): QueryExp {
-    return new QueryExp("mapColumnsByIndex", [cmap], [this]);
+  mapColumnsByIndex(cmap: { [colIndex: number]: ColumnMapInfo }): QueryExp {
+    return new QueryExp({
+      operator: "mapColumnsByIndex",
+      cmap,
+      from: this._rep,
+    });
   }
 
   concat(qexp: QueryExp): QueryExp {
-    return new QueryExp("concat", [], [this, qexp]);
+    return new QueryExp({
+      operator: "concat",
+      target: qexp._rep,
+      from: this._rep,
+    });
   }
 
   sort(keys: Array<[string, boolean]>): QueryExp {
-    return new QueryExp("sort", [keys], [this]);
-  } // extend by adding a single column
+    return new QueryExp({ operator: "sort", keys, from: this._rep });
+  }
 
+  // extend by adding a single column
   // TODO: Should probably use a distinct type from ColumnMapInfo where
   // type is mandatory:
   extend(
     colId: string,
-    columnMetadata: ColumnMapInfo,
-    colVal: ColumnExtendExp
+    colType: ColumnType,
+    colExp: ColumnExtendExp,
+    opts: ColumnExtendOptions = {}
   ): QueryExp {
-    return new QueryExp("extend", [colId, columnMetadata, colVal], [this]);
-  } // join to another QueryExp
+    return new QueryExp({
+      operator: "extend",
+      colId,
+      colType,
+      colExp,
+      opts,
+      from: this._rep,
+    });
+  }
 
+  // join to another QueryExp
   join(
-    qexp: QueryExp,
+    rhs: QueryExp,
     on: string | Array<string>,
     joinType: JoinType = "LeftOuter"
   ): QueryExp {
-    const onArg = typeof on === "string" ? [on] : on;
-    return new QueryExp("join", [joinType, onArg], [this, qexp]);
-  } // distinct values of a column
-  // just a degenerate groupBy:
+    return new QueryExp({
+      operator: "join",
+      joinType,
+      on,
+      rhs: rhs._rep,
+      lhs: this._rep,
+    });
+  }
 
+  // distinct values of a column
+  // just a degenerate groupBy:
   distinct(col: string): QueryExp {
     return this.groupBy([col], []);
   }
@@ -184,24 +273,25 @@ export class QueryExp {
     offset: number = -1,
     limit: number = -1
   ): string {
-    return ppSQLQuery(dialect, queryToSql(tableMap, this), offset, limit);
+    return ppSQLQuery(dialect, queryToSql(tableMap, this._rep), offset, limit);
   }
 
   toCountSql(dialect: SQLDialect, tableMap: TableInfoMap): string {
-    return ppSQLQuery(dialect, queryToCountSql(tableMap, this), -1, -1);
+    return ppSQLQuery(dialect, queryToCountSql(tableMap, this._rep), -1, -1);
   }
 
   getSchema(tableMap: TableInfoMap): Schema {
-    return getQuerySchema(tableMap, this);
+    return getQuerySchema(tableMap, this._rep);
   }
 }
+
 const reviverMap = {
   ColRef: (v: any) => col(v.colName),
   ConstVal: (v: any) => constVal(v.val),
   BinRelExp: (v: any) => new BinRelExp(v.op, v.lhs, v.rhs),
   UnaryRelExp: (v: any) => new UnaryRelExp(v.op, v.arg),
   FilterExp: (v: any) => new FilterExp(v.op, v.opArgs),
-  QueryExp: (v: any) => new QueryExp(v.operator, v.valArgs, v.tableArgs),
+  QueryExp: (v: any) => new QueryExp(v._rep),
 };
 
 export const queryReviver = (key: string, val: any): any => {
@@ -262,46 +352,52 @@ export const deserializeTableRepJson = (json: any): TableRep => {
   return tableRep;
 };
 
-type GetSchemaFunc = (tableMap: TableInfoMap, query: QueryExp) => Schema;
-type GetSchemaMap = {
-  [operator: string]: GetSchemaFunc;
+const tableGetSchema = (
+  tableMap: TableInfoMap,
+  query: TableQueryRep
+): Schema => {
+  return tableMap[query.tableName].schema;
 };
 
-const tableGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  return tableMap[query.valArgs[0]].schema;
+const projectGetSchema = (
+  tableMap: TableInfoMap,
+  query: ProjectQueryRep
+): Schema => {
+  const inSchema = getQuerySchema(tableMap, query.from);
+  const { cols } = query;
+  return new Schema(cols, _.pick(inSchema.columnMetadata, cols));
 };
 
-const projectGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  const inSchema = query.tableArgs[0].getSchema(tableMap);
-  const projectCols = query.valArgs[0];
-  return new Schema(projectCols, _.pick(inSchema.columnMetadata, projectCols));
-};
-
-const groupByGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  const [cols, aggSpecs] = query.valArgs as [string[], (string | string[])[]];
-  const aggCols: Array<string> = aggSpecs.map((aggSpec: string | string[]) =>
+const groupByGetSchema = (
+  tableMap: TableInfoMap,
+  query: GroupByQueryRep
+): Schema => {
+  const { cols, aggs } = query;
+  const aggCols: Array<string> = aggs.map((aggSpec: string | string[]) =>
     typeof aggSpec === "string" ? aggSpec : aggSpec[1]
   );
-  const inSchema = query.tableArgs[0].getSchema(tableMap);
+  const inSchema = getQuerySchema(tableMap, query.from);
   const rs = new Schema(cols.concat(aggCols), inSchema.columnMetadata);
   return rs;
 };
 
-const filterGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  const inSchema = query.tableArgs[0].getSchema(tableMap);
+const filterGetSchema = (
+  tableMap: TableInfoMap,
+  { from }: { from: QueryRep }
+): Schema => {
+  const inSchema = getQuerySchema(tableMap, from);
   return inSchema;
 };
 
 const mapColumnsGetSchema = (
   tableMap: TableInfoMap,
-  query: QueryExp
+  query: MapColumnsQueryRep
 ): Schema => {
+  const { cmap, from } = query;
   // TODO: check that all columns are columns of original schema,
   // and that applying cmap will not violate any invariants on Schema....but need to nail down
-  const cmap: {
-    [colName: string]: ColumnMapInfo;
-  } = query.valArgs[0];
-  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap);
+  const inSchema = getQuerySchema(tableMap, query.from);
+
   let outColumns = [];
   let outMetadata: { [cid: string]: ColumnMetadata } = {};
 
@@ -339,20 +435,19 @@ const mapColumnsGetSchema = (
 
 const mapColumnsByIndexGetSchema = (
   tableMap: TableInfoMap,
-  query: QueryExp
+  { cmap, from }: MapColumnsByIndexQueryRep
 ): Schema => {
-  // TODO: try to unify with mapColumns.  Probably means mapColumns will construct an argument to
-  const cmap: {
-    [colName: string]: ColumnMapInfo;
-  } = query.valArgs[0];
-  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap);
+  // TODO: try to unify with mapColumns; probably have mapColumns do the
+  // mapping to column indices then call this
+  const inSchema = getQuerySchema(tableMap, from);
+
   var outColumns = [];
   var outMetadata: { [cid: string]: ColumnMetadata } = {};
 
   for (var inIndex = 0; inIndex < inSchema.columns.length; inIndex++) {
     var inColumnId = inSchema.columns[inIndex];
     var inColumnInfo = inSchema.columnMetadata[inColumnId];
-    var cmapColumnInfo = cmap[inIndex.toString()];
+    var cmapColumnInfo = cmap[inIndex];
 
     if (typeof cmapColumnInfo === "undefined") {
       outColumns.push(inColumnId);
@@ -381,27 +476,33 @@ const mapColumnsByIndexGetSchema = (
   return outSchema;
 };
 
-const concatGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap);
+const concatGetSchema = (
+  tableMap: TableInfoMap,
+  { from }: ConcatQueryRep
+): Schema => {
+  const inSchema = getQuerySchema(tableMap, from);
   return inSchema;
 };
 
-const extendGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  const [colId, columnMetadata] = query.valArgs;
-  const inSchema: Schema = query.tableArgs[0].getSchema(tableMap);
-  return inSchema.extend(colId, columnMetadata);
+const extendGetSchema = (
+  tableMap: TableInfoMap,
+  { colId, colType, opts, from }: ExtendQueryRep
+): Schema => {
+  const inSchema = getQuerySchema(tableMap, from);
+  const displayName = opts.displayName != null ? opts.displayName : colId;
+  return inSchema.extend(colId, { type: colType, displayName });
 };
 
-const joinGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  const [joinType, on] = query.valArgs;
-  const [lhs, rhs] = query.tableArgs;
-
+const joinGetSchema = (
+  tableMap: TableInfoMap,
+  { rhs, on, joinType, lhs }: JoinQueryRep
+): Schema => {
   if (joinType !== "LeftOuter") {
     throw new Error("unsupported join type: " + joinType);
   }
 
-  const lhsSchema = lhs.getSchema(tableMap);
-  const rhsSchema = rhs.getSchema(tableMap);
+  const lhsSchema = getQuerySchema(tableMap, lhs);
+  const rhsSchema = getQuerySchema(tableMap, rhs);
 
   const rhsCols = _.difference(
     rhsSchema.columns,
@@ -418,29 +519,34 @@ const joinGetSchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
   return joinSchema;
 };
 
-const getSchemaMap: GetSchemaMap = {
-  table: tableGetSchema,
-  project: projectGetSchema,
-  groupBy: groupByGetSchema,
-  filter: filterGetSchema,
-  mapColumns: mapColumnsGetSchema,
-  mapColumnsByIndex: mapColumnsByIndexGetSchema,
-  concat: concatGetSchema,
-  sort: filterGetSchema,
-  extend: extendGetSchema,
-  join: joinGetSchema,
-};
-
-const getQuerySchema = (tableMap: TableInfoMap, query: QueryExp): Schema => {
-  const gsf = getSchemaMap[query.operator];
-
-  if (!gsf) {
-    throw new Error(
-      "getQuerySchema: No implementation for operator '" + query.operator + "'"
-    );
+const getQuerySchema = (tableMap: TableInfoMap, query: QueryRep): Schema => {
+  switch (query.operator) {
+    case "table":
+      return tableGetSchema(tableMap, query);
+    case "project":
+      return projectGetSchema(tableMap, query);
+    case "groupBy":
+      return groupByGetSchema(tableMap, query);
+    case "filter":
+      return filterGetSchema(tableMap, query);
+    case "mapColumns":
+      return mapColumnsGetSchema(tableMap, query);
+    case "mapColumnsByIndex":
+      return mapColumnsByIndexGetSchema(tableMap, query);
+    case "concat":
+      return concatGetSchema(tableMap, query);
+    case "sort":
+      return filterGetSchema(tableMap, query);
+    case "extend":
+      return extendGetSchema(tableMap, query);
+    case "join":
+      return joinGetSchema(tableMap, query);
+    default:
+      const invalidQuery: never = query;
+      throw new Error(
+        "getQuerySchema: No implementation for operator, query: " + query
+      );
   }
-
-  return gsf(tableMap, query);
 };
 
 type GenSQLFunc = (tableMap: TableInfoMap, q: QueryExp) => SQLQueryAST;
@@ -448,8 +554,10 @@ type GenSQLMap = {
   [operator: string]: GenSQLFunc;
 };
 
-const tableQueryToSql = (tableMap: TableInfoMap, tq: QueryExp): SQLQueryAST => {
-  const tableName = tq.valArgs[0];
+const tableQueryToSql = (
+  tableMap: TableInfoMap,
+  { tableName }: TableQueryRep
+): SQLQueryAST => {
   const schema = tableMap[tableName].schema;
 
   const selectCols = schema.columns;
@@ -483,15 +591,14 @@ const selectColsMap = (
 
 const projectQueryToSql = (
   tableMap: TableInfoMap,
-  pq: QueryExp
+  { cols, from }: ProjectQueryRep
 ): SQLQueryAST => {
-  const projectCols: string[] = pq.valArgs[0];
-  const sqsql = queryToSql(tableMap, pq.tableArgs[0]);
+  const sqsql = queryToSql(tableMap, from);
 
   // rewrite an individual select statement to only select projected cols:
   const rewriteSel = (sel: SQLSelectAST): SQLSelectAST => {
     const colsMap = selectColsMap(sel);
-    const outCols = projectCols.map((cid: string) => {
+    const outCols = cols.map((cid: string) => {
       let outCol = colsMap[cid];
 
       if (outCol === undefined) {
@@ -537,14 +644,12 @@ export const defaultAggFn = (colType: ColumnType): AggFn => {
 
 const groupByQueryToSql = (
   tableMap: TableInfoMap,
-  query: QueryExp
+  { cols, aggs, from }: GroupByQueryRep
 ): SQLQueryAST => {
-  const cols: string[] = query.valArgs[0];
-  const aggSpecs: AggColSpec[] = query.valArgs[1];
-  const inSchema = query.tableArgs[0].getSchema(tableMap);
+  const inSchema = getQuerySchema(tableMap, from);
 
   // emulate the uniq and null aggregation functions:
-  const aggExprs: SQLSelectListItem[] = aggSpecs.map((aggSpec) => {
+  const aggExprs: SQLSelectListItem[] = aggs.map((aggSpec) => {
     let aggStr: AggFn;
     let cid;
     let colExp: SQLValExp;
@@ -576,7 +681,7 @@ const groupByQueryToSql = (
     mkColSelItem(cid, inSchema.columnType(cid))
   );
   const selectCols = selectGbCols.concat(aggExprs);
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]);
+  const sqsql = queryToSql(tableMap, from);
 
   // If sub-query is just a single select with no group by
   // and where every select expression a simple column id
@@ -622,10 +727,9 @@ const groupByQueryToSql = (
 
 const filterQueryToSql = (
   tableMap: TableInfoMap,
-  query: QueryExp
+  { fexp, from }: FilterQueryRep
 ): SQLQueryAST => {
-  const fexp: FilterExp = query.valArgs[0];
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]);
+  const sqsql = queryToSql(tableMap, from);
 
   const subSel = sqsql.selectStmts[0];
   let retSel: SQLSelectAST;
@@ -658,24 +762,29 @@ const filterQueryToSql = (
     selectStmts: [retSel],
   };
 };
+
 /*
  * Note: this implements both mapColumns and mapColumsByIndex
+ * Regrettably, we can't easily give this a generic type in TypeScript because
+ * generic type params for map-like objects not yet supported,
+ * see: https://github.com/microsoft/TypeScript/issues/12754
+ * We'll just give cmap an 'any' type, grieve briefly, and move on.
  */
-
-const mapColumnsQueryToSql = (byIndex: boolean) => (
+type MapColumnsGenQueryRep<T extends Object> = { cmap: any; from: QueryRep };
+function mapColumnsQueryToSql<T extends Object>(
+  byIndex: boolean,
   tableMap: TableInfoMap,
-  query: QueryExp
-): SQLQueryAST => {
-  const cMap = query.valArgs[0];
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]); // apply renaming to invididual select expression:
+  { cmap, from }: MapColumnsGenQueryRep<T>
+): SQLQueryAST {
+  const sqsql = queryToSql(tableMap, from); // apply renaming to invididual select expression:
 
   const applyColRename = (
     cexp: SQLSelectListItem,
     index: number
   ): SQLSelectListItem => {
     const inCid = getColId(cexp);
-    const mapKey = byIndex ? index.toString() : inCid;
-    const outCid = cMap.hasOwnProperty(mapKey) ? cMap[mapKey].id : inCid;
+    const mapKey = byIndex ? index : inCid;
+    const outCid = cmap.hasOwnProperty(mapKey) ? cmap[mapKey].id : inCid;
 
     return {
       colExp: cexp.colExp,
@@ -699,13 +808,13 @@ const mapColumnsQueryToSql = (byIndex: boolean) => (
     selectStmts: sqsql.selectStmts.map(rewriteSel),
   };
   return ret;
-};
+}
 
 const concatQueryToSql = (
   tableMap: TableInfoMap,
-  query: QueryExp
+  { target, from }: ConcatQueryRep
 ): SQLQueryAST => {
-  const sqSqls = query.tableArgs.map((tq) => queryToSql(tableMap, tq));
+  const sqSqls = [queryToSql(tableMap, from), queryToSql(tableMap, target)];
   const allSelStmts = sqSqls.map((q) => q.selectStmts);
   return {
     selectStmts: _.flatten(allSelStmts),
@@ -714,16 +823,15 @@ const concatQueryToSql = (
 
 const sortQueryToSql = (
   tableMap: TableInfoMap,
-  query: QueryExp
+  { keys, from }: SortQueryRep
 ): SQLQueryAST => {
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]);
-  const orderBy = (query.valArgs[0] as [string, boolean][]).map(
-    ([col, asc]) => ({
-      col,
-      asc,
-    })
-  ); // If subquery just a single select with no orderBy clause, just add one:
+  const sqsql = queryToSql(tableMap, from);
+  const orderBy = keys.map(([col, asc]) => ({
+    col,
+    asc,
+  }));
 
+  // If subquery just a single select with no orderBy clause, just add one:
   const subSel = sqsql.selectStmts[0];
   let retSel: SQLSelectAST;
 
@@ -782,12 +890,9 @@ const isConstantExpr = (expr: string): boolean => {
 
 const extendQueryToSql = (
   tableMap: TableInfoMap,
-  query: QueryExp
+  { colId, colType, opts, colExp, from }: ExtendQueryRep
 ): SQLQueryAST => {
-  const as = query.valArgs[0];
-  const colMetadata: ColumnMapInfo = query.valArgs[1];
-  const colExp: ColumnExtendExp = query.valArgs[2];
-  const sqsql = queryToSql(tableMap, query.tableArgs[0]);
+  const sqsql = queryToSql(tableMap, from);
   const subSel = sqsql.selectStmts[0];
 
   // Note: We only want to extract the column ids from subquery for use at this level; we
@@ -796,22 +901,13 @@ const extendQueryToSql = (
   const isConst = colExp.expType === "ConstVal";
   let retSel: SQLSelectAST;
 
-  let colType: ColumnType;
-
-  if (colMetadata.type == null) {
-    const msg = `extend query: column '${as}': type required in column metadata in extend operation`;
-    console.error(msg);
-    throw new Error(msg);
-  }
-  colType = colMetadata.type;
-
   if (isConst && sqsql.selectStmts.length === 1) {
     // just append our column to existing selectCols list:
     const outSel = subSel.selectCols.slice();
     outSel.push({
       colExp,
       colType,
-      as,
+      as: colId,
     });
     retSel = _.defaults(
       {
@@ -823,8 +919,8 @@ const extendQueryToSql = (
     let selectCols: SQLSelectListItem[] = mkSubSelectList(subSel.selectCols);
     selectCols.push({
       colExp,
-      colType: colMetadata.type,
-      as,
+      colType,
+      as: colId,
     });
     const from: SQLFromQuery = {
       expType: "query",
@@ -845,13 +941,12 @@ const extendQueryToSql = (
 
 const joinQueryToSql = (
   tableMap: TableInfoMap,
-  query: QueryExp
+  query: JoinQueryRep
 ): SQLQueryAST => {
-  const [joinType, on] = query.valArgs;
-  const [lhsQuery, rhsQuery] = query.tableArgs;
-  const lhs = queryToSql(tableMap, lhsQuery);
-  const rhs = queryToSql(tableMap, rhsQuery);
-  const outSchema = query.getSchema(tableMap);
+  const { lhs, rhs, on: onArg, joinType } = query;
+  const lhsSql = queryToSql(tableMap, lhs);
+  const rhsSql = queryToSql(tableMap, rhs);
+  const outSchema = getQuerySchema(tableMap, query);
 
   const selectCols: SQLSelectListItem[] = outSchema.columns.map((cid) =>
     mkColSelItem(cid, outSchema.columnType(cid))
@@ -859,9 +954,10 @@ const joinQueryToSql = (
   const from: SQLFromJoin = {
     expType: "join",
     joinType,
-    lhs,
-    rhs,
+    lhs: lhsSql,
+    rhs: rhsSql,
   };
+  const on = typeof onArg === "string" ? [onArg] : onArg;
   const retSel: SQLSelectAST = {
     selectCols,
     from,
@@ -874,36 +970,38 @@ const joinQueryToSql = (
   };
 };
 
-const genSqlMap: GenSQLMap = {
-  table: tableQueryToSql,
-  project: projectQueryToSql,
-  groupBy: groupByQueryToSql,
-  filter: filterQueryToSql,
-  mapColumns: mapColumnsQueryToSql(false),
-  mapColumnsByIndex: mapColumnsQueryToSql(true),
-  concat: concatQueryToSql,
-  sort: sortQueryToSql,
-  extend: extendQueryToSql,
-  join: joinQueryToSql,
-};
-
-const queryToSql = (tableMap: TableInfoMap, query: QueryExp): SQLQueryAST => {
-  const gen = genSqlMap[query.operator];
-
-  if (!gen) {
-    throw new Error(
-      "queryToSql: No implementation for operator '" + query.operator + "'"
-    );
+const queryToSql = (tableMap: TableInfoMap, query: QueryRep): SQLQueryAST => {
+  switch (query.operator) {
+    case "table":
+      return tableQueryToSql(tableMap, query);
+    case "project":
+      return projectQueryToSql(tableMap, query);
+    case "groupBy":
+      return groupByQueryToSql(tableMap, query);
+    case "filter":
+      return filterQueryToSql(tableMap, query);
+    case "mapColumns":
+      return mapColumnsQueryToSql(false, tableMap, query);
+    case "mapColumnsByIndex":
+      return mapColumnsQueryToSql(true, tableMap, query);
+    case "concat":
+      return concatQueryToSql(tableMap, query);
+    case "sort":
+      return sortQueryToSql(tableMap, query);
+    case "extend":
+      return extendQueryToSql(tableMap, query);
+    case "join":
+      return joinQueryToSql(tableMap, query);
+    default:
+      const invalidQuery: never = query;
+      throw new Error("queryToSql: No implementation for operator: " + query);
   }
-
-  const ret = gen(tableMap, query);
-  return ret;
 };
 
 // Generate a count(*) as rowCount wrapper around a query:
 const queryToCountSql = (
   tableMap: TableInfoMap,
-  query: QueryExp
+  query: QueryRep
 ): SQLQueryAST => {
   const sqsql = queryToSql(tableMap, query);
   const colExp = mkAggExp("count", constVal("*"));
@@ -933,5 +1031,5 @@ const queryToCountSql = (
 // Create base of a query expression chain by starting with "table":
 
 export const tableQuery = (tableName: string): QueryExp => {
-  return new QueryExp("table", [tableName]);
+  return new QueryExp({ operator: "table", tableName });
 };

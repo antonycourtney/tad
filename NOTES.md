@@ -45,6 +45,7 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 
 ### Punch-list items:
 
+[ ] It would be good for extend() not to require non-portable type names. Either map core column types in dialect, or allow inference.
 [ ] Get rid of hard-coded testTable and testBaseUrl in webRenderMain
 [ ] Migrate aggtree tests
 [ ] Fix clipboard write (electron based) in GridPane.tsx
@@ -57,7 +58,7 @@ can be re-used in strange ways.
 [ ] Deal gracefully with network errors
 [ ] Electron app: port various event handlers from renderMain to web app
 [ ] Electron app: Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app in web app
-[ ] Migrate reltab AST to use typescript tagged unions (kill tableArgs / valArgs)
+[ ] \*\*\* !! Migrate reltab AST to use typescript tagged unions (kill tableArgs / valArgs)
 [ ] Need to account for constant expressions (numbers and string literals) vs column references coming from an extend
 operation that can end up in a SQL select column expression. Probably time for a tagged union!
 [ ] static analysis of tables mentioned in a query

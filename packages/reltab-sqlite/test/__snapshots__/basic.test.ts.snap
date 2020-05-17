@@ -66,6 +66,7 @@ TableRep {
         "type": "text",
       },
       "_depth": Object {
+        "displayName": "_depth",
         "type": "integer",
       },
     },
@@ -166,6 +167,7 @@ TableRep {
         "type": "text",
       },
       "_depth": Object {
+        "displayName": "_depth",
         "type": "integer",
       },
     },
@@ -1007,9 +1009,11 @@ TableRep {
         "type": "text",
       },
       "_depth": Object {
+        "displayName": "_depth",
         "type": "integer",
       },
       "_pivot": Object {
+        "displayName": "_pivot",
         "type": "text",
       },
     },
@@ -1367,6 +1371,7 @@ TableRep {
         "type": "text",
       },
       "_pivot": Object {
+        "displayName": "_pivot",
         "type": "text",
       },
     },

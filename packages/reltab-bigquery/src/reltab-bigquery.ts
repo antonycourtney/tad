@@ -1,5 +1,5 @@
 import * as log from "loglevel";
-import { TableRep, QueryExp, Schema, tableQuery } from "reltab";
+import { TableRep, QueryExp, Schema, tableQuery, ColumnType } from "reltab";
 import {
   TableInfoMap,
   TableInfo,
@@ -91,8 +91,8 @@ export class BigQueryConnection implements Connection {
     const [t1s, t1ns] = t1;
 
     if (this.showQueries) {
-      log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.info("SqliteContext.evalQuery: evaluating:");
+      log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
+      log.debug("SqliteContext.evalQuery: evaluating:");
       log.info(sqlQuery);
     }
 
@@ -127,8 +127,8 @@ export class BigQueryConnection implements Connection {
     const [t1s, t1ns] = t1;
 
     if (this.showQueries) {
-      log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.info("SqliteContext.evalQuery: evaluating:");
+      log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
+      log.debug("SqliteContext.evalQuery: evaluating:");
       log.info(countSql);
     }
 
@@ -139,7 +139,7 @@ export class BigQueryConnection implements Connection {
     });
     const t3 = process.hrtime(t2);
     const [t3s, t3ns] = t3;
-    log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
+    log.debug("time to run query: %ds %dms", t3s, t3ns / 1e6);
     const ret = Number.parseInt(dbRows[0].rowCount);
     return ret;
   }
@@ -153,47 +153,41 @@ export class BigQueryConnection implements Connection {
     );
   }
 
-  async dbGetTableInfo(
+  private async dbGetTableInfo(
     projectId: string,
     datasetName: string,
     baseTableName: string
   ): Promise<TableInfo> {
-    let dataset: Dataset;
-    if (projectId === this.projectId && datasetName === this.datasetName) {
-      dataset = this.dataset;
-    } else {
-      const bigquery = new BigQuery({ projectId, location: LOCATION });
-      dataset = bigquery.dataset(datasetName);
+    const sqlQuery = `SELECT column_name, data_type FROM \`${projectId}.${datasetName}\`.INFORMATION_SCHEMA.COLUMNS WHERE table_name="${baseTableName}"`;
+
+    if (this.showQueries) {
+      log.info(sqlQuery);
     }
-    const table = dataset.table(baseTableName);
-    const [metadata, apiResponse] = await table.getMetadata();
-    console.log("metadata: ", JSON.stringify(metadata, null, 2));
-    const fields = metadata.schema.fields;
-    const columnIds: string[] = fields.map((f: any) => f.name);
 
-    const extendCMap = (
-      cmm: ColumnMetaMap,
-      field: any,
-      idx: number
-    ): ColumnMetaMap => {
-      const cnm = field.name;
-      const cType = field.type.toLocaleLowerCase();
+    const [dbRows] = await this.bigquery.query({
+      query: sqlQuery,
+      location: LOCATION,
+    });
+    const rows = dbRows as Row[];
 
-      if (cType == null) {
-        log.error(
-          'mkTableInfo: No column type for "' + cnm + '", index: ' + idx
-        );
-      }
+    if (this.showQueries) {
+      log.info("rows: ", rows);
+    }
+
+    const extendCMap = (cmm: ColumnMetaMap, row: Row): ColumnMetaMap => {
+      const cnm = row.column_name as string;
+      const cType = (row.data_type! as string).toLocaleLowerCase();
 
       const cmd = {
         displayName: cnm,
-        type: assertDefined(cType),
+        type: assertDefined(cType) as ColumnType, // TODO: this is definitely a lie!
       };
       cmm[cnm] = cmd;
       return cmm;
     };
 
-    const cmMap = fields.reduce(extendCMap, {});
+    const columnIds = rows.map((row) => row.column_name as string);
+    const cmMap = rows.reduce(extendCMap, {});
     const schema = new Schema(columnIds, cmMap);
     return {
       tableName: projectId + "." + datasetName + "." + baseTableName,

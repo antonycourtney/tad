@@ -18,12 +18,11 @@ const q1 = reltab.tableQuery("barttest");
 test("t0 - trivial query generation", () => {
   expect(q1).toMatchInlineSnapshot(`
     QueryExp {
+      "_rep": Object {
+        "operator": "table",
+        "tableName": "barttest",
+      },
       "expType": "QueryExp",
-      "operator": "table",
-      "tableArgs": Array [],
-      "valArgs": Array [
-        "barttest",
-      ],
     }
   `);
 });
@@ -138,14 +137,14 @@ test("empty and filter", async () => {
 test("query deserialization", async () => {
   let req: Object = { query: q5 };
   const ser5 = JSON.stringify(req, null, 2);
-  // console.log("serialized query");
-  // console.log(ser5);
+  console.log("serialized query");
+  console.log(ser5);
   const dq5 = reltab.deserializeQueryReq(ser5);
-  // console.log("deserialized query: ", dq5);
+  console.log("deserialized query: ", JSON.stringify(dq5, null, 2));
   const rtc = testCtx;
   const res = await rtc.evalQuery(dq5.query);
-  // console.log("got results of evaluating deserialized query");
-  // util.logTable(res);
+  console.log("got results of evaluating deserialized query");
+  util.logTable(res);
   expect(res.rowData.length).toBe(4);
 });
 
@@ -201,13 +200,7 @@ test("compound key sort", async () => {
   expect(res).toMatchSnapshot();
 });
 
-const qex1 = q8.extend(
-  "_depth",
-  {
-    type: "integer",
-  },
-  constVal(0)
-);
+const qex1 = q8.extend("_depth", "integer", constVal(0));
 test("basic extend with const col", async () => {
   const res = await testCtx.evalQuery(qex1);
   expect(res).toMatchSnapshot();
@@ -220,20 +213,8 @@ test("basic extend composed with project", async () => {
 });
 
 const qex3 = q1
-  .extend(
-    "_pivot",
-    {
-      type: "text",
-    },
-    asString(constVal(null))
-  )
-  .extend(
-    "_depth",
-    {
-      type: "integer",
-    },
-    constVal(0)
-  );
+  .extend("_pivot", "text", asString(constVal(null)))
+  .extend("_depth", "integer", constVal(0));
 
 test("chained extend", async () => {
   // console.log("chained extend: query: ", JSON.stringify(qex3, undefined, 2));
@@ -242,13 +223,7 @@ test("chained extend", async () => {
   expect(res).toMatchSnapshot();
 });
 
-const qex4 = q1.extend(
-  "_pivot",
-  {
-    type: "text",
-  },
-  asString(constVal(null))
-);
+const qex4 = q1.extend("_pivot", "text", asString(constVal(null)));
 test("null const extend", async () => {
   const res = await testCtx.evalQuery(qex4);
   // util.logTable(res);

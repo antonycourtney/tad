@@ -54,13 +54,7 @@ const addPathCols = (
   let retQuery = baseQuery;
 
   for (let i = baseDepth; i < maxDepth - 1; i++) {
-    retQuery = retQuery.extend(
-      "_path" + i,
-      {
-        type: "text",
-      },
-      asString(constVal(null))
-    );
+    retQuery = retQuery.extend("_path" + i, "text", asString(constVal(null)));
   }
 
   return retQuery;
@@ -160,8 +154,9 @@ export class VPivotTree {
       pathQuery = pathQuery
         .extend(
           "_pivot",
-          { displayName: "_pivot", type: "text" },
-          asString(col(this.pivotColumns[path.length]))
+          "text",
+          asString(col(this.pivotColumns[path.length])),
+          { displayName: "_pivot" }
         )
         .groupBy(["_pivot"], gbAggs);
     } else {
@@ -170,31 +165,13 @@ export class VPivotTree {
         this.pivotLeafColumn == null
           ? constVal("")
           : asString(col(this.pivotLeafColumn!));
-      pathQuery = pathQuery.extend(
-        "_pivot",
-        {
-          type: "text",
-        },
-        leafExp
-      );
+      pathQuery = pathQuery.extend("_pivot", "text", leafExp);
     }
 
     const depth = path.length + 1;
     pathQuery = pathQuery
-      .extend(
-        "_depth",
-        {
-          type: "integer",
-        },
-        constVal(depth)
-      )
-      .extend(
-        "_isRoot",
-        {
-          type: "boolean",
-        },
-        constVal(0)
-      )
+      .extend("_depth", "integer", constVal(depth))
+      .extend("_isRoot", "boolean", constVal(0))
       .project(this.outCols);
     /*
      * The point of the '_sortVal_<i>' column is that it will be 1 for all rows of
@@ -211,9 +188,7 @@ export class VPivotTree {
       const depthVal = depth > i ? 1 : 0;
       pathQuery = pathQuery.extend(
         "_sortVal_" + i,
-        {
-          type: "integer",
-        },
+        "integer",
         constVal(depthVal)
       );
     }
@@ -228,13 +203,7 @@ export class VPivotTree {
         pathElemExp = col("_pivot"); // SQL expression referring to _pivot column
       }
 
-      pathQuery = pathQuery.extend(
-        "_path" + i,
-        {
-          type: "text",
-        },
-        asString(pathElemExp)
-      );
+      pathQuery = pathQuery.extend("_path" + i, "text", asString(pathElemExp));
     }
 
     // TODO: Should we optionally also insert _childCount and _leafCount ?
@@ -294,13 +263,7 @@ export class VPivotTree {
       resQuery = this.rootQuery;
 
       for (let i = 0; i < maxDepth; i++) {
-        resQuery = resQuery.extend(
-          "_sortVal_" + i,
-          {
-            type: "integer",
-          },
-          constVal(0)
-        );
+        resQuery = resQuery.extend("_sortVal_" + i, "integer", constVal(0));
       }
 
       resQuery = addPathCols(resQuery, 0, maxDepth);
@@ -378,13 +341,7 @@ export const getBaseSchema = (
 ): Promise<Schema> => {
   // add a count column and do the usual SQL where 1=0 trick:
   const schemaQuery = baseQuery
-    .extend(
-      "Rec",
-      {
-        type: "integer",
-      },
-      constVal(1)
-    )
+    .extend("Rec", "integer", constVal(1))
     .filter(reltab.and().eq(constVal(1), constVal(0)));
   const schemap = rt.evalQuery(schemaQuery);
   return schemap.then((schemaRes) => schemaRes.schema);
@@ -406,13 +363,7 @@ export function vpivot(
 ): VPivotTree {
   const aggMap = inAggMap; // just for Flow
 
-  baseQuery = baseQuery.extend(
-    "Rec",
-    {
-      type: "integer",
-    },
-    constVal(1)
-  );
+  baseQuery = baseQuery.extend("Rec", "integer", constVal(1));
   const hiddenCols = ["_depth", "_pivot", "_isRoot"];
   const outCols = baseSchema.columns.concat(hiddenCols);
   const gbCols = baseSchema.columns.slice();
@@ -423,27 +374,9 @@ export function vpivot(
   if (showRoot) {
     rootQuery = baseQuery
       .groupBy([], gbAggs)
-      .extend(
-        "_pivot",
-        {
-          type: "text",
-        },
-        asString(constVal(null))
-      )
-      .extend(
-        "_depth",
-        {
-          type: "integer",
-        },
-        constVal(0)
-      )
-      .extend(
-        "_isRoot",
-        {
-          type: "boolean",
-        },
-        constVal(1)
-      )
+      .extend("_pivot", "text", asString(constVal(null)))
+      .extend("_depth", "integer", constVal(0))
+      .extend("_isRoot", "boolean", constVal(1))
       .project(outCols);
   }
 

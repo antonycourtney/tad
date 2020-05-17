@@ -1,5 +1,5 @@
 import { SQLDialect } from "./dialect";
-import { asString, constVal } from "./defs";
+import { asString, constVal, ColumnExtendExp } from "./defs";
 import { StringBuffer, colExtendExpToSqlStr } from "./internals";
 import {
   SQLValExp,
@@ -8,6 +8,7 @@ import {
   SQLSelectAST,
   SQLQueryAST,
 } from "./SQLQuery";
+import { ColumnType } from "./Schema";
 
 /*
  * not-so-pretty print a SQL query
@@ -18,14 +19,37 @@ const ppOut = (dst: StringBuffer, depth: number, str: string): void => {
   dst.push(str);
 };
 
-type PPAggFn = (dialect: SQLDialect, aggStr: string, qcid: string) => string;
-const ppAggUniq = (dialect: SQLDialect, aggStr: string, qcid: string) =>
-  `case when min(${qcid})=max(${qcid}) then min(${qcid}) else null end`;
-const ppAggNull = (dialect: SQLDialect, aggStr: string, qcid: string) => "null";
-const ppAggNullStr = (dialect: SQLDialect, aggStr: string, qcid: string) =>
-  ppValExp(dialect, asString(constVal(null)));
-const ppAggDefault = (dialect: SQLDialect, aggStr: string, qcid: string) =>
-  aggStr + "(" + qcid + ")";
+type PPAggFn = (
+  dialect: SQLDialect,
+  aggStr: string,
+  qcid: string,
+  colType: ColumnType
+) => string;
+const ppAggUniq = (
+  dialect: SQLDialect,
+  aggStr: string,
+  qcid: string,
+  colType: ColumnType
+) => `case when min(${qcid})=max(${qcid}) then min(${qcid}) else null end`;
+const ppAggNull = (
+  dialect: SQLDialect,
+  aggStr: string,
+  qcid: string,
+  colType: ColumnType
+) => dialect.ppAggNull(aggStr, qcid, colType);
+"null";
+const ppAggNullStr = (
+  dialect: SQLDialect,
+  aggStr: string,
+  qcid: string,
+  colType: ColumnType
+) => ppValExp(dialect, asString(constVal(null)), colType);
+const ppAggDefault = (
+  dialect: SQLDialect,
+  aggStr: string,
+  qcid: string,
+  colType: ColumnType
+) => aggStr + "(" + qcid + ")";
 
 const ppAggMap: { [aggStr: string]: PPAggFn } = {
   uniq: ppAggUniq,
@@ -38,13 +62,22 @@ const getPPAggFn = (fnm: string): PPAggFn => {
   return ppfn != null ? ppfn : ppAggDefault;
 };
 
-const ppValExp = (dialect: SQLDialect, vexp: SQLValExp): string => {
+const ppValExp = (
+  dialect: SQLDialect,
+  vexp: SQLValExp,
+  colType: ColumnType
+): string => {
   let ret: string;
   switch (vexp.expType) {
     case "agg":
       const aggStr = vexp.aggFn;
       const ppAggFn = getPPAggFn(aggStr);
-      ret = ppAggFn(dialect, aggStr, colExtendExpToSqlStr(dialect, vexp.exp));
+      ret = ppAggFn(
+        dialect,
+        aggStr,
+        colExtendExpToSqlStr(dialect, vexp.exp),
+        colType
+      );
       break;
     default:
       ret = colExtendExpToSqlStr(dialect, vexp);
@@ -60,7 +93,7 @@ const ppSelListItem = (
   if (item.colExp == null) {
     throw new Error("ppSelListItem fail: " + item.toString());
   }
-  ret = ppValExp(dialect, item.colExp);
+  ret = ppValExp(dialect, item.colExp, item.colType);
   if (item.as != null) {
     ret += ` as ${dialect.quoteCol(item.as)}`;
   }

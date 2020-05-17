@@ -63,7 +63,7 @@ test("public covid19 dataset - basic covid-table query", async () => {
   const q1 = reltab.tableQuery("bigquery-public-data.covid19_jhu_csse.summary");
   const q1res = await rtc.evalQuery(q1, 0, 100);
   console.log("q1 query result: row 0: ", q1res.rowData[0], "...");
-  util.logTable(q1res, { maxRows: 50 });
+  util.logTable(q1res, { maxRows: 20 });
 });
 
 const bartTableQuery = reltab.tableQuery(
@@ -367,13 +367,13 @@ test("public covid19 dataset - aggtree basics", async () => {
   const q3 = tree0.getTreeQuery(openPaths);
   const res3 = await rtc.evalQuery(q3);
   log.debug("res3: ");
-  util.logTable(res3);
+  util.logTable(res3, { maxRows: 20 });
   expect(res3).toMatchSnapshot();
 
   const q4 = tree0.getSortedTreeQuery(openPaths);
   const res4 = await rtc.evalQuery(q4);
   log.debug("res4: ");
-  util.logTable(res4);
+  util.logTable(res4, { maxRows: 20 });
 });
 
 test("covid19 -- open pivot tree to leaf level", async () => {
@@ -407,11 +407,11 @@ test("covid19 -- open pivot tree to leaf level", async () => {
   const q3 = tree0.getTreeQuery(openPaths);
   const res3 = await rtc.evalQuery(q3);
   log.debug("res3: ");
-  util.logTable(res3);
+  util.logTable(res3, { maxRows: 20 });
   expect(res3).toMatchSnapshot();
 
   const q4 = tree0.getSortedTreeQuery(openPaths);
   const res4 = await rtc.evalQuery(q4);
   log.debug("res4: ");
-  util.logTable(res4);
+  util.logTable(res4, { maxRows: 20 });
 });
