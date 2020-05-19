@@ -45,7 +45,10 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 
 ### Punch-list items:
 
-[ ] It would be good for extend() not to require non-portable type names. Either map core column types in dialect, or allow inference.
+[ ] How do we go from column type back to a Core Type for formatting? Example: int/float formatting panel.
+[ ] Tweak extend to make column type optional, with clear rules for inference. number ==> integer by default.
+[ ] Change internal and exported signatures of Schema to reflect that not all string lookups will succeed.
+[ ] Change dialects from singletons to static objects that implement SQLDialect interface
 [ ] Get rid of hard-coded testTable and testBaseUrl in webRenderMain
 [ ] Migrate aggtree tests
 [ ] Fix clipboard write (electron based) in GridPane.tsx

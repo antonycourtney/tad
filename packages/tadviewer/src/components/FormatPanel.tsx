@@ -10,6 +10,7 @@ import { AppState } from "../AppState";
 import { useState } from "react";
 import { NumFormatOptions } from "../NumFormatOptions";
 import { TextFormatOptions } from "../TextFormatOptions";
+import { ColumnType } from "reltab";
 
 export interface FormatPanelProps {
   schema: reltab.Schema;
@@ -59,8 +60,13 @@ export const FormatPanel: React.FC<FormatPanelProps> = ({
     </select>
   );
 
+  // TODO: need to rethink this mechanism a bit in light
+  // of dialect-determined column types
   const subPanelComponentForType = (columnType: string) =>
     columnType === "text" ? TextFormatPanel : NumFormatPanel;
+
+  const getCoreTypeName = (columnType: ColumnType) =>
+    columnType.isString ? "text" : "integer";
 
   let componentColType: string;
   let currentOpts: any;
@@ -73,7 +79,7 @@ export const FormatPanel: React.FC<FormatPanelProps> = ({
     changeHandler = (fopts: any) =>
       actions.setDefaultFormatOptions(colType, fopts, stateRef);
   } else {
-    componentColType = schema.columnType(selectedColumn!);
+    componentColType = getCoreTypeName(schema.columnType(selectedColumn!));
     currentOpts = viewParams.getColumnFormat(schema, selectedColumn!);
 
     changeHandler = (fopts: any) =>

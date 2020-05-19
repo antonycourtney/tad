@@ -1,9 +1,8 @@
 import _ = require("lodash");
+import { ColumnType } from "./ColumnType";
 
 // metadata for a single column:
-// TODO: date, time, datetime, URL, ...
-// TODO: need to think about what we're doing with string / text types and how they map to SQL.
-export type ColumnType = "integer" | "real" | "text" | "string" | "boolean";
+
 export type ColumnMetadata = {
   displayName: string;
   type: ColumnType;

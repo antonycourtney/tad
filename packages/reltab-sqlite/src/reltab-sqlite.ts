@@ -1,15 +1,18 @@
 import * as tp from "typed-promisify";
 import * as sqlite3 from "sqlite3";
 import * as log from "loglevel";
-import { TableRep, QueryExp, Schema } from "reltab";
-import { SQLiteDialect } from "reltab";
 import {
+  TableRep,
+  QueryExp,
+  Schema,
   TableInfoMap,
   TableInfo,
   Row,
   ColumnMetaMap,
   Connection,
+  SQLiteDialect,
 } from "reltab"; // eslint-disable-line
+import { SQLDialect } from "reltab/dist/dialect";
 
 export * from "./csvimport";
 
@@ -32,8 +35,9 @@ interface ContextOptions {
 
 export class SqliteContext implements Connection {
   db: sqlite3.Database;
-  tableMap: TableInfoMap;
-  showQueries: boolean;
+  private tableMap: TableInfoMap;
+  private showQueries: boolean;
+  dialect: SQLDialect = SQLiteDialect.getInstance();
 
   constructor(db: any, options: ContextOptions) {
     this.db = db;
@@ -55,7 +59,7 @@ export class SqliteContext implements Connection {
   }
 
   getSchema(query: QueryExp): Schema {
-    const schema = query.getSchema(this.tableMap);
+    const schema = query.getSchema(SQLiteDialect.getInstance(), this.tableMap);
     return schema;
   }
 
@@ -65,7 +69,7 @@ export class SqliteContext implements Connection {
     limit: number = -1
   ): Promise<TableRep> {
     let t0 = process.hrtime();
-    const schema = query.getSchema(this.tableMap);
+    const schema = query.getSchema(SQLiteDialect.getInstance(), this.tableMap);
     const sqlQuery = query.toSql(
       SQLiteDialect.getInstance(),
       this.tableMap,

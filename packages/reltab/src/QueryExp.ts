@@ -8,7 +8,8 @@ import {
 } from "./defs";
 import { FilterExp, BinRelExp, UnaryRelExp } from "./FilterExp";
 import { SQLDialect } from "./dialect";
-import { Schema, ColumnType, ColumnMetadata } from "./Schema";
+import { ColumnType } from "./ColumnType";
+import { Schema, ColumnMetadata } from "./Schema";
 import _ = require("lodash");
 import { TableInfoMap, TableRep } from "./TableRep";
 import { ppSQLQuery } from "./pp";
@@ -24,6 +25,7 @@ import {
   mkAggExp,
   mkSubSelectList,
 } from "./SQLQuery";
+import { AggFn } from "./AggFn";
 
 type QueryOp =
   | "table"
@@ -37,45 +39,14 @@ type QueryOp =
   | "extend"
   | "join";
 
-// We'll add "nullstr" here, but don't expect it to show up in any UI; generated
-// during toSql elaboration step.
-export type AggFn =
-  | "avg"
-  | "count"
-  | "min"
-  | "max"
-  | "sum"
-  | "uniq"
-  | "null"
-  | "nullstr";
-
 // An AggColSpec is either a column name (for default aggregation based on column type
 // or a pair of column name and AggFn
 export type AggColSpec = string | [AggFn, string];
 
-const basicAggFns: AggFn[] = ["min", "max", "uniq", "null"];
-const numericAggFns: AggFn[] = [
-  "avg",
-  "count",
-  "min",
-  "max",
-  "sum",
-  "uniq",
-  "null",
-];
-export const typeIsNumeric = (ct: ColumnType): boolean => {
-  return ct === "integer" || ct === "real";
-};
-export const typeIsString = (ct: ColumnType): boolean => {
-  return ct === "text";
-};
-export const aggFns = (ct: ColumnType): Array<AggFn> => {
-  if (ct === "text") {
-    return basicAggFns;
-  }
+export const typeIsNumeric = (ct: ColumnType): boolean => ct.isNumeric;
 
-  return numericAggFns;
-};
+export const typeIsString = (ct: ColumnType): boolean => ct.isString;
+
 /*
  * generate a SQL literal for the given value based on its
  * column type.
@@ -89,7 +60,7 @@ export const sqlLiteralVal = (ct: ColumnType, jsVal: any): string => {
   if (jsVal == null) {
     ret = "null";
   } else {
-    ret = ct === "text" ? sqlEscapeString(jsVal) : jsVal.toString();
+    ret = ct.isString ? sqlEscapeString(jsVal) : jsVal.toString();
   }
 
   return ret;
@@ -102,12 +73,12 @@ export const sqlLiteralVal = (ct: ColumnType, jsVal: any): string => {
 
 export type ColumnMapInfo = {
   id?: string;
-  type?: ColumnType;
   displayName?: string;
 };
 
 export type ColumnExtendOptions = {
   displayName?: string;
+  type?: ColumnType;
 };
 
 interface TableQueryRep {
@@ -153,7 +124,6 @@ interface SortQueryRep {
 interface ExtendQueryRep {
   operator: "extend";
   colId: string;
-  colType: ColumnType;
   colExp: ColumnExtendExp;
   opts: ColumnExtendOptions;
   from: QueryRep;
@@ -232,14 +202,12 @@ export class QueryExp {
   // type is mandatory:
   extend(
     colId: string,
-    colType: ColumnType,
     colExp: ColumnExtendExp,
     opts: ColumnExtendOptions = {}
   ): QueryExp {
     return new QueryExp({
       operator: "extend",
       colId,
-      colType,
       colExp,
       opts,
       from: this._rep,
@@ -273,15 +241,25 @@ export class QueryExp {
     offset: number = -1,
     limit: number = -1
   ): string {
-    return ppSQLQuery(dialect, queryToSql(tableMap, this._rep), offset, limit);
+    return ppSQLQuery(
+      dialect,
+      queryToSql(dialect, tableMap, this._rep),
+      offset,
+      limit
+    );
   }
 
   toCountSql(dialect: SQLDialect, tableMap: TableInfoMap): string {
-    return ppSQLQuery(dialect, queryToCountSql(tableMap, this._rep), -1, -1);
+    return ppSQLQuery(
+      dialect,
+      queryToCountSql(dialect, tableMap, this._rep),
+      -1,
+      -1
+    );
   }
 
-  getSchema(tableMap: TableInfoMap): Schema {
-    return getQuerySchema(tableMap, this._rep);
+  getSchema(dialect: SQLDialect, tableMap: TableInfoMap): Schema {
+    return getQuerySchema(dialect, tableMap, this._rep);
   }
 }
 
@@ -353,6 +331,7 @@ export const deserializeTableRepJson = (json: any): TableRep => {
 };
 
 const tableGetSchema = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   query: TableQueryRep
 ): Schema => {
@@ -360,15 +339,17 @@ const tableGetSchema = (
 };
 
 const projectGetSchema = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   query: ProjectQueryRep
 ): Schema => {
-  const inSchema = getQuerySchema(tableMap, query.from);
+  const inSchema = getQuerySchema(dialect, tableMap, query.from);
   const { cols } = query;
   return new Schema(cols, _.pick(inSchema.columnMetadata, cols));
 };
 
 const groupByGetSchema = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   query: GroupByQueryRep
 ): Schema => {
@@ -376,27 +357,29 @@ const groupByGetSchema = (
   const aggCols: Array<string> = aggs.map((aggSpec: string | string[]) =>
     typeof aggSpec === "string" ? aggSpec : aggSpec[1]
   );
-  const inSchema = getQuerySchema(tableMap, query.from);
+  const inSchema = getQuerySchema(dialect, tableMap, query.from);
   const rs = new Schema(cols.concat(aggCols), inSchema.columnMetadata);
   return rs;
 };
 
 const filterGetSchema = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   { from }: { from: QueryRep }
 ): Schema => {
-  const inSchema = getQuerySchema(tableMap, from);
+  const inSchema = getQuerySchema(dialect, tableMap, from);
   return inSchema;
 };
 
 const mapColumnsGetSchema = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   query: MapColumnsQueryRep
 ): Schema => {
   const { cmap, from } = query;
   // TODO: check that all columns are columns of original schema,
   // and that applying cmap will not violate any invariants on Schema....but need to nail down
-  const inSchema = getQuerySchema(tableMap, query.from);
+  const inSchema = getQuerySchema(dialect, tableMap, query.from);
 
   let outColumns = [];
   let outMetadata: { [cid: string]: ColumnMetadata } = {};
@@ -434,12 +417,13 @@ const mapColumnsGetSchema = (
 };
 
 const mapColumnsByIndexGetSchema = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   { cmap, from }: MapColumnsByIndexQueryRep
 ): Schema => {
   // TODO: try to unify with mapColumns; probably have mapColumns do the
   // mapping to column indices then call this
-  const inSchema = getQuerySchema(tableMap, from);
+  const inSchema = getQuerySchema(dialect, tableMap, from);
 
   var outColumns = [];
   var outMetadata: { [cid: string]: ColumnMetadata } = {};
@@ -477,23 +461,76 @@ const mapColumnsByIndexGetSchema = (
 };
 
 const concatGetSchema = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   { from }: ConcatQueryRep
 ): Schema => {
-  const inSchema = getQuerySchema(tableMap, from);
+  const inSchema = getQuerySchema(dialect, tableMap, from);
   return inSchema;
 };
 
+/*
+ * Use explicit type if specified, otherwise try to
+ * infer column type from expression.
+ * Throws if type can not be inferred.
+ */
+const getOrInferColumnType = (
+  dialect: SQLDialect,
+  inSchema: Schema,
+  colType: ColumnType | undefined,
+  colExp: ColumnExtendExp
+): ColumnType => {
+  if (colType !== undefined) {
+    return colType;
+  }
+  switch (colExp.expType) {
+    case "ColRef":
+      const colType = inSchema.columnType(colExp.colName);
+      if (colType === undefined) {
+        throw new Error(
+          "Could not look up type information for column reference in extend expression: '" +
+            colExp.colName +
+            "'"
+        );
+      }
+      return colType;
+    case "AsString":
+      return dialect.coreColumnTypes.string;
+    case "ConstVal":
+      switch (typeof colExp.val) {
+        case "number":
+          return dialect.coreColumnTypes.integer;
+        case "string":
+          return dialect.coreColumnTypes.string;
+        case "boolean":
+          return dialect.coreColumnTypes.boolean;
+        default:
+          throw new Error(
+            "Could not infer column type for column extend expression: " +
+              JSON.stringify(colExp)
+          );
+      }
+    default:
+      throw new Error(
+        "Could not infer column type for column extend expression: " +
+          JSON.stringify(colExp)
+      );
+  }
+};
+
 const extendGetSchema = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
-  { colId, colType, opts, from }: ExtendQueryRep
+  { colId, colExp, opts, from }: ExtendQueryRep
 ): Schema => {
-  const inSchema = getQuerySchema(tableMap, from);
+  const inSchema = getQuerySchema(dialect, tableMap, from);
+  const colType = getOrInferColumnType(dialect, inSchema, opts.type, colExp);
   const displayName = opts.displayName != null ? opts.displayName : colId;
   return inSchema.extend(colId, { type: colType, displayName });
 };
 
 const joinGetSchema = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   { rhs, on, joinType, lhs }: JoinQueryRep
 ): Schema => {
@@ -501,8 +538,8 @@ const joinGetSchema = (
     throw new Error("unsupported join type: " + joinType);
   }
 
-  const lhsSchema = getQuerySchema(tableMap, lhs);
-  const rhsSchema = getQuerySchema(tableMap, rhs);
+  const lhsSchema = getQuerySchema(dialect, tableMap, lhs);
+  const rhsSchema = getQuerySchema(dialect, tableMap, rhs);
 
   const rhsCols = _.difference(
     rhsSchema.columns,
@@ -519,28 +556,32 @@ const joinGetSchema = (
   return joinSchema;
 };
 
-const getQuerySchema = (tableMap: TableInfoMap, query: QueryRep): Schema => {
+const getQuerySchema = (
+  dialect: SQLDialect,
+  tableMap: TableInfoMap,
+  query: QueryRep
+): Schema => {
   switch (query.operator) {
     case "table":
-      return tableGetSchema(tableMap, query);
+      return tableGetSchema(dialect, tableMap, query);
     case "project":
-      return projectGetSchema(tableMap, query);
+      return projectGetSchema(dialect, tableMap, query);
     case "groupBy":
-      return groupByGetSchema(tableMap, query);
+      return groupByGetSchema(dialect, tableMap, query);
     case "filter":
-      return filterGetSchema(tableMap, query);
+      return filterGetSchema(dialect, tableMap, query);
     case "mapColumns":
-      return mapColumnsGetSchema(tableMap, query);
+      return mapColumnsGetSchema(dialect, tableMap, query);
     case "mapColumnsByIndex":
-      return mapColumnsByIndexGetSchema(tableMap, query);
+      return mapColumnsByIndexGetSchema(dialect, tableMap, query);
     case "concat":
-      return concatGetSchema(tableMap, query);
+      return concatGetSchema(dialect, tableMap, query);
     case "sort":
-      return filterGetSchema(tableMap, query);
+      return filterGetSchema(dialect, tableMap, query);
     case "extend":
-      return extendGetSchema(tableMap, query);
+      return extendGetSchema(dialect, tableMap, query);
     case "join":
-      return joinGetSchema(tableMap, query);
+      return joinGetSchema(dialect, tableMap, query);
     default:
       const invalidQuery: never = query;
       throw new Error(
@@ -555,6 +596,7 @@ type GenSQLMap = {
 };
 
 const tableQueryToSql = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   { tableName }: TableQueryRep
 ): SQLQueryAST => {
@@ -590,10 +632,11 @@ const selectColsMap = (
 };
 
 const projectQueryToSql = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   { cols, from }: ProjectQueryRep
 ): SQLQueryAST => {
-  const sqsql = queryToSql(tableMap, from);
+  const sqsql = queryToSql(dialect, tableMap, from);
 
   // rewrite an individual select statement to only select projected cols:
   const rewriteSel = (sel: SQLSelectAST): SQLSelectAST => {
@@ -626,27 +669,14 @@ const projectQueryToSql = (
   };
 };
 
-const defaultAggs: { [CT in ColumnType]: AggFn } = {
-  integer: "sum",
-  real: "sum",
-  text: "uniq",
-  string: "uniq",
-  boolean: "uniq",
-};
-
-export const defaultAggFn = (colType: ColumnType): AggFn => {
-  let afn: AggFn | undefined = defaultAggs[colType];
-  if (afn == null) {
-    afn = "null";
-  }
-  return afn;
-};
+export const defaultAggFn = (ct: ColumnType): AggFn => ct.defaultAggFn;
 
 const groupByQueryToSql = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   { cols, aggs, from }: GroupByQueryRep
 ): SQLQueryAST => {
-  const inSchema = getQuerySchema(tableMap, from);
+  const inSchema = getQuerySchema(dialect, tableMap, from);
 
   // emulate the uniq and null aggregation functions:
   const aggExprs: SQLSelectListItem[] = aggs.map((aggSpec) => {
@@ -681,7 +711,7 @@ const groupByQueryToSql = (
     mkColSelItem(cid, inSchema.columnType(cid))
   );
   const selectCols = selectGbCols.concat(aggExprs);
-  const sqsql = queryToSql(tableMap, from);
+  const sqsql = queryToSql(dialect, tableMap, from);
 
   // If sub-query is just a single select with no group by
   // and where every select expression a simple column id
@@ -726,10 +756,11 @@ const groupByQueryToSql = (
 };
 
 const filterQueryToSql = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   { fexp, from }: FilterQueryRep
 ): SQLQueryAST => {
-  const sqsql = queryToSql(tableMap, from);
+  const sqsql = queryToSql(dialect, tableMap, from);
 
   const subSel = sqsql.selectStmts[0];
   let retSel: SQLSelectAST;
@@ -772,11 +803,12 @@ const filterQueryToSql = (
  */
 type MapColumnsGenQueryRep<T extends Object> = { cmap: any; from: QueryRep };
 function mapColumnsQueryToSql<T extends Object>(
+  dialect: SQLDialect,
   byIndex: boolean,
   tableMap: TableInfoMap,
   { cmap, from }: MapColumnsGenQueryRep<T>
 ): SQLQueryAST {
-  const sqsql = queryToSql(tableMap, from); // apply renaming to invididual select expression:
+  const sqsql = queryToSql(dialect, tableMap, from); // apply renaming to invididual select expression:
 
   const applyColRename = (
     cexp: SQLSelectListItem,
@@ -811,10 +843,14 @@ function mapColumnsQueryToSql<T extends Object>(
 }
 
 const concatQueryToSql = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   { target, from }: ConcatQueryRep
 ): SQLQueryAST => {
-  const sqSqls = [queryToSql(tableMap, from), queryToSql(tableMap, target)];
+  const sqSqls = [
+    queryToSql(dialect, tableMap, from),
+    queryToSql(dialect, tableMap, target),
+  ];
   const allSelStmts = sqSqls.map((q) => q.selectStmts);
   return {
     selectStmts: _.flatten(allSelStmts),
@@ -822,10 +858,11 @@ const concatQueryToSql = (
 };
 
 const sortQueryToSql = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   { keys, from }: SortQueryRep
 ): SQLQueryAST => {
-  const sqsql = queryToSql(tableMap, from);
+  const sqsql = queryToSql(dialect, tableMap, from);
   const orderBy = keys.map(([col, asc]) => ({
     col,
     asc,
@@ -889,10 +926,13 @@ const isConstantExpr = (expr: string): boolean => {
 };
 
 const extendQueryToSql = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
-  { colId, colType, opts, colExp, from }: ExtendQueryRep
+  { colId, opts, colExp, from }: ExtendQueryRep
 ): SQLQueryAST => {
-  const sqsql = queryToSql(tableMap, from);
+  const inSchema = getQuerySchema(dialect, tableMap, from);
+  const colType = getOrInferColumnType(dialect, inSchema, opts.type, colExp);
+  const sqsql = queryToSql(dialect, tableMap, from);
   const subSel = sqsql.selectStmts[0];
 
   // Note: We only want to extract the column ids from subquery for use at this level; we
@@ -940,13 +980,14 @@ const extendQueryToSql = (
 };
 
 const joinQueryToSql = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   query: JoinQueryRep
 ): SQLQueryAST => {
   const { lhs, rhs, on: onArg, joinType } = query;
-  const lhsSql = queryToSql(tableMap, lhs);
-  const rhsSql = queryToSql(tableMap, rhs);
-  const outSchema = getQuerySchema(tableMap, query);
+  const lhsSql = queryToSql(dialect, tableMap, lhs);
+  const rhsSql = queryToSql(dialect, tableMap, rhs);
+  const outSchema = getQuerySchema(dialect, tableMap, query);
 
   const selectCols: SQLSelectListItem[] = outSchema.columns.map((cid) =>
     mkColSelItem(cid, outSchema.columnType(cid))
@@ -970,28 +1011,32 @@ const joinQueryToSql = (
   };
 };
 
-const queryToSql = (tableMap: TableInfoMap, query: QueryRep): SQLQueryAST => {
+const queryToSql = (
+  dialect: SQLDialect,
+  tableMap: TableInfoMap,
+  query: QueryRep
+): SQLQueryAST => {
   switch (query.operator) {
     case "table":
-      return tableQueryToSql(tableMap, query);
+      return tableQueryToSql(dialect, tableMap, query);
     case "project":
-      return projectQueryToSql(tableMap, query);
+      return projectQueryToSql(dialect, tableMap, query);
     case "groupBy":
-      return groupByQueryToSql(tableMap, query);
+      return groupByQueryToSql(dialect, tableMap, query);
     case "filter":
-      return filterQueryToSql(tableMap, query);
+      return filterQueryToSql(dialect, tableMap, query);
     case "mapColumns":
-      return mapColumnsQueryToSql(false, tableMap, query);
+      return mapColumnsQueryToSql(dialect, false, tableMap, query);
     case "mapColumnsByIndex":
-      return mapColumnsQueryToSql(true, tableMap, query);
+      return mapColumnsQueryToSql(dialect, true, tableMap, query);
     case "concat":
-      return concatQueryToSql(tableMap, query);
+      return concatQueryToSql(dialect, tableMap, query);
     case "sort":
-      return sortQueryToSql(tableMap, query);
+      return sortQueryToSql(dialect, tableMap, query);
     case "extend":
-      return extendQueryToSql(tableMap, query);
+      return extendQueryToSql(dialect, tableMap, query);
     case "join":
-      return joinQueryToSql(tableMap, query);
+      return joinQueryToSql(dialect, tableMap, query);
     default:
       const invalidQuery: never = query;
       throw new Error("queryToSql: No implementation for operator: " + query);
@@ -1000,16 +1045,17 @@ const queryToSql = (tableMap: TableInfoMap, query: QueryRep): SQLQueryAST => {
 
 // Generate a count(*) as rowCount wrapper around a query:
 const queryToCountSql = (
+  dialect: SQLDialect,
   tableMap: TableInfoMap,
   query: QueryRep
 ): SQLQueryAST => {
-  const sqsql = queryToSql(tableMap, query);
+  const sqsql = queryToSql(dialect, tableMap, query);
   const colExp = mkAggExp("count", constVal("*"));
   const as = "rowCount";
   const selectCols: SQLSelectListItem[] = [
     {
       colExp,
-      colType: "integer",
+      colType: dialect.coreColumnTypes.integer,
       as,
     },
   ];

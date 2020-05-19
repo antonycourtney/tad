@@ -14,6 +14,7 @@ import {
 } from "reltab";
 import { BigQuery, Dataset } from "@google-cloud/bigquery";
 import path = require("path");
+import { SQLDialect } from "reltab/dist/dialect";
 
 const LOCATION = "US";
 
@@ -44,6 +45,16 @@ const genTableName = (pathname: string): string => {
   return tableName;
 };
 
+const columnTypes = BigQueryDialect.getInstance().columnTypes;
+
+const typeLookup = (tnm: string): ColumnType => {
+  const ret = columnTypes[tnm] as ColumnType | undefined;
+  if (ret == null) {
+    throw new Error("typeLookup: unknown type name: '" + tnm + "'");
+  }
+  return ret;
+};
+
 export interface BigQueryConnectionOptions {
   showQueries?: boolean;
 }
@@ -55,6 +66,7 @@ export class BigQueryConnection implements Connection {
   dataset: Dataset;
   tableMap: TableInfoMap;
   showQueries: boolean;
+  dialect: BigQueryDialect = BigQueryDialect.getInstance();
 
   constructor(
     projectId: string,
@@ -80,7 +92,7 @@ export class BigQueryConnection implements Connection {
     limit: number = -1
   ): Promise<TableRep> {
     let t0 = process.hrtime();
-    const schema = query.getSchema(this.tableMap);
+    const schema = query.getSchema(this.dialect, this.tableMap);
     const sqlQuery = query.toSql(
       BigQueryDialect.getInstance(),
       this.tableMap,
@@ -180,7 +192,7 @@ export class BigQueryConnection implements Connection {
 
       const cmd = {
         displayName: cnm,
-        type: assertDefined(cType) as ColumnType, // TODO: this is definitely a lie!
+        type: this.dialect.getColumnType(cType),
       };
       cmm[cnm] = cmd;
       return cmm;

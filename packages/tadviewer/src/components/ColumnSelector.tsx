@@ -31,7 +31,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 
   const renderColumnRow = (cid: string) => {
     const displayName = schema.displayName(cid);
-    const colTypeName = shortenTypeName(schema.columnType(cid));
+    const colTypeName = shortenTypeName(schema.columnType(cid).sqlTypeName);
     const isShown = viewParams.displayColumns.includes(cid);
     const isPivot = viewParams.vpivots.includes(cid);
     const isSort =

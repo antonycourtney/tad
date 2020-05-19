@@ -3,6 +3,7 @@
  */
 
 import { ColumnType, ColumnMetaMap, Schema, TableInfo } from "reltab";
+import { SQLiteDialect } from "reltab";
 import * as csv from "@fast-csv/parse";
 import * as _ from "lodash";
 import * as path from "path";
@@ -21,6 +22,17 @@ const CSVSnifferModule = require("csv-sniffer");
 const CSVSniffer = CSVSnifferModule();
 const delimChars = [",", "\t", "|", ";"];
 const sniffer = new CSVSniffer(delimChars);
+
+const coreTypes = SQLiteDialect.getInstance().coreColumnTypes;
+const columnTypes = SQLiteDialect.getInstance().columnTypes;
+
+const typeLookup = (tnm: string): ColumnType => {
+  const ret = columnTypes[tnm] as ColumnType | undefined;
+  if (ret == null) {
+    throw new Error("typeLookup: unknown type name: '" + tnm + "'");
+  }
+  return ret;
+};
 
 /*
  * regex to match a float or int:
@@ -53,7 +65,7 @@ const eurNumREs = {
 export type FileMetadata = {
   columnIds: Array<string>;
   columnNames: Array<string>;
-  columnTypes: Array<ColumnType | null>;
+  columnTypes: Array<string | null>;
   rowCount: number;
   tableName: string;
   csvOptions: Object;
@@ -74,11 +86,13 @@ export const mkTableInfo = (md: FileMetadata): TableInfo => {
   ): ColumnMetaMap => {
     const cType = md.columnTypes[idx];
     if (cType == null) {
-      log.error('mkTableInfo: No column type for "' + cnm + '", index: ' + idx);
+      throw new Error(
+        'mkTableInfo: No column type for "' + cnm + '", index: ' + idx
+      );
     }
     const cmd = {
       displayName: md.columnNames[idx],
-      type: assertDefined(cType),
+      type: typeLookup(cType),
     };
     cmm[cnm] = cmd;
     return cmm;
@@ -98,24 +112,24 @@ const guessColumnType = (numREs: { [tname: string]: RegExp }) => (
   cg: ColumnType | null | undefined,
   cs: string | null | undefined
 ): ColumnType | null | undefined => {
-  if (cg === "text") {
+  if (cg === coreTypes.string) {
     return cg; // already most general case
   }
   if (cs == null || cs.length === 0) {
     return cg; // empty cells don't affect current guess
   }
-  if (cg === null || cg === "integer") {
+  if (cg === null || coreTypes.integer) {
     let match = numREs.intRE.exec(cs);
     if (match !== null && match.index === 0 && match[0].length === cs.length) {
-      return "integer";
+      return coreTypes.integer;
     }
   }
   // assert: cg !== 'text
   let match = numREs.realRE.exec(cs);
   if (match !== null && match.index === 0 && match[0].length === cs.length) {
-    return "real";
+    return coreTypes.real;
   } else {
-    return "text";
+    return coreTypes.string;
   }
 };
 
@@ -129,10 +143,10 @@ const prepValue = (
   vs: string | null | undefined,
   isEuroFormat: boolean
 ): string | null | undefined => {
-  if (vs == null || (vs.length === 0 && ct !== "text")) {
+  if (vs == null || (vs.length === 0 && ct !== coreTypes.string)) {
     return null;
   }
-  if (ct === "integer" || ct === "real") {
+  if (ct === coreTypes.integer || ct === coreTypes.real) {
     let cs;
     if (isEuroFormat) {
       cs = vs.trim().replace(eurBadCharsRE, "").replace(",", ".");
@@ -459,7 +473,7 @@ const importData = async (
       for (let i = 0; i < row.length; i++) {
         const t = md.columnTypes[i];
         const v = row[i];
-        rowVals.push(prepValue(t, v, isEuroFormat));
+        rowVals.push(prepValue(typeLookup(t!), v, isEuroFormat));
       }
       return insertStmt.run(rowVals);
     };
@@ -569,7 +583,7 @@ interface ImportOpts {
 interface ImportResult {
   tableName: string;
   columnIds: string[];
-  columnTypes: ColumnType[];
+  columnTypes: string[];
   rowCount: number;
 }
 

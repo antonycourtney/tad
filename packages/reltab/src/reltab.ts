@@ -8,3 +8,5 @@ export * from "./FilterExp";
 export * from "./QueryExp";
 export * from "./Schema";
 export * from "./TableRep";
+export * from "./AggFn";
+export * from "./ColumnType";

@@ -60,7 +60,10 @@ const mkDataView = (
     rowData.push(rowMap);
   }
 
-  const outSchema = tableData.schema
+  // TODO, 18May20: Do we really need this?  Seems surprising that we'd get back
+  // a schema that didn't have these columns already.
+  const outSchema = tableData.schema;
+  /*
     .extend("_id", {
       type: "integer",
       displayName: "_id",
@@ -77,6 +80,7 @@ const mkDataView = (
       type: "integer",
       displayName: "_isLeaf",
     });
+  */
   const dataView = new PagedDataView(outSchema, rowCount, offset, rowData);
   return dataView;
 };

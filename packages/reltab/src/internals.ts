@@ -43,7 +43,7 @@ export const colExtendExpToSqlStr = (
   switch (cexp.expType) {
     case "AsString":
       ret = `CAST(${valExpToSqlStr(dialect, cexp.valExp)} AS ${
-        dialect.stringType
+        dialect.coreColumnTypes.string.sqlTypeName
       })`;
       break;
     default:

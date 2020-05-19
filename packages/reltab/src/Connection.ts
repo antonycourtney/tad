@@ -1,8 +1,8 @@
 import { QueryExp } from "./QueryExp";
 import { TableRep, TableInfo } from "./TableRep";
+import { SQLDialect } from "./dialect";
 
 export interface Connection {
-  // eslint-disable-line
   evalQuery(
     query: QueryExp,
     offset?: number,

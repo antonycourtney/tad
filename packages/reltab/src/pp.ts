@@ -8,7 +8,7 @@ import {
   SQLSelectAST,
   SQLQueryAST,
 } from "./SQLQuery";
-import { ColumnType } from "./Schema";
+import { ColumnType } from "./ColumnType";
 
 /*
  * not-so-pretty print a SQL query
@@ -22,34 +22,35 @@ const ppOut = (dst: StringBuffer, depth: number, str: string): void => {
 type PPAggFn = (
   dialect: SQLDialect,
   aggStr: string,
-  qcid: string,
+  subExpStr: string,
   colType: ColumnType
 ) => string;
 const ppAggUniq = (
   dialect: SQLDialect,
   aggStr: string,
-  qcid: string,
+  subExpStr: string,
   colType: ColumnType
-) => `case when min(${qcid})=max(${qcid}) then min(${qcid}) else null end`;
+) =>
+  `case when min(${subExpStr})=max(${subExpStr}) then min(${subExpStr}) else null end`;
 const ppAggNull = (
   dialect: SQLDialect,
   aggStr: string,
-  qcid: string,
+  subExpStr: string,
   colType: ColumnType
-) => dialect.ppAggNull(aggStr, qcid, colType);
+) => dialect.ppAggNull(aggStr, subExpStr, colType);
 "null";
 const ppAggNullStr = (
   dialect: SQLDialect,
   aggStr: string,
-  qcid: string,
+  subExpStr: string,
   colType: ColumnType
 ) => ppValExp(dialect, asString(constVal(null)), colType);
 const ppAggDefault = (
   dialect: SQLDialect,
   aggStr: string,
-  qcid: string,
+  subExpStr: string,
   colType: ColumnType
-) => aggStr + "(" + qcid + ")";
+) => aggStr + "(" + subExpStr + ")";
 
 const ppAggMap: { [aggStr: string]: PPAggFn } = {
   uniq: ppAggUniq,

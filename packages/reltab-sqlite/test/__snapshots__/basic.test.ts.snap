@@ -51,23 +51,48 @@ TableRep {
     "columnMetadata": Object {
       "JobFamily": Object {
         "displayName": "Job Family",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Name": Object {
         "displayName": "Name",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "TCOE": Object {
         "displayName": "TCOE",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "Title": Object {
         "displayName": "Title",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "_depth": Object {
         "displayName": "_depth",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
     },
     "columns": Array [
@@ -144,31 +169,66 @@ TableRep {
     "columnMetadata": Object {
       "Base": Object {
         "displayName": "Base",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "JobFamily": Object {
         "displayName": "Job Family",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Name": Object {
         "displayName": "Name",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "TCOE": Object {
         "displayName": "TCOE",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "Title": Object {
         "displayName": "Title",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Union": Object {
         "displayName": "Union",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "_depth": Object {
         "displayName": "_depth",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
     },
     "columns": Array [
@@ -233,27 +293,57 @@ TableRep {
     "columnMetadata": Object {
       "Base": Object {
         "displayName": "Base",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "JobFamily": Object {
         "displayName": "Job Family",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Name": Object {
         "displayName": "Name",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "TCOE": Object {
         "displayName": "TCOE",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "Title": Object {
         "displayName": "Title",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Union": Object {
         "displayName": "Union",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
     },
     "columns": Array [
@@ -377,27 +467,57 @@ TableRep {
     "columnMetadata": Object {
       "Base": Object {
         "displayName": "Base",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "JobFamily": Object {
         "displayName": "Job Family",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Name": Object {
         "displayName": "Name",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "TCOE": Object {
         "displayName": "TCOE",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "Title": Object {
         "displayName": "Title",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Union": Object {
         "displayName": "Union",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
     },
     "columns": Array [
@@ -610,27 +730,57 @@ TableRep {
     "columnMetadata": Object {
       "Base": Object {
         "displayName": "Base",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "JobFamily": Object {
         "displayName": "Job Family",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Name": Object {
         "displayName": "Name",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "TCOE": Object {
         "displayName": "TCOE",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "Title": Object {
         "displayName": "Title",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Union": Object {
         "displayName": "Union",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
     },
     "columns": Array [
@@ -702,27 +852,57 @@ TableRep {
     "columnMetadata": Object {
       "Base": Object {
         "displayName": "Base",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "JobFamily": Object {
         "displayName": "Job Family",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Name": Object {
         "displayName": "Name",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "TCOE": Object {
         "displayName": "TCOE",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "Title": Object {
         "displayName": "Title",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Union": Object {
         "displayName": "Union",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
     },
     "columns": Array [
@@ -986,35 +1166,75 @@ TableRep {
     "columnMetadata": Object {
       "Base": Object {
         "displayName": "Base",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "JobFamily": Object {
         "displayName": "Job Family",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Name": Object {
         "displayName": "Name",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "TCOE": Object {
         "displayName": "TCOE",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "Title": Object {
         "displayName": "Title",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Union": Object {
         "displayName": "Union",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "_depth": Object {
         "displayName": "_depth",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "_pivot": Object {
         "displayName": "_pivot",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
     },
     "columns": Array [
@@ -1088,27 +1308,57 @@ TableRep {
     "columnMetadata": Object {
       "Base": Object {
         "displayName": "Base",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "JobFamily": Object {
         "displayName": "Job Family",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Name": Object {
         "displayName": "Name",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "TCOE": Object {
         "displayName": "TCOE",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "Title": Object {
         "displayName": "Title",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Union": Object {
         "displayName": "Union",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
     },
     "columns": Array [
@@ -1348,31 +1598,66 @@ TableRep {
     "columnMetadata": Object {
       "Base": Object {
         "displayName": "Base",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "JobFamily": Object {
         "displayName": "Job Family",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Name": Object {
         "displayName": "Name",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "TCOE": Object {
         "displayName": "TCOE",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "Title": Object {
         "displayName": "Title",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Union": Object {
         "displayName": "Union",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "_pivot": Object {
         "displayName": "_pivot",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
     },
     "columns": Array [
@@ -1421,19 +1706,39 @@ TableRep {
     "columnMetadata": Object {
       "email": Object {
         "displayName": "email",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "firstName": Object {
         "displayName": "firstName",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "lastName": Object {
         "displayName": "lastName",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "phoneNumber": Object {
         "displayName": "phoneNumber",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
     },
     "columns": Array [
@@ -1647,27 +1952,57 @@ TableRep {
     "columnMetadata": Object {
       "Base": Object {
         "displayName": "Base",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "JobFamily": Object {
         "displayName": "Job Family",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Name": Object {
         "displayName": "Name",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "TCOE": Object {
         "displayName": "TCOE",
-        "type": "integer",
+        "type": ColumnType {
+          "defaultAggFn": "sum",
+          "isNumeric": true,
+          "isString": false,
+          "sqlTypeName": "integer",
+        },
       },
       "Title": Object {
         "displayName": "Title",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
       "Union": Object {
         "displayName": "Union",
-        "type": "text",
+        "type": ColumnType {
+          "defaultAggFn": "uniq",
+          "isNumeric": false,
+          "isString": true,
+          "sqlTypeName": "text",
+        },
       },
     },
     "columns": Array [

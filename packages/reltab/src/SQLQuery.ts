@@ -1,7 +1,8 @@
-import { AggFn, JoinType } from "./QueryExp";
+import { JoinType } from "./QueryExp";
 import { ValExp, ColumnExtendExp, col } from "./defs";
 import { FilterExp } from "./FilterExp";
-import { ColumnType } from "./Schema";
+import { AggFn } from "./AggFn";
+import { ColumnType } from "./ColumnType";
 
 /* AST for generating SQL queries */
 /* internal only -- should not be re-exported from reltab */

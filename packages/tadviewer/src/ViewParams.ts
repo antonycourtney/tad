@@ -36,8 +36,9 @@ const deserializeFormatOptions = (
   }
 
   return ret;
-}; // formatting defaults, keyed by column type:
+};
 
+// formatting defaults, keyed by column type:
 export interface FormatDefaultsProps {
   [index: string]: FormatOptions; // index is really ColumnType
   text: TextFormatOptions;
@@ -232,7 +233,7 @@ export class ViewParams extends Immutable.Record(defaultViewParamsProps)
 
     if (formatOpts == null) {
       formatOpts = this.defaultFormats.get(
-        schema.columnType(cid)
+        schema.columnType(cid).sqlTypeName
       ) as FormatOptions;
     }
 

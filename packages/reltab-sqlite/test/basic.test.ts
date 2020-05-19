@@ -11,6 +11,8 @@ import { asString } from "reltab";
 
 const { col, constVal } = reltab;
 
+const coreTypes = reltab.SQLiteDialect.getInstance().coreColumnTypes;
+
 let testCtx: reltabSqlite.SqliteContext;
 
 const q1 = reltab.tableQuery("barttest");
@@ -32,6 +34,7 @@ const importCsv = async (db: sqlite3.Database, path: string) => {
 
   const ti = reltabSqlite.mkTableInfo(md);
   testCtx.registerTable(ti);
+  console.log("importCsv: table info: ", JSON.stringify(ti, null, 2));
 };
 
 beforeAll(
@@ -149,7 +152,7 @@ test("query deserialization", async () => {
 });
 
 const q6 = q1.mapColumns({
-  Name: { id: "EmpName", type: "text", displayName: "Employee Name" },
+  Name: { id: "EmpName", displayName: "Employee Name" },
 });
 
 test("mapColumns", async () => {
@@ -157,11 +160,14 @@ test("mapColumns", async () => {
   const rs = res.schema;
   expect(rs.columns[0]).toBe("EmpName");
   const em = rs.columnMetadata["EmpName"];
-  expect(em).toEqual({ type: "text", displayName: "Employee Name" });
+  expect(em.type.sqlTypeName).toBe("text");
+  expect(em.displayName).toBe("Employee Name");
   expect(res.rowData.length).toBe(23);
 });
 
-const q7 = q1.mapColumnsByIndex({ "0": { id: "EmpName", type: "string" } });
+const q7 = q1.mapColumnsByIndex({
+  0: { id: "EmpName" },
+});
 
 test("mapColumnsByIndex", async () => {
   const res = await testCtx.evalQuery(q7);
@@ -200,7 +206,7 @@ test("compound key sort", async () => {
   expect(res).toMatchSnapshot();
 });
 
-const qex1 = q8.extend("_depth", "integer", constVal(0));
+const qex1 = q8.extend("_depth", constVal(0));
 test("basic extend with const col", async () => {
   const res = await testCtx.evalQuery(qex1);
   expect(res).toMatchSnapshot();
@@ -213,8 +219,8 @@ test("basic extend composed with project", async () => {
 });
 
 const qex3 = q1
-  .extend("_pivot", "text", asString(constVal(null)))
-  .extend("_depth", "integer", constVal(0));
+  .extend("_pivot", asString(constVal(null)))
+  .extend("_depth", constVal(0));
 
 test("chained extend", async () => {
   // console.log("chained extend: query: ", JSON.stringify(qex3, undefined, 2));
@@ -223,7 +229,7 @@ test("chained extend", async () => {
   expect(res).toMatchSnapshot();
 });
 
-const qex4 = q1.extend("_pivot", "text", asString(constVal(null)));
+const qex4 = q1.extend("_pivot", asString(constVal(null)));
 test("null const extend", async () => {
   const res = await testCtx.evalQuery(qex4);
   // util.logTable(res);
