@@ -1,26 +1,24 @@
 import { SQLDialect } from "../dialect";
 import { ColumnType, CoreColumnTypes, ColumnTypeMap } from "../ColumnType";
 
-const intCT = new ColumnType("integer", true, false, "sum");
-const realCT = new ColumnType("real", true, false, "sum");
-const textCT = new ColumnType("text", false, true, "uniq");
-const boolCT = new ColumnType("boolean", false, false, "uniq");
+const intCT = new ColumnType("INTEGER", "integer");
+const realCT = new ColumnType("REAL", "real");
+const textCT = new ColumnType("TEXT", "string");
 
-export class SQLiteDialect implements SQLDialect {
-  private static instance: SQLiteDialect;
+export class SQLiteDialectClass implements SQLDialect {
+  private static instance: SQLiteDialectClass;
+  readonly dialectName: string = "sqlite";
   readonly coreColumnTypes: CoreColumnTypes = {
     integer: intCT,
     real: realCT,
     string: textCT,
-    boolean: boolCT,
+    boolean: intCT,
   };
 
   readonly columnTypes: ColumnTypeMap = {
-    boolean: boolCT,
-    integer: intCT,
-    real: realCT,
-    string: textCT,
-    text: textCT,
+    INTEGER: intCT,
+    REAL: realCT,
+    TEXT: textCT,
   };
 
   quoteCol(cid: string): string {
@@ -31,10 +29,12 @@ export class SQLiteDialect implements SQLDialect {
     return "null";
   }
 
-  static getInstance(): SQLiteDialect {
-    if (!SQLiteDialect.instance) {
-      SQLiteDialect.instance = new SQLiteDialect();
+  static getInstance(): SQLiteDialectClass {
+    if (!SQLiteDialectClass.instance) {
+      SQLiteDialectClass.instance = new SQLiteDialectClass();
     }
-    return SQLiteDialect.instance;
+    return SQLiteDialectClass.instance;
   }
 }
+
+export const SQLiteDialect = SQLiteDialectClass.getInstance();

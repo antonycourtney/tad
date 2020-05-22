@@ -1,22 +1,71 @@
 import { AggFn, numericAggFns, basicAggFns } from "./AggFn";
 import { defaultDialect } from "./defs";
+import { AggColSpec } from "./QueryExp";
+
+// Classification of column types:
+export type ColumnKind =
+  | "string"
+  | "integer"
+  | "real"
+  | "boolean"
+  | "date"
+  | "time"
+  | "datetime"
+  | "dialect"; // unknown; specific to db engine SQL dialect
+
+export const defaultAggForKind = (kind: ColumnKind): AggFn => {
+  switch (kind) {
+    case "string":
+    case "boolean":
+    case "date":
+      return "uniq";
+    case "integer":
+    case "real":
+      return "sum";
+    default:
+      return "null";
+  }
+};
+
+const kindIsNumeric = (kind: ColumnKind): boolean => {
+  switch (kind) {
+    case "integer":
+    case "real":
+      return true;
+    default:
+      return false;
+  }
+};
+
+export type StringRenderFn = (val: any) => string;
+
+type ColumnTypeOpts = {
+  defaultAggFn?: AggFn;
+  stringRender?: StringRenderFn;
+};
+
+const defaultValRender: StringRenderFn = (val: any) =>
+  val == null ? "" : typeof val === "string" ? val : JSON.stringify(val);
 
 export class ColumnType {
   readonly sqlTypeName: string;
-  readonly isNumeric: boolean;
-  readonly isString: boolean;
+  readonly kind: ColumnKind;
   readonly defaultAggFn: AggFn;
+  readonly stringRender: StringRenderFn;
 
   constructor(
     sqlTypeName: string,
-    isNumeric: boolean,
-    isString: boolean,
-    defaultAggFn: AggFn
+    kind: ColumnKind,
+    opts: ColumnTypeOpts = {}
   ) {
     this.sqlTypeName = sqlTypeName;
-    this.isNumeric = isNumeric;
-    this.isString = isString;
-    this.defaultAggFn = defaultAggFn;
+    this.kind = kind;
+    this.defaultAggFn =
+      opts.defaultAggFn === undefined
+        ? defaultAggForKind(kind)
+        : opts.defaultAggFn;
+    this.stringRender =
+      opts.stringRender === undefined ? defaultValRender : opts.stringRender;
   }
 }
 
@@ -27,11 +76,14 @@ export interface CoreColumnTypes {
   boolean: ColumnType;
 }
 
+export const colIsNumeric = (ct: ColumnType) => kindIsNumeric(ct.kind);
+export const colIsString = (ct: ColumnType) => ct.kind === "string";
+
 export const aggFns = (ct: ColumnType): AggFn[] => {
-  if (ct.isNumeric) {
+  if (colIsNumeric(ct)) {
     return numericAggFns;
   }
   return basicAggFns;
 };
 
-export type ColumnTypeMap = { [tname: string]: ColumnType };
+export type ColumnTypeMap = { [sqlTypeName: string]: ColumnType };

@@ -1,11 +1,23 @@
 import _ = require("lodash");
 import { ColumnType } from "./ColumnType";
+import { SQLDialect, ensureDialectColumnType } from "./dialect";
+import { dialects } from "./dialectRegistry";
 
 // metadata for a single column:
 
 export type ColumnMetadata = {
   displayName: string;
-  type: ColumnType;
+  columnType: string; // sql type name, based on dialect
+};
+
+export type ColumnMetaMap = {
+  [colId: string]: ColumnMetadata;
+};
+
+const validateColumnMetadata = (dialect: SQLDialect, cmap: ColumnMetaMap) => {
+  for (let [colId, cmd] of Object.entries(cmap)) {
+    ensureDialectColumnType(dialect, cmd.columnType);
+  }
 };
 
 class SchemaError {
@@ -18,10 +30,14 @@ class SchemaError {
   }
 }
 
-export type ColumnMetaMap = {
-  [colId: string]: ColumnMetadata;
-};
+interface SchemaJSON {
+  dialect: string;
+  columns: string[];
+  columnMetadata: ColumnMetaMap;
+}
+
 export class Schema {
+  private dialect: SQLDialect;
   columnMetadata: ColumnMetaMap;
   columns: Array<string>;
   columnIndices: {
@@ -29,10 +45,15 @@ export class Schema {
   };
   _sortedColumns: Array<string> | undefined | null;
 
-  constructor(columns: Array<string>, columnMetadata: ColumnMetaMap) {
-    // TODO: really need to clone these to be safe
-    this.columns = columns;
+  constructor(
+    dialect: SQLDialect,
+    columns: Array<string>,
+    columnMetadata: ColumnMetaMap
+  ) {
+    this.dialect = dialect;
+    this.columns = columns.slice();
     this.columnMetadata = columnMetadata;
+    validateColumnMetadata(dialect, columnMetadata);
     this._sortedColumns = null;
     var columnIndices: { [colId: string]: number } = {};
 
@@ -45,8 +66,12 @@ export class Schema {
   }
 
   columnType(colId: string): ColumnType {
-    const md = this.columnMetadata[colId];
-    return md.type;
+    const cmd = this.columnMetadata[colId];
+    if (cmd == null) {
+      throw new Error(`Schema.columnType: unknown columnd '${colId}'`);
+    }
+    const sqlTypeName = cmd.columnType;
+    return this.dialect.columnTypes[sqlTypeName];
   }
 
   displayName(colId: string): string {
@@ -84,8 +109,8 @@ export class Schema {
         );
       }
 
-      var colType = this.columnMetadata[colId].type;
-      var bColType = sb.columnMetadata[bColId].type;
+      var colType = this.columnMetadata[colId].columnType;
+      var bColType = sb.columnMetadata[bColId].columnType;
 
       if (colType !== bColType) {
         throw new SchemaError(
@@ -102,8 +127,9 @@ export class Schema {
     }
 
     return true;
-  } // Construct a row map with keys being column ids:
+  }
 
+  // Construct a row map with keys being column ids:
   rowMapFromRow(rowArray: Array<any>): Object {
     var columnIds = this.columns;
     var rowMap: { [cid: string]: any } = {};
@@ -113,8 +139,9 @@ export class Schema {
     }
 
     return rowMap;
-  } // calculate extension of this schema (as in extend query):
+  }
 
+  // calculate extension of this schema (as in extend query):
   extend(colId: string, columnMetadata: ColumnMetadata): Schema {
     var outCols = this.columns.concat([colId]);
     let cMap: { [cid: string]: ColumnMetadata } = {};
@@ -122,11 +149,12 @@ export class Schema {
 
     var outMetadata = _.extend(cMap, this.columnMetadata);
 
-    var outSchema = new Schema(outCols, outMetadata);
+    var outSchema = new Schema(this.dialect, outCols, outMetadata);
     return outSchema;
-  } // returned an array of column ids in locale-sorted order
-  // cached lazily
+  }
 
+  // returned an array of column ids in locale-sorted order
+  // cached lazily
   sortedColumns(): Array<string> {
     let sc = this._sortedColumns;
 
@@ -139,5 +167,27 @@ export class Schema {
     }
 
     return sc;
+  }
+
+  toJSON(): SchemaJSON {
+    return {
+      dialect: this.dialect.dialectName,
+      columns: this.columns,
+      columnMetadata: this.columnMetadata,
+    };
+  }
+
+  static fromJSON(json: SchemaJSON | string): Schema {
+    if (typeof json === "string") {
+      return JSON.parse(json, Schema.reviver);
+    } else {
+      const dialect = dialects[json.dialect];
+      let schema = new Schema(dialect, json.columns, json.columnMetadata);
+      return schema;
+    }
+  }
+
+  static reviver(key: string, value: any): any {
+    return key === "" ? Schema.fromJSON(value) : value;
   }
 }

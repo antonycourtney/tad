@@ -45,8 +45,14 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 
 ### Punch-list items:
 
-[ ] How do we go from column type back to a Core Type for formatting? Example: int/float formatting panel.
-[ ] Tweak extend to make column type optional, with clear rules for inference. number ==> integer by default.
+[X] Think about binding affinity of dialect for WebConnection. Probably want dialect to live on Schema.
+[ ] Floating point / real formatting (num decimal places) not working on BigQuery data (Iowa liquor db). Why?
+[ ] Add assertive test using a sqlite db file (not a csv) as data source
+[ ] Optimize SQL construction a bit -- a sequence of projects currently looks very sub-optimal, as do multiple
+extends. Look at bigquery opps with sorted aggtree.
+[ ] JavaScript representation of QueryExp AST for debugging
+[X] How do we go from column type back to a Core Type for formatting? Example: int/float formatting panel. Ans: ColumnKind
+[X] Tweak extend to make column type optional, with clear rules for inference. number ==> integer by default.
 [ ] Change internal and exported signatures of Schema to reflect that not all string lookups will succeed.
 [ ] Change dialects from singletons to static objects that implement SQLDialect interface
 [ ] Get rid of hard-coded testTable and testBaseUrl in webRenderMain
@@ -68,12 +74,14 @@ operation that can end up in a SQL select column expression. Probably time for a
 
 ### Features to add before next release:
 
-[ ] Multiple database support (at least bigquery)
+[X] Multiple database support (at least bigquery)
+[ ] Include query time in footer
+[ ] Query console showing generated queries
+[ ] Datasets and table selector UI
 [ ] column extensions
 [ ] date and time columns
 [ ] large text rendering
 [ ] Web server running publicly
-[ ] Datasets and table selector UI
 [ ] Font size preferences
 [ ] horizontal pivots
 [ ] heat maps

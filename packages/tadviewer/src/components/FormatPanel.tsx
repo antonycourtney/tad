@@ -26,7 +26,7 @@ export const FormatPanel: React.FC<FormatPanelProps> = ({
   const firstCol =
     schema.columns && schema.columns.length > 0 ? schema.columns[0] : undefined;
   const [formatKind, setFormatKind] = useState("default");
-  const [colType, setColType] = useState("text");
+  const [colKind, setColKind] = useState("text");
   const [selectedColumn, setSelectedColumn] = useState(firstCol);
 
   const handleFormatKind = (event: any) => {
@@ -35,7 +35,7 @@ export const FormatPanel: React.FC<FormatPanelProps> = ({
 
   // column type select handler
   const handleTypeSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setColType(event.target.value);
+    setColKind(event.target.value);
   };
 
   const handleColumnSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -65,28 +65,25 @@ export const FormatPanel: React.FC<FormatPanelProps> = ({
   const subPanelComponentForType = (columnType: string) =>
     columnType === "text" ? TextFormatPanel : NumFormatPanel;
 
-  const getCoreTypeName = (columnType: ColumnType) =>
-    columnType.isString ? "text" : "integer";
-
-  let componentColType: string;
+  let componentColKind: string;
   let currentOpts: any;
   let changeHandler: any;
 
   if (formatKind === "default") {
-    componentColType = colType;
-    currentOpts = viewParams.defaultFormats.get(colType);
+    componentColKind = colKind;
+    currentOpts = viewParams.defaultFormats.get(colKind);
 
     changeHandler = (fopts: any) =>
-      actions.setDefaultFormatOptions(colType, fopts, stateRef);
+      actions.setDefaultFormatOptions(colKind, fopts, stateRef);
   } else {
-    componentColType = getCoreTypeName(schema.columnType(selectedColumn!));
+    componentColKind = schema.columnType(selectedColumn!).kind;
     currentOpts = viewParams.getColumnFormat(schema, selectedColumn!);
 
     changeHandler = (fopts: any) =>
       actions.setColumnFormatOptions(selectedColumn!, fopts, stateRef);
   }
 
-  const PanelComponent = subPanelComponentForType(componentColType);
+  const PanelComponent = subPanelComponentForType(componentColKind);
   const formatPanel = (
     <PanelComponent opts={currentOpts} onChange={changeHandler} />
   );
@@ -94,7 +91,7 @@ export const FormatPanel: React.FC<FormatPanelProps> = ({
   const colTypeSelect = (
     <select
       disabled={formatKind !== "default"}
-      value={colType}
+      value={colKind}
       onChange={(event) => handleTypeSelect(event)}
     >
       <option value="text">text</option>

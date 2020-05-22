@@ -7,7 +7,7 @@ import { SQLiteDialect } from "./dialects/SQLiteDialect";
 // Exported so that we can do things like pretty print a FilterExp for
 // UI or debugging even when no db connection / preferred dialect
 // available
-export const defaultDialect = SQLiteDialect.getInstance();
+export const defaultDialect = SQLiteDialect;
 
 export type Scalar = number | string | boolean | null;
 

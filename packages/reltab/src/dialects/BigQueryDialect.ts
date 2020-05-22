@@ -2,17 +2,18 @@ import { SQLDialect } from "../dialect";
 import { ColumnType, CoreColumnTypes, ColumnTypeMap } from "../ColumnType";
 import * as log from "loglevel";
 
-const intCT = new ColumnType("INT64", true, false, "sum");
-const floatCT = new ColumnType("FLOAT64", true, false, "sum");
-const stringCT = new ColumnType("STRING", false, true, "uniq");
-const boolCT = new ColumnType("BOOL", false, false, "uniq");
+const intCT = new ColumnType("INT64", "integer");
+const floatCT = new ColumnType("FLOAT64", "real");
+const stringCT = new ColumnType("STRING", "string");
+const boolCT = new ColumnType("BOOL", "boolean");
 
-// Construct a ColumnType meta-object for an unknown type name:
-const mkGenColumnType = (tnm: string): ColumnType =>
-  new ColumnType(tnm, false, false, "null");
+const dateCT = new ColumnType("DATE", "date", {
+  stringRender: (val: any) => (val == null ? "" : val.value),
+});
 
-export class BigQueryDialect implements SQLDialect {
-  private static instance: BigQueryDialect;
+class BigQueryDialectClass implements SQLDialect {
+  private static instance: BigQueryDialectClass;
+  readonly dialectName: string = "bigquery";
   readonly coreColumnTypes: CoreColumnTypes = {
     integer: intCT,
     real: floatCT,
@@ -21,10 +22,11 @@ export class BigQueryDialect implements SQLDialect {
   };
 
   readonly columnTypes: ColumnTypeMap = {
-    int64: intCT,
-    float64: floatCT,
-    string: stringCT,
-    bool: boolCT,
+    INT64: intCT,
+    FLOAT64: floatCT,
+    STRING: stringCT,
+    BOOL: boolCT,
+    DATE: dateCT,
   };
 
   quoteCol(cid: string): string {
@@ -35,24 +37,12 @@ export class BigQueryDialect implements SQLDialect {
     return `CAST(null as ${colType.sqlTypeName})`;
   }
 
-  static getInstance(): BigQueryDialect {
-    if (!BigQueryDialect.instance) {
-      BigQueryDialect.instance = new BigQueryDialect();
+  static getInstance(): BigQueryDialectClass {
+    if (!BigQueryDialectClass.instance) {
+      BigQueryDialectClass.instance = new BigQueryDialectClass();
     }
-    return BigQueryDialect.instance;
-  }
-
-  getColumnType(tnm: string): ColumnType {
-    let ret = this.columnTypes[tnm] as ColumnType | undefined;
-    if (ret == null) {
-      // log.debug(
-      console.log(
-        "no column type found for type name '" + tnm + "' -- adding entry"
-      );
-      ret = mkGenColumnType(tnm);
-      this.columnTypes[tnm] = ret;
-      // throw new Error("typeLookup: unknown type name: '" + tnm + "'");
-    }
-    return ret;
+    return BigQueryDialectClass.instance;
   }
 }
+
+export const BigQueryDialect = BigQueryDialectClass.getInstance();

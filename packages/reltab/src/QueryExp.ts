@@ -8,7 +8,7 @@ import {
 } from "./defs";
 import { FilterExp, BinRelExp, UnaryRelExp } from "./FilterExp";
 import { SQLDialect } from "./dialect";
-import { ColumnType } from "./ColumnType";
+import { ColumnType, colIsString } from "./ColumnType";
 import { Schema, ColumnMetadata } from "./Schema";
 import _ = require("lodash");
 import { TableInfoMap, TableRep } from "./TableRep";
@@ -43,10 +43,6 @@ type QueryOp =
 // or a pair of column name and AggFn
 export type AggColSpec = string | [AggFn, string];
 
-export const typeIsNumeric = (ct: ColumnType): boolean => ct.isNumeric;
-
-export const typeIsString = (ct: ColumnType): boolean => ct.isString;
-
 /*
  * generate a SQL literal for the given value based on its
  * column type.
@@ -60,7 +56,7 @@ export const sqlLiteralVal = (ct: ColumnType, jsVal: any): string => {
   if (jsVal == null) {
     ret = "null";
   } else {
-    ret = ct.isString ? sqlEscapeString(jsVal) : jsVal.toString();
+    ret = colIsString(ct) ? sqlEscapeString(jsVal) : jsVal.toString();
   }
 
   return ret;
@@ -310,7 +306,7 @@ const tableRepReviver = (key: string, val: any): any => {
   let retVal = val;
 
   if (key === "schema") {
-    retVal = new Schema(val.columns, val.columnMetadata);
+    retVal = Schema.fromJSON(val);
   }
 
   return retVal;
@@ -325,7 +321,7 @@ export const deserializeTableRepStr = (jsonStr: string): TableRep => {
 export const deserializeTableRepJson = (json: any): TableRep => {
   const tableRepJson = json["tableRep"];
   const schemaJson = tableRepJson["schema"];
-  const schema = new Schema(schemaJson.columns, schemaJson.columnMetadata);
+  const schema = Schema.fromJSON(schemaJson);
   const tableRep = new TableRep(schema, tableRepJson.rowData);
   return tableRep;
 };
@@ -345,7 +341,7 @@ const projectGetSchema = (
 ): Schema => {
   const inSchema = getQuerySchema(dialect, tableMap, query.from);
   const { cols } = query;
-  return new Schema(cols, _.pick(inSchema.columnMetadata, cols));
+  return new Schema(dialect, cols, _.pick(inSchema.columnMetadata, cols));
 };
 
 const groupByGetSchema = (
@@ -358,7 +354,7 @@ const groupByGetSchema = (
     typeof aggSpec === "string" ? aggSpec : aggSpec[1]
   );
   const inSchema = getQuerySchema(dialect, tableMap, query.from);
-  const rs = new Schema(cols.concat(aggCols), inSchema.columnMetadata);
+  const rs = new Schema(dialect, cols.concat(aggCols), inSchema.columnMetadata);
   return rs;
 };
 
@@ -412,7 +408,7 @@ const mapColumnsGetSchema = (
     }
   }
 
-  const outSchema = new Schema(outColumns, outMetadata);
+  const outSchema = new Schema(dialect, outColumns, outMetadata);
   return outSchema;
 };
 
@@ -456,7 +452,7 @@ const mapColumnsByIndexGetSchema = (
     }
   }
 
-  var outSchema = new Schema(outColumns, outMetadata);
+  var outSchema = new Schema(dialect, outColumns, outMetadata);
   return outSchema;
 };
 
@@ -526,7 +522,10 @@ const extendGetSchema = (
   const inSchema = getQuerySchema(dialect, tableMap, from);
   const colType = getOrInferColumnType(dialect, inSchema, opts.type, colExp);
   const displayName = opts.displayName != null ? opts.displayName : colId;
-  return inSchema.extend(colId, { type: colType, displayName });
+  return inSchema.extend(colId, {
+    columnType: colType.sqlTypeName,
+    displayName,
+  });
 };
 
 const joinGetSchema = (
@@ -552,7 +551,7 @@ const joinGetSchema = (
 
   const joinMeta = _.defaults(lhsSchema.columnMetadata, rhsMeta);
 
-  const joinSchema = new Schema(joinCols, joinMeta);
+  const joinSchema = new Schema(dialect, joinCols, joinMeta);
   return joinSchema;
 };
 
@@ -695,7 +694,7 @@ const groupByQueryToSql = (
     }
 
     if (aggStr == "null") {
-      if (typeIsString(inSchema.columnType(cid))) {
+      if (colIsString(inSchema.columnType(cid))) {
         aggStr = "nullstr";
       }
     }

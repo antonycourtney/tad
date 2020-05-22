@@ -92,7 +92,7 @@ export const opIsBinary = (op: RelOp): boolean => {
 const textOps = textOnlyBinaryOps.concat(commonBinaryOps).concat(unaryOps);
 const numOps = commonBinaryOps.concat(unaryOps);
 export const columnTypeOps = (ct: ColumnType): Array<RelOp> => {
-  if (ct.isString) {
+  if (ct.kind === "string") {
     return textOps;
   }
 

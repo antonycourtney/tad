@@ -11,7 +11,7 @@ import { asString } from "reltab";
 
 const { col, constVal } = reltab;
 
-const coreTypes = reltab.SQLiteDialect.getInstance().coreColumnTypes;
+const coreTypes = reltab.SQLiteDialect.coreColumnTypes;
 
 let testCtx: reltabSqlite.SqliteContext;
 
@@ -84,6 +84,23 @@ test("basic project operator", async () => {
   expect(qres.schema.columns).toEqual(pcols);
 
   expect(qres).toMatchSnapshot();
+});
+
+test("table and schema deserialization", async () => {
+  const qres = await testCtx.evalQuery(q2);
+
+  console.log(
+    "qres schema, JobFamily column type: ",
+    qres.schema.columnType("JobFamily")
+  );
+
+  const qresStr = JSON.stringify(qres, undefined, 2);
+
+  const deserRes = reltab.deserializeTableRepStr(qresStr);
+
+  const jfct = deserRes.schema.columnType("JobFamily");
+  console.log("deserRes schema, JobFamily column type: ");
+  expect(typeof jfct.stringRender).toBe("function");
 });
 
 test("basic groupBy", async () => {
@@ -160,7 +177,7 @@ test("mapColumns", async () => {
   const rs = res.schema;
   expect(rs.columns[0]).toBe("EmpName");
   const em = rs.columnMetadata["EmpName"];
-  expect(em.type.sqlTypeName).toBe("text");
+  expect(em.columnType).toBe("TEXT");
   expect(em.displayName).toBe("Employee Name");
   expect(res.rowData.length).toBe(23);
 });

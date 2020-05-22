@@ -58,50 +58,23 @@ TableRep {
       "_sortVal_0_2": null,
     },
   ],
-  "schema": Schema {
-    "_sortedColumns": null,
-    "columnIndices": Object {
-      "_path0": 0,
-      "_sortVal_0_0": 1,
-      "_sortVal_0_1": 2,
-      "_sortVal_0_2": 3,
-    },
+  "schema": Object {
     "columnMetadata": Object {
       "_path0": Object {
+        "columnType": "TEXT",
         "displayName": "Job Family",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_0_0": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_1": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_2": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
     },
     "columns": Array [
@@ -110,6 +83,7 @@ TableRep {
       "_sortVal_0_1",
       "_sortVal_0_2",
     ],
+    "dialect": "sqlite",
   },
 }
 `;
@@ -251,60 +225,27 @@ TableRep {
       "_sortVal_1_2": "Train Operator",
     },
   ],
-  "schema": Schema {
-    "_sortedColumns": null,
-    "columnIndices": Object {
-      "_path0": 0,
-      "_path1": 1,
-      "_sortVal_1_0": 2,
-      "_sortVal_1_1": 3,
-      "_sortVal_1_2": 4,
-    },
+  "schema": Object {
     "columnMetadata": Object {
       "_path0": Object {
+        "columnType": "TEXT",
         "displayName": "Job Family",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_path1": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_1_0": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1_1": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1_2": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
     },
     "columns": Array [
@@ -314,6 +255,7 @@ TableRep {
       "_sortVal_1_1",
       "_sortVal_1_2",
     ],
+    "dialect": "sqlite",
   },
 }
 `;
@@ -690,220 +632,91 @@ TableRep {
       "_sortVal_2": 0,
     },
   ],
-  "schema": Schema {
-    "_sortedColumns": null,
-    "columnIndices": Object {
-      "Base": 4,
-      "JobFamily": 0,
-      "Name": 3,
-      "Rec": 6,
-      "TCOE": 5,
-      "Title": 1,
-      "Union": 2,
-      "_depth": 7,
-      "_isRoot": 9,
-      "_path0": 13,
-      "_path1": 14,
-      "_pivot": 8,
-      "_sortVal_0": 10,
-      "_sortVal_0_0": 15,
-      "_sortVal_0_1": 16,
-      "_sortVal_0_2": 17,
-      "_sortVal_1": 11,
-      "_sortVal_1_0": 18,
-      "_sortVal_1_1": 19,
-      "_sortVal_1_2": 20,
-      "_sortVal_2": 12,
-    },
+  "schema": Object {
     "columnMetadata": Object {
       "Base": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "JobFamily": Object {
+        "columnType": "TEXT",
         "displayName": "Job Family",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Name": Object {
+        "columnType": "TEXT",
         "displayName": "Name",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Rec": Object {
+        "columnType": "INTEGER",
         "displayName": "Rec",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "TCOE": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "Title": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Union": Object {
+        "columnType": "TEXT",
         "displayName": "Union",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_depth": Object {
+        "columnType": "INTEGER",
         "displayName": "_depth",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_isRoot": Object {
+        "columnType": "INTEGER",
         "displayName": "_isRoot",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": false,
-          "sqlTypeName": "boolean",
-        },
       },
       "_path0": Object {
+        "columnType": "TEXT",
         "displayName": "_path0",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_path1": Object {
+        "columnType": "TEXT",
         "displayName": "_path1",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_pivot": Object {
+        "columnType": "TEXT",
         "displayName": "_pivot",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_0": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_0",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_0": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_1": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_2": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_1": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_1",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1_0": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1_1": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1_2": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_2": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_2",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
     },
     "columns": Array [
@@ -929,6 +742,7 @@ TableRep {
       "_sortVal_1_1",
       "_sortVal_1_2",
     ],
+    "dialect": "sqlite",
   },
 }
 `;
@@ -1305,220 +1119,91 @@ TableRep {
       "_sortVal_2": 0,
     },
   ],
-  "schema": Schema {
-    "_sortedColumns": null,
-    "columnIndices": Object {
-      "Base": 4,
-      "JobFamily": 0,
-      "Name": 3,
-      "Rec": 6,
-      "TCOE": 5,
-      "Title": 1,
-      "Union": 2,
-      "_depth": 7,
-      "_isRoot": 9,
-      "_path0": 13,
-      "_path1": 14,
-      "_pivot": 8,
-      "_sortVal_0": 10,
-      "_sortVal_0_0": 15,
-      "_sortVal_0_1": 16,
-      "_sortVal_0_2": 17,
-      "_sortVal_1": 11,
-      "_sortVal_1_0": 18,
-      "_sortVal_1_1": 19,
-      "_sortVal_1_2": 20,
-      "_sortVal_2": 12,
-    },
+  "schema": Object {
     "columnMetadata": Object {
       "Base": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "JobFamily": Object {
+        "columnType": "TEXT",
         "displayName": "Job Family",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Name": Object {
+        "columnType": "TEXT",
         "displayName": "Name",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Rec": Object {
+        "columnType": "INTEGER",
         "displayName": "Rec",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "TCOE": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "Title": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Union": Object {
+        "columnType": "TEXT",
         "displayName": "Union",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_depth": Object {
+        "columnType": "INTEGER",
         "displayName": "_depth",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_isRoot": Object {
+        "columnType": "INTEGER",
         "displayName": "_isRoot",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": false,
-          "sqlTypeName": "boolean",
-        },
       },
       "_path0": Object {
+        "columnType": "TEXT",
         "displayName": "_path0",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_path1": Object {
+        "columnType": "TEXT",
         "displayName": "_path1",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_pivot": Object {
+        "columnType": "TEXT",
         "displayName": "_pivot",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_0": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_0",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_0": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_1": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_2": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_1": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_1",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1_0": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1_1": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1_2": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_2": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_2",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
     },
     "columns": Array [
@@ -1544,6 +1229,7 @@ TableRep {
       "_sortVal_1_1",
       "_sortVal_1_2",
     ],
+    "dialect": "sqlite",
   },
 }
 `;
@@ -1606,50 +1292,23 @@ TableRep {
       "_sortVal_0_2": null,
     },
   ],
-  "schema": Schema {
-    "_sortedColumns": null,
-    "columnIndices": Object {
-      "_path0": 0,
-      "_sortVal_0_0": 1,
-      "_sortVal_0_1": 2,
-      "_sortVal_0_2": 3,
-    },
+  "schema": Object {
     "columnMetadata": Object {
       "_path0": Object {
+        "columnType": "TEXT",
         "displayName": "Job Family",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_0_0": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_1": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_2": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
     },
     "columns": Array [
@@ -1658,6 +1317,7 @@ TableRep {
       "_sortVal_0_1",
       "_sortVal_0_2",
     ],
+    "dialect": "sqlite",
   },
 }
 `;
@@ -1799,60 +1459,27 @@ TableRep {
       "_sortVal_1_2": "Train Operator",
     },
   ],
-  "schema": Schema {
-    "_sortedColumns": null,
-    "columnIndices": Object {
-      "_path0": 0,
-      "_path1": 1,
-      "_sortVal_1_0": 2,
-      "_sortVal_1_1": 3,
-      "_sortVal_1_2": 4,
-    },
+  "schema": Object {
     "columnMetadata": Object {
       "_path0": Object {
+        "columnType": "TEXT",
         "displayName": "Job Family",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_path1": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_1_0": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1_1": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1_2": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
     },
     "columns": Array [
@@ -1862,6 +1489,7 @@ TableRep {
       "_sortVal_1_1",
       "_sortVal_1_2",
     ],
+    "dialect": "sqlite",
   },
 }
 `;
@@ -2050,190 +1678,79 @@ TableRep {
       "_sortVal_2": 0,
     },
   ],
-  "schema": Schema {
-    "_sortedColumns": null,
-    "columnIndices": Object {
-      "Base": 4,
-      "JobFamily": 0,
-      "Name": 3,
-      "Rec": 6,
-      "TCOE": 5,
-      "Title": 1,
-      "Union": 2,
-      "_depth": 7,
-      "_isRoot": 9,
-      "_path0": 13,
-      "_path1": 14,
-      "_pivot": 8,
-      "_sortVal_0": 10,
-      "_sortVal_0_0": 15,
-      "_sortVal_0_1": 16,
-      "_sortVal_0_2": 17,
-      "_sortVal_1": 11,
-      "_sortVal_2": 12,
-    },
+  "schema": Object {
     "columnMetadata": Object {
       "Base": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "JobFamily": Object {
+        "columnType": "TEXT",
         "displayName": "Job Family",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Name": Object {
+        "columnType": "TEXT",
         "displayName": "Name",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Rec": Object {
+        "columnType": "INTEGER",
         "displayName": "Rec",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "TCOE": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "Title": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Union": Object {
+        "columnType": "TEXT",
         "displayName": "Union",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_depth": Object {
+        "columnType": "INTEGER",
         "displayName": "_depth",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_isRoot": Object {
+        "columnType": "INTEGER",
         "displayName": "_isRoot",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": false,
-          "sqlTypeName": "boolean",
-        },
       },
       "_path0": Object {
+        "columnType": "TEXT",
         "displayName": "_path0",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_path1": Object {
+        "columnType": "TEXT",
         "displayName": "_path1",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_pivot": Object {
+        "columnType": "TEXT",
         "displayName": "_pivot",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_0": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_0",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_0": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_1": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": Object {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_0_2": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": Object {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_1": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_1",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_2": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_2",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
     },
     "columns": Array [
@@ -2256,6 +1773,7 @@ TableRep {
       "_sortVal_0_1",
       "_sortVal_0_2",
     ],
+    "dialect": "sqlite",
   },
 }
 `;
@@ -2315,160 +1833,67 @@ TableRep {
       "_sortVal_2": 0,
     },
   ],
-  "schema": Schema {
-    "_sortedColumns": null,
-    "columnIndices": Object {
-      "Base": 4,
-      "JobFamily": 0,
-      "Name": 3,
-      "Rec": 6,
-      "TCOE": 5,
-      "Title": 1,
-      "Union": 2,
-      "_depth": 7,
-      "_isRoot": 9,
-      "_path0": 13,
-      "_path1": 14,
-      "_pivot": 8,
-      "_sortVal_0": 10,
-      "_sortVal_1": 11,
-      "_sortVal_2": 12,
-    },
+  "schema": Object {
     "columnMetadata": Object {
       "Base": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "JobFamily": Object {
+        "columnType": "TEXT",
         "displayName": "Job Family",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Name": Object {
+        "columnType": "TEXT",
         "displayName": "Name",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Rec": Object {
+        "columnType": "INTEGER",
         "displayName": "Rec",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "TCOE": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "Title": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Union": Object {
+        "columnType": "TEXT",
         "displayName": "Union",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_depth": Object {
+        "columnType": "INTEGER",
         "displayName": "_depth",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_isRoot": Object {
+        "columnType": "INTEGER",
         "displayName": "_isRoot",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": false,
-          "sqlTypeName": "boolean",
-        },
       },
       "_path0": Object {
+        "columnType": "TEXT",
         "displayName": "_path0",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_path1": Object {
+        "columnType": "TEXT",
         "displayName": "_path1",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_pivot": Object {
+        "columnType": "TEXT",
         "displayName": "_pivot",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_0": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_0",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_1",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_2": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_2",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
     },
     "columns": Array [
@@ -2488,6 +1913,7 @@ TableRep {
       "_path0",
       "_path1",
     ],
+    "dialect": "sqlite",
   },
 }
 `;
@@ -2530,160 +1956,67 @@ TableRep {
       "_sortVal_2": 1,
     },
   ],
-  "schema": Schema {
-    "_sortedColumns": null,
-    "columnIndices": Object {
-      "Base": 4,
-      "JobFamily": 0,
-      "Name": 3,
-      "Rec": 6,
-      "TCOE": 5,
-      "Title": 1,
-      "Union": 2,
-      "_depth": 7,
-      "_isRoot": 9,
-      "_path0": 13,
-      "_path1": 14,
-      "_pivot": 8,
-      "_sortVal_0": 10,
-      "_sortVal_1": 11,
-      "_sortVal_2": 12,
-    },
+  "schema": Object {
     "columnMetadata": Object {
       "Base": Object {
+        "columnType": "INTEGER",
         "displayName": "Base",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "JobFamily": Object {
+        "columnType": "TEXT",
         "displayName": "Job Family",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Name": Object {
+        "columnType": "TEXT",
         "displayName": "Name",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Rec": Object {
+        "columnType": "INTEGER",
         "displayName": "Rec",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "TCOE": Object {
+        "columnType": "INTEGER",
         "displayName": "TCOE",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "Title": Object {
+        "columnType": "TEXT",
         "displayName": "Title",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "Union": Object {
+        "columnType": "TEXT",
         "displayName": "Union",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_depth": Object {
+        "columnType": "INTEGER",
         "displayName": "_depth",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_isRoot": Object {
+        "columnType": "INTEGER",
         "displayName": "_isRoot",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": false,
-          "sqlTypeName": "boolean",
-        },
       },
       "_path0": Object {
+        "columnType": "TEXT",
         "displayName": "_path0",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_path1": Object {
+        "columnType": "TEXT",
         "displayName": "_path1",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_pivot": Object {
+        "columnType": "TEXT",
         "displayName": "_pivot",
-        "type": ColumnType {
-          "defaultAggFn": "uniq",
-          "isNumeric": false,
-          "isString": true,
-          "sqlTypeName": "text",
-        },
       },
       "_sortVal_0": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_0",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_1": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_1",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
       "_sortVal_2": Object {
+        "columnType": "INTEGER",
         "displayName": "_sortVal_2",
-        "type": ColumnType {
-          "defaultAggFn": "sum",
-          "isNumeric": true,
-          "isString": false,
-          "sqlTypeName": "integer",
-        },
       },
     },
     "columns": Array [
@@ -2703,6 +2036,7 @@ TableRep {
       "_path0",
       "_path1",
     ],
+    "dialect": "sqlite",
   },
 }
 `;

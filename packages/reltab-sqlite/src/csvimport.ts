@@ -23,8 +23,8 @@ const CSVSniffer = CSVSnifferModule();
 const delimChars = [",", "\t", "|", ";"];
 const sniffer = new CSVSniffer(delimChars);
 
-const coreTypes = SQLiteDialect.getInstance().coreColumnTypes;
-const columnTypes = SQLiteDialect.getInstance().columnTypes;
+const coreTypes = SQLiteDialect.coreColumnTypes;
+const columnTypes = SQLiteDialect.columnTypes;
 
 const typeLookup = (tnm: string): ColumnType => {
   const ret = columnTypes[tnm] as ColumnType | undefined;
@@ -84,7 +84,7 @@ export const mkTableInfo = (md: FileMetadata): TableInfo => {
     cnm: string,
     idx: number
   ): ColumnMetaMap => {
-    const cType = md.columnTypes[idx];
+    const cType = md.columnTypes[idx]?.toLocaleUpperCase();
     if (cType == null) {
       throw new Error(
         'mkTableInfo: No column type for "' + cnm + '", index: ' + idx
@@ -92,13 +92,13 @@ export const mkTableInfo = (md: FileMetadata): TableInfo => {
     }
     const cmd = {
       displayName: md.columnNames[idx],
-      type: typeLookup(cType),
+      columnType: cType,
     };
     cmm[cnm] = cmd;
     return cmm;
   };
   const cmMap = md.columnIds.reduce(extendCMap, {});
-  const schema = new Schema(md.columnIds, cmMap);
+  const schema = new Schema(SQLiteDialect, md.columnIds, cmMap);
   return { tableName: md.tableName, schema };
 };
 

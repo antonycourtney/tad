@@ -1,7 +1,7 @@
 import * as Immutable from "immutable";
 import * as _ from "lodash";
 import { Path, PathTree } from "aggtree";
-import { QueryExp } from "reltab"; // eslint-disable-line
+import { QueryExp, ColumnType } from "reltab"; // eslint-disable-line
 import * as reltab from "reltab"; // eslint-disable-line
 
 import { TextFormatOptions } from "./TextFormatOptions";
@@ -103,8 +103,12 @@ const defaultViewParamsProps: ViewParamsProps = {
 
 type CellFormatter = (val?: any) => string | undefined | null;
 
-const defaultCellFormatter: CellFormatter = (val?: any) =>
-  val != null ? val.toString() : "";
+const defaultCellFormatter = (ct: ColumnType): CellFormatter => (
+  val?: any
+): string => {
+  console.log("defaultCellFormatter: ", ct, val);
+  return ct.stringRender(val);
+};
 
 export class ViewParams extends Immutable.Record(defaultViewParamsProps)
   implements ViewParamsProps {
@@ -242,8 +246,10 @@ export class ViewParams extends Immutable.Record(defaultViewParamsProps)
 
   getColumnFormatter(schema: reltab.Schema, cid: string): CellFormatter {
     const cf = this.getColumnFormat(schema, cid);
+    const ct = schema.columnType(cid);
+    console.log("getColumnFormatter: ", cid, ct, ct.sqlTypeName);
     const ff: CellFormatter =
-      cf != null ? cf.getFormatter() : defaultCellFormatter;
+      cf != null ? cf.getFormatter() : defaultCellFormatter(ct);
     return ff;
   }
 

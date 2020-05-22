@@ -11,18 +11,21 @@ import {
   ColumnMetaMap,
   Connection,
   SQLiteDialect,
+  ColumnType,
 } from "reltab"; // eslint-disable-line
 import { SQLDialect } from "reltab/dist/dialect";
 
 export * from "./csvimport";
 
-function assertDefined<A>(x: A | undefined | null): A {
-  if (x == null) {
-    throw new Error("unexpected null value");
-  }
+const columnTypes = SQLiteDialect.columnTypes;
 
-  return x;
-}
+const typeLookup = (tnm: string): ColumnType => {
+  const ret = columnTypes[tnm] as ColumnType | undefined;
+  if (ret == null) {
+    throw new Error("typeLookup: unknown type name: '" + tnm + "'");
+  }
+  return ret;
+};
 
 const dbAll = tp.promisify(
   (db: sqlite3.Database, query: string, cb: (err: any, res: any) => void) =>
@@ -37,7 +40,6 @@ export class SqliteContext implements Connection {
   db: sqlite3.Database;
   private tableMap: TableInfoMap;
   private showQueries: boolean;
-  dialect: SQLDialect = SQLiteDialect.getInstance();
 
   constructor(db: any, options: ContextOptions) {
     this.db = db;
@@ -59,7 +61,7 @@ export class SqliteContext implements Connection {
   }
 
   getSchema(query: QueryExp): Schema {
-    const schema = query.getSchema(SQLiteDialect.getInstance(), this.tableMap);
+    const schema = query.getSchema(SQLiteDialect, this.tableMap);
     return schema;
   }
 
@@ -69,13 +71,8 @@ export class SqliteContext implements Connection {
     limit: number = -1
   ): Promise<TableRep> {
     let t0 = process.hrtime();
-    const schema = query.getSchema(SQLiteDialect.getInstance(), this.tableMap);
-    const sqlQuery = query.toSql(
-      SQLiteDialect.getInstance(),
-      this.tableMap,
-      offset,
-      limit
-    );
+    const schema = query.getSchema(SQLiteDialect, this.tableMap);
+    const sqlQuery = query.toSql(SQLiteDialect, this.tableMap, offset, limit);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
@@ -108,10 +105,7 @@ export class SqliteContext implements Connection {
 
   rowCount(query: QueryExp): Promise<number> {
     let t0 = process.hrtime();
-    const countSql = query.toCountSql(
-      SQLiteDialect.getInstance(),
-      this.tableMap
-    );
+    const countSql = query.toCountSql(SQLiteDialect, this.tableMap);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
@@ -149,17 +143,16 @@ export class SqliteContext implements Connection {
         idx: number
       ): ColumnMetaMap => {
         const cnm = row.name;
-        const cType = row.type.toLocaleLowerCase();
+        const cType = row.type.toLocaleUpperCase();
 
         if (cType == null) {
           log.error(
             'mkTableInfo: No column type for "' + cnm + '", index: ' + idx
           );
         }
-
         const cmd = {
           displayName: cnm,
-          type: assertDefined(cType),
+          columnType: cType,
         };
         cmm[cnm] = cmd;
         return cmm;
@@ -167,7 +160,7 @@ export class SqliteContext implements Connection {
 
       const cmMap = rows.reduce(extendCMap, {});
       const columnIds = rows.map((r) => r.name);
-      const schema = new Schema(columnIds as string[], cmMap);
+      const schema = new Schema(SQLiteDialect, columnIds as string[], cmMap);
       return {
         tableName,
         schema,

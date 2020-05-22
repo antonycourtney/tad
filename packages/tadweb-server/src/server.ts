@@ -140,6 +140,16 @@ async function main() {
   );
   console.log("tableInfo: ", ti);
 
+  const ti2 = await dbCtx.getTableInfo(
+    "bigquery-public-data.github_repos.commits"
+  );
+  console.log("tableInfo: ", ti2);
+
+  const ti3 = await dbCtx.getTableInfo(
+    "bigquery-public-data.iowa_liquor_sales.sales"
+  );
+  console.log("tableInfo: ", ti3);
+
   log.info("db initialization complete");
 
   let app = express();

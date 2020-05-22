@@ -212,7 +212,7 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
   let valInput: JSX.Element | null = null;
   if (columnId != null) {
     const columnType = schema.columnType(columnId);
-    if (reltab.typeIsNumeric(columnType)) {
+    if (reltab.colIsNumeric(columnType)) {
       valInput = (
         <NumericInput
           onValueChange={(v) => handleValueChange(v)}

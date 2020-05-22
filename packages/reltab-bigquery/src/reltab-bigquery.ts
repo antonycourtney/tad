@@ -45,16 +45,6 @@ const genTableName = (pathname: string): string => {
   return tableName;
 };
 
-const columnTypes = BigQueryDialect.getInstance().columnTypes;
-
-const typeLookup = (tnm: string): ColumnType => {
-  const ret = columnTypes[tnm] as ColumnType | undefined;
-  if (ret == null) {
-    throw new Error("typeLookup: unknown type name: '" + tnm + "'");
-  }
-  return ret;
-};
-
 export interface BigQueryConnectionOptions {
   showQueries?: boolean;
 }
@@ -66,7 +56,6 @@ export class BigQueryConnection implements Connection {
   dataset: Dataset;
   tableMap: TableInfoMap;
   showQueries: boolean;
-  dialect: BigQueryDialect = BigQueryDialect.getInstance();
 
   constructor(
     projectId: string,
@@ -92,13 +81,8 @@ export class BigQueryConnection implements Connection {
     limit: number = -1
   ): Promise<TableRep> {
     let t0 = process.hrtime();
-    const schema = query.getSchema(this.dialect, this.tableMap);
-    const sqlQuery = query.toSql(
-      BigQueryDialect.getInstance(),
-      this.tableMap,
-      offset,
-      limit
-    );
+    const schema = query.getSchema(BigQueryDialect, this.tableMap);
+    const sqlQuery = query.toSql(BigQueryDialect, this.tableMap, offset, limit);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
@@ -131,10 +115,7 @@ export class BigQueryConnection implements Connection {
 
   async rowCount(query: QueryExp): Promise<number> {
     let t0 = process.hrtime();
-    const countSql = query.toCountSql(
-      BigQueryDialect.getInstance(),
-      this.tableMap
-    );
+    const countSql = query.toCountSql(BigQueryDialect, this.tableMap);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
@@ -188,11 +169,11 @@ export class BigQueryConnection implements Connection {
 
     const extendCMap = (cmm: ColumnMetaMap, row: Row): ColumnMetaMap => {
       const cnm = row.column_name as string;
-      const cType = (row.data_type! as string).toLocaleLowerCase();
+      const cType = (row.data_type! as string).toLocaleUpperCase();
 
       const cmd = {
         displayName: cnm,
-        type: this.dialect.getColumnType(cType),
+        columnType: cType,
       };
       cmm[cnm] = cmd;
       return cmm;
@@ -200,7 +181,7 @@ export class BigQueryConnection implements Connection {
 
     const columnIds = rows.map((row) => row.column_name as string);
     const cmMap = rows.reduce(extendCMap, {});
-    const schema = new Schema(columnIds, cmMap);
+    const schema = new Schema(BigQueryDialect, columnIds, cmMap);
     return {
       tableName: projectId + "." + datasetName + "." + baseTableName,
       schema,
