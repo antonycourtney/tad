@@ -16,9 +16,7 @@ type AggMap = {
   [cid: string]: reltab.AggFn;
 };
 
-// type FormatsMap = {[cid: string]: any}
-
-type FormatOptions = TextFormatOptions | NumFormatOptions;
+export type FormatOptions = TextFormatOptions | NumFormatOptions;
 type FormatsMap = Immutable.Map<string, FormatOptions>; // deserialize a formatter by examining its type member:
 
 const deserializeFormatOptions = (
@@ -40,15 +38,15 @@ const deserializeFormatOptions = (
 
 // formatting defaults, keyed by column type:
 export interface FormatDefaultsProps {
-  [index: string]: FormatOptions; // index is really ColumnType
-  text: TextFormatOptions;
+  [index: string]: FormatOptions; // index is really ColumnKind
+  string: TextFormatOptions;
   integer: NumFormatOptions;
   real: NumFormatOptions;
   boolean: NumFormatOptions;
 }
 
 const defaultFormatDefaultProps: FormatDefaultsProps = {
-  text: new TextFormatOptions(),
+  string: new TextFormatOptions(),
   integer: new NumFormatOptions({
     decimalPlaces: 0,
   }),
@@ -61,7 +59,7 @@ const defaultFormatDefaultProps: FormatDefaultsProps = {
 class FormatDefaults extends Immutable.Record(defaultFormatDefaultProps) {
   static deserialize(jsObj: any) {
     const initMap = {
-      text: new TextFormatOptions(jsObj["text"]),
+      string: new TextFormatOptions(jsObj["string"]),
       integer: new NumFormatOptions(jsObj["integer"]),
       real: new NumFormatOptions(jsObj["real"]),
       boolean: new NumFormatOptions(jsObj["boolean"]),
@@ -106,7 +104,6 @@ type CellFormatter = (val?: any) => string | undefined | null;
 const defaultCellFormatter = (ct: ColumnType): CellFormatter => (
   val?: any
 ): string => {
-  console.log("defaultCellFormatter: ", ct, val);
   return ct.stringRender(val);
 };
 
@@ -232,12 +229,12 @@ export class ViewParams extends Immutable.Record(defaultViewParamsProps)
     return this.set("aggMap", nextAggMap) as ViewParams;
   }
 
-  getColumnFormat(schema: reltab.Schema, cid: string): FormatOptions | null {
+  getColumnFormat(schema: reltab.Schema, cid: string): FormatOptions {
     let formatOpts: FormatOptions | undefined = this.columnFormats.get(cid);
 
     if (formatOpts == null) {
       formatOpts = this.defaultFormats.get(
-        schema.columnType(cid).sqlTypeName
+        schema.columnType(cid).kind
       ) as FormatOptions;
     }
 
@@ -247,7 +244,6 @@ export class ViewParams extends Immutable.Record(defaultViewParamsProps)
   getColumnFormatter(schema: reltab.Schema, cid: string): CellFormatter {
     const cf = this.getColumnFormat(schema, cid);
     const ct = schema.columnType(cid);
-    console.log("getColumnFormatter: ", cid, ct, ct.sqlTypeName);
     const ff: CellFormatter =
       cf != null ? cf.getFormatter() : defaultCellFormatter(ct);
     return ff;
