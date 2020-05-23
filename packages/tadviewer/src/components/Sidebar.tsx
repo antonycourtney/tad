@@ -15,6 +15,7 @@ import { AppState } from "../AppState";
 import { useState } from "react";
 
 export interface SidebarProps {
+  expanded: boolean;
   schema: reltab.Schema;
   viewParams: ViewParams;
   onColumnClick?: (cid: string) => void;
@@ -22,17 +23,12 @@ export interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
+  expanded,
   schema,
   viewParams,
   onColumnClick,
   stateRef,
 }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  const onExpandClick = () => {
-    setExpanded(!expanded);
-  };
-
   const onLeafColumnSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selStr = event.target.value;
     const cid = selStr === "__none" ? null : selStr;
@@ -77,20 +73,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   );
   return (
     <div className={"sidebar " + expandClass}>
-      <div className="sidebar-placeholder">
-        <button
-          type="button"
-          className="bp3-button bp3-minimal bp3-icon-cog"
-          onClick={(e) => onExpandClick()}
-        />
-      </div>
       <div className="sidebar-content">
         <div className="sidebar-content-inner">
-          <button
-            type="button"
-            className="bp3-button bp3-icon-chevron-left sidebar-collapse-button"
-            onClick={(e) => onExpandClick()}
-          />
           <div className="ui-block">
             <h5 className="bp3-heading">General</h5>
             <div className="root-check-group">

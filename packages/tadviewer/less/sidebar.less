@@ -1,14 +1,15 @@
 .sidebar {
   background-color: #efefef;
   display: inherit;
-  // width: 50px;
-  // min-width: 50px;
-  width: 40px;
-  min-width: 40px;
   flex: 0 0 auto;
   height: 100%;
   transition-duration: 0.3s;
   overflow: none;
+}
+
+.sidebar-collapsed {
+  width: 0px;
+  min-width: 0px;
 }
 
 .sidebar-expanded {
@@ -17,10 +18,7 @@
 }
 
 .sidebar-content {
-  position: absolute;
-  left: 0;
-  top: 0;
-  visibility:hidden;
+  visibility: hidden;
   height: 100%;
   width: 328px;
   min-width: 328px;
@@ -34,12 +32,12 @@
   width: 300px;
 }
 
-
-
 .sidebar-placeholder {
+  /*  
   position: absolute;
   left: 0;
   top: 0;
+*/
   margin-left: 8px;
   margin-top: 8px;
 }
@@ -53,7 +51,7 @@
 }
 
 .sidebar-expanded > .sidebar-content {
-  visibility:visible;
+  visibility: visible;
 }
 
 .show-root-label {

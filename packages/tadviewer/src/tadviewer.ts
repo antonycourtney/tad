@@ -2,6 +2,7 @@ import * as actions from "./actions";
 require("./slickgrid.scss");
 require("../less/app.less");
 
+require("../less/activityBar.less");
 require("../less/sidebar.less");
 
 require("../less/columnSelector.less");

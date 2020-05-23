@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ActivityBar } from "./ActivityBar";
 import { Sidebar } from "./Sidebar";
 import { DndProvider } from "react-dnd";
 import Backend from "react-dnd-html5-backend";
@@ -29,6 +30,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   appState,
   stateRef,
 }: AppPaneProps) => {
+  const [pivotPropsExpanded, setPivotPropsExpanded] = useState(false);
   const [grid, setGrid] = useState<any>(null);
   let mainContents: JSX.Element | null = null;
 
@@ -36,11 +38,22 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
 
   const { viewState } = appState;
 
+  const togglePivotPropsExpanded = (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    setPivotPropsExpanded(!pivotPropsExpanded);
+  };
+
   if (appState.initialized && viewState.dataView !== null) {
     mainContents = (
       <div className="container-fluid full-height main-container">
         <DndProvider backend={Backend}>
+          <ActivityBar
+            onPivotPropsClick={togglePivotPropsExpanded}
+            stateRef={stateRef}
+          />
           <Sidebar
+            expanded={pivotPropsExpanded}
             schema={appState.baseSchema}
             viewParams={viewState.viewParams}
             stateRef={stateRef}
