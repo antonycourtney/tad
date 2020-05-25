@@ -72,4 +72,9 @@ export const deserializeValExp = (js: any): ValExp => {
  * form a final result string
  */
 
-export type StringBuffer = Array<string>;
+export type StringBuffer = string[];
+export const ppOut = (dst: StringBuffer, depth: number, str: string): void => {
+  const indentStr = "  ".repeat(depth);
+  dst.push(indentStr);
+  dst.push(str);
+};

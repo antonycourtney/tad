@@ -1778,7 +1778,7 @@ TableRep {
 }
 `;
 
-exports[`initial aggtree Test 1`] = `
+exports[`open specific node 1`] = `
 TableRep {
   "rowData": Array [
     Object {
@@ -1918,7 +1918,7 @@ TableRep {
 }
 `;
 
-exports[`initial aggtree Test 2`] = `
+exports[`open specific node 2`] = `
 TableRep {
   "rowData": Array [
     Object {
@@ -2035,6 +2035,82 @@ TableRep {
       "_sortVal_2",
       "_path0",
       "_path1",
+    ],
+    "dialect": "sqlite",
+  },
+}
+`;
+
+exports[`rootQuery Test 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 3251221,
+      "JobFamily": null,
+      "Name": null,
+      "Rec": 23,
+      "TCOE": 4691559,
+      "Title": null,
+      "Union": null,
+      "_depth": 0,
+      "_isRoot": 1,
+      "_pivot": null,
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Base": Object {
+        "columnType": "INTEGER",
+        "displayName": "Base",
+      },
+      "JobFamily": Object {
+        "columnType": "TEXT",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "TEXT",
+        "displayName": "Name",
+      },
+      "Rec": Object {
+        "columnType": "INTEGER",
+        "displayName": "Rec",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "TEXT",
+        "displayName": "Title",
+      },
+      "Union": Object {
+        "columnType": "TEXT",
+        "displayName": "Union",
+      },
+      "_depth": Object {
+        "columnType": "INTEGER",
+        "displayName": "_depth",
+      },
+      "_isRoot": Object {
+        "columnType": "INTEGER",
+        "displayName": "_isRoot",
+      },
+      "_pivot": Object {
+        "columnType": "TEXT",
+        "displayName": "_pivot",
+      },
+    },
+    "columns": Array [
+      "JobFamily",
+      "Title",
+      "Union",
+      "Name",
+      "Base",
+      "TCOE",
+      "Rec",
+      "_depth",
+      "_pivot",
+      "_isRoot",
     ],
     "dialect": "sqlite",
   },

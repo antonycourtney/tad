@@ -254,6 +254,7 @@ const createGrid = (
   });
 
   grid.onSort.subscribe((e: any, args: any) => {
+    console.log("grid onSort: ", args);
     // convert back from slickGrid format: */
     const sortKey = args.sortCols.map((sc: any) => [
       sc.sortCol.field,

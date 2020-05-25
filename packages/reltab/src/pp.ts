@@ -1,6 +1,6 @@
 import { SQLDialect } from "./dialect";
 import { asString, constVal, ColumnExtendExp } from "./defs";
-import { StringBuffer, colExtendExpToSqlStr } from "./internals";
+import { StringBuffer, colExtendExpToSqlStr, ppOut } from "./internals";
 import {
   SQLValExp,
   SQLSelectListItem,
@@ -13,11 +13,6 @@ import { ColumnType } from "./ColumnType";
 /*
  * not-so-pretty print a SQL query
  */
-const ppOut = (dst: StringBuffer, depth: number, str: string): void => {
-  const indentStr = "  ".repeat(depth);
-  dst.push(indentStr);
-  dst.push(str);
-};
 
 type PPAggFn = (
   dialect: SQLDialect,

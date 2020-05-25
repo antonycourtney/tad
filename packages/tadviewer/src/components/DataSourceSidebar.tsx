@@ -63,13 +63,13 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
 }) => {
   const [initialized, setInitialized] = useState(false);
   const [treeState, setTreeState] = useState<ITreeNode[]>([]);
+  const [selectedNode, setSelectedNode] = useState<ITreeNode | null>(null);
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   React.useEffect(() => {
     async function fetchSourceInfo() {
       const appState = mutableGet(stateRef);
       const rtc = appState.rtc;
       const rootSourceInfo = await rtc.getSourceInfo([]);
-      console.log("DataSourceSidebar: rootSourceInfo: ", rootSourceInfo);
       const rootNode = dataSourceTreeNode(rootSourceInfo);
       setTreeState([rootNode]);
     }
@@ -84,7 +84,6 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     const appState = mutableGet(stateRef);
     const rtc = appState.rtc;
     const dsInfo = await rtc.getSourceInfo([dsNodeId]);
-    console.log("DataSourceSidebar: expandDataset: ", dsInfo);
     treeNode.childNodes = dsInfo.children.map(placeholderTreeNode);
     treeNode.isExpanded = true;
     if (dsInfo.description) {
@@ -102,12 +101,10 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
   }
 
   const handleNodeCollapse = (treeNode: ITreeNode) => {
-    console.log("handleNodeCollapse: ", treeNode);
     treeNode.isExpanded = false;
     forceUpdate();
   };
   const handleNodeExpand = (treeNode: ITreeNode) => {
-    console.log("handleNodeExpand: ", treeNode);
     const dsNodeId: DataSourceNodeId = treeNode.nodeData as DataSourceNodeId;
     if (dsNodeId.kind === "Dataset") {
       expandDataset(treeNode);
@@ -121,13 +118,15 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     _nodePath: any[],
     e: React.MouseEvent<HTMLElement>
   ) => {
-    console.log("handleNodeClick: ", treeNode);
-    const originallySelected = treeNode.isSelected;
     const dsNodeId: DataSourceNodeId = treeNode.nodeData as DataSourceNodeId;
     if (dsNodeId.kind === "Table") {
       actions.openTable(dsNodeId.id, stateRef);
     }
-    // treeNode.isSelected = true;
+    if (selectedNode != null) {
+      selectedNode.isSelected = false;
+    }
+    treeNode.isSelected = true;
+    setSelectedNode(treeNode);
     forceUpdate();
   };
 

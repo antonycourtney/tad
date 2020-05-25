@@ -28,28 +28,26 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
       setActivity(buttonActivity);
     }
   };
+  const baseStyle = "bp3-button bp3-minimal";
+  const activeStyle = (target: Activity): string =>
+    activity === target ? "bp3-active" : "";
+
+  const activityButton = (target: Activity, iconName: string): JSX.Element => (
+    <button
+      type="button"
+      className={[baseStyle, activeStyle(target), "bp3-icon-" + iconName].join(
+        " "
+      )}
+      onClick={handleActivityClick(target)}
+    />
+  );
+
   return (
     <div className={"activityBar"}>
-      <button
-        type="button"
-        className="bp3-button bp3-minimal bp3-icon-database"
-        onClick={handleActivityClick("DataSource")}
-      />
-      <button
-        type="button"
-        className="bp3-button bp3-minimal bp3-icon-build"
-        onClick={handleActivityClick("Query")}
-      />
-      <button
-        type="button"
-        className="bp3-button bp3-minimal bp3-icon-pivot-table"
-        onClick={handleActivityClick("Pivot")}
-      />
-      <button
-        type="button"
-        className="bp3-button bp3-minimal bp3-icon-cog"
-        onClick={handleActivityClick("Preferences")}
-      />
+      {activityButton("DataSource", "database")}
+      {activityButton("Query", "build")}
+      {activityButton("Pivot", "pivot-table")}
+      {activityButton("Preferences", "cog")}
     </div>
   );
 };

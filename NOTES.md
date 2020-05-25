@@ -47,10 +47,12 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 
 [X] Think about binding affinity of dialect for WebConnection. Probably want dialect to live on Schema.
 [X] Floating point / real formatting (num decimal places) not working on BigQuery data (Iowa liquor db). Why?
-[ ] Crash bug when setting formatting for specific column by column name
+[X] Crash bug when setting formatting for specific column by column name
+[ ] Really need better feedback that data is loading when scrolling!
+[ ] We choke in BigQuery when pivoting by an INT64 column (like ParentID in Hacker News dataset). Probably add an 'asString' option to mapColumns
+[ ] DataSource support for sqlite
 [ ] Add assertive test using a sqlite db file (not a csv) as data source
-[ ] Optimize SQL construction a bit -- a sequence of projects currently looks very sub-optimal, as do multiple
-extends. Look at bigquery opps with sorted aggtree.
+[ ] Optimize SQL construction a bit -- a sequence of projects currently looks very sub-optimal, as do multiple extends. Look at bigquery opps with sorted aggtree.
 [ ] JavaScript representation of QueryExp AST for debugging
 [X] How do we go from column type back to a Core Type for formatting? Example: int/float formatting panel. Ans: ColumnKind
 [X] Tweak extend to make column type optional, with clear rules for inference. number ==> integer by default.

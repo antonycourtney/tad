@@ -20,10 +20,15 @@ const importCsv = async (db: sqlite3.Database, path: string) => {
   testCtx.registerTable(ti);
 };
 
+const pcols = ["JobFamily", "Title", "Union", "Name", "Base", "TCOE"];
+const q0 = reltab.tableQuery("barttest").project(pcols);
+
+let tree0: aggtree.VPivotTree;
+
 beforeAll(
   async (): Promise<reltabSqlite.SqliteContext> => {
-    // log.setLevel("info"); // use "debug" for even more verbosity
-    const showQueries = false;
+    log.setLevel("info"); // use "debug" for even more verbosity
+    const showQueries = true;
     const ctx = await reltabSqlite.getContext(":memory:", { showQueries });
 
     testCtx = ctx as reltabSqlite.SqliteContext;
@@ -33,37 +38,38 @@ beforeAll(
     await importCsv(db, "../reltab-sqlite/test/support/sample.csv");
     await importCsv(db, "../reltab-sqlite/test/support/barttest.csv");
 
+    const schema = await aggtree.getBaseSchema(testCtx, q0);
+    log.debug("got schema: ", schema);
+
+    tree0 = aggtree.vpivot(
+      testCtx,
+      q0,
+      schema,
+      ["JobFamily", "Title"],
+      "Name",
+      true,
+      []
+    );
+
     return testCtx;
   }
 );
 
-const pcols = ["JobFamily", "Title", "Union", "Name", "Base", "TCOE"];
-
-test("initial aggtree Test", async () => {
-  const q0 = reltab.tableQuery("barttest").project(pcols);
-
-  const schema = await aggtree.getBaseSchema(testCtx, q0);
-  log.debug("got schema: ", schema);
-
-  const tree0 = aggtree.vpivot(
-    testCtx,
-    q0,
-    schema,
-    ["JobFamily", "Title"],
-    "Name",
-    true,
-    []
-  );
+test("rootQuery Test", async () => {
   const rq0 = tree0.rootQuery;
-  log.debug("root query exp: ", rq0);
+  log.info("root query exp:\n", rq0?.toJS());
 
   const res0 = await testCtx.evalQuery(rq0!);
-  log.debug("root query result:", res0);
+  log.info("root query result:");
   util.logTable(res0);
+  expect(res0).toMatchSnapshot();
+});
 
+test("initial applyPath operations", async () => {
   const q1 = tree0.applyPath([]);
+  log.info("open root query:");
+  log.info(q1.toJS());
   const res1 = await testCtx.evalQuery(q1);
-  log.debug("open root query:");
   util.logTable(res1);
 
   const expCols = [
@@ -90,7 +96,9 @@ test("initial aggtree Test", async () => {
   const actSum = util.columnSum(res1, "TCOE");
 
   expect(actSum).toBe(4691559);
+});
 
+test("open specific node", async () => {
   const q2 = tree0.applyPath(["Executive Management"]);
 
   // console.log("after opening node: q2: ", JSON.stringify(q2, null, 2));
@@ -211,6 +219,9 @@ test("async aggTree sortedTreeQuery test", async () => {
   expect(jres4).toMatchSnapshot();
 
   const stq = tree0.getSortedTreeQuery(openPaths);
+
+  console.log("full sorted tree query:\n", stq.toJS());
+
   const sres = await rtc.evalQuery(stq);
 
   // console.log("result of sorted tree query:");

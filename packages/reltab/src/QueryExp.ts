@@ -26,6 +26,7 @@ import {
   mkSubSelectList,
 } from "./SQLQuery";
 import { AggFn } from "./AggFn";
+import { StringBuffer, ppOut } from "./internals";
 
 type QueryOp =
   | "table"
@@ -256,6 +257,14 @@ export class QueryExp {
 
   getSchema(dialect: SQLDialect, tableMap: TableInfoMap): Schema {
     return getQuerySchema(dialect, tableMap, this._rep);
+  }
+
+  // render this query as a JavaScript expression:
+  toJS(): string {
+    let strBuf: StringBuffer = [];
+    queryToJSAux(strBuf, 0, this._rep);
+    const ret = strBuf.join("");
+    return ret;
   }
 }
 
@@ -1074,7 +1083,175 @@ const queryToCountSql = (
 };
 
 // Create base of a query expression chain by starting with "table":
-
 export const tableQuery = (tableName: string): QueryExp => {
   return new QueryExp({ operator: "table", tableName });
+};
+
+const tableQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: TableQueryRep
+): number => {
+  ppOut(dst, depth, `tableQuery("${query.tableName}")`);
+  return depth + 1;
+};
+
+const projectQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: ProjectQueryRep
+): number => {
+  depth = queryToJSAux(dst, depth, query.from);
+  dst.push("\n");
+  ppOut(dst, depth, `.project(${JSON.stringify(query.cols)})`);
+  return depth;
+};
+
+const aggColSpecToJS = (agg: AggColSpec): string => JSON.stringify(agg);
+
+const groupByQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: GroupByQueryRep
+): number => {
+  depth = queryToJSAux(dst, depth, query.from);
+  dst.push("\n");
+  const aggColJSStr = `[ ${query.aggs.map(aggColSpecToJS).join(", ")} ]`;
+  ppOut(dst, depth, `.groupBy(${JSON.stringify(query.cols)}, ${aggColJSStr})`);
+  return depth;
+};
+
+const filterQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: FilterQueryRep
+): number => {
+  depth = queryToJSAux(dst, depth, query.from);
+  dst.push("\n");
+  ppOut(dst, depth, `.filter(${JSON.stringify(query.fexp)})`);
+  return depth;
+};
+
+const mapColumnsQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: MapColumnsQueryRep
+): number => {
+  depth = queryToJSAux(dst, depth, query.from);
+  dst.push("\n");
+  ppOut(dst, depth, `.mapColumns(${JSON.stringify(query.cmap)})`);
+  return depth;
+};
+
+const mapColumnsByIndexQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: MapColumnsByIndexQueryRep
+): number => {
+  depth = queryToJSAux(dst, depth, query.from);
+  dst.push("\n");
+  ppOut(dst, depth, `.mapColumnsByIndex(${JSON.stringify(query.cmap)})`);
+  return depth;
+};
+
+const concatQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: ConcatQueryRep
+): number => {
+  depth = queryToJSAux(dst, depth, query.from);
+  dst.push("\n");
+  ppOut(dst, depth, `.concat(\n`);
+  queryToJSAux(dst, depth + 1, query.target);
+  dst.push(")");
+  return depth;
+};
+
+const sortQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: SortQueryRep
+): number => {
+  depth = queryToJSAux(dst, depth, query.from);
+  dst.push("\n");
+  ppOut(dst, depth, `.sort(${JSON.stringify(query.keys)})`);
+  return depth;
+};
+
+const colExtendExpToJSStr = (colExp: ColumnExtendExp): string => {
+  switch (colExp.expType) {
+    case "ColRef":
+      return `col("${colExp.colName}")`;
+    case "ConstVal":
+      return `constVal(${JSON.stringify(colExp.val)})`;
+    case "AsString":
+      return `asString(${colExtendExpToJSStr(colExp.valExp)})`;
+    default:
+      throw new Error(
+        `colExtendExptoJSStr: unknown expType in column expression ${colExp}`
+      );
+  }
+};
+
+const extendQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: ExtendQueryRep
+): number => {
+  depth = queryToJSAux(dst, depth, query.from);
+  dst.push("\n");
+  const expJSStr = colExtendExpToJSStr(query.colExp);
+  ppOut(
+    dst,
+    depth,
+    `.extend("${query.colId}", ${expJSStr}, ${JSON.stringify(query.opts)} )`
+  );
+  return depth;
+};
+
+const joinQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: JoinQueryRep
+): number => {
+  depth = queryToJSAux(dst, depth, query.lhs);
+  dst.push("\n");
+  ppOut(dst, depth, `.join(\n`);
+  queryToJSAux(dst, depth + 1, query.rhs);
+  dst.push(",\n");
+  ppOut(dst, depth + 1, `${JSON.stringify(query.on)},\n`);
+  ppOut(dst, depth + 1, `${JSON.stringify(query.joinType)})`);
+  return depth;
+};
+
+const queryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: QueryRep
+): number => {
+  switch (query.operator) {
+    case "table":
+      return tableQueryToJSAux(dst, depth, query);
+    case "project":
+      return projectQueryToJSAux(dst, depth, query);
+    case "groupBy":
+      return groupByQueryToJSAux(dst, depth, query);
+    case "filter":
+      return filterQueryToJSAux(dst, depth, query);
+    case "mapColumns":
+      return mapColumnsQueryToJSAux(dst, depth, query);
+    case "mapColumnsByIndex":
+      return mapColumnsByIndexQueryToJSAux(dst, depth, query);
+    case "concat":
+      return concatQueryToJSAux(dst, depth, query);
+    case "sort":
+      return sortQueryToJSAux(dst, depth, query);
+    case "extend":
+      return extendQueryToJSAux(dst, depth, query);
+    case "join":
+      return joinQueryToJSAux(dst, depth, query);
+    default:
+      const invalidQuery: never = query;
+      throw new Error("queryToJSAux: No implementation for operator: " + query);
+  }
 };
