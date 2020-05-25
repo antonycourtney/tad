@@ -18,3 +18,11 @@ export const ColumnListTypes: ColumnListTypeConstMap = {
   SORT: "sortKey",
   AGG: "aggFn",
 };
+
+// current activity:
+export type Activity =
+  | "DataSource"
+  | "Query"
+  | "Pivot"
+  | "Preferences"
+  | "None";

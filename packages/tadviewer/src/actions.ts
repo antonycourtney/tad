@@ -5,7 +5,7 @@ import * as reltab from "reltab";
 import { ColumnListTypes } from "./components/defs";
 import { Path, PathTree } from "aggtree";
 import * as aggtree from "aggtree";
-import { StateRef, update } from "oneref";
+import { StateRef, update, mutableGet } from "oneref";
 import log from "loglevel";
 
 export async function initAppState(
@@ -48,6 +48,46 @@ export async function initAppState(
         .set("initialized", true) as AppState
   );
 }
+
+export const openTable = async (
+  tableName: string,
+  stateRef: StateRef<AppState>
+): Promise<void> => {
+  const appState = mutableGet(stateRef);
+  const rtc = appState.rtc;
+
+  // TODO: This shouldn't actually be needed, but let's do it for now:
+  const ti = await rtc.getTableInfo(tableName);
+  console.log("openTable: tableInfo: ", ti);
+
+  const windowTitle = tableName;
+  const baseQuery = reltab.tableQuery(tableName);
+  const baseSchema = await aggtree.getBaseSchema(rtc, baseQuery);
+
+  // start off with all columns displayed:
+  const displayColumns = baseSchema.columns.slice();
+
+  const openPaths = new PathTree();
+  const viewParams = new ViewParams({
+    displayColumns,
+    openPaths,
+  });
+
+  const viewState = new ViewState({
+    viewParams,
+  }); // We explicitly set rather than merge() because merge
+  // will attempt to deep convert JS objects to Immutables
+
+  update(
+    stateRef,
+    (st: AppState): AppState =>
+      st
+        .set("windowTitle", windowTitle)
+        .set("baseSchema", baseSchema)
+        .set("baseQuery", baseQuery)
+        .set("viewState", viewState) as AppState
+  );
+};
 
 // helper to hoist a ViewParams => ViewParams fn to an AppState => AppState
 // Always resets the viewport

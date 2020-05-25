@@ -415,3 +415,22 @@ test("covid19 -- open pivot tree to leaf level", async () => {
   log.debug("res4: ");
   util.logTable(res4, { maxRows: 20 });
 });
+
+test("getSourceInfo basics", async () => {
+  const rtc = new BigQueryConnection(
+    "bigquery-public-data",
+    "covid19_jhu_csse",
+    { showQueries: true }
+  );
+
+  const rootSourceInfo = await rtc.getSourceInfo([]);
+  // console.log("root source info: ", rootSourceInfo);
+
+  const covid_item = rootSourceInfo.children.find(
+    (item) => item.id === "covid19_jhu_csse"
+  );
+
+  console.log("calling getSourceInfo on item ", covid_item);
+  const covidSourceInfo = await rtc.getSourceInfo([covid_item!]);
+  console.log("covid19 source info: ", covidSourceInfo);
+});

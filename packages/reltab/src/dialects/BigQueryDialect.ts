@@ -10,6 +10,9 @@ const boolCT = new ColumnType("BOOL", "boolean");
 const dateCT = new ColumnType("DATE", "date", {
   stringRender: (val: any) => (val == null ? "" : val.value),
 });
+const timestampCT = new ColumnType("TIMESTAMP", "timestamp", {
+  stringRender: (val: any) => (val == null ? "" : val.value),
+});
 
 class BigQueryDialectClass implements SQLDialect {
   private static instance: BigQueryDialectClass;
@@ -27,6 +30,7 @@ class BigQueryDialectClass implements SQLDialect {
     STRING: stringCT,
     BOOL: boolCT,
     DATE: dateCT,
+    TIMESTAMP: timestampCT,
   };
 
   quoteCol(cid: string): string {

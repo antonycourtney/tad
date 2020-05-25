@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ActivityBar } from "./ActivityBar";
-import { Sidebar } from "./Sidebar";
+import { PivotSidebar } from "./PivotSidebar";
+import { DataSourceSidebar } from "./DataSourceSidebar";
 import { DndProvider } from "react-dnd";
 import Backend from "react-dnd-html5-backend";
 import {
@@ -17,6 +18,7 @@ import * as actions from "../actions";
 import { AppState } from "../AppState";
 import * as oneref from "oneref";
 import { useState } from "react";
+import { Activity } from "./defs";
 
 /**
  * top level application pane
@@ -30,53 +32,59 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   appState,
   stateRef,
 }: AppPaneProps) => {
-  const [pivotPropsExpanded, setPivotPropsExpanded] = useState(false);
+  const [activity, setActivity] = useState<Activity>("None");
+  const dataSourceExpanded = activity === "DataSource";
+  const pivotPropsExpanded = activity === "Pivot";
   const [grid, setGrid] = useState<any>(null);
   let mainContents: JSX.Element | null = null;
 
-  console.log("AppPane: ", appState.toJS());
+  // console.log("AppPane: ", appState.toJS());
 
   const { viewState } = appState;
 
-  const togglePivotPropsExpanded = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
-    setPivotPropsExpanded(!pivotPropsExpanded);
-  };
+  let centerPane: JSX.Element;
+
+  // We should probably make pivot sidebar deal better with an empty table, but...
+  let pivotSidebar: JSX.Element | null;
 
   if (appState.initialized && viewState.dataView !== null) {
-    mainContents = (
-      <div className="container-fluid full-height main-container">
-        <DndProvider backend={Backend}>
-          <ActivityBar
-            onPivotPropsClick={togglePivotPropsExpanded}
-            stateRef={stateRef}
-          />
-          <Sidebar
-            expanded={pivotPropsExpanded}
-            schema={appState.baseSchema}
-            viewParams={viewState.viewParams}
-            stateRef={stateRef}
-          />
-          <div className="center-app-pane">
-            <GridPane
-              onSlickGridCreated={(grid) => setGrid(grid)}
-              appState={appState}
-              viewState={appState.viewState}
-              stateRef={stateRef}
-            />
-            <Footer appState={appState} stateRef={stateRef} />
-          </div>
-        </DndProvider>
+    pivotSidebar = (
+      <PivotSidebar
+        expanded={pivotPropsExpanded}
+        schema={appState.baseSchema}
+        viewParams={viewState.viewParams}
+        stateRef={stateRef}
+      />
+    );
+    centerPane = (
+      <div className="center-app-pane">
+        <GridPane
+          onSlickGridCreated={(grid) => setGrid(grid)}
+          appState={appState}
+          viewState={appState.viewState}
+          stateRef={stateRef}
+        />
+        <Footer appState={appState} stateRef={stateRef} />
       </div>
     );
   } else {
-    mainContents = (
-      <div className="container-fluid full-height main-container">
-        <LoadingModal />
-      </div>
-    );
+    pivotSidebar = null;
+    centerPane = <LoadingModal />;
   }
+  mainContents = (
+    <div className="container-fluid full-height main-container">
+      <DndProvider backend={Backend}>
+        <ActivityBar
+          activity={activity}
+          setActivity={setActivity}
+          stateRef={stateRef}
+        />
+        <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
+        {pivotSidebar}
+        {centerPane}
+      </DndProvider>
+    </div>
+  );
   return mainContents;
 };
 

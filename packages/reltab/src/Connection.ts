@@ -1,6 +1,7 @@
 import { QueryExp } from "./QueryExp";
 import { TableRep, TableInfo } from "./TableRep";
 import { SQLDialect } from "./dialect";
+import { DataSourceNode, DataSourcePath } from "./DataSource";
 
 export interface Connection {
   evalQuery(
@@ -10,4 +11,6 @@ export interface Connection {
   ): Promise<TableRep>;
   rowCount(query: QueryExp): Promise<number>;
   getTableInfo(tableName: string): Promise<TableInfo>;
+
+  getSourceInfo(path: DataSourcePath): Promise<DataSourceNode>;
 }

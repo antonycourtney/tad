@@ -11,6 +11,7 @@ export type ColumnKind =
   | "date"
   | "time"
   | "datetime"
+  | "timestamp"
   | "dialect"; // unknown; specific to db engine SQL dialect
 
 export const defaultAggForKind = (kind: ColumnKind): AggFn => {

@@ -12,6 +12,8 @@ import {
   Connection,
   SQLiteDialect,
   ColumnType,
+  DataSourcePath,
+  DataSourceNode,
 } from "reltab"; // eslint-disable-line
 import { SQLDialect } from "reltab/dist/dialect";
 
@@ -177,6 +179,10 @@ export class SqliteContext implements Connection {
       }
     }
     return ti;
+  }
+
+  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
+    throw new Error("getSourceInfo not implemented yet for sqlite data source");
   }
 }
 

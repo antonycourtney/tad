@@ -40,9 +40,9 @@ const handleEvalQuery = async (
       ? rtc.evalQuery(queryReq.query, queryReq.offset, queryReq.limit)
       : rtc.evalQuery(queryReq.query));
     const [es, ens] = process.hrtime(hrstart);
-    log.info("evalQuery: evaluated query in %ds %dms", es, ens / 1e6);
+    log.info("\nevalQuery: evaluated query in %ds %dms", es, ens / 1e6);
     const resObj = { tableRep };
-    log.info("sending response: ", resObj);
+    log.info(`sending response w/ ${tableRep.rowData.length} rows.\n`);
     res.json(resObj);
   } catch (err) {
     log.error("evalQuery: ", err, err.stack);
@@ -119,6 +119,23 @@ const handleGetTableInfo = async (
   }
 };
 
+const handleGetSourceInfo = async (
+  rtc: reltab.Connection,
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    log.info("POST getSourceInfo: got request: ", req.body);
+    const tiReq = req.body;
+    const sourceInfo = await rtc.getSourceInfo(tiReq.path);
+    const resObj = { sourceInfo };
+    log.info("getSourceInfo: sending response: ", resObj);
+    res.json(resObj);
+  } catch (err) {
+    log.error("getSourceInfo: ", err, err.stack);
+  }
+};
+
 const viewerUrl = "/tadweb-app/index.html";
 
 const rootRedirect = (req: express.Request, res: express.Response) => {
@@ -172,6 +189,10 @@ async function main() {
 
   app.post("/tadweb/importFile", (req, res) =>
     handleImportFile(dbCtx, req, res)
+  );
+
+  app.post("/tadweb/getSourceInfo", (req, res) =>
+    handleGetSourceInfo(dbCtx, req, res)
   );
 
   const server = app.listen(portNumber, () => {

@@ -48,8 +48,6 @@ const init = async () => {
     AppPane
   );
 
-  ReactDOM.render(<App />, document.getElementById("app"));
-
   const rtc = new ReltabWebConnection(testBaseUrl);
 
   // const tableName = await rtc.importFile(TEST_FILE);
@@ -61,6 +59,9 @@ const init = async () => {
   var pivotRequester: PivotRequester | undefined | null = null;
 
   await initAppState(rtc, tableName, baseQuery, viewParams, stateRef);
+
+  ReactDOM.render(<App />, document.getElementById("app"));
+
   pivotRequester = new PivotRequester(stateRef);
 
   /*

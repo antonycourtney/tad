@@ -1,5 +1,12 @@
 import * as log from "loglevel";
-import { TableRep, QueryExp, Schema, tableQuery, ColumnType } from "reltab";
+import {
+  TableRep,
+  QueryExp,
+  Schema,
+  tableQuery,
+  ColumnType,
+  DataSourceNodeId,
+} from "reltab";
 import {
   TableInfoMap,
   TableInfo,
@@ -11,6 +18,8 @@ import {
   ColumnMapInfo,
   Connection,
   BigQueryDialect,
+  DataSourceNode,
+  DataSourcePath,
 } from "reltab";
 import { BigQuery, Dataset } from "@google-cloud/bigquery";
 import path = require("path");
@@ -198,5 +207,59 @@ export class BigQueryConnection implements Connection {
       }
     }
     return ti;
+  }
+
+  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
+    if (path.length === 0) {
+      // Enumerate datasets and get their ids:
+      const [datasets] = await this.bigquery_meta.getDatasets();
+      const children: DataSourceNodeId[] = datasets.map((dataset) => ({
+        kind: "Dataset",
+        id: dataset.id!,
+        displayName: dataset.id!,
+      }));
+
+      let nodeId: DataSourceNodeId = {
+        kind: "Database",
+        id: this.projectId,
+        displayName: this.projectId,
+      };
+      let node: DataSourceNode = {
+        nodeId,
+        children,
+      };
+      return node;
+    } else {
+      const nodeId = path[path.length - 1];
+      if (nodeId.kind != "Dataset") {
+        throw new Error(
+          `bigQuery.getSourceInfo: Can not provide source info for ${JSON.stringify(
+            nodeId
+          )}`
+        );
+      }
+      const datasetName = nodeId.id;
+      const dataset = this.bigquery_meta.dataset(datasetName);
+
+      // get metadata on dataset for description:
+      const [dsInfo, apiResponse] = await dataset.get();
+
+      console.log("got dataset info: ", dsInfo);
+      // And enumerate tables:
+      const [tables] = await dataset.getTables();
+      const tableIds = tables.map((table) => table.id);
+
+      const children: DataSourceNodeId[] = tableIds.map((tableId) => ({
+        kind: "Table",
+        id: `${this.projectId}.${datasetName}.${tableId!}`,
+        displayName: tableId!,
+      }));
+      const node: DataSourceNode = {
+        nodeId,
+        description: dsInfo.metadata.description,
+        children,
+      };
+      return node;
+    }
   }
 }

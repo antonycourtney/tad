@@ -46,7 +46,8 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 ### Punch-list items:
 
 [X] Think about binding affinity of dialect for WebConnection. Probably want dialect to live on Schema.
-[ ] Floating point / real formatting (num decimal places) not working on BigQuery data (Iowa liquor db). Why?
+[X] Floating point / real formatting (num decimal places) not working on BigQuery data (Iowa liquor db). Why?
+[ ] Crash bug when setting formatting for specific column by column name
 [ ] Add assertive test using a sqlite db file (not a csv) as data source
 [ ] Optimize SQL construction a bit -- a sequence of projects currently looks very sub-optimal, as do multiple
 extends. Look at bigquery opps with sorted aggtree.
@@ -71,18 +72,21 @@ can be re-used in strange ways.
 [ ] Need to account for constant expressions (numbers and string literals) vs column references coming from an extend
 operation that can end up in a SQL select column expression. Probably time for a tagged union!
 [ ] static analysis of tables mentioned in a query
+[ ] Add static validation of JSON data in tadweb-server, using https://github.com/pelotom/runtypes
 
 ### Features to add before next release:
 
 [X] Multiple database support (at least bigquery)
-[ ] Include query time in footer
-[ ] Query console showing generated queries
 [ ] Datasets and table selector UI
 [ ] column extensions
-[ ] date and time columns
-[ ] large text rendering
-[ ] Web server running publicly
 [ ] Font size preferences
+[ ] Delayed calc mode
+[ ] Include query time in footer
+[ ] Query console showing generated queries
+[ ] date and time columns
+[ ] Web server running publicly
 [ ] horizontal pivots
 [ ] heat maps
 [ ] spark lines
+[ ] Save views to view store in tadweb-server
+[ ] Views loadable by URL

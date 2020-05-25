@@ -1,5 +1,6 @@
 import log from "loglevel";
 import * as reltab from "reltab";
+import { DataSourcePath, DataSourceNode } from "reltab";
 
 async function request(baseUrl: string, path: string, args: any): Promise<any> {
   const url = baseUrl + path;
@@ -58,5 +59,13 @@ export class ReltabWebConnection implements reltab.Connection {
     const response = await request(this.baseUrl, "/tadweb/getRowCount", args);
     log.debug("rowCount: got result: ", response);
     return response["rowCount"] as number;
+  }
+
+  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
+    const args = { path };
+    log.debug("getSourceInfo: ", args);
+    const response = await request(this.baseUrl, "/tadweb/getSourceInfo", args);
+    log.debug("getSourceInfo: got result: ", response);
+    return response["sourceInfo"] as reltab.DataSourceNode;
   }
 }

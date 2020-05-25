@@ -11,3 +11,4 @@ export * from "./Schema";
 export * from "./TableRep";
 export * from "./AggFn";
 export * from "./ColumnType";
+export * from "./DataSource";
