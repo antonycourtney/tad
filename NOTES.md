@@ -79,10 +79,10 @@ operation that can end up in a SQL select column expression. Probably time for a
 ### Features to add before next release:
 
 [X] Multiple database support (at least bigquery)
+[ ] Delayed calc mode
 [ ] Datasets and table selector UI
 [ ] column extensions
 [ ] Font size preferences
-[ ] Delayed calc mode
 [ ] Include query time in footer
 [ ] Query console showing generated queries
 [ ] date and time columns
@@ -92,3 +92,21 @@ operation that can end up in a SQL select column expression. Probably time for a
 [ ] spark lines
 [ ] Save views to view store in tadweb-server
 [ ] Views loadable by URL
+[ ] Open to Depth
+
+### What to ship for Memorial Day week:
+
+A web service that allows creation and sharing of named pivot tables (maybe workbooks).
+
+Priorities:
+[ ] Presto support
+[ ] Sandbox-like UI for creating an analysis, saving session, assigning name, sharing URL
+[ ] Deferred Recalc
+[ ] Larger font by default (check out example in es6-slickgrid)
+[ ] Column extensions / query builder
+[ ] Filter support on base query (needed for ds = ...)
+[ ] Query console showing generated queries
+[ ] Heat maps
+[ ] Spark lines
+
+### Notes, playing with Amazon Athena (Presto for S3):

@@ -30,11 +30,12 @@ const handleEvalQuery = async (
   res: express.Response
 ) => {
   try {
-    log.info(
+    log.debug(
       "POST evalQuery: got request: ",
       JSON.stringify(req.body, undefined, 2)
     );
     const queryReq = req.body;
+    log.info("evalQuery: got query:\n", queryReq.query.toJS(), "\n\n");
     const hrstart = process.hrtime();
     const tableRep = await (queryReq.offset !== undefined
       ? rtc.evalQuery(queryReq.query, queryReq.offset, queryReq.limit)
@@ -56,7 +57,7 @@ const handleGetRowCount = async (
   res: express.Response
 ) => {
   try {
-    log.info(
+    log.debug(
       "POST getRowcount: got request: ",
       JSON.stringify(req.body, undefined, 2)
     );
@@ -112,7 +113,10 @@ const handleGetTableInfo = async (
     const tiReq = req.body;
     const tableInfo = await rtc.getTableInfo(tiReq.tableName);
     const resObj = { tableInfo };
-    log.info("getTableInfo: sending response: ", resObj);
+    log.info(
+      "getTableInfo: sending response: ",
+      JSON.stringify(resObj, null, 2)
+    );
     res.json(resObj);
   } catch (err) {
     log.error("getTableInfo: ", err, err.stack);
@@ -129,7 +133,10 @@ const handleGetSourceInfo = async (
     const tiReq = req.body;
     const sourceInfo = await rtc.getSourceInfo(tiReq.path);
     const resObj = { sourceInfo };
-    log.info("getSourceInfo: sending response: ", resObj);
+    log.info(
+      "getSourceInfo: sending response w/ node Id: ",
+      JSON.stringify(sourceInfo.nodeId)
+    );
     res.json(resObj);
   } catch (err) {
     log.error("getSourceInfo: ", err, err.stack);

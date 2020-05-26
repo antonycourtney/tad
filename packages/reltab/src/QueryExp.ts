@@ -6,7 +6,7 @@ import {
   constVal,
   defaultDialect,
 } from "./defs";
-import { FilterExp, BinRelExp, UnaryRelExp } from "./FilterExp";
+import { FilterExp, BinRelExp, UnaryRelExp, SubExp } from "./FilterExp";
 import { SQLDialect } from "./dialect";
 import { ColumnType, colIsString } from "./ColumnType";
 import { Schema, ColumnMetadata } from "./Schema";
@@ -905,32 +905,19 @@ const sortQueryToSql = (
   };
 };
 
-/*
-const intRE = /^[-+]?[$]?[0-9,]+$/
-const strLitRE = /^'[^']*'$/
-const nullRE = /^null$/
-*/
-
-const litRE = /^[-+]?[$]?[0-9,]+$|^'[^']*'$|^null$/;
-/*
- * determine if extend expression is a constant expression, so that
- * we can inline the extend expression.
- *
- * Conservative approximation -- true => constant expr, but false may or may not be constant
- *
- * Only returns true for simple literal exprs for now; should expand to handle binary ops
- */
-
-const isConstantExpr = (expr: string): boolean => {
-  const ret = litRE.test(expr);
-  /*
-    const selExp = `select (${expr})`
-    const selPtree = sqliteParser(selExp)
-    const expPtree = selPtree.statement[0].result[0]
-    const ret = (expPtree.type === 'literal')
-  */
-
-  return ret;
+const isConstExtendExp = (colExp: ColumnExtendExp): boolean => {
+  switch (colExp.expType) {
+    case "ConstVal":
+      return true;
+    case "AsString":
+      return isConstExtendExp(colExp.valExp);
+    case "ColRef":
+      return false;
+    default:
+      throw new Error(
+        "isConstExtendExp: unknown expType in " + JSON.stringify(colExp)
+      );
+  }
 };
 
 const extendQueryToSql = (
@@ -946,7 +933,7 @@ const extendQueryToSql = (
   // Note: We only want to extract the column ids from subquery for use at this level; we
   // want to skip any calculated expressions or aggregate functions
 
-  const isConst = colExp.expType === "ConstVal";
+  const isConst = isConstExtendExp(colExp);
   let retSel: SQLSelectAST;
 
   if (isConst && sqsql.selectStmts.length === 1) {
@@ -1121,6 +1108,78 @@ const groupByQueryToJSAux = (
   return depth;
 };
 
+// map to corresponding JS method name:
+const jsOpMap = {
+  EQ: "eq",
+  NEQ: "neq",
+  GT: "gt",
+  GE: "ge",
+  LT: "lt",
+  LE: "le",
+  ISNULL: "isNull",
+  NOTNULL: "isNotNull",
+  BEGINS: "begins",
+  NOTBEGINS: "notBegins",
+  ENDS: "ends",
+  NOTENDS: "notEnds",
+  CONTAINS: "contains",
+  NOTCONTAINS: "notContains",
+  IN: "in",
+  NOTIN: "notIn",
+};
+
+const unaryRelExpToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  exp: UnaryRelExp
+) => {
+  const opName = jsOpMap[exp.op];
+  ppOut(dst, depth, `.${opName}(${colExtendExpToJSStr(exp.arg)})`);
+};
+
+const binRelExpToJSAux = (dst: StringBuffer, depth: number, exp: BinRelExp) => {
+  const opName = jsOpMap[exp.op];
+  ppOut(
+    dst,
+    depth,
+    `.${opName}(${colExtendExpToJSStr(exp.lhs)}, ${colExtendExpToJSStr(
+      exp.rhs
+    )})`
+  );
+};
+
+const subExpToJSAux = (dst: StringBuffer, depth: number, subExp: SubExp) => {
+  switch (subExp.expType) {
+    case "FilterExp":
+      filterExpToJSAux(dst, depth, subExp);
+      break;
+    case "BinRelExp":
+      binRelExpToJSAux(dst, depth, subExp);
+      break;
+    case "UnaryRelExp":
+      unaryRelExpToJSAux(dst, depth, subExp);
+      break;
+    default:
+      const foo: never = subExp;
+      throw new Error(
+        "subExpToJSAux: unknown expression type: " + JSON.stringify(subExp)
+      );
+  }
+};
+
+const filterExpToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  fexp: FilterExp
+) => {
+  let opName: string = fexp.op.toLowerCase();
+  ppOut(dst, depth, `${opName}()`);
+  fexp.opArgs.forEach((subExp: SubExp) => {
+    dst.push("\n");
+    subExpToJSAux(dst, depth + 1, subExp);
+  });
+};
+
 const filterQueryToJSAux = (
   dst: StringBuffer,
   depth: number,
@@ -1128,7 +1187,9 @@ const filterQueryToJSAux = (
 ): number => {
   depth = queryToJSAux(dst, depth, query.from);
   dst.push("\n");
-  ppOut(dst, depth, `.filter(${JSON.stringify(query.fexp)})`);
+  ppOut(dst, depth, `.filter(\n`);
+  filterExpToJSAux(dst, depth + 1, query.fexp);
+  dst.push(")");
   return depth;
 };
 
