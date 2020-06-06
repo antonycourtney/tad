@@ -1,7 +1,3 @@
-import { SQLDialect } from "./dialect";
-import { SQLiteDialect } from "./dialects/SQLiteDialect";
-import { BigQueryDialect } from "./dialects/BigQueryDialect";
-export { BigQueryDialect, SQLiteDialect };
 export * from "./dialectRegistry";
 export * from "./Connection";
 export * from "./defs";

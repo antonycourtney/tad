@@ -69,8 +69,8 @@ export class SqliteContext implements Connection {
 
   evalQuery(
     query: QueryExp,
-    offset: number = -1,
-    limit: number = -1
+    offset?: number,
+    limit?: number
   ): Promise<TableRep> {
     let t0 = process.hrtime();
     const schema = query.getSchema(SQLiteDialect, this.tableMap);

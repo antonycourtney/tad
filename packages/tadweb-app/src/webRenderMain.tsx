@@ -21,7 +21,8 @@ const testBaseUrl = "http://localhost:9000";
 
 //const TEST_TABLE = "bigquery-public-data.covid19_jhu_csse.summary";
 // const TEST_TABLE = "bigquery-public-data.github_repos.commits";
-const TEST_TABLE = "bigquery-public-data.iowa_liquor_sales.sales";
+// const TEST_TABLE = "bigquery-public-data.iowa_liquor_sales.sales";
+const TEST_TABLE = "movie_metadata";
 
 /*
 const openParams = {

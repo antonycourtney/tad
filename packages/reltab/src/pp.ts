@@ -168,25 +168,23 @@ const auxPPSQLQuery = (
       ppOut(dst, depth, "UNION ALL\n");
     }
   });
-}; // external (top-level) function:
+  const { offset, limit } = query;
+  if (limit != null) {
+    ppOut(dst, 0, "LIMIT ");
+    ppOut(dst, 0, limit!.toString());
+  }
+  if (offset != null) {
+    ppOut(dst, 0, " OFFSET ");
+    ppOut(dst, 0, offset.toString());
+    ppOut(dst, 0, "\n");
+  }
+};
 
-export const ppSQLQuery = (
-  dialect: SQLDialect,
-  query: SQLQueryAST,
-  offset: number,
-  limit: number
-): string => {
+// external (top-level) function:
+export const ppSQLQuery = (dialect: SQLDialect, query: SQLQueryAST): string => {
   try {
     let strBuf: StringBuffer = [];
     auxPPSQLQuery(dialect, strBuf, 0, query);
-
-    if (offset !== -1) {
-      ppOut(strBuf, 0, "LIMIT ");
-      ppOut(strBuf, 0, limit.toString());
-      ppOut(strBuf, 0, " OFFSET ");
-      ppOut(strBuf, 0, offset.toString());
-      ppOut(strBuf, 0, "\n");
-    }
 
     const retStr = strBuf.join("");
     return retStr;

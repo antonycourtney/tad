@@ -93,6 +93,7 @@ operation that can end up in a SQL select column expression. Probably time for a
 [ ] Save views to view store in tadweb-server
 [ ] Views loadable by URL
 [ ] Open to Depth
+[ ] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
 
 ### What to ship for Memorial Day week:
 
@@ -100,7 +101,7 @@ A web service that allows creation and sharing of named pivot tables (maybe work
 
 Priorities:
 [ ] Presto support
-[ ] Sandbox-like UI for creating an analysis, saving session, assigning name, sharing URL
+[ ] Sandbox-like UI for creating an analysis, saving/loading session, assigning name, sharing URL
 [ ] Deferred Recalc
 [ ] Larger font by default (check out example in es6-slickgrid)
 [ ] Column extensions / query builder
@@ -110,3 +111,9 @@ Priorities:
 [ ] Spark lines
 
 ### Notes, playing with Amazon Athena (Presto for S3):
+
+### Thoughts, 29May20
+
+- Maybe "Relatable" is a good name for reltab
+- Maybe the query builder UI for Relatable should be its own thing, independent of Tad. Capable of providing JS or SQL.
+- Need to think about a real synthetic Data type for sqlite for CSVs, both in import and subsequent handling. Download data set from https://ourworldindata.org/grapher/new-covid-deaths-per-million for perfect example.

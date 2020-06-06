@@ -6,6 +6,7 @@ import * as path from "path";
 import * as reltabSqlite from "reltab-sqlite";
 import { SqliteContext } from "reltab-sqlite";
 import { BigQueryConnection } from "reltab-bigquery";
+import { AWSAthenaConnection } from "reltab-aws-athena";
 import * as reltab from "reltab";
 import { monitorEventLoopDelay } from "perf_hooks";
 import { read } from "fs";
@@ -153,6 +154,7 @@ async function main() {
   log.setLevel(log.levels.INFO);
 
   // const dbCtx = await initSqlite();
+  /*
   const dbCtx = new BigQueryConnection(
     "bigquery-public-data",
     "covid19_jhu_csse",
@@ -162,8 +164,6 @@ async function main() {
   const ti = await dbCtx.getTableInfo(
     "bigquery-public-data.covid19_jhu_csse.summary"
   );
-  console.log("tableInfo: ", ti);
-
   const ti2 = await dbCtx.getTableInfo(
     "bigquery-public-data.github_repos.commits"
   );
@@ -173,6 +173,11 @@ async function main() {
     "bigquery-public-data.iowa_liquor_sales.sales"
   );
   console.log("tableInfo: ", ti3);
+*/
+  const dbCtx = new AWSAthenaConnection({ showQueries: true });
+
+  const ti = await dbCtx.getTableInfo("movie_metadata");
+  console.log("tableInfo: ", ti);
 
   log.info("db initialization complete");
 

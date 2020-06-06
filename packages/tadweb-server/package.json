@@ -33,6 +33,7 @@
     "loglevel": "^1.6.8",
     "node-fetch": "^2.6.0",
     "reltab": "^0.10.0",
+    "reltab-aws-athena": "^0.10.0",
     "reltab-bigquery": "^0.10.0",
     "reltab-sqlite": "^0.10.0",
     "tadweb-app": "^0.10.0",

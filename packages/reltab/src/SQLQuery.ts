@@ -57,8 +57,11 @@ export type SQLSelectAST = {
   orderBy: Array<SQLSortColExp>;
 };
 export type SQLQueryAST = {
+  // all underliers combined via `union all`
   selectStmts: Array<SQLSelectAST>;
-}; // all underliers combined via `union all`
+  offset?: number;
+  limit?: number;
+};
 
 /**
  * get Column Id from a SQLSelectListItem -- essential when hoisting column names from

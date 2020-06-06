@@ -11,6 +11,6 @@
     "typescript": "^3.8.3"
   },
   "scripts": {
-    "bootstrap": "lerna bootstrap --hoist --force-local"
+    "bootstrap": "lerna bootstrap --hoist --force-local --ignore-prepublish"
   }
 }

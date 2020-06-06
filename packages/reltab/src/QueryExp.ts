@@ -5,6 +5,7 @@ import {
   col,
   constVal,
   defaultDialect,
+  asString,
 } from "./defs";
 import { FilterExp, BinRelExp, UnaryRelExp, SubExp } from "./FilterExp";
 import { SQLDialect } from "./dialect";
@@ -235,24 +236,17 @@ export class QueryExp {
   toSql(
     dialect: SQLDialect,
     tableMap: TableInfoMap,
-    offset: number = -1,
-    limit: number = -1
+    offset?: number,
+    limit?: number
   ): string {
     return ppSQLQuery(
       dialect,
-      queryToSql(dialect, tableMap, this._rep),
-      offset,
-      limit
+      queryToSql(dialect, tableMap, this._rep, offset, limit)
     );
   }
 
   toCountSql(dialect: SQLDialect, tableMap: TableInfoMap): string {
-    return ppSQLQuery(
-      dialect,
-      queryToCountSql(dialect, tableMap, this._rep),
-      -1,
-      -1
-    );
+    return ppSQLQuery(dialect, queryToCountSql(dialect, tableMap, this._rep));
   }
 
   getSchema(dialect: SQLDialect, tableMap: TableInfoMap): Schema {
@@ -271,6 +265,7 @@ export class QueryExp {
 const reviverMap = {
   ColRef: (v: any) => col(v.colName),
   ConstVal: (v: any) => constVal(v.val),
+  AsString: (v: any) => asString(v.valExp),
   BinRelExp: (v: any) => new BinRelExp(v.op, v.lhs, v.rhs),
   UnaryRelExp: (v: any) => new UnaryRelExp(v.op, v.arg),
   FilterExp: (v: any) => new FilterExp(v.op, v.opArgs),
@@ -653,7 +648,7 @@ const projectQueryToSql = (
       let outCol = colsMap[cid];
 
       if (outCol === undefined) {
-        const sqStr = ppSQLQuery(defaultDialect, sqsql, -1, -1);
+        const sqStr = ppSQLQuery(defaultDialect, sqsql);
         throw new Error(
           "projectQueryToSql: no such column " +
             defaultDialect.quoteCol(cid) +
@@ -1009,33 +1004,49 @@ const joinQueryToSql = (
 const queryToSql = (
   dialect: SQLDialect,
   tableMap: TableInfoMap,
-  query: QueryRep
+  query: QueryRep,
+  offset?: number,
+  limit?: number
 ): SQLQueryAST => {
+  let ret: SQLQueryAST;
   switch (query.operator) {
     case "table":
-      return tableQueryToSql(dialect, tableMap, query);
+      ret = tableQueryToSql(dialect, tableMap, query);
+      break;
     case "project":
-      return projectQueryToSql(dialect, tableMap, query);
+      ret = projectQueryToSql(dialect, tableMap, query);
+      break;
     case "groupBy":
-      return groupByQueryToSql(dialect, tableMap, query);
+      ret = groupByQueryToSql(dialect, tableMap, query);
+      break;
     case "filter":
-      return filterQueryToSql(dialect, tableMap, query);
+      ret = filterQueryToSql(dialect, tableMap, query);
+      break;
     case "mapColumns":
-      return mapColumnsQueryToSql(dialect, false, tableMap, query);
+      ret = mapColumnsQueryToSql(dialect, false, tableMap, query);
+      break;
     case "mapColumnsByIndex":
-      return mapColumnsQueryToSql(dialect, true, tableMap, query);
+      ret = mapColumnsQueryToSql(dialect, true, tableMap, query);
+      break;
     case "concat":
-      return concatQueryToSql(dialect, tableMap, query);
+      ret = concatQueryToSql(dialect, tableMap, query);
+      break;
     case "sort":
-      return sortQueryToSql(dialect, tableMap, query);
+      ret = sortQueryToSql(dialect, tableMap, query);
+      break;
     case "extend":
-      return extendQueryToSql(dialect, tableMap, query);
+      ret = extendQueryToSql(dialect, tableMap, query);
+      break;
     case "join":
-      return joinQueryToSql(dialect, tableMap, query);
+      ret = joinQueryToSql(dialect, tableMap, query);
+      break;
     default:
       const invalidQuery: never = query;
       throw new Error("queryToSql: No implementation for operator: " + query);
   }
+  ret.offset = offset;
+  ret.limit = limit;
+  return ret;
 };
 
 // Generate a count(*) as rowCount wrapper around a query:

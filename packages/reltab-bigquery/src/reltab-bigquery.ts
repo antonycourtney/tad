@@ -86,8 +86,8 @@ export class BigQueryConnection implements Connection {
 
   async evalQuery(
     query: QueryExp,
-    offset: number = -1,
-    limit: number = -1
+    offset?: number,
+    limit?: number
   ): Promise<TableRep> {
     let t0 = process.hrtime();
     const schema = query.getSchema(BigQueryDialect, this.tableMap);
