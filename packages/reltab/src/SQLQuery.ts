@@ -1,4 +1,4 @@
-import { JoinType } from "./QueryExp";
+import { JoinType } from "./QueryRep";
 import { ValExp, ColumnExtendExp, col } from "./defs";
 import { FilterExp } from "./FilterExp";
 import { AggFn } from "./AggFn";
