@@ -171,10 +171,8 @@ export class QueryExp {
     offset?: number,
     limit?: number
   ): string {
-    return ppSQLQuery(
-      dialect,
-      pagedQueryToSql(dialect, tableMap, this._rep, offset, limit)
-    );
+    const sql = dialect.queryToSql(tableMap, this._rep, offset, limit);
+    return ppSQLQuery(dialect, sql);
   }
 
   toCountSql(dialect: SQLDialect, tableMap: TableInfoMap): string {

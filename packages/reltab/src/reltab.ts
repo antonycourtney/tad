@@ -8,3 +8,4 @@ export * from "./TableRep";
 export * from "./AggFn";
 export * from "./ColumnType";
 export * from "./DataSource";
+export * from "./toSql";

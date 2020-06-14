@@ -29,7 +29,14 @@ export const col = (colName: string): ColRef => ({
   colName,
 });
 
-export type ValExp = ConstVal | ColRef;
+type WindowFn = "row_number";
+
+interface WindowExp {
+  expType: "WindowExp";
+  fn: WindowFn;
+}
+
+export type ValExp = ConstVal | ColRef | WindowExp;
 
 // A text cast operator applied to a ValExp:
 interface AsString {

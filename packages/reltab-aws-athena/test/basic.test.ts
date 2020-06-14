@@ -81,6 +81,14 @@ test("basic groupBy", async () => {
   // expect(qres).toMatchSnapshot();
 });
 
+test("basic paging", async () => {
+  const qres = await testCtx.evalQuery(movieTableQuery, 10, 15);
+
+  util.logTable(qres, { maxRows: 20 });
+
+  expect(qres).toMatchSnapshot();
+});
+
 /*
 test("extended groupBy", async () => {
   // Let's also try mapping the pivot column to be named "_pivot":

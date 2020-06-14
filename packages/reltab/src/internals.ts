@@ -28,6 +28,9 @@ export const valExpToSqlStr = (dialect: SQLDialect, vexp: ValExp): string => {
     case "ColRef":
       ret = dialect.quoteCol(vexp.colName);
       break;
+    case "WindowExp":
+      ret = `${vexp.fn}() OVER ()`;
+      break;
     default:
       const invalid: never = vexp;
       throw new Error(`Unknown value expression expType: ${invalid}`);
