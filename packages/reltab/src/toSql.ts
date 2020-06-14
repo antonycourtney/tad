@@ -1,5 +1,5 @@
 /**
- * various queryToSql functions, for transforming reltab QueryRep trees to SQLQueryAST trees
+ * various unpagedQueryToSql functions, for transforming reltab QueryRep trees to SQLQueryAST trees
  */
 
 import { SQLDialect } from "./dialect";
@@ -74,7 +74,7 @@ const projectQueryToSql = (
   tableMap: TableInfoMap,
   { cols, from }: ProjectQueryRep
 ): SQLQueryAST => {
-  const sqsql = queryToSql(dialect, tableMap, from);
+  const sqsql = unpagedQueryToSql(dialect, tableMap, from);
 
   // rewrite an individual select statement to only select projected cols:
   const rewriteSel = (sel: SQLSelectAST): SQLSelectAST => {
@@ -149,7 +149,7 @@ const groupByQueryToSql = (
     mkColSelItem(cid, inSchema.columnType(cid))
   );
   const selectCols = selectGbCols.concat(aggExprs);
-  const sqsql = queryToSql(dialect, tableMap, from);
+  const sqsql = unpagedQueryToSql(dialect, tableMap, from);
 
   // If sub-query is just a single select with no group by
   // and where every select expression a simple column id
@@ -198,7 +198,7 @@ const filterQueryToSql = (
   tableMap: TableInfoMap,
   { fexp, from }: FilterQueryRep
 ): SQLQueryAST => {
-  const sqsql = queryToSql(dialect, tableMap, from);
+  const sqsql = unpagedQueryToSql(dialect, tableMap, from);
 
   const subSel = sqsql.selectStmts[0];
   let retSel: SQLSelectAST;
@@ -246,7 +246,7 @@ function mapColumnsQueryToSql<T extends Object>(
   tableMap: TableInfoMap,
   { cmap, from }: MapColumnsGenQueryRep<T>
 ): SQLQueryAST {
-  const sqsql = queryToSql(dialect, tableMap, from); // apply renaming to invididual select expression:
+  const sqsql = unpagedQueryToSql(dialect, tableMap, from); // apply renaming to invididual select expression:
 
   const applyColRename = (
     cexp: SQLSelectListItem,
@@ -286,8 +286,8 @@ const concatQueryToSql = (
   { target, from }: ConcatQueryRep
 ): SQLQueryAST => {
   const sqSqls = [
-    queryToSql(dialect, tableMap, from),
-    queryToSql(dialect, tableMap, target),
+    unpagedQueryToSql(dialect, tableMap, from),
+    unpagedQueryToSql(dialect, tableMap, target),
   ];
   const allSelStmts = sqSqls.map((q) => q.selectStmts);
   return {
@@ -300,7 +300,7 @@ const sortQueryToSql = (
   tableMap: TableInfoMap,
   { keys, from }: SortQueryRep
 ): SQLQueryAST => {
-  const sqsql = queryToSql(dialect, tableMap, from);
+  const sqsql = unpagedQueryToSql(dialect, tableMap, from);
   const orderBy = keys.map(([col, asc]) => ({
     col,
     asc,
@@ -357,7 +357,7 @@ const extendQueryToSql = (
 ): SQLQueryAST => {
   const inSchema = queryGetSchema(dialect, tableMap, from);
   const colType = getOrInferColumnType(dialect, inSchema, opts.type, colExp);
-  const sqsql = queryToSql(dialect, tableMap, from);
+  const sqsql = unpagedQueryToSql(dialect, tableMap, from);
   const subSel = sqsql.selectStmts[0];
 
   // Note: We only want to extract the column ids from subquery for use at this level; we
@@ -410,8 +410,8 @@ const joinQueryToSql = (
   query: JoinQueryRep
 ): SQLQueryAST => {
   const { lhs, rhs, on: onArg, joinType } = query;
-  const lhsSql = queryToSql(dialect, tableMap, lhs);
-  const rhsSql = queryToSql(dialect, tableMap, rhs);
+  const lhsSql = unpagedQueryToSql(dialect, tableMap, lhs);
+  const rhsSql = unpagedQueryToSql(dialect, tableMap, rhs);
   const outSchema = queryGetSchema(dialect, tableMap, query);
 
   const selectCols: SQLSelectListItem[] = outSchema.columns.map((cid) =>
@@ -436,12 +436,10 @@ const joinQueryToSql = (
   };
 };
 
-export const queryToSql = (
+export const unpagedQueryToSql = (
   dialect: SQLDialect,
   tableMap: TableInfoMap,
-  query: QueryRep,
-  offset?: number,
-  limit?: number
+  query: QueryRep
 ): SQLQueryAST => {
   let ret: SQLQueryAST;
   switch (query.operator) {
@@ -477,8 +475,22 @@ export const queryToSql = (
       break;
     default:
       const invalidQuery: never = query;
-      throw new Error("queryToSql: No implementation for operator: " + query);
+      throw new Error(
+        "unpagedQueryToSql: No implementation for operator: " + query
+      );
   }
+  return ret;
+};
+
+export const pagedQueryToSql = (
+  dialect: SQLDialect,
+  tableMap: TableInfoMap,
+  query: QueryRep,
+  offset?: number,
+  limit?: number
+): SQLQueryAST => {
+  const ret = unpagedQueryToSql(dialect, tableMap, query);
+
   ret.offset = offset;
   ret.limit = limit;
   return ret;

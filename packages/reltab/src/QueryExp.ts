@@ -46,7 +46,7 @@ import {
   SortQueryRep,
 } from "./QueryRep";
 import { queryGetSchema } from "./getSchema";
-import { queryToSql } from "./toSql";
+import { pagedQueryToSql, unpagedQueryToSql } from "./toSql";
 
 type QueryOp =
   | "table"
@@ -173,7 +173,7 @@ export class QueryExp {
   ): string {
     return ppSQLQuery(
       dialect,
-      queryToSql(dialect, tableMap, this._rep, offset, limit)
+      pagedQueryToSql(dialect, tableMap, this._rep, offset, limit)
     );
   }
 
@@ -273,7 +273,7 @@ const queryToCountSql = (
   tableMap: TableInfoMap,
   query: QueryRep
 ): SQLQueryAST => {
-  const sqsql = queryToSql(dialect, tableMap, query);
+  const sqsql = unpagedQueryToSql(dialect, tableMap, query);
   const colExp = mkAggExp("count", constVal("*"));
   const as = "rowCount";
   const selectCols: SQLSelectListItem[] = [

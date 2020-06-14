@@ -1,11 +1,12 @@
 import { SQLDialect } from "../dialect";
 import { ColumnType, CoreColumnTypes, ColumnTypeMap } from "../ColumnType";
+import { BaseSQLDialect } from "../BaseSQLDialect";
 
 const intCT = new ColumnType("INTEGER", "integer");
 const realCT = new ColumnType("REAL", "real");
 const textCT = new ColumnType("TEXT", "string");
 
-export class SQLiteDialectClass implements SQLDialect {
+export class SQLiteDialectClass extends BaseSQLDialect {
   private static instance: SQLiteDialectClass;
   readonly dialectName: string = "sqlite";
   readonly coreColumnTypes: CoreColumnTypes = {
@@ -20,14 +21,6 @@ export class SQLiteDialectClass implements SQLDialect {
     REAL: realCT,
     TEXT: textCT,
   };
-
-  quoteCol(cid: string): string {
-    return '"' + cid + '"';
-  }
-
-  ppAggNull(aggStr: string, subExpStr: string, expType: ColumnType): string {
-    return "null";
-  }
 
   static getInstance(): SQLiteDialectClass {
     if (!SQLiteDialectClass.instance) {

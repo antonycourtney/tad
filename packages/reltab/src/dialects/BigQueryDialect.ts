@@ -1,6 +1,7 @@
 import { SQLDialect } from "../dialect";
 import { ColumnType, CoreColumnTypes, ColumnTypeMap } from "../ColumnType";
 import * as log from "loglevel";
+import { BaseSQLDialect } from "../BaseSQLDialect";
 
 const intCT = new ColumnType("INT64", "integer");
 const floatCT = new ColumnType("FLOAT64", "real");
@@ -14,7 +15,7 @@ const timestampCT = new ColumnType("TIMESTAMP", "timestamp", {
   stringRender: (val: any) => (val == null ? "" : val.value),
 });
 
-class BigQueryDialectClass implements SQLDialect {
+class BigQueryDialectClass extends BaseSQLDialect {
   private static instance: BigQueryDialectClass;
   readonly dialectName: string = "bigquery";
   readonly coreColumnTypes: CoreColumnTypes = {

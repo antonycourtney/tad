@@ -4,11 +4,21 @@
 
 import { ColumnType, CoreColumnTypes, ColumnTypeMap } from "./ColumnType";
 import * as log from "loglevel";
+import { TableInfoMap } from "./TableRep";
+import { QueryRep } from "./QueryRep";
+import { SQLQueryAST } from "./SQLQuery";
 
 export interface SQLDialect {
   readonly dialectName: string;
   quoteCol(cid: string): string;
   ppAggNull(aggStr: string, subExpStr: string, expType: ColumnType): string;
+
+  queryToSql(
+    tableMap: TableInfoMap,
+    query: QueryRep,
+    offset?: number,
+    limit?: number
+  ): SQLQueryAST;
 
   readonly coreColumnTypes: CoreColumnTypes;
   columnTypes: ColumnTypeMap;

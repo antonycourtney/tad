@@ -1,21 +1,10 @@
 import * as log from "loglevel";
-import {
-  TableRep,
-  QueryExp,
-  Schema,
-  tableQuery,
-  ColumnType,
-  DataSourceNodeId,
-} from "reltab";
+import { TableRep, QueryExp, Schema, DataSourceNodeId } from "reltab";
 import {
   TableInfoMap,
   TableInfo,
-  ValExp,
   Row,
-  AggColSpec,
-  SubExp,
   ColumnMetaMap,
-  ColumnMapInfo,
   Connection,
   BigQueryDialect,
   DataSourceNode,
@@ -23,17 +12,8 @@ import {
 } from "reltab";
 import { BigQuery, Dataset } from "@google-cloud/bigquery";
 import path = require("path");
-import { SQLDialect } from "reltab/dist/dialect";
 
 const LOCATION = "US";
-
-function assertDefined<A>(x: A | undefined | null): A {
-  if (x == null) {
-    throw new Error("unexpected null value");
-  }
-
-  return x;
-}
 
 const mapIdent = (src: string): string => {
   const ret = src.replace(/[^a-z0-9_]/gi, "_");
@@ -242,7 +222,7 @@ export class BigQueryConnection implements Connection {
       const dataset = this.bigquery_meta.dataset(datasetName);
 
       // get metadata on dataset for description:
-      const [dsInfo, apiResponse] = await dataset.get();
+      const [dsInfo] = await dataset.get();
 
       console.log("got dataset info: ", dsInfo);
       // And enumerate tables:

@@ -1,21 +1,10 @@
 import * as log from "loglevel";
-import {
-  TableRep,
-  QueryExp,
-  Schema,
-  tableQuery,
-  ColumnType,
-  DataSourceNodeId,
-} from "reltab";
+import { TableRep, QueryExp, Schema } from "reltab";
 import {
   TableInfoMap,
   TableInfo,
-  ValExp,
   Row,
-  AggColSpec,
-  SubExp,
   ColumnMetaMap,
-  ColumnMapInfo,
   Connection,
   PrestoDialect,
   DataSourceNode,
@@ -23,7 +12,6 @@ import {
 } from "reltab";
 import * as aws from "aws-sdk";
 import * as path from "path";
-import { SQLDialect } from "reltab/dist/dialect";
 
 const AthenaExpress = require("athena-express");
 
@@ -33,32 +21,12 @@ aws.config.update({ region: REGION });
 const athenaExpressConfig = { aws }; //configuring athena-express with aws sdk object
 const athenaExpress = new AthenaExpress(athenaExpressConfig);
 
-function assertDefined<A>(x: A | undefined | null): A {
-  if (x == null) {
-    throw new Error("unexpected null value");
-  }
-
-  return x;
-}
-
 const mapIdent = (src: string): string => {
   const ret = src.replace(/[^a-z0-9_]/gi, "_");
   return ret;
 };
 
 const isAlpha = (ch: string): boolean => /^[A-Z]$/i.test(ch);
-
-/* generate a SQL table name from pathname */
-const genTableName = (pathname: string): string => {
-  const extName = path.extname(pathname);
-  const baseName = path.basename(pathname, extName);
-  let baseIdent = mapIdent(baseName);
-  if (!isAlpha(baseIdent[0])) {
-    baseIdent = "t_" + baseIdent;
-  }
-  const tableName = baseIdent;
-  return tableName;
-};
 
 export interface BigQueryConnectionOptions {
   showQueries?: boolean;
@@ -133,7 +101,7 @@ export class AWSAthenaConnection implements Connection {
     return ret;
   }
 
-  async importCsv(pathname: string, metadata: any): Promise<void> {
+  async importCsv(): Promise<void> {
     throw new Error("importCsv not implemented for aws-athena");
   }
 
