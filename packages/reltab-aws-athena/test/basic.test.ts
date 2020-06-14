@@ -89,6 +89,87 @@ test("basic paging", async () => {
   expect(qres).toMatchSnapshot();
 });
 
+test("initial aggtree Test", async () => {
+  const q0 = movieTableQuery.project(pcols);
+
+  const schema = await aggtree.getBaseSchema(testCtx, q0);
+  log.debug("got schema: ", schema);
+
+  const tree0 = aggtree.vpivot(
+    testCtx,
+    q0,
+    schema,
+    ["country", "director_name"],
+    "movie_title",
+    true,
+    []
+  );
+  const rq0 = tree0.rootQuery!;
+  log.debug("root query exp: ", rq0.toJS());
+
+  const res0 = await testCtx.evalQuery(rq0!);
+  log.debug("root query result:", res0);
+  util.logTable(res0);
+
+  const q1 = tree0.applyPath([]);
+  const res1 = await testCtx.evalQuery(q1);
+  log.debug("open root query:");
+  util.logTable(res1);
+
+  expect(res1.schema.columns).toMatchInlineSnapshot(`
+    Array [
+      "country",
+      "director_name",
+      "movie_title",
+      "title_year",
+      "budget",
+      "gross",
+      "Rec",
+      "_depth",
+      "_pivot",
+      "_isRoot",
+      "_sortVal_0",
+      "_sortVal_1",
+      "_sortVal_2",
+      "_path0",
+      "_path1",
+    ]
+  `);
+  expect(res1.rowData.length).toMatchInlineSnapshot(`31`);
+
+  const actSum = util.columnSum(res1, "gross");
+
+  expect(actSum).toMatchInlineSnapshot(
+    `"014677654570793448undefined293558095153629485313837577894186530000016808878913168130323291476undefinedundefinedundefined397094881143313486953315383834undefinedundefined685709617766755undefined65720983undefined757145761000008023894undefined201674242258748"`
+  );
+
+  /*
+  const q2 = tree0.applyPath(["Executive Management"]);
+
+  console.log("after opening node: q2: ", JSON.stringify(q2, null, 2));
+
+  const res2 = await testCtx.evalQuery(q2);
+
+  console.log('after applying path ["Executive Management"]:');
+  util.logTable(res2);
+  expect(res2).toMatchSnapshot();
+
+  const q3 = tree0.applyPath(["Executive Management", "General Manager"]);
+  const res3 = await testCtx.evalQuery(q3);
+
+  console.log("after applying path /Executive Management/General Manager:");
+  util.logTable(res3);
+  expect(res3).toMatchSnapshot();
+
+  const openPaths = new PathTree({ '"Executive Management"': {} });
+  const q4 = tree0.getTreeQuery(openPaths);
+  const res4 = await testCtx.evalQuery(q4);
+
+  console.log("after treeQuery for path /Executive Management: ");
+  util.logTable(res4);
+  */
+});
+
 /*
 test("extended groupBy", async () => {
   // Let's also try mapping the pivot column to be named "_pivot":

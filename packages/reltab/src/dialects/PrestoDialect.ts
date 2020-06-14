@@ -16,8 +16,8 @@ import { FilterExp, and } from "../FilterExp";
 import { col, constVal } from "../defs";
 
 const intCT = new ColumnType("INT", "integer");
-const floatCT = new ColumnType("REAL", "real");
-const stringCT = new ColumnType("STRING", "string");
+const floatCT = new ColumnType("DOUBLE", "real");
+const stringCT = new ColumnType("VARCHAR", "string");
 const boolCT = new ColumnType("BOOLEAN", "boolean");
 
 const dateCT = new ColumnType("DATE", "date");
