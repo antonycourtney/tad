@@ -410,20 +410,42 @@ const joinQueryToSql = (
   query: JoinQueryRep
 ): SQLQueryAST => {
   const { lhs, rhs, on: onArg, joinType } = query;
+  const on = typeof onArg === "string" ? [onArg] : onArg;
   const lhsSql = unpagedQueryToSql(dialect, tableMap, lhs);
   const rhsSql = unpagedQueryToSql(dialect, tableMap, rhs);
   const outSchema = queryGetSchema(dialect, tableMap, query);
 
-  const selectCols: SQLSelectListItem[] = outSchema.columns.map((cid) =>
-    mkColSelItem(cid, outSchema.columnType(cid))
+  const lhsTblAlias = "tA";
+  const rhsTblAlias = "tB";
+  const lhsSchema = queryGetSchema(dialect, tableMap, lhs);
+  const rhsSchema = queryGetSchema(dialect, tableMap, rhs);
+
+  const rhsCols = _.difference(
+    rhsSchema.columns,
+    _.concat(on, lhsSchema.columns)
   );
+
+  const rhsMeta = _.pick(rhsSchema.columnMetadata, rhsCols);
+
+  // const joinCols = _.concat(lhsSchema.columns, rhsCols);
+
+  const lhsSelectCols: SQLSelectListItem[] = lhsSchema.columns.map((cid) =>
+    mkColSelItem(cid, outSchema.columnType(cid), lhsTblAlias)
+  );
+  const rhsSelectCols: SQLSelectListItem[] = rhsCols.map((cid) =>
+    mkColSelItem(cid, outSchema.columnType(cid), rhsTblAlias)
+  );
+
+  const selectCols = _.concat(lhsSelectCols, rhsSelectCols);
+
   const from: SQLFromJoin = {
     expType: "join",
     joinType,
     lhs: lhsSql,
+    lhsTblAlias,
     rhs: rhsSql,
+    rhsTblAlias,
   };
-  const on = typeof onArg === "string" ? [onArg] : onArg;
   const retSel: SQLSelectAST = {
     selectCols,
     from,

@@ -23,10 +23,12 @@ export const constVal = (val: Scalar): ConstVal => ({
 interface ColRef {
   expType: "ColRef";
   colName: string;
+  tblAlias?: string;
 }
-export const col = (colName: string): ColRef => ({
+export const col = (colName: string, tblAlias?: string): ColRef => ({
   expType: "ColRef",
   colName,
+  tblAlias,
 });
 
 type WindowFn = "row_number";

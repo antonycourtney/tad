@@ -26,7 +26,8 @@ export const valExpToSqlStr = (dialect: SQLDialect, vexp: ValExp): string => {
           : vexp.val.toString();
       break;
     case "ColRef":
-      ret = dialect.quoteCol(vexp.colName);
+      const qCol = dialect.quoteCol(vexp.colName);
+      ret = vexp.tblAlias ? `${vexp.tblAlias}.${qCol}` : qCol;
       break;
     case "WindowExp":
       ret = `${vexp.fn}() OVER ()`;

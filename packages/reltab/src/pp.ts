@@ -118,12 +118,12 @@ const ppSQLSelect = (
     dst.push(dialect.quoteCol(fromVal) + "\n");
   } else if (fromVal.expType === "join") {
     // join condition:
-    const { lhs, rhs } = fromVal;
+    const { lhs, lhsTblAlias, rhs, rhsTblAlias } = fromVal;
     dst.push("(\n");
     auxPPSQLQuery(dialect, dst, depth + 1, lhs);
-    dst.push(") LEFT OUTER JOIN (\n");
+    dst.push(`) ${lhsTblAlias} LEFT OUTER JOIN (\n`);
     auxPPSQLQuery(dialect, dst, depth + 1, rhs);
-    dst.push(")\n");
+    dst.push(`) ${rhsTblAlias}\n`);
 
     if (ss.on) {
       const qcols = ss.on.map(dialect.quoteCol);

@@ -28,9 +28,10 @@ export type SQLSelectListItem = {
 
 export const mkColSelItem = (
   cid: string,
-  colType: ColumnType
+  colType: ColumnType,
+  tblAlias?: string
 ): SQLSelectListItem => ({
-  colExp: col(cid),
+  colExp: col(cid, tblAlias),
   colType,
 });
 
@@ -42,7 +43,9 @@ export type SQLFromJoin = {
   expType: "join";
   joinType: JoinType;
   lhs: SQLQueryAST;
+  lhsTblAlias: string;
   rhs: SQLQueryAST;
+  rhsTblAlias: string;
 };
 export type SQLFromQuery = {
   expType: "query";
