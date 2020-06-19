@@ -62,7 +62,7 @@ export class AWSAthenaConnection implements Connection {
 
     const t2 = process.hrtime();
     const qres = await athenaExpress.query(sqlQuery);
-    console.log("evalQuery: query results: ", JSON.stringify(qres, null, 2));
+    // console.log("evalQuery: query results: ", JSON.stringify(qres, null, 2));
     const rows = qres.Items as Row[];
     const t3 = process.hrtime(t2);
     const [t3s, t3ns] = t3;

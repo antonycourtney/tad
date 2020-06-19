@@ -137,37 +137,109 @@ test("initial aggtree Test", async () => {
   `);
   expect(res1.rowData.length).toMatchInlineSnapshot(`31`);
 
-  const actSum = util.columnSum(res1, "gross");
+  const q2 = tree0.applyPath(["USA"]);
 
-  expect(actSum).toMatchInlineSnapshot(
-    `"014677654570793448undefined293558095153629485313837577894186530000016808878913168130323291476undefinedundefinedundefined397094881143313486953315383834undefinedundefined685709617766755undefined65720983undefined757145761000008023894undefined201674242258748"`
-  );
-
-  /*
-  const q2 = tree0.applyPath(["Executive Management"]);
-
-  console.log("after opening node: q2: ", JSON.stringify(q2, null, 2));
+  console.log("open node query (q2):\n", q2.toJS());
 
   const res2 = await testCtx.evalQuery(q2);
 
-  console.log('after applying path ["Executive Management"]:');
-  util.logTable(res2);
+  console.log('after applying path ["USA"]:');
+  util.logTable(res2), { maxRows: 20 };
+
   expect(res2).toMatchSnapshot();
 
-  const q3 = tree0.applyPath(["Executive Management", "General Manager"]);
+  const q3 = tree0.applyPath(["USA", "Steven Spielberg"]);
+
+  console.log("open multi-level node query (q3):\n", q3.toJS());
+
   const res3 = await testCtx.evalQuery(q3);
 
-  console.log("after applying path /Executive Management/General Manager:");
-  util.logTable(res3);
+  console.log("after applying path /USA/Steven Spielberg:");
+  util.logTable(res3, { maxRows: 20 });
   expect(res3).toMatchSnapshot();
 
-  const openPaths = new PathTree({ '"Executive Management"': {} });
+  const openPaths = new PathTree({ '"USA"': {} });
   const q4 = tree0.getTreeQuery(openPaths);
+
+  console.log("treeQuery (q4):\n", q4);
+
   const res4 = await testCtx.evalQuery(q4);
 
-  console.log("after treeQuery for path /Executive Management: ");
-  util.logTable(res4);
-  */
+  console.log("after treeQuery for path /USA: ");
+  util.logTable(res4, { maxRows: 20 });
+
+  expect(res4).toMatchSnapshot();
+});
+
+test("basic sorted aggTree test", async () => {
+  const q0 = movieTableQuery.project(pcols);
+  const schema = await aggtree.getBaseSchema(testCtx, q0);
+  const tree0 = aggtree.vpivot(
+    testCtx,
+    q0,
+    schema,
+    ["country", "director_name"],
+    "movie_title",
+    true,
+    [
+      ["title_year", true],
+      ["gross", false],
+    ]
+  );
+
+  console.log("vpivot initial promise resolved...");
+
+  const sq1 = tree0.getSortQuery(1);
+
+  const res = await testCtx.evalQuery(sq1);
+  console.log("sort query depth 1: ");
+  util.logTable(res, { maxRows: 20 });
+
+  // expect(res).toMatchSnapshot();
+
+  const sq2 = tree0.getSortQuery(2);
+
+  const res2 = await testCtx.evalQuery(sq2);
+  console.log("sort query depth 2: ");
+  util.logTable(res2, { maxRows: 20 });
+  // expect(res2).toMatchSnapshot();
+
+  const q1 = tree0.applyPath([]);
+
+  console.log("got depth 1 query and sortQuery, joining...: ");
+  const jq1 = q1.join(sq1, "_path0");
+
+  console.log("join query:\n", jq1.toJS());
+
+  const jres = await testCtx.evalQuery(jq1);
+
+  console.log("result of join query: ");
+  util.logTable(jres, { maxRows: 20 });
+  // expect(jres).toMatchSnapshot();
+});
+
+test("ambiguous join test", async () => {
+  const q0 = movieTableQuery.groupBy(["country"], ["gross"]);
+
+  const res0 = await testCtx.evalQuery(q0);
+  util.logTable(res0, { maxRows: 20 });
+
+  const q1 = movieTableQuery.project([
+    "country",
+    "director_name",
+    "movie_title",
+  ]);
+  const res1 = await testCtx.evalQuery(q1);
+  util.logTable(res1, { maxRows: 20 });
+
+  const jq1 = q0.join(q1, "country");
+
+  console.log("join query:\n", jq1.toJS());
+
+  const jres = await testCtx.evalQuery(jq1);
+
+  console.log("result of join query: ");
+  util.logTable(jres, { maxRows: 20 });
 });
 
 /*
