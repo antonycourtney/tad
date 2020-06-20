@@ -14,6 +14,7 @@ import {
   ColumnType,
   DataSourcePath,
   DataSourceNode,
+  DataSourceNodeId,
 } from "reltab"; // eslint-disable-line
 import { SQLDialect } from "reltab/dist/dialect";
 
@@ -39,11 +40,13 @@ interface ContextOptions {
 }
 
 export class SqliteContext implements Connection {
+  dbfile: string;
   db: sqlite3.Database;
   private tableMap: TableInfoMap;
   private showQueries: boolean;
 
-  constructor(db: any, options: ContextOptions) {
+  constructor(dbfile: string, db: any, options: ContextOptions) {
+    this.dbfile = dbfile;
     this.db = db;
     this.tableMap = {};
     this.showQueries =
@@ -182,7 +185,23 @@ export class SqliteContext implements Connection {
   }
 
   async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
-    throw new Error("getSourceInfo not implemented yet for sqlite data source");
+    const tiQuery = `select name,tbl_name from sqlite_master where type='table'`;
+    const dbRows = await dbAll(this.db, tiQuery);
+    const children: DataSourceNodeId[] = dbRows.map((row: any) => ({
+      kind: "Table",
+      id: row.tbl_name,
+      displayName: row.name,
+    }));
+    let nodeId: DataSourceNodeId = {
+      kind: "Database",
+      id: "",
+      displayName: this.dbfile,
+    };
+    let node: DataSourceNode = {
+      nodeId,
+      children,
+    };
+    return node;
   }
 }
 
@@ -203,7 +222,7 @@ const init = async (
   options: ContextOptions = {}
 ): Promise<Connection> => {
   const db = await open(dbfile, sqlite3.OPEN_READWRITE);
-  const ctx = new SqliteContext(db, options);
+  const ctx = new SqliteContext(dbfile, db, options);
   return ctx;
 };
 

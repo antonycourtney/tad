@@ -64,7 +64,6 @@ const init = async () => {
     AppPane
   );
 
-  ReactDOM.render(<App />, document.getElementById("app"));
   try {
     const ti = await initMainProcess(targetPath, srcFile!);
 
@@ -75,6 +74,8 @@ const init = async () => {
     var pivotRequester: PivotRequester | undefined | null = null;
 
     await initAppState(rtc, ti.tableName, baseQuery, viewParams, stateRef);
+
+    ReactDOM.render(<App />, document.getElementById("app"));
     pivotRequester = new PivotRequester(stateRef);
 
     ipcRenderer.on("request-serialize-app-state", (event, req) => {

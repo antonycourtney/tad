@@ -82,6 +82,61 @@ const getRowCount = (rtc: reltabSqlite.SqliteContext) => (
     log.error("runQuery: ", err, err.stack);
   }
 };
+
+const getSourceInfo = (rtc: reltabSqlite.SqliteContext) => (
+  pathStr: string,
+  cb: (res: any, err: any) => void
+) => {
+  try {
+    const req = JSON.parse(pathStr);
+    const hrstart = process.hrtime();
+    delay(0).then(() => {
+      const qp = rtc.getSourceInfo(req.path);
+      qp.then((sourceInfo) => {
+        const [es, ens] = process.hrtime(hrstart);
+        log.info("getSourceInfo: evaluated query in %ds %dms", es, ens / 1e6);
+        const resObj = {
+          sourceInfo,
+        };
+        const serRes = JSON.stringify(resObj, null, 2);
+        cb(null, serRes);
+      }).catch((err) => {
+        log.error("getSourceInfo: error: ", err.message);
+        cb(err, null);
+      });
+    });
+  } catch (err) {
+    log.error("getSourceInfo: ", err, err.stack);
+  }
+};
+
+const getTableInfo = (rtc: reltabSqlite.SqliteContext) => (
+  tableNameReqStr: string,
+  cb: (res: any, err: any) => void
+) => {
+  try {
+    const req = JSON.parse(tableNameReqStr);
+    const hrstart = process.hrtime();
+    delay(0).then(() => {
+      const qp = rtc.getTableInfo(req.tableName);
+      qp.then((tableInfo) => {
+        const [es, ens] = process.hrtime(hrstart);
+        log.info("getTableInfo: evaluated query in %ds %dms", es, ens / 1e6);
+        const resObj = {
+          tableInfo,
+        };
+        const serRes = JSON.stringify(resObj, null, 2);
+        cb(null, serRes);
+      }).catch((err) => {
+        log.error("geTableInfo: error: ", err.message);
+        cb(err, null);
+      });
+    });
+  } catch (err) {
+    log.error("getTableInfo: ", err, err.stack);
+  }
+};
+
 /*
  * main process initialization
  *
@@ -166,10 +221,13 @@ const initMainAsync = async (
     ti = reltabSqlite.mkTableInfo(md);
   }
 
-  rtc.registerTable(ti); // Now let's place a function in global so it can be run via remote:
+  rtc.registerTable(ti);
 
+  // Now let's place a function in global so it can be run via remote:
   (global as any).runQuery = runQuery(rtc);
   (global as any).getRowCount = getRowCount(rtc);
+  (global as any).getSourceInfo = getSourceInfo(rtc);
+  (global as any).getTableInfo = getTableInfo(rtc);
   (global as any).appRtc = rtc;
   const tiStr = JSON.stringify(ti, null, 2);
   console.log("initMainAsync: returning: ", tiStr);

@@ -1,10 +1,12 @@
 import log from "loglevel";
 import * as reltab from "reltab";
 import * as electron from "electron";
-import { TableInfo } from "reltab";
+import { TableInfo, DataSourcePath, DataSourceNode } from "reltab";
 
 let remoteQuery: any;
 let remoteRowCount: any;
+let remoteGetSourceInfo: any;
+let remoteGetTableInfo: any;
 
 export class ElectronConnection implements reltab.Connection {
   tableName: string;
@@ -15,11 +17,25 @@ export class ElectronConnection implements reltab.Connection {
     this.tableInfo = tableInfo;
     remoteQuery = electron.remote.getGlobal("runQuery");
     remoteRowCount = electron.remote.getGlobal("getRowCount");
+    remoteGetSourceInfo = electron.remote.getGlobal("getSourceInfo");
+    remoteGetTableInfo = electron.remote.getGlobal("getTableInfo");
     console.log("ElectronConnection: ", { remoteQuery, remoteRowCount });
   }
 
-  async getTableInfo(tableName: string): Promise<reltab.TableInfo> {
-    return this.tableInfo;
+  async getTableInfo(tableName: string): Promise<TableInfo> {
+    return new Promise((resolve, reject) => {
+      let req: Object = { tableName };
+      const sq = JSON.stringify(req, null, 2);
+      remoteGetTableInfo(sq, (err: any, resStr: string) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        const res = JSON.parse(resStr);
+        console.log("getSourceInfo returned: ", { resStr, res });
+        resolve(res.tableInfo as TableInfo);
+      });
+    });
   }
 
   evalQuery(
@@ -60,6 +76,22 @@ export class ElectronConnection implements reltab.Connection {
         const res = JSON.parse(resStr);
         console.log("remoteRowCount returned: ", { resStr, res });
         resolve(res.rowCount);
+      });
+    });
+  }
+
+  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
+    return new Promise((resolve, reject) => {
+      let req: Object = { path };
+      const sq = JSON.stringify(req, null, 2);
+      remoteGetSourceInfo(sq, (err: any, resStr: string) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        const res = JSON.parse(resStr);
+        console.log("getSourceInfo returned: ", { resStr, res });
+        resolve(res.sourceInfo as DataSourceNode);
       });
     });
   }

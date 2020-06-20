@@ -253,6 +253,22 @@ test("null const extend", async () => {
   expect(res).toMatchSnapshot();
 });
 
+test("getSourceInfo basics", async () => {
+  const rtc = testCtx;
+  const rootSourceInfo = await rtc.getSourceInfo([]);
+  console.log("root source info: ", rootSourceInfo);
+
+  /*  
+  const covid_item = rootSourceInfo.children.find(
+    (item) => item.id === "covid19_jhu_csse"
+  );
+
+  console.log("calling getSourceInfo on item ", covid_item);
+  const covidSourceInfo = await rtc.getSourceInfo([covid_item!]);
+  console.log("covid19 source info: ", covidSourceInfo);
+*/
+});
+
 /*
  * We'd need to put back expression syntax in extend first:
 const q11 = q8.extend('ExtraComp', {type: 'integer'}, col('TCOE - Base'));

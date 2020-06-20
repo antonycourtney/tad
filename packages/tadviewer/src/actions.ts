@@ -5,7 +5,7 @@ import * as reltab from "reltab";
 import { ColumnListTypes } from "./components/defs";
 import { Path, PathTree } from "aggtree";
 import * as aggtree from "aggtree";
-import { StateRef, update, mutableGet } from "oneref";
+import { StateRef, update, mutableGet, awaitableUpdate_ } from "oneref";
 import log from "loglevel";
 
 export async function initAppState(
@@ -36,7 +36,7 @@ export async function initAppState(
   }); // We explicitly set rather than merge() because merge
   // will attempt to deep convert JS objects to Immutables
 
-  update(
+  const st = await awaitableUpdate_(
     stateRef,
     (st: AppState): AppState =>
       st
@@ -47,6 +47,7 @@ export async function initAppState(
         .set("viewState", viewState)
         .set("initialized", true) as AppState
   );
+  console.log("initAppState: st: ", st.toJS());
 }
 
 export const openTable = async (
