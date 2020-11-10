@@ -13,6 +13,7 @@ import * as reltab from "reltab";
 import log from "loglevel";
 import { ElectronConnection } from "./electronClient";
 import * as electron from "electron";
+import { DbConnectionKey, TableInfo } from "reltab";
 
 const remote = electron.remote;
 const remoteInitMain = remote.getGlobal("initMain");
@@ -20,18 +21,23 @@ const remoteErrorDialog = remote.getGlobal("errorDialog");
 
 const ipcRenderer = electron.ipcRenderer;
 
+type InitInfo = {
+  tableInfo: TableInfo;
+  connKey: DbConnectionKey;
+};
+
 const initMainProcess = (
   targetPath: string,
   srcFile: string
-): Promise<reltab.TableInfo> => {
+): Promise<InitInfo> => {
   return new Promise((resolve, reject) => {
-    remoteInitMain(targetPath, srcFile, (err: any, tiStr: string) => {
+    remoteInitMain(targetPath, srcFile, (err: any, initStr: string) => {
       if (err) {
         console.error("initMain error: ", err);
         reject(err);
       } else {
-        const ti = JSON.parse(tiStr);
-        resolve(ti);
+        const initInfo: InitInfo = JSON.parse(initStr);
+        resolve(initInfo);
       }
     });
   });
@@ -40,6 +46,8 @@ const initMainProcess = (
 // TODO: figure out how to initialize based on saved views or different file / table names
 const init = async () => {
   log.setLevel(log.levels.DEBUG);
+  console.log("testing, testing, one two...");
+  log.debug("Hello, Electron!");
   const openParams: any = (remote.getCurrentWindow() as any).openParams;
   let targetPath: string = "";
   let srcFile: string | null = null;
@@ -65,15 +73,24 @@ const init = async () => {
   );
 
   try {
-    const ti = await initMainProcess(targetPath, srcFile!);
+    console.log("before initMain");
+    const initInfo = await initMainProcess(targetPath, srcFile!);
+    console.log("after initMain");
+    const ti = initInfo.tableInfo;
+    const rtEngine = initInfo.connKey;
 
     const rtc = new ElectronConnection(ti.tableName, ti);
+
+    const dbc = await rtc.connect(
+      initInfo.connKey,
+      initInfo.tableInfo.tableName
+    );
 
     const baseQuery = reltab.tableQuery(ti.tableName);
 
     var pivotRequester: PivotRequester | undefined | null = null;
 
-    await initAppState(rtc, ti.tableName, baseQuery, viewParams, stateRef);
+    await initAppState(rtc, dbc, ti.tableName, baseQuery, viewParams, stateRef);
 
     ReactDOM.render(<App />, document.getElementById("app"));
     pivotRequester = new PivotRequester(stateRef);
@@ -130,5 +147,5 @@ const init = async () => {
     // remoteErrorDialog("Error initializing Tad", err.message, true);
   }
 };
-
+console.log("before init");
 init();

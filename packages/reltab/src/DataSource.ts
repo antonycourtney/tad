@@ -7,7 +7,7 @@ export type DataSourceKind = "Database" | "Dataset" | "Table";
 export interface DataSourceNodeId {
   kind: DataSourceKind;
   displayName: string;
-  id: string;
+  id: any;
 }
 
 export type DataSourcePath = Array<DataSourceNodeId>;

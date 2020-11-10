@@ -9,12 +9,17 @@ import {
   TableInfo,
   Row,
   ColumnMetaMap,
-  Connection,
+  DbConnection,
   SQLiteDialect,
   ColumnType,
   DataSourcePath,
   DataSourceNode,
   DataSourceNodeId,
+  DbConnectionKey,
+  EvalQueryOptions,
+  DbProvider,
+  registerProvider,
+  defaultEvalQueryOptions,
 } from "reltab"; // eslint-disable-line
 import { SQLDialect } from "reltab/dist/dialect";
 
@@ -35,86 +40,96 @@ const dbAll = tp.promisify(
     db.all(query, cb)
 );
 
-interface ContextOptions {
-  showQueries?: boolean;
-}
-
-export class SqliteContext implements Connection {
+export class SqliteContext implements DbConnection {
+  readonly displayName: string;
+  readonly connectionKey: DbConnectionKey;
   dbfile: string;
   db: sqlite3.Database;
   private tableMap: TableInfoMap;
-  private showQueries: boolean;
 
-  constructor(dbfile: string, db: any, options: ContextOptions) {
+  constructor(dbfile: string, db: any) {
     this.dbfile = dbfile;
+    this.displayName = dbfile;
+    this.connectionKey = { providerName: "sqlite", connectionInfo: dbfile };
     this.db = db;
     this.tableMap = {};
-    this.showQueries =
-      options != null && options.showQueries != null
-        ? options.showQueries
-        : false;
-    if (this.showQueries) {
-      log.setLevel(
-        Math.min(log.getLevel(), log.levels.INFO) as log.LogLevelDesc
-      );
-      log.info("SqliteContext: showQueries enabled");
-    }
+  }
+
+  async getDisplayName(): Promise<string> {
+    return this.displayName;
   }
 
   registerTable(ti: TableInfo) {
     this.tableMap[ti.tableName] = ti;
   }
 
-  getSchema(query: QueryExp): Schema {
+  // ensure every table mentioned in query is registered:
+  async ensureTables(query: QueryExp): Promise<void> {
+    const tblNames = query.getTables();
+    const namesArr = Array.from(tblNames);
+    for (let tblName of namesArr) {
+      if (this.tableMap[tblName] === undefined) {
+        await this.getTableInfo(tblName);
+      }
+    }
+  }
+
+  async getSchema(query: QueryExp): Promise<Schema> {
+    await this.ensureTables(query);
     const schema = query.getSchema(SQLiteDialect, this.tableMap);
     return schema;
   }
 
-  evalQuery(
+  async evalQuery(
     query: QueryExp,
     offset?: number,
-    limit?: number
+    limit?: number,
+    options?: EvalQueryOptions
   ): Promise<TableRep> {
     let t0 = process.hrtime();
+    await this.ensureTables(query);
     const schema = query.getSchema(SQLiteDialect, this.tableMap);
     const sqlQuery = query.toSql(SQLiteDialect, this.tableMap, offset, limit);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
-    if (this.showQueries) {
+    const trueOptions = options ? options : defaultEvalQueryOptions;
+
+    if (trueOptions.showQueries) {
       // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
       log.info("SqliteContext.evalQuery: evaluating:\n" + sqlQuery);
     }
 
     const t2 = process.hrtime();
-    const qp = dbAll(this.db, sqlQuery);
-    return qp.then((dbRows) => {
-      const rows = dbRows as Row[];
-      const t3 = process.hrtime(t2);
-      const [t3s, t3ns] = t3;
-      const t4pre = process.hrtime();
-      const ret = new TableRep(schema, rows);
-      const t4 = process.hrtime(t4pre);
-      const [t4s, t4ns] = t4;
+    const dbRows = await dbAll(this.db, sqlQuery);
+    const rows = dbRows as Row[];
+    const t3 = process.hrtime(t2);
+    const [t3s, t3ns] = t3;
+    const t4pre = process.hrtime();
+    const ret = new TableRep(schema, rows);
+    const t4 = process.hrtime(t4pre);
+    const [t4s, t4ns] = t4;
 
-      /*
-      if (this.showQueries) {
-        log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
-        log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
-      }
-      */
+    /*
+    if (this.showQueries) {
+      log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
+      log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
+    }
+    */
 
-      return ret;
-    });
+    return ret;
   }
 
-  rowCount(query: QueryExp): Promise<number> {
+  async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
     let t0 = process.hrtime();
+    await this.ensureTables(query);
     const countSql = query.toCountSql(SQLiteDialect, this.tableMap);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
-    if (this.showQueries) {
+    const trueOptions = options ? options : defaultEvalQueryOptions;
+
+    if (trueOptions.showQueries) {
       // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
       log.debug("SqliteContext.rowCount: evaluating: \n" + countSql);
     }
@@ -217,28 +232,14 @@ const open = (filename: string, mode: number): Promise<sqlite3.Database> => {
   });
 };
 
-const init = async (
-  dbfile: string,
-  options: ContextOptions = {}
-): Promise<Connection> => {
-  const db = await open(dbfile, sqlite3.OPEN_READWRITE);
-  const ctx = new SqliteContext(dbfile, db, options);
-  return ctx;
+const sqliteDbProvider: DbProvider = {
+  providerName: "sqlite",
+  connect: async (connectionInfo: any): Promise<DbConnection> => {
+    const dbfile = connectionInfo as string;
+    const db = await open(dbfile, sqlite3.OPEN_READWRITE);
+    const ctx = new SqliteContext(dbfile, db);
+    return ctx;
+  },
 };
 
-let ctxCache: { [key: string]: Promise<Connection> } = {};
-
-export const getContext = (
-  dbfile: string,
-  options: ContextOptions = {}
-): Promise<Connection> => {
-  let ctxPromise: Promise<Connection> | undefined;
-  const key = JSON.stringify({ dbfile, options });
-  ctxPromise = ctxCache[key];
-  if (!ctxPromise) {
-    ctxPromise = init(dbfile, options);
-    ctxCache[key] = ctxPromise;
-  }
-
-  return ctxPromise;
-};
+registerProvider(sqliteDbProvider);

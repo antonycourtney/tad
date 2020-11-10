@@ -34,15 +34,15 @@ const importCsv = async (db: sqlite3.Database, path: string) => {
 
   const ti = reltabSqlite.mkTableInfo(md);
   testCtx.registerTable(ti);
-  console.log("importCsv: table info: ", JSON.stringify(ti, null, 2));
+  // console.log("importCsv: table info: ", JSON.stringify(ti, null, 2));
 };
 
 beforeAll(
   async (): Promise<reltabSqlite.SqliteContext> => {
     log.setLevel("info"); // use "debug" for even more verbosity
-    const showQueries = true;
-    const ctx = await reltabSqlite.getContext(":memory:", {
-      showQueries,
+    const ctx = await reltab.getConnection({
+      providerName: "sqlite",
+      connectionInfo: ":memory:",
     });
 
     testCtx = ctx as reltabSqlite.SqliteContext;
@@ -89,17 +89,17 @@ test("basic project operator", async () => {
 test("table and schema deserialization", async () => {
   const qres = await testCtx.evalQuery(q2);
 
+  /*
   console.log(
     "qres schema, JobFamily column type: ",
     qres.schema.columnType("JobFamily")
   );
-
+  */
   const qresStr = JSON.stringify(qres, undefined, 2);
 
   const deserRes = reltab.deserializeTableRepStr(qresStr);
 
   const jfct = deserRes.schema.columnType("JobFamily");
-  console.log("deserRes schema, JobFamily column type: ");
   expect(typeof jfct.stringRender).toBe("function");
 });
 
@@ -157,14 +157,9 @@ test("empty and filter", async () => {
 test("query deserialization", async () => {
   let req: Object = { query: q5 };
   const ser5 = JSON.stringify(req, null, 2);
-  console.log("serialized query");
-  console.log(ser5);
   const dq5 = reltab.deserializeQueryReq(ser5);
-  console.log("deserialized query: ", JSON.stringify(dq5, null, 2));
   const rtc = testCtx;
   const res = await rtc.evalQuery(dq5.query);
-  console.log("got results of evaluating deserialized query");
-  util.logTable(res);
   expect(res.rowData.length).toBe(4);
 });
 
@@ -256,7 +251,7 @@ test("null const extend", async () => {
 test("getSourceInfo basics", async () => {
   const rtc = testCtx;
   const rootSourceInfo = await rtc.getSourceInfo([]);
-  console.log("root source info: ", rootSourceInfo);
+  // console.log("root source info: ", rootSourceInfo);
 
   /*  
   const covid_item = rootSourceInfo.children.find(

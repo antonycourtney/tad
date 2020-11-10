@@ -183,6 +183,10 @@ export class QueryExp {
     return queryGetSchema(dialect, tableMap, this._rep);
   }
 
+  getTables(): Set<string> {
+    return queryGetTables(this._rep);
+  }
+
   // render this query as a JavaScript expression:
   toJS(): string {
     let strBuf: StringBuffer = [];
@@ -225,13 +229,7 @@ export const queryReviver = (key: string, val: any): any => {
   return retVal;
 };
 
-type QueryReq = {
-  query: QueryExp;
-  filterRowCount: number;
-  offset?: number;
-  limit?: number;
-};
-export const deserializeQueryReq = (jsonStr: string): QueryReq => {
+export const deserializeQueryReq = (jsonStr: string): any => {
   const rq = JSON.parse(jsonStr, queryReviver);
   return rq;
 };
@@ -542,4 +540,40 @@ const queryToJSAux = (
       const invalidQuery: never = query;
       throw new Error("queryToJSAux: No implementation for operator: " + query);
   }
+};
+
+const queryGetTablesAux = (acc: Set<string>, query: QueryRep) => {
+  switch (query.operator) {
+    case "table":
+      acc.add(query.tableName);
+      break;
+    case "project":
+    case "groupBy":
+    case "filter":
+    case "mapColumns":
+    case "mapColumnsByIndex":
+    case "sort":
+    case "extend":
+      queryGetTablesAux(acc, query.from);
+      break;
+    case "concat":
+      queryGetTablesAux(acc, query.from);
+      queryGetTablesAux(acc, query.target);
+      break;
+    case "join":
+      queryGetTablesAux(acc, query.lhs);
+      queryGetTablesAux(acc, query.rhs);
+      break;
+    default:
+      const invalidQuery: never = query;
+      throw new Error(
+        "queryGetTables: No implementation for operator, query: " + query
+      );
+  }
+};
+
+const queryGetTables = (query: QueryRep): Set<string> => {
+  const ret = new Set<string>();
+  queryGetTablesAux(ret, query);
+  return ret;
 };

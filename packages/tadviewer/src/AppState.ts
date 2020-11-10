@@ -1,6 +1,7 @@
 import * as Immutable from "immutable";
 import { ViewState } from "./ViewState";
 import * as reltab from "reltab";
+import { DbConnectionKey } from "reltab";
 /**
  * Immutable representation of application state
  *
@@ -12,7 +13,8 @@ export interface AppStateProps {
 
   windowTitle: string; // Usually just the table name or file name
 
-  rtc: reltab.Connection | null;
+  rtc: reltab.ReltabConnection | null;
+  dbc: reltab.DbConnection | null;
   targetPath: string;
   baseQuery: reltab.QueryExp | null;
   baseSchema: reltab.Schema | null; // always in sync with baseQuery
@@ -27,6 +29,7 @@ const defaultAppStateProps: AppStateProps = {
   initialized: false,
   windowTitle: "",
   rtc: null,
+  dbc: null,
   targetPath: "",
   // path to CSV file
   baseQuery: null,
@@ -34,7 +37,7 @@ const defaultAppStateProps: AppStateProps = {
   viewState: new ViewState(),
   exportDialogOpen: false,
   exportFilename: "",
-  exportPercent: 0
+  exportPercent: 0,
 };
 
 export class AppState extends Immutable.Record(defaultAppStateProps) {
@@ -42,7 +45,8 @@ export class AppState extends Immutable.Record(defaultAppStateProps) {
 
   public readonly windowTitle!: string; // Usually just the table name or file name
 
-  public readonly rtc!: reltab.Connection;
+  public readonly rtc!: reltab.ReltabConnection;
+  public readonly dbc!: reltab.DbConnection;
   public readonly targetPath!: string;
   public readonly baseQuery!: reltab.QueryExp;
   public readonly baseSchema!: reltab.Schema; // always in sync with baseQuery

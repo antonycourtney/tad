@@ -1,11 +1,20 @@
 import * as log from "loglevel";
-import { TableRep, QueryExp, Schema } from "reltab";
+import {
+  TableRep,
+  QueryExp,
+  Schema,
+  DbConnection,
+  defaultEvalQueryOptions,
+  EvalQueryOptions,
+  DbProvider,
+  registerProvider,
+} from "reltab";
 import {
   TableInfoMap,
   TableInfo,
   Row,
   ColumnMetaMap,
-  Connection,
+  DbConnectionKey,
   PrestoDialect,
   DataSourceNode,
   DataSourcePath,
@@ -28,25 +37,27 @@ const mapIdent = (src: string): string => {
 
 const isAlpha = (ch: string): boolean => /^[A-Z]$/i.test(ch);
 
-export interface BigQueryConnectionOptions {
-  showQueries?: boolean;
-}
-export class AWSAthenaConnection implements Connection {
+export class AWSAthenaConnection implements DbConnection {
+  readonly connectionKey: DbConnectionKey;
   tableMap: TableInfoMap;
-  showQueries: boolean;
 
-  constructor(options?: BigQueryConnectionOptions) {
+  constructor() {
+    this.connectionKey = {
+      providerName: "aws-athena",
+      connectionInfo: {},
+    };
     this.tableMap = {};
-    this.showQueries =
-      options != null && options.showQueries != null
-        ? options.showQueries
-        : false;
+  }
+
+  async getDisplayName(): Promise<string> {
+    return "AWS Athena";
   }
 
   async evalQuery(
     query: QueryExp,
     offset?: number,
-    limit?: number
+    limit?: number,
+    options?: EvalQueryOptions
   ): Promise<TableRep> {
     let t0 = process.hrtime();
     const schema = query.getSchema(PrestoDialect, this.tableMap);
@@ -54,7 +65,9 @@ export class AWSAthenaConnection implements Connection {
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
-    if (this.showQueries) {
+    const trueOptions = options ? options : defaultEvalQueryOptions;
+
+    if (trueOptions.showQueries) {
       log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
       log.debug("SqliteContext.evalQuery: evaluating:");
       log.info(sqlQuery);
@@ -71,7 +84,7 @@ export class AWSAthenaConnection implements Connection {
     const t4 = process.hrtime(t4pre);
     const [t4s, t4ns] = t4;
 
-    if (this.showQueries) {
+    if (trueOptions.showQueries) {
       log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
       log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
     }
@@ -79,13 +92,15 @@ export class AWSAthenaConnection implements Connection {
     return ret;
   }
 
-  async rowCount(query: QueryExp): Promise<number> {
+  async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
     let t0 = process.hrtime();
     const countSql = query.toCountSql(PrestoDialect, this.tableMap);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
-    if (this.showQueries) {
+    const trueOptions = options ? options : defaultEvalQueryOptions;
+
+    if (trueOptions.showQueries) {
       log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
       log.debug("SqliteContext.evalQuery: evaluating:");
       log.info(countSql);
@@ -108,16 +123,8 @@ export class AWSAthenaConnection implements Connection {
   private async dbGetTableInfo(tableName: string): Promise<TableInfo> {
     const sqlQuery = `DESCRIBE ${tableName}`;
 
-    if (this.showQueries) {
-      log.info(sqlQuery);
-    }
-
     const qres = await athenaExpress.query(sqlQuery);
     const items = qres.Items; // each item has one key (column name), mapped to its type.
-
-    if (this.showQueries) {
-      log.info("items: ", items);
-    }
 
     const extendCMap = (cmm: ColumnMetaMap, item: any): ColumnMetaMap => {
       const cnm = Object.keys(item)[0] as string;
@@ -155,3 +162,11 @@ export class AWSAthenaConnection implements Connection {
     throw new Error("getSourceInfo not yet implemented for aws-athena");
   }
 }
+
+const awsAthenaDbProvider: DbProvider = {
+  providerName: "aws-athena",
+  connect: async (connectionInfo: any): Promise<DbConnection> =>
+    new AWSAthenaConnection(),
+};
+
+registerProvider(awsAthenaDbProvider);

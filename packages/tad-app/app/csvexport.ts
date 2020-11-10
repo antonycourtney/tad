@@ -28,7 +28,7 @@ export const exportAs = async (
   });
   const writableStream = fs.createWriteStream(saveFilename);
   csvStream.pipe(writableStream);
-  const schema = appRtc.getSchema(query); // Map entries in a row object to array of [displayName, value] pairs
+  const schema = await appRtc.getSchema(query); // Map entries in a row object to array of [displayName, value] pairs
 
   const mapRow = (row: reltab.Row) => {
     return schema.columns.map((cid) => [schema.displayName(cid), row[cid]]);

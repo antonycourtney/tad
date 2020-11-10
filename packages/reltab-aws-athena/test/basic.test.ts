@@ -1,21 +1,25 @@
 import * as reltab from "reltab";
 import { AWSAthenaConnection } from "../src/reltab-aws-athena";
+import "../src/reltab-aws-athena";
 import * as util from "./testUtils";
 import * as log from "loglevel";
 import * as aggtree from "aggtree";
 import { PathTree } from "aggtree";
+import { DbConnectionKey } from "reltab";
 
 const PROJECT_ID = "";
 
 let testCtx: AWSAthenaConnection;
 
+const awsConnKey: DbConnectionKey = {
+  providerName: "aws-athena",
+  connectionInfo: {},
+};
+
 beforeAll(async () => {
   log.setLevel(log.levels.DEBUG);
 
-  testCtx = new AWSAthenaConnection({
-    showQueries: true,
-  });
-
+  testCtx = (await reltab.getConnection(awsConnKey)) as AWSAthenaConnection;
   const ti = await testCtx.getTableInfo("imdb_top_rated");
   console.log("movie_metadata table info: ", ti);
 });

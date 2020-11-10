@@ -48,12 +48,14 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 [X] Think about binding affinity of dialect for WebConnection. Probably want dialect to live on Schema.
 [X] Floating point / real formatting (num decimal places) not working on BigQuery data (Iowa liquor db). Why?
 [X] Crash bug when setting formatting for specific column by column name
+[ ] \*\*\* Must be able to give a sqlite file to tad-app command line without specifying table name!
+[ ] defer gray loading overlay to avoid flicker when switching tables
 [ ] Really need better feedback that data is loading when scrolling!
 [ ] We choke in BigQuery when pivoting by an INT64 column (like ParentID in Hacker News dataset). Probably add an 'asString' option to mapColumns
 [X] DataSource support for sqlite
 [ ] Add assertive test using a sqlite db file (not a csv) as data source
 [ ] Optimize SQL construction a bit -- a sequence of projects currently looks very sub-optimal, as do multiple extends. Look at bigquery opps with sorted aggtree.
-[ ] JavaScript representation of QueryExp AST for debugging
+[X] JavaScript representation of QueryExp AST for debugging
 [X] How do we go from column type back to a Core Type for formatting? Example: int/float formatting panel. Ans: ColumnKind
 [X] Tweak extend to make column type optional, with clear rules for inference. number ==> integer by default.
 [ ] Change internal and exported signatures of Schema to reflect that not all string lookups will succeed.
@@ -70,7 +72,7 @@ can be re-used in strange ways.
 [ ] Deal gracefully with network errors
 [ ] Electron app: port various event handlers from renderMain to web app
 [ ] Electron app: Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app in web app
-[ ] \*\*\* !! Migrate reltab AST to use typescript tagged unions (kill tableArgs / valArgs)
+[X] \*\*\* !! Migrate reltab AST to use typescript tagged unions (kill tableArgs / valArgs)
 [ ] Need to account for constant expressions (numbers and string literals) vs column references coming from an extend
 operation that can end up in a SQL select column expression. Probably time for a tagged union!
 [ ] static analysis of tables mentioned in a query
@@ -94,6 +96,8 @@ operation that can end up in a SQL select column expression. Probably time for a
 [ ] Views loadable by URL
 [ ] Open to Depth
 [ ] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
+[ ] Duplicate detection / elimination. Constructing the groupBy using schema an interesting example
+of reltab.
 
 ### What to ship for Memorial Day week:
 
@@ -117,3 +121,52 @@ Priorities:
 - Maybe "Relatable" is a good name for reltab
 - Maybe the query builder UI for Relatable should be its own thing, independent of Tad. Capable of providing JS or SQL.
 - Need to think about a real synthetic Data type for sqlite for CSVs, both in import and subsequent handling. Download data set from https://ourworldindata.org/grapher/new-covid-deaths-per-million for perfect example.
+
+### Instance IDs and Multiplexing connections
+
+We need to think about how to identify database instances.
+
+#### Reminder to self, 3Jul20:
+
+- Issue right now is that tableMap is not properly populated.
+  Problem is that right now we're warming this with explicit calls to dbc.getTableInfo in places like
+  actions.openTable, actions.openSourcePath and electronRenderMain.
+  Unfortunately caching is happening in getConnection(), and this includes options in the memo key, so
+  we end up with distinct db connections...
+
+The right way to fix:
+(1) Really need to walk any queries, gather all table names, and ensure we have TableInfo for all table
+names before trying to do a GetSchema operation.
+(2) Should probably try harder to pass around the right options along with the connection key to avoid
+opening extra connections to the db.
+
+#### Thoughts on sharing client/server remoting across Electron and web, 6Nov20
+
+It would sure be nice if we could just have one simple remote / proxy request abstraction that would work across
+either http or Electron's remote mechanism, and not have to duplicate all the JSON encoding / decoding for remote
+functions / methods for web and Electron app.
+
+This is particularly timely since Electron's remote module has been deprecated:
+https://www.electronjs.org/docs/breaking-changes#deprecated-remote-module
+
+We should replace with a call to ipcRenderer.invoke:
+https://www.electronjs.org/docs/api/ipc-renderer#ipcrendererinvokechannel-args
+
+Note that this is tantalizingly close to the request() API in the tadweb-app...
+
+#### Some Quick Notes to get re-oriented
+
+Right now:
+
+- Just got web app working again, but only barely. Tree control is buggy -- seeing sqlite datasets under
+  bigquery entry, and CSV file getting re-imported on every full reload.
+- To start let's debug and fix tree control. Should also check and ensure right dbconnection info
+  getting passed to various methods like evalquery.
+- Need to think through a multiple tab / worksheet model. Probably OK to have tree control on left, but
+  if user has made _any_ changes to the view params, need to prompt before replacing if they select a
+  different data set.
+  Bigger point: Tree selector is one form of baseline "New" or "Open" action, creating a new view.
+- Should allow main view of a tab to be empty, for case when no data source has yet been selected.
+- Importing a CSV is one place where web and Electron UIs will differ a bit. Straightforward
+  local file picker for Electron, but need some kind of upload dialog, possibly also allowing something
+  like an URL or s3 bucket address.

@@ -4,7 +4,7 @@ import { PagedDataView } from "./PagedDataView";
 import { ViewParams } from "./ViewParams";
 import { AppState } from "./AppState";
 import { QueryView } from "./QueryView";
-import { Connection } from "reltab"; // eslint-disable-line
+import { ReltabConnection, DbConnectionKey, DbConnection } from "reltab"; // eslint-disable-line
 
 import * as oneref from "oneref"; // eslint-disable-line
 import { mutableGet, addStateChangeListener } from "oneref";
@@ -89,7 +89,7 @@ const mkDataView = (
  */
 
 const fastFilterRowCount = async (
-  rt: Connection,
+  rt: DbConnection,
   baseRowCount: number,
   filterExp: reltab.FilterExp,
   filterQuery: reltab.QueryExp
@@ -106,7 +106,7 @@ const fastFilterRowCount = async (
  */
 
 const fastViewRowCount = async (
-  rt: Connection,
+  rt: DbConnection,
   filterRowCount: number,
   vpivots: Array<string>,
   viewQuery: reltab.QueryExp
@@ -126,7 +126,7 @@ const fastViewRowCount = async (
  */
 
 const requestQueryView = async (
-  rt: Connection,
+  rt: DbConnection,
   baseQuery: reltab.QueryExp,
   baseSchema: reltab.Schema,
   viewParams: ViewParams
@@ -176,12 +176,13 @@ const requestQueryView = async (
 };
 
 const requestDataView = async (
-  rt: Connection,
+  rt: DbConnection,
   viewParams: ViewParams,
   queryView: QueryView,
   offset: number,
   limit: number
 ): Promise<PagedDataView> => {
+  console.log("requestDataView: ", { query: queryView.query });
   const tableData = await rt.evalQuery(queryView.query, offset, limit);
   const dataView = mkDataView(
     viewParams,
@@ -243,7 +244,7 @@ export class PivotRequester {
     this.pendingOffset = offset;
     this.pendingLimit = limit;
     const dreq = requestDataView(
-      appState.rtc,
+      appState.dbc,
       viewParams,
       queryView,
       offset,
@@ -276,8 +277,8 @@ export class PivotRequester {
     if (viewParams !== this.pendingViewParams) {
       console.log(
         "onStateChange: requesting new query: ",
-        viewState,
-        this.pendingViewParams
+        viewState.toJS(),
+        this.pendingViewParams?.toJS()
       );
       // Might be nice to cancel any pending request here...
       // failing that we could calculate additional pages we need
@@ -285,7 +286,7 @@ export class PivotRequester {
       const prevViewParams = this.pendingViewParams;
       this.pendingViewParams = viewParams;
       const qreq = requestQueryView(
-        appState.rtc,
+        appState.dbc,
         appState.baseQuery,
         appState.baseSchema,
         this.pendingViewParams

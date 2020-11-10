@@ -6,27 +6,52 @@ import * as path from "path";
 import * as reltabSqlite from "reltab-sqlite";
 import { SqliteContext } from "reltab-sqlite";
 import { BigQueryConnection } from "reltab-bigquery";
+import "reltab-bigquery";
 import { AWSAthenaConnection } from "reltab-aws-athena";
 import * as reltab from "reltab";
 import { monitorEventLoopDelay } from "perf_hooks";
 import { read } from "fs";
+import {
+  DbConnection,
+  DbConnectionKey,
+  EvalQueryOptions,
+  getConnection,
+  getSourceInfo,
+} from "reltab";
 
 const SRV_DIR = "./public/csv";
 
 const portNumber = 9000;
 
-const initSqlite = async (): Promise<SqliteContext> => {
+const initSqlite = async (): Promise<DbConnection> => {
   const rtOptions: any = { showQueries: true };
-  const ctx = (await reltabSqlite.getContext(
-    ":memory:",
-    rtOptions
-  )) as SqliteContext;
+  const connKey: DbConnectionKey = {
+    providerName: "sqlite",
+    connectionInfo: ":memory:",
+  };
+  const dbc = await getConnection(connKey);
+  return dbc;
+};
 
-  return ctx;
+const covid19ConnKey: DbConnectionKey = {
+  providerName: "bigquery",
+  connectionInfo: {
+    projectId: "bigquery-public-data",
+    datasetName: "covid19_jhu_csse",
+  },
+};
+const connOpts: EvalQueryOptions = {
+  showQueries: true,
+};
+
+const initBigquery = async () => {
+  const rtc = (await reltab.getConnection(
+    covid19ConnKey
+  )) as BigQueryConnection;
 };
 
 const handleEvalQuery = async (
-  rtc: reltab.Connection,
+  dbc: reltab.DbConnection,
   req: express.Request,
   res: express.Response
 ) => {
@@ -39,8 +64,8 @@ const handleEvalQuery = async (
     log.info("evalQuery: got query:\n", queryReq.query.toJS(), "\n\n");
     const hrstart = process.hrtime();
     const tableRep = await (queryReq.offset !== undefined
-      ? rtc.evalQuery(queryReq.query, queryReq.offset, queryReq.limit)
-      : rtc.evalQuery(queryReq.query));
+      ? dbc.evalQuery(queryReq.query, queryReq.offset, queryReq.limit)
+      : dbc.evalQuery(queryReq.query));
     const [es, ens] = process.hrtime(hrstart);
     log.info("\nevalQuery: evaluated query in %ds %dms", es, ens / 1e6);
     const resObj = { tableRep };
@@ -53,7 +78,7 @@ const handleEvalQuery = async (
 };
 
 const handleGetRowCount = async (
-  rtc: reltab.Connection,
+  dbc: reltab.DbConnection,
   req: express.Request,
   res: express.Response
 ) => {
@@ -64,7 +89,7 @@ const handleGetRowCount = async (
     );
     const queryReq = req.body;
     const hrstart = process.hrtime();
-    const rowCount = await rtc.rowCount(queryReq.query);
+    const rowCount = await dbc.rowCount(queryReq.query);
     const [es, ens] = process.hrtime(hrstart);
     log.info("getRowCount: evaluated query in %ds %dms", es, ens / 1e6);
     const resObj = { rowCount };
@@ -78,15 +103,15 @@ const handleGetRowCount = async (
 
 // TODO: really should cache fileName to table name, so we don't have to re-import CSV file every time
 const handleImportFile = async (
-  rtc: reltab.Connection,
+  dbc: reltab.DbConnection,
   req: express.Request,
   res: express.Response
 ) => {
   try {
-    const ctx = rtc as SqliteContext;
+    const ctx = dbc as SqliteContext;
     log.info("POST importFile: got request: ", req.body);
     const tiReq = req.body;
-    // const tableInfo = await rtc.getTableInfo(tiReq.tableName);
+    // const tableInfo = await dbc.getTableInfo(tiReq.tableName);
     const { fileName } = tiReq;
     const filePath = path.join(SRV_DIR, fileName);
     log.info("handleImportFile: importing: " + filePath);
@@ -105,14 +130,14 @@ const handleImportFile = async (
 };
 
 const handleGetTableInfo = async (
-  rtc: reltab.Connection,
+  dbc: reltab.DbConnection,
   req: express.Request,
   res: express.Response
 ) => {
   try {
     log.info("POST getTableInfo: got request: ", req.body);
     const tiReq = req.body;
-    const tableInfo = await rtc.getTableInfo(tiReq.tableName);
+    const tableInfo = await dbc.getTableInfo(tiReq.tableName);
     const resObj = { tableInfo };
     log.info(
       "getTableInfo: sending response: ",
@@ -125,14 +150,14 @@ const handleGetTableInfo = async (
 };
 
 const handleGetSourceInfo = async (
-  rtc: reltab.Connection,
+  dbc: reltab.DbConnection,
   req: express.Request,
   res: express.Response
 ) => {
   try {
-    log.info("POST getSourceInfo: got request: ", req.body);
+    log.info("POST getSourceInfo: got request: ", JSON.stringify(req.body));
     const tiReq = req.body;
-    const sourceInfo = await rtc.getSourceInfo(tiReq.path);
+    const sourceInfo = await getSourceInfo(tiReq.path);
     const resObj = { sourceInfo };
     log.info(
       "getSourceInfo: sending response w/ node Id: ",
@@ -141,6 +166,23 @@ const handleGetSourceInfo = async (
     res.json(resObj);
   } catch (err) {
     log.error("getSourceInfo: ", err, err.stack);
+  }
+};
+
+const handleGetDataSources = async (
+  dbc: reltab.DbConnection,
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    log.info("POST getDataSource: got request: ", req.body);
+    const tiReq = req.body;
+    const nodeIds = await reltab.getDataSources();
+    const resObj = { nodeIds };
+    log.info("getDataSource: sending response: ", JSON.stringify(nodeIds));
+    res.json(resObj);
+  } catch (err) {
+    log.error("getDataSources: ", err, err.stack);
   }
 };
 
@@ -153,31 +195,34 @@ const rootRedirect = (req: express.Request, res: express.Response) => {
 async function main() {
   log.setLevel(log.levels.INFO);
 
-  // const dbCtx = await initSqlite();
+  await initBigquery();
+
+  const dbc = await initSqlite();
   /*
-  const dbCtx = new BigQueryConnection(
+  const dbc = new BigQueryConnection(
     "bigquery-public-data",
     "covid19_jhu_csse",
     { showQueries: true }
   );
 
-  const ti = await dbCtx.getTableInfo(
+  const ti = await dbc.getTableInfo(
     "bigquery-public-data.covid19_jhu_csse.summary"
   );
-  const ti2 = await dbCtx.getTableInfo(
+  const ti2 = await dbc.getTableInfo(
     "bigquery-public-data.github_repos.commits"
   );
   console.log("tableInfo: ", ti2);
 
-  const ti3 = await dbCtx.getTableInfo(
+  const ti3 = await dbc.getTableInfo(
     "bigquery-public-data.iowa_liquor_sales.sales"
   );
   console.log("tableInfo: ", ti3);
 */
-  const dbCtx = new AWSAthenaConnection({ showQueries: true });
+  /* const dbc = new AWSAthenaConnection({ showQueries: true });
 
-  const ti = await dbCtx.getTableInfo("movie_metadata");
+  // const ti = await dbc.getTableInfo("movie_metadata");
   console.log("tableInfo: ", ti);
+*/
 
   log.info("db initialization complete");
 
@@ -189,22 +234,24 @@ async function main() {
 
   app.use(express.static("./public"));
 
-  app.post("/tadweb/evalQuery", (req, res) => handleEvalQuery(dbCtx, req, res));
+  app.post("/tadweb/evalQuery", (req, res) => handleEvalQuery(dbc, req, res));
 
   app.post("/tadweb/getRowCount", (req, res) =>
-    handleGetRowCount(dbCtx, req, res)
+    handleGetRowCount(dbc, req, res)
   );
 
   app.post("/tadweb/getTableInfo", (req, res) =>
-    handleGetTableInfo(dbCtx, req, res)
+    handleGetTableInfo(dbc, req, res)
   );
 
-  app.post("/tadweb/importFile", (req, res) =>
-    handleImportFile(dbCtx, req, res)
-  );
+  app.post("/tadweb/importFile", (req, res) => handleImportFile(dbc, req, res));
 
   app.post("/tadweb/getSourceInfo", (req, res) =>
-    handleGetSourceInfo(dbCtx, req, res)
+    handleGetSourceInfo(dbc, req, res)
+  );
+
+  app.post("/tadweb/getDataSources", (req, res) =>
+    handleGetDataSources(dbc, req, res)
   );
 
   const server = app.listen(portNumber, () => {

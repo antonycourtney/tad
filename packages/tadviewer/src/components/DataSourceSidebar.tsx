@@ -2,6 +2,7 @@ import * as React from "react";
 import { Sidebar } from "./Sidebar";
 import { StateRef, mutableGet } from "oneref";
 import { AppState } from "../AppState";
+import * as reltab from "reltab";
 
 import {
   Classes,
@@ -14,7 +15,12 @@ import {
   IconName,
 } from "@blueprintjs/core";
 import { useState, useReducer } from "react";
-import { DataSourceKind, DataSourceNode, DataSourceNodeId } from "reltab";
+import {
+  DataSourceKind,
+  DataSourceNodeId,
+  DataSourcePath,
+  DbConnectionKey,
+} from "reltab";
 import { actions } from "../tadviewer";
 
 export interface DataSourceSidebarProps {
@@ -34,25 +40,17 @@ const dataKindIcon = (dsKind: DataSourceKind): IconName => {
       throw new Error("dataKindIcon: unknown kind '" + dsKind + "'");
   }
 };
-const placeholderTreeNode = (nodeId: DataSourceNodeId): ITreeNode => {
+const dsPathTreeNode = (
+  prefix: DataSourcePath,
+  nodeId: DataSourceNodeId
+): ITreeNode => {
+  const path = prefix.concat([nodeId]);
   const ret: ITreeNode = {
     icon: dataKindIcon(nodeId.kind),
     id: JSON.stringify(nodeId),
     label: nodeId.displayName,
-    nodeData: nodeId,
+    nodeData: path,
     hasCaret: nodeId.kind !== "Table",
-  };
-  return ret;
-};
-
-const dataSourceTreeNode = (dsNode: DataSourceNode): ITreeNode => {
-  const ret: ITreeNode = {
-    icon: dataKindIcon(dsNode.nodeId.kind),
-    id: JSON.stringify(dsNode.nodeId),
-    label: dsNode.nodeId.displayName,
-    nodeData: dsNode.nodeId,
-    hasCaret: dsNode.children.length > 0,
-    childNodes: dsNode.children.map(placeholderTreeNode),
   };
   return ret;
 };
@@ -69,9 +67,10 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     async function fetchSourceInfo() {
       const appState = mutableGet(stateRef);
       const rtc = appState.rtc;
-      const rootSourceInfo = await rtc.getSourceInfo([]);
-      const rootNode = dataSourceTreeNode(rootSourceInfo);
-      setTreeState([rootNode]);
+      const rootSources = await rtc.getDataSources();
+      console.log("DataSourceSideBar: rootSources: ", rootSources);
+      const rootNodes = rootSources.map((src) => dsPathTreeNode([], src));
+      setTreeState(rootNodes);
     }
     if (!initialized) {
       fetchSourceInfo();
@@ -79,12 +78,21 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     }
   }, [initialized]);
 
-  async function expandDataset(treeNode: ITreeNode) {
-    const dsNodeId: DataSourceNodeId = treeNode.nodeData as DataSourceNodeId;
+  const handleNodeCollapse = (treeNode: ITreeNode) => {
+    treeNode.isExpanded = false;
+    forceUpdate();
+  };
+  const handleNodeExpand = async (treeNode: ITreeNode) => {
+    console.log("handleNodeExand", treeNode);
+    const dsPath: DataSourcePath = treeNode.nodeData as DataSourcePath;
+    const dbConnKey: DbConnectionKey = dsPath[0].id as DbConnectionKey;
+    console.log("expandDatabase: ", dbConnKey);
     const appState = mutableGet(stateRef);
     const rtc = appState.rtc;
-    const dsInfo = await rtc.getSourceInfo([dsNodeId]);
-    treeNode.childNodes = dsInfo.children.map(placeholderTreeNode);
+    const dsInfo = await rtc.getSourceInfo(dsPath);
+    treeNode.childNodes = dsInfo.children.map((item) =>
+      dsPathTreeNode(dsPath, item)
+    );
     treeNode.isExpanded = true;
     if (dsInfo.description) {
       treeNode.secondaryLabel = (
@@ -98,29 +106,18 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
       );
     }
     forceUpdate();
-  }
+  };
 
-  const handleNodeCollapse = (treeNode: ITreeNode) => {
-    treeNode.isExpanded = false;
-    forceUpdate();
-  };
-  const handleNodeExpand = (treeNode: ITreeNode) => {
-    const dsNodeId: DataSourceNodeId = treeNode.nodeData as DataSourceNodeId;
-    if (dsNodeId.kind === "Dataset") {
-      expandDataset(treeNode);
-    } else {
-      treeNode.isExpanded = true;
-      forceUpdate();
-    }
-  };
   const handleNodeClick = (
     treeNode: ITreeNode,
     _nodePath: any[],
     e: React.MouseEvent<HTMLElement>
   ) => {
-    const dsNodeId: DataSourceNodeId = treeNode.nodeData as DataSourceNodeId;
+    const dsPath = treeNode.nodeData as DataSourcePath;
+    const dsNodeId = dsPath[dsPath.length - 1];
     if (dsNodeId.kind === "Table") {
-      actions.openTable(dsNodeId.id, stateRef);
+      actions.openDataSourcePath(dsPath, stateRef);
+      // actions.openTable(dsNodeId.id, stateRef);
     }
     if (selectedNode != null) {
       selectedNode.isSelected = false;

@@ -13,11 +13,12 @@ import { ViewParams } from "tadviewer";
 import { initAppState } from "tadviewer";
 import * as reltab from "reltab";
 import log from "loglevel";
-import { ReltabWebConnection } from "./reltabWebClient";
+import { WebReltabConnection } from "./reltabWebClient";
+import { DbConnectionKey } from "reltab";
 
 const testBaseUrl = "http://localhost:9000";
 // const TEST_FILE = "sample.csv";
-//const TEST_FILE = "movie_metadata.csv";
+const TEST_FILE = "movie_metadata.csv";
 
 //const TEST_TABLE = "bigquery-public-data.covid19_jhu_csse.summary";
 // const TEST_TABLE = "bigquery-public-data.github_repos.commits";
@@ -49,17 +50,22 @@ const init = async () => {
     AppPane
   );
 
-  const rtc = new ReltabWebConnection(testBaseUrl);
+  // const tableName = TEST_TABLE;
 
+  const rtc = new WebReltabConnection(testBaseUrl);
   // const tableName = await rtc.importFile(TEST_FILE);
-  const tableName = TEST_TABLE;
 
+  const connKey: DbConnectionKey = {
+    providerName: "sqlite",
+    connectionInfo: ":memory:",
+  };
+
+  const dbc = await rtc.connect(connKey, TEST_TABLE);
   const baseQuery = reltab.tableQuery(tableName);
-  // const rtc = reltabElectron.init(); // module local to keep alive:
 
   var pivotRequester: PivotRequester | undefined | null = null;
 
-  await initAppState(rtc, tableName, baseQuery, viewParams, stateRef);
+  await initAppState(rtc, dbc, tableName, baseQuery, viewParams, stateRef);
 
   ReactDOM.render(<App />, document.getElementById("app"));
 

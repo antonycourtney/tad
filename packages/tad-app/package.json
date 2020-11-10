@@ -31,6 +31,7 @@
   "dependencies": {
     "aggtree": "^0.10.0",
     "reltab": "^0.10.0",
+    "reltab-bigquery": "^0.10.0",
     "reltab-sqlite": "^0.10.0",
     "tadviewer": "^0.10.0",
     "babel-cli": "^6.26.0",

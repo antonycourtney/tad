@@ -27,14 +27,14 @@ const mkColValsLoader = (
   appState: AppState,
   columnId: string
 ): OptionsLoader => {
-  const rtc = appState.rtc;
+  const dbc = appState.dbc;
   const baseQuery = appState.baseQuery;
   return async (input: string): Promise<OptionsRet> => {
     let dq = baseQuery.distinct(columnId);
     if (input.length > 0) {
       dq = dq.filter(reltab.and().contains(col(columnId), constVal(input)));
     }
-    const qres = await rtc.evalQuery(dq, 0, 50);
+    const qres = await dbc.evalQuery(dq, 0, 50);
     const colData = qres.rowData
       .map((r) => r[columnId])
       .filter((v) => v != null);

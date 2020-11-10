@@ -1,11 +1,21 @@
 import * as log from "loglevel";
-import { TableRep, QueryExp, Schema, DataSourceNodeId } from "reltab";
+import {
+  TableRep,
+  QueryExp,
+  Schema,
+  DataSourceNodeId,
+  DbConnectionKey,
+  EvalQueryOptions,
+  DbProvider,
+  defaultEvalQueryOptions,
+  registerProvider,
+} from "reltab";
 import {
   TableInfoMap,
   TableInfo,
   Row,
   ColumnMetaMap,
-  Connection,
+  DbConnection,
   BigQueryDialect,
   DataSourceNode,
   DataSourcePath,
@@ -34,23 +44,28 @@ const genTableName = (pathname: string): string => {
   return tableName;
 };
 
-export interface BigQueryConnectionOptions {
-  showQueries?: boolean;
+interface BigQueryConnectionInfo {
+  projectId: string;
+  datasetName: string;
 }
-export class BigQueryConnection implements Connection {
+
+export class BigQueryConnection implements DbConnection {
+  readonly displayName: string;
+  readonly connectionKey: DbConnectionKey;
   projectId: string;
   datasetName: string;
   bigquery: BigQuery;
   bigquery_meta: BigQuery;
   dataset: Dataset;
   tableMap: TableInfoMap;
-  showQueries: boolean;
 
-  constructor(
-    projectId: string,
-    datasetName: string,
-    options?: BigQueryConnectionOptions
-  ) {
+  constructor(connectionInfo: BigQueryConnectionInfo) {
+    const { projectId, datasetName } = connectionInfo;
+    this.displayName = `bigquery: ${projectId}`;
+    this.connectionKey = {
+      providerName: "bigquery",
+      connectionInfo,
+    };
     this.projectId = projectId;
     this.datasetName = datasetName;
 
@@ -58,16 +73,17 @@ export class BigQueryConnection implements Connection {
     this.bigquery_meta = new BigQuery({ projectId, location: LOCATION });
     this.dataset = this.bigquery_meta.dataset(datasetName);
     this.tableMap = {};
-    this.showQueries =
-      options != null && options.showQueries != null
-        ? options.showQueries
-        : false;
+  }
+
+  async getDisplayName(): Promise<string> {
+    return this.displayName;
   }
 
   async evalQuery(
     query: QueryExp,
     offset?: number,
-    limit?: number
+    limit?: number,
+    options?: EvalQueryOptions
   ): Promise<TableRep> {
     let t0 = process.hrtime();
     const schema = query.getSchema(BigQueryDialect, this.tableMap);
@@ -75,7 +91,9 @@ export class BigQueryConnection implements Connection {
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
-    if (this.showQueries) {
+    const trueOptions = options ? options : defaultEvalQueryOptions;
+
+    if (trueOptions.showQueries) {
       log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
       log.debug("SqliteContext.evalQuery: evaluating:");
       log.info(sqlQuery);
@@ -94,7 +112,7 @@ export class BigQueryConnection implements Connection {
     const t4 = process.hrtime(t4pre);
     const [t4s, t4ns] = t4;
 
-    if (this.showQueries) {
+    if (trueOptions.showQueries) {
       log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
       log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
     }
@@ -102,13 +120,15 @@ export class BigQueryConnection implements Connection {
     return ret;
   }
 
-  async rowCount(query: QueryExp): Promise<number> {
+  async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
     let t0 = process.hrtime();
     const countSql = query.toCountSql(BigQueryDialect, this.tableMap);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
-    if (this.showQueries) {
+    const trueOptions = options ? options : defaultEvalQueryOptions;
+
+    if (trueOptions.showQueries) {
       log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
       log.debug("SqliteContext.evalQuery: evaluating:");
       log.info(countSql);
@@ -142,19 +162,11 @@ export class BigQueryConnection implements Connection {
   ): Promise<TableInfo> {
     const sqlQuery = `SELECT column_name, data_type FROM \`${projectId}.${datasetName}\`.INFORMATION_SCHEMA.COLUMNS WHERE table_name="${baseTableName}"`;
 
-    if (this.showQueries) {
-      log.info(sqlQuery);
-    }
-
     const [dbRows] = await this.bigquery.query({
       query: sqlQuery,
       location: LOCATION,
     });
     const rows = dbRows as Row[];
-
-    if (this.showQueries) {
-      log.info("rows: ", rows);
-    }
 
     const extendCMap = (cmm: ColumnMetaMap, row: Row): ColumnMetaMap => {
       const cnm = row.column_name as string;
@@ -243,3 +255,11 @@ export class BigQueryConnection implements Connection {
     }
   }
 }
+
+const bigqueryDbProvider: DbProvider = {
+  providerName: "bigquery",
+  connect: async (connectionInfo: any): Promise<DbConnection> =>
+    new BigQueryConnection(connectionInfo),
+};
+
+registerProvider(bigqueryDbProvider);

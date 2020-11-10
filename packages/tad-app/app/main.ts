@@ -3,12 +3,14 @@ import getUsage from "command-line-usage";
 import log from "electron-log";
 import * as logLevel from "loglevel";
 import * as reltab from "reltab";
+import * as reltabBigQuery from "reltab-bigquery";
+import "reltab-bigquery";
 import * as reltabSqlite from "reltab-sqlite";
 import * as setup from "./setup";
 import * as quickStart from "./quickStart";
 import * as appMenu from "./appMenu";
 import * as appWindow from "./appWindow";
-import electron from "electron";
+import electron, { contextBridge } from "electron";
 import fs from "fs";
 
 const dialog = electron.dialog;
@@ -17,6 +19,18 @@ const app = electron.app;
 import path from "path";
 
 import pkgInfo from "../package.json";
+import {
+  getDataSources,
+  getConnection,
+  DbConnectionKey,
+  TableInfo,
+  EvalQueryOptions,
+  getSourceInfo,
+  QueryExp,
+  DbConnection,
+  TableRep,
+} from "reltab";
+import { BigQueryConnection } from "reltab-bigquery";
 
 require("console.table"); // Can insert delay in promise chain by:
 // delay(amount).then(() => ...)
@@ -29,112 +43,195 @@ let delay = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-const runQuery = (rtc: reltabSqlite.SqliteContext) => (
-  queryStr: string,
-  cb: (res: any, err: any) => void
-) => {
+export interface EvalQueryRequest {
+  query: QueryExp;
+  offset?: number;
+  limit?: number;
+}
+
+const serverEvalQuery = async (
+  conn: DbConnection,
+  req: EvalQueryRequest
+): Promise<TableRep> => {
   try {
-    const req = reltab.deserializeQueryReq(queryStr);
     const hrstart = process.hrtime();
-    delay(0).then(() => {
-      const qp =
-        req.offset !== undefined
-          ? rtc.evalQuery(req.query, req.offset, req.limit)
-          : rtc.evalQuery(req.query);
-      qp.then((res) => {
-        const [es, ens] = process.hrtime(hrstart);
-        log.info("runQuery: evaluated query in %ds %dms", es, ens / 1e6);
-        const serRes = JSON.stringify(res, null, 2);
-        cb(null, serRes);
-      }).catch((err) => {
-        log.error("runQuery: error running query: ", err, err.stack);
-        cb(err, null);
-      });
-    });
-  } catch (err) {
-    log.error("runQuery: ", err, err.stack);
+    const qp =
+      req.offset !== undefined
+        ? conn.evalQuery(req.query, req.offset, req.limit)
+        : conn.evalQuery(req.query);
+    const qres = await qp;
+    const [es, ens] = process.hrtime(hrstart);
+    log.info("runQuery: evaluated query in %ds %dms", es, ens / 1e6);
+    return qres;
+    // const serRes = JSON.stringify(res, null, 2);
+    // cb(null, serRes);
+  } catch (error) {
+    log.error("runQuery: ", error, error.stack);
+    throw error;
   }
 };
 
-const getRowCount = (rtc: reltabSqlite.SqliteContext) => (
-  queryStr: string,
+type EngineReq<T> = { engine: DbConnectionKey; req: T };
+type EngineReqHandler<Req, Resp> = (req: EngineReq<Req>) => Promise<Resp>;
+
+function mkEngineReqHandler<Req, Resp>(
+  srvFn: (dbConn: DbConnection, req: Req) => Promise<Resp>
+): EngineReqHandler<Req, Resp> {
+  const handler = async (ereq: EngineReq<Req>): Promise<Resp> => {
+    const { engine, req } = ereq;
+    const conn = await getConnection(engine);
+    const res = srvFn(conn, req);
+    return res;
+  };
+  return handler;
+}
+
+const engineReqEvalQuery = mkEngineReqHandler(serverEvalQuery);
+
+// TODO: clearly nothing EvalQuery-specific here
+const remotableEvalQuery = async (
+  reqStr: string,
   cb: (res: any, err: any) => void
 ) => {
   try {
-    const req = reltab.deserializeQueryReq(queryStr);
-    const hrstart = process.hrtime();
-    delay(0).then(() => {
-      const qp = rtc.rowCount(req.query);
-      qp.then((rowCount) => {
-        const [es, ens] = process.hrtime(hrstart);
-        log.info("getRowCount: evaluated query in %ds %dms", es, ens / 1e6);
-        const resObj = {
-          rowCount,
-        };
-        const serRes = JSON.stringify(resObj, null, 2);
-        cb(null, serRes);
-      }).catch((err) => {
-        log.error("getRowCount: error running query: ", err.message);
-        cb(err, null);
-      });
-    });
+    const ereq = reltab.deserializeQueryReq(reqStr) as any;
+    const res = await engineReqEvalQuery(ereq);
+    const serRes = JSON.stringify(res, null, 2);
+    cb(null, serRes);
   } catch (err) {
-    log.error("runQuery: ", err, err.stack);
+    cb(err, null);
   }
 };
 
-const getSourceInfo = (rtc: reltabSqlite.SqliteContext) => (
-  pathStr: string,
+const getRowCount = async (
+  reqStr: string,
   cb: (res: any, err: any) => void
 ) => {
   try {
-    const req = JSON.parse(pathStr);
+    const req = reltab.deserializeQueryReq(reqStr) as any;
+    const { engine, query } = req;
     const hrstart = process.hrtime();
-    delay(0).then(() => {
-      const qp = rtc.getSourceInfo(req.path);
-      qp.then((sourceInfo) => {
-        const [es, ens] = process.hrtime(hrstart);
-        log.info("getSourceInfo: evaluated query in %ds %dms", es, ens / 1e6);
-        const resObj = {
-          sourceInfo,
-        };
-        const serRes = JSON.stringify(resObj, null, 2);
-        cb(null, serRes);
-      }).catch((err) => {
-        log.error("getSourceInfo: error: ", err.message);
-        cb(err, null);
-      });
-    });
+    const rtc = await getConnection(engine);
+    const rowCount = await rtc.rowCount(query);
+    const [es, ens] = process.hrtime(hrstart);
+    log.info("getRowCount: evaluated query in %ds %dms", es, ens / 1e6);
+    const resObj = {
+      rowCount,
+    };
+    const serRes = JSON.stringify(resObj, null, 2);
+    cb(null, serRes);
+  } catch (err) {
+    log.error("getRowCount: ", err, err.stack);
+    cb(err, null);
+  }
+};
+
+// remotable wrapper around getSourceInfo on a DbConnection:
+const dbGetSourceInfo = async (
+  reqStr: string,
+  cb: (res: any, err: any) => void
+) => {
+  try {
+    const req = JSON.parse(reqStr);
+    const hrstart = process.hrtime();
+    const { engine, path } = req;
+    const rtc = await getConnection(engine);
+    const sourceInfo = await rtc.getSourceInfo(path);
+    const [es, ens] = process.hrtime(hrstart);
+    log.info("dbGetSourceInfo: evaluated query in %ds %dms", es, ens / 1e6);
+    const resObj = {
+      sourceInfo,
+    };
+    const serRes = JSON.stringify(resObj, null, 2);
+    cb(null, serRes);
+  } catch (err) {
+    log.error("dbGetSourceInfo: ", err, err.stack);
+    cb(err, null);
+  }
+};
+
+// main server getSourceInfo
+const serverGetSourceInfo = async (
+  reqStr: string,
+  cb: (res: any, err: any) => void
+) => {
+  try {
+    const req = JSON.parse(reqStr);
+    const hrstart = process.hrtime();
+    const { path } = req;
+    const sourceInfo = await getSourceInfo(path);
+    const [es, ens] = process.hrtime(hrstart);
+    log.info("getSourceInfo: evaluated query in %ds %dms", es, ens / 1e6);
+    const resObj = {
+      sourceInfo,
+    };
+    const serRes = JSON.stringify(resObj, null, 2);
+    cb(null, serRes);
   } catch (err) {
     log.error("getSourceInfo: ", err, err.stack);
+    cb(err, null);
   }
 };
 
-const getTableInfo = (rtc: reltabSqlite.SqliteContext) => (
-  tableNameReqStr: string,
+const serverGetDataSources = async (
+  reqStr: string,
   cb: (res: any, err: any) => void
 ) => {
   try {
-    const req = JSON.parse(tableNameReqStr);
+    const req = JSON.parse(reqStr);
     const hrstart = process.hrtime();
-    delay(0).then(() => {
-      const qp = rtc.getTableInfo(req.tableName);
-      qp.then((tableInfo) => {
-        const [es, ens] = process.hrtime(hrstart);
-        log.info("getTableInfo: evaluated query in %ds %dms", es, ens / 1e6);
-        const resObj = {
-          tableInfo,
-        };
-        const serRes = JSON.stringify(resObj, null, 2);
-        cb(null, serRes);
-      }).catch((err) => {
-        log.error("geTableInfo: error: ", err.message);
-        cb(err, null);
-      });
-    });
+    const nodeIds = await getDataSources();
+    const [es, ens] = process.hrtime(hrstart);
+    log.info("getDataSources: evaluated query in %ds %dms", es, ens / 1e6);
+    const resObj = {
+      nodeIds,
+    };
+    const serRes = JSON.stringify(resObj, null, 2);
+    cb(null, serRes);
+  } catch (err) {
+    log.error("getDataSources: ", err, err.stack);
+    cb(err, null);
+  }
+};
+
+const getTableInfo = async (
+  reqStr: string,
+  cb: (res: any, err: any) => void
+) => {
+  try {
+    const req = JSON.parse(reqStr);
+    const hrstart = process.hrtime();
+    const { engine, tableName } = req;
+    const rtc = await getConnection(engine);
+    const tableInfo = await rtc.getTableInfo(req.tableName);
+    const [es, ens] = process.hrtime(hrstart);
+    log.info("getTableInfo: evaluated query in %ds %dms", es, ens / 1e6);
+    const resObj = {
+      tableInfo,
+    };
+    const serRes = JSON.stringify(resObj, null, 2);
+    cb(null, serRes);
   } catch (err) {
     log.error("getTableInfo: ", err, err.stack);
+    cb(err, null);
   }
+};
+
+const covid19ConnKey: DbConnectionKey = {
+  providerName: "bigquery",
+  connectionInfo: {
+    projectId: "bigquery-public-data",
+    datasetName: "covid19_jhu_csse",
+  },
+};
+const connOpts: EvalQueryOptions = {
+  showQueries: true,
+};
+
+const initBigquery = async () => {
+  const rtc = (await reltab.getConnection(
+    covid19ConnKey
+  )) as BigQueryConnection;
 };
 
 /*
@@ -162,25 +259,32 @@ const initMainAsync = async (
     log.info("initMainAsync: set log level to INFO");
   }
 
+  await initBigquery();
+
   let rtc: reltabSqlite.SqliteContext;
-  let ti;
+  let tableInfo: TableInfo;
   const sqlUrlPrefix = "sqlite://";
+
+  let connKey: DbConnectionKey;
 
   if (targetPath.startsWith(sqlUrlPrefix)) {
     const urlPath = targetPath.slice(sqlUrlPrefix.length);
     const tableSepIndex = urlPath.lastIndexOf("/");
     const tableName = urlPath.slice(tableSepIndex + 1);
     const dbFileName = urlPath.slice(0, tableSepIndex);
-    rtc = (await reltabSqlite.getContext(
-      dbFileName,
-      rtOptions
-    )) as reltabSqlite.SqliteContext;
-    ti = await rtc.getTableInfo(tableName);
+    connKey = {
+      providerName: "sqlite",
+      connectionInfo: dbFileName,
+    };
+    console.log("electronMain: connKey: ", connKey);
+    rtc = (await getConnection(connKey)) as reltabSqlite.SqliteContext;
+    tableInfo = await rtc.getTableInfo(tableName);
   } else {
-    rtc = (await reltabSqlite.getContext(
-      ":memory:",
-      rtOptions
-    )) as reltabSqlite.SqliteContext;
+    connKey = {
+      providerName: "sqlite",
+      connectionInfo: ":memory:",
+    };
+    rtc = (await getConnection(connKey)) as reltabSqlite.SqliteContext;
     let pathname = targetPath; // check if pathname exists
 
     if (!fs.existsSync(pathname)) {
@@ -218,20 +322,24 @@ const initMainAsync = async (
     });
     // const md = await csvimport.importSqlite(pathname, ',', { noHeaderRow })
 
-    ti = reltabSqlite.mkTableInfo(md);
+    tableInfo = reltabSqlite.mkTableInfo(md);
   }
 
-  rtc.registerTable(ti);
+  rtc.registerTable(tableInfo);
 
   // Now let's place a function in global so it can be run via remote:
-  (global as any).runQuery = runQuery(rtc);
-  (global as any).getRowCount = getRowCount(rtc);
-  (global as any).getSourceInfo = getSourceInfo(rtc);
-  (global as any).getTableInfo = getTableInfo(rtc);
+  (global as any).runQuery = remotableEvalQuery;
+  (global as any).getRowCount = getRowCount;
+  (global as any).getTableInfo = getTableInfo;
+  (global as any).dbGetSourceInfo = dbGetSourceInfo;
+  (global as any).serverGetSourceInfo = serverGetSourceInfo;
+  (global as any).serverGetDataSources = serverGetDataSources;
   (global as any).appRtc = rtc;
-  const tiStr = JSON.stringify(ti, null, 2);
-  console.log("initMainAsync: returning: ", tiStr);
-  return tiStr;
+
+  const initInfo = { tableInfo, connKey };
+  const initStr = JSON.stringify(initInfo, null, 2);
+  console.log("initMainAsync: returning: ", initStr);
+  return initStr;
 };
 
 const mkInitMain = (options: any) => (

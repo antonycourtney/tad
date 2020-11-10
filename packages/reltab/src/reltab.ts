@@ -9,3 +9,4 @@ export * from "./AggFn";
 export * from "./ColumnType";
 export * from "./DataSource";
 export * from "./toSql";
+export { AggColSpec, ColumnMapInfo } from "./QueryRep";

@@ -2,12 +2,13 @@ import * as reltab from "reltab";
 import * as _ from "lodash";
 import { Path, PathTree } from "./PathTree";
 import {
-  Connection,
+  DbConnection,
   QueryExp,
   Schema,
   AggColSpec,
   asString,
   ValExp,
+  ColumnMapInfo,
 } from "reltab"; // eslint-disable-line
 import { convertTypeAcquisitionFromJson } from "typescript";
 
@@ -62,7 +63,7 @@ const addPathCols = (
 };
 
 export class VPivotTree {
-  rt: reltab.Connection;
+  rt: DbConnection;
   baseQuery: QueryExp;
   pivotColumns: Array<string>;
   pivotLeafColumn: string | undefined | null;
@@ -78,7 +79,7 @@ export class VPivotTree {
     | null;
 
   constructor(
-    rt: Connection,
+    rt: DbConnection,
     baseQuery: QueryExp,
     baseSchema: reltab.Schema,
     pivotColumns: Array<string>,
@@ -132,7 +133,7 @@ export class VPivotTree {
       pathQuery = pathQuery.filter(pred);
     }
 
-    const pivotColumnInfo: reltab.ColumnMapInfo = {
+    const pivotColumnInfo: ColumnMapInfo = {
       id: "_pivot",
       displayName: "_pivot",
     };
@@ -329,7 +330,7 @@ export class VPivotTree {
   }
 }
 export const getBaseSchema = (
-  rt: reltab.Connection,
+  rt: DbConnection,
   baseQuery: QueryExp
 ): Promise<Schema> => {
   // add a count column and do the usual SQL where 1=0 trick:
@@ -340,7 +341,7 @@ export const getBaseSchema = (
   return schemap.then((schemaRes) => schemaRes.schema);
 };
 export function vpivot(
-  rt: reltab.Connection,
+  rt: DbConnection,
   baseQuery: QueryExp,
   baseSchema: Schema,
   pivotColumns: Array<string>,
