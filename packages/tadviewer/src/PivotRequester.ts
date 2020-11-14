@@ -182,7 +182,7 @@ const requestDataView = async (
   offset: number,
   limit: number
 ): Promise<PagedDataView> => {
-  console.log("requestDataView: ", { query: queryView.query });
+  // console.log("requestDataView: ", { query: queryView.query });
   const tableData = await rt.evalQuery(queryView.query, offset, limit);
   const dataView = mkDataView(
     viewParams,
@@ -275,11 +275,13 @@ export class PivotRequester {
     const viewParams = viewState.viewParams;
 
     if (viewParams !== this.pendingViewParams) {
+      /*
       console.log(
         "onStateChange: requesting new query: ",
         viewState.toJS(),
         this.pendingViewParams?.toJS()
       );
+      */
       // Might be nice to cancel any pending request here...
       // failing that we could calculate additional pages we need
       // if viewParams are same and only page range differs.

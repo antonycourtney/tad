@@ -10,7 +10,7 @@ import * as setup from "./setup";
 import * as quickStart from "./quickStart";
 import * as appMenu from "./appMenu";
 import * as appWindow from "./appWindow";
-import electron, { contextBridge } from "electron";
+import electron, { contextBridge, ipcMain } from "electron";
 import fs from "fs";
 
 const dialog = electron.dialog;
@@ -20,15 +20,15 @@ import path from "path";
 
 import pkgInfo from "../package.json";
 import {
-  getDataSources,
   getConnection,
   DbConnectionKey,
   TableInfo,
   EvalQueryOptions,
-  getSourceInfo,
   QueryExp,
   DbConnection,
   TableRep,
+  TransportServer,
+  serverInit,
 } from "reltab";
 import { BigQueryConnection } from "reltab-bigquery";
 
@@ -41,180 +41,6 @@ let delay = (ms: number) => {
   }
 
   return new Promise((resolve) => setTimeout(resolve, ms));
-};
-
-export interface EvalQueryRequest {
-  query: QueryExp;
-  offset?: number;
-  limit?: number;
-}
-
-const serverEvalQuery = async (
-  conn: DbConnection,
-  req: EvalQueryRequest
-): Promise<TableRep> => {
-  try {
-    const hrstart = process.hrtime();
-    const qp =
-      req.offset !== undefined
-        ? conn.evalQuery(req.query, req.offset, req.limit)
-        : conn.evalQuery(req.query);
-    const qres = await qp;
-    const [es, ens] = process.hrtime(hrstart);
-    log.info("runQuery: evaluated query in %ds %dms", es, ens / 1e6);
-    return qres;
-    // const serRes = JSON.stringify(res, null, 2);
-    // cb(null, serRes);
-  } catch (error) {
-    log.error("runQuery: ", error, error.stack);
-    throw error;
-  }
-};
-
-type EngineReq<T> = { engine: DbConnectionKey; req: T };
-type EngineReqHandler<Req, Resp> = (req: EngineReq<Req>) => Promise<Resp>;
-
-function mkEngineReqHandler<Req, Resp>(
-  srvFn: (dbConn: DbConnection, req: Req) => Promise<Resp>
-): EngineReqHandler<Req, Resp> {
-  const handler = async (ereq: EngineReq<Req>): Promise<Resp> => {
-    const { engine, req } = ereq;
-    const conn = await getConnection(engine);
-    const res = srvFn(conn, req);
-    return res;
-  };
-  return handler;
-}
-
-const engineReqEvalQuery = mkEngineReqHandler(serverEvalQuery);
-
-// TODO: clearly nothing EvalQuery-specific here
-const remotableEvalQuery = async (
-  reqStr: string,
-  cb: (res: any, err: any) => void
-) => {
-  try {
-    const ereq = reltab.deserializeQueryReq(reqStr) as any;
-    const res = await engineReqEvalQuery(ereq);
-    const serRes = JSON.stringify(res, null, 2);
-    cb(null, serRes);
-  } catch (err) {
-    cb(err, null);
-  }
-};
-
-const getRowCount = async (
-  reqStr: string,
-  cb: (res: any, err: any) => void
-) => {
-  try {
-    const req = reltab.deserializeQueryReq(reqStr) as any;
-    const { engine, query } = req;
-    const hrstart = process.hrtime();
-    const rtc = await getConnection(engine);
-    const rowCount = await rtc.rowCount(query);
-    const [es, ens] = process.hrtime(hrstart);
-    log.info("getRowCount: evaluated query in %ds %dms", es, ens / 1e6);
-    const resObj = {
-      rowCount,
-    };
-    const serRes = JSON.stringify(resObj, null, 2);
-    cb(null, serRes);
-  } catch (err) {
-    log.error("getRowCount: ", err, err.stack);
-    cb(err, null);
-  }
-};
-
-// remotable wrapper around getSourceInfo on a DbConnection:
-const dbGetSourceInfo = async (
-  reqStr: string,
-  cb: (res: any, err: any) => void
-) => {
-  try {
-    const req = JSON.parse(reqStr);
-    const hrstart = process.hrtime();
-    const { engine, path } = req;
-    const rtc = await getConnection(engine);
-    const sourceInfo = await rtc.getSourceInfo(path);
-    const [es, ens] = process.hrtime(hrstart);
-    log.info("dbGetSourceInfo: evaluated query in %ds %dms", es, ens / 1e6);
-    const resObj = {
-      sourceInfo,
-    };
-    const serRes = JSON.stringify(resObj, null, 2);
-    cb(null, serRes);
-  } catch (err) {
-    log.error("dbGetSourceInfo: ", err, err.stack);
-    cb(err, null);
-  }
-};
-
-// main server getSourceInfo
-const serverGetSourceInfo = async (
-  reqStr: string,
-  cb: (res: any, err: any) => void
-) => {
-  try {
-    const req = JSON.parse(reqStr);
-    const hrstart = process.hrtime();
-    const { path } = req;
-    const sourceInfo = await getSourceInfo(path);
-    const [es, ens] = process.hrtime(hrstart);
-    log.info("getSourceInfo: evaluated query in %ds %dms", es, ens / 1e6);
-    const resObj = {
-      sourceInfo,
-    };
-    const serRes = JSON.stringify(resObj, null, 2);
-    cb(null, serRes);
-  } catch (err) {
-    log.error("getSourceInfo: ", err, err.stack);
-    cb(err, null);
-  }
-};
-
-const serverGetDataSources = async (
-  reqStr: string,
-  cb: (res: any, err: any) => void
-) => {
-  try {
-    const req = JSON.parse(reqStr);
-    const hrstart = process.hrtime();
-    const nodeIds = await getDataSources();
-    const [es, ens] = process.hrtime(hrstart);
-    log.info("getDataSources: evaluated query in %ds %dms", es, ens / 1e6);
-    const resObj = {
-      nodeIds,
-    };
-    const serRes = JSON.stringify(resObj, null, 2);
-    cb(null, serRes);
-  } catch (err) {
-    log.error("getDataSources: ", err, err.stack);
-    cb(err, null);
-  }
-};
-
-const getTableInfo = async (
-  reqStr: string,
-  cb: (res: any, err: any) => void
-) => {
-  try {
-    const req = JSON.parse(reqStr);
-    const hrstart = process.hrtime();
-    const { engine, tableName } = req;
-    const rtc = await getConnection(engine);
-    const tableInfo = await rtc.getTableInfo(req.tableName);
-    const [es, ens] = process.hrtime(hrstart);
-    log.info("getTableInfo: evaluated query in %ds %dms", es, ens / 1e6);
-    const resObj = {
-      tableInfo,
-    };
-    const serRes = JSON.stringify(resObj, null, 2);
-    cb(null, serRes);
-  } catch (err) {
-    log.error("getTableInfo: ", err, err.stack);
-    cb(err, null);
-  }
 };
 
 const covid19ConnKey: DbConnectionKey = {
@@ -233,6 +59,16 @@ const initBigquery = async () => {
     covid19ConnKey
   )) as BigQueryConnection;
 };
+
+class ElectronTransportServer implements TransportServer {
+  registerInvokeHandler(
+    functionName: string,
+    handler: (req: any) => Promise<any>
+  ): void {
+    // TODO: catch exceptions and map into a serializable failure
+    ipcMain.handle(functionName, async (event, req) => handler(req));
+  }
+}
 
 /*
  * main process initialization
@@ -276,7 +112,6 @@ const initMainAsync = async (
       providerName: "sqlite",
       connectionInfo: dbFileName,
     };
-    console.log("electronMain: connKey: ", connKey);
     rtc = (await getConnection(connKey)) as reltabSqlite.SqliteContext;
     tableInfo = await rtc.getTableInfo(tableName);
   } else {
@@ -327,18 +162,13 @@ const initMainAsync = async (
 
   rtc.registerTable(tableInfo);
 
-  // Now let's place a function in global so it can be run via remote:
-  (global as any).runQuery = remotableEvalQuery;
-  (global as any).getRowCount = getRowCount;
-  (global as any).getTableInfo = getTableInfo;
-  (global as any).dbGetSourceInfo = dbGetSourceInfo;
-  (global as any).serverGetSourceInfo = serverGetSourceInfo;
-  (global as any).serverGetDataSources = serverGetDataSources;
   (global as any).appRtc = rtc;
+
+  const ts = new ElectronTransportServer();
+  serverInit(ts);
 
   const initInfo = { tableInfo, connKey };
   const initStr = JSON.stringify(initInfo, null, 2);
-  console.log("initMainAsync: returning: ", initStr);
   return initStr;
 };
 

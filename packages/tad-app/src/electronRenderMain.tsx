@@ -11,9 +11,9 @@ import { ViewParams, actions } from "tadviewer";
 import { initAppState } from "tadviewer";
 import * as reltab from "reltab";
 import log from "loglevel";
-import { ElectronConnection } from "./electronClient";
+import { ElectronTransportClient } from "./electronClient";
 import * as electron from "electron";
-import { DbConnectionKey, TableInfo } from "reltab";
+import { DbConnectionKey, RemoteReltabConnection, TableInfo } from "reltab";
 
 const remote = electron.remote;
 const remoteInitMain = remote.getGlobal("initMain");
@@ -46,7 +46,7 @@ const initMainProcess = (
 // TODO: figure out how to initialize based on saved views or different file / table names
 const init = async () => {
   log.setLevel(log.levels.DEBUG);
-  console.log("testing, testing, one two...");
+  // console.log("testing, testing, one two...");
   log.debug("Hello, Electron!");
   const openParams: any = (remote.getCurrentWindow() as any).openParams;
   let targetPath: string = "";
@@ -73,13 +73,13 @@ const init = async () => {
   );
 
   try {
-    console.log("before initMain");
     const initInfo = await initMainProcess(targetPath, srcFile!);
-    console.log("after initMain");
     const ti = initInfo.tableInfo;
     const rtEngine = initInfo.connKey;
 
-    const rtc = new ElectronConnection(ti.tableName, ti);
+    const tconn = new ElectronTransportClient();
+
+    const rtc = new RemoteReltabConnection(tconn);
 
     const dbc = await rtc.connect(
       initInfo.connKey,

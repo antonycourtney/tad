@@ -73,19 +73,20 @@ export const create = (targetPath: string) => {
   } // win.targetPath = targetPath
 
   (win as any).openParams = encodeOpenParams(targetPath);
-  win.loadURL(
-    url.format({
-      pathname: path.join(__dirname, "index.html"),
-      protocol: "file:",
-      slashes: true,
-    })
-  ); // Open the DevTools.
+  const targetUrl = url.format({
+    pathname: path.join(__dirname, "index.html"),
+    protocol: "file:",
+    slashes: true,
+  });
+  win.loadURL(targetUrl);
 
+  // Open the DevTools.
   win.webContents.openDevTools({
     mode: "bottom",
   });
-  win.webContents.closeDevTools(); // Emitted when the window is closed.
+  win.webContents.closeDevTools();
 
+  // Emitted when the window is closed.
   win.on("closed", function () {
     const idx = mainWindows.indexOf(win);
 

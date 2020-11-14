@@ -84,7 +84,7 @@ function production() {
 var render = {
   target: "electron-renderer",
   entry: {
-    tadweb: "./src/electronRenderMain.tsx",
+    tadapp: "./src/electronRenderMain.tsx",
   },
 };
 

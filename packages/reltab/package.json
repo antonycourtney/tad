@@ -18,7 +18,8 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.15",
+    "loglevel": "^1.6.8"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.149",

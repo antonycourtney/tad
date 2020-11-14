@@ -244,17 +244,16 @@ const tableRepReviver = (key: string, val: any): any => {
   return retVal;
 };
 
-export const deserializeTableRepStr = (jsonStr: string): TableRep => {
+export const deserializeTableRepStr = (jsonStr: string): any => {
   const rt = JSON.parse(jsonStr, tableRepReviver);
   return rt;
 };
 
 // deserialize already decoded JSON:
 export const deserializeTableRepJson = (json: any): TableRep => {
-  const tableRepJson = json["tableRep"];
-  const schemaJson = tableRepJson["schema"];
+  const schemaJson = json["schema"];
   const schema = Schema.fromJSON(schemaJson);
-  const tableRep = new TableRep(schema, tableRepJson.rowData);
+  const tableRep = new TableRep(schema, json.rowData);
   return tableRep;
 };
 

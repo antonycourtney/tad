@@ -3,6 +3,7 @@ import { Sidebar } from "./Sidebar";
 import { StateRef, mutableGet } from "oneref";
 import { AppState } from "../AppState";
 import * as reltab from "reltab";
+import * as log from "loglevel";
 
 import {
   Classes,
@@ -68,7 +69,7 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
       const appState = mutableGet(stateRef);
       const rtc = appState.rtc;
       const rootSources = await rtc.getDataSources();
-      console.log("DataSourceSideBar: rootSources: ", rootSources);
+      log.debug("DataSourceSideBar: rootSources: ", rootSources);
       const rootNodes = rootSources.map((src) => dsPathTreeNode([], src));
       setTreeState(rootNodes);
     }
@@ -83,10 +84,8 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     forceUpdate();
   };
   const handleNodeExpand = async (treeNode: ITreeNode) => {
-    console.log("handleNodeExand", treeNode);
     const dsPath: DataSourcePath = treeNode.nodeData as DataSourcePath;
     const dbConnKey: DbConnectionKey = dsPath[0].id as DbConnectionKey;
-    console.log("expandDatabase: ", dbConnKey);
     const appState = mutableGet(stateRef);
     const rtc = appState.rtc;
     const dsInfo = await rtc.getSourceInfo(dsPath);
