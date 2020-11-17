@@ -68,10 +68,14 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     async function fetchSourceInfo() {
       const appState = mutableGet(stateRef);
       const rtc = appState.rtc;
-      const rootSources = await rtc.getDataSources();
-      log.debug("DataSourceSideBar: rootSources: ", rootSources);
-      const rootNodes = rootSources.map((src) => dsPathTreeNode([], src));
-      setTreeState(rootNodes);
+      try {
+        const rootSources = await rtc.getDataSources();
+        log.debug("DataSourceSideBar: rootSources: ", rootSources);
+        const rootNodes = rootSources.map((src) => dsPathTreeNode([], src));
+        setTreeState(rootNodes);
+      } catch (err) {
+        console.error("Caught error getting data sources: ", err);
+      }
     }
     if (!initialized) {
       fetchSourceInfo();

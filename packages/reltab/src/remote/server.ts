@@ -26,6 +26,8 @@ import {
   TransportServer,
 } from "./Transport";
 import { TableInfo, TableRep } from "../TableRep";
+import { Result } from "./result";
+import { serializeError } from "serialize-error";
 
 const dbConnEvalQuery = async (
   conn: DbConnection,
@@ -132,8 +134,6 @@ const saveOnResolve = async (
 /**
  * Used to both populate and read from the instance cache
  *
- * @param providerName
- * @param connectionInfo
  */
 export async function getConnection(
   connKey: DbConnectionKey
@@ -234,6 +234,20 @@ async function handleGetSourceInfo(
 
 type AnyReqHandler = (req: any) => Promise<any>;
 
+type ResultReqHandler<T> = (req: any) => Promise<Result<T>>;
+
+const exceptionHandler = (hf: AnyReqHandler): ResultReqHandler<any> => async (
+  req: any
+) => {
+  try {
+    const value = await hf(req);
+    return { status: "Ok", value };
+  } catch (errVal) {
+    console.error("exceptionHandler caught error: ", errVal);
+    return { status: "Err", errVal: serializeError(errVal) };
+  }
+};
+
 const simpleJSONHandler = (hf: AnyReqHandler): EncodedRequestHandler => async (
   encodedReq: string
 ): Promise<string> => {
@@ -245,26 +259,26 @@ const simpleJSONHandler = (hf: AnyReqHandler): EncodedRequestHandler => async (
 export const serverInit = (ts: TransportServer) => {
   ts.registerInvokeHandler(
     "getDataSources",
-    simpleJSONHandler(handleGetDataSources)
+    simpleJSONHandler(exceptionHandler(handleGetDataSources))
   );
   ts.registerInvokeHandler(
     "getSourceInfo",
-    simpleJSONHandler(handleGetSourceInfo)
+    simpleJSONHandler(exceptionHandler(handleGetSourceInfo))
   );
   ts.registerInvokeHandler(
     "DbConnection.evalQuery",
-    simpleJSONHandler(handleDbConnEvalQuery)
+    simpleJSONHandler(exceptionHandler(handleDbConnEvalQuery))
   );
   ts.registerInvokeHandler(
     "DbConnection.rowCount",
-    simpleJSONHandler(handleDbConnRowCount)
+    simpleJSONHandler(exceptionHandler(handleDbConnRowCount))
   );
   ts.registerInvokeHandler(
     "DbConnection.getSourceInfo",
-    simpleJSONHandler(handleDbConnGetSourceInfo)
+    simpleJSONHandler(exceptionHandler(handleDbConnGetSourceInfo))
   );
   ts.registerInvokeHandler(
     "DbConnection.getTableInfo",
-    simpleJSONHandler(handleDbConnGetTableInfo)
+    simpleJSONHandler(exceptionHandler(handleDbConnGetTableInfo))
   );
 };

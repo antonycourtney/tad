@@ -12,6 +12,8 @@ import {
 } from "../DataSource";
 import { TransportClient } from "./Transport";
 import * as log from "loglevel";
+import { Result } from "./result";
+import { deserializeError } from "serialize-error";
 
 // Static registry of globally unique DbProvider names:
 export type DbProviderName = "aws-athena" | "bigquery" | "sqlite";
@@ -76,7 +78,7 @@ async function invokeDbFunction<T>(
   engine: DbConnectionKey,
   methodName: string,
   req: T
-): Promise<any> {
+): Promise<Result<any>> {
   const ereq: EngineReq<T> = { engine, req };
   const retStr = await tconn.invoke(
     "DbConnection." + methodName,
@@ -124,7 +126,7 @@ class RemoteDbConnection implements DbConnection {
       this.connectionKey,
       "evalQuery",
       req
-    );
+    ).then(decodeResult);
     return ret;
   }
 
@@ -133,7 +135,12 @@ class RemoteDbConnection implements DbConnection {
       queryStr: JSON.stringify(query),
       options: options ? options : defaultEvalQueryOptions,
     };
-    return invokeDbFunction(this.tconn, this.connectionKey, "rowCount", req);
+    return invokeDbFunction(
+      this.tconn,
+      this.connectionKey,
+      "rowCount",
+      req
+    ).then(decodeResult);
   }
 
   async getTableInfo(tableName: string): Promise<TableInfo> {
@@ -143,7 +150,7 @@ class RemoteDbConnection implements DbConnection {
       this.connectionKey,
       "getTableInfo",
       req
-    );
+    ).then(decodeResult);
   }
 
   async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
@@ -153,7 +160,7 @@ class RemoteDbConnection implements DbConnection {
       this.connectionKey,
       "getSourceInfo",
       req
-    );
+    ).then(decodeResult);
   }
 }
 
@@ -189,6 +196,17 @@ async function jsonInvoke(
   return ret;
 }
 
+function decodeResult<T>(res: Result<T>): T {
+  switch (res.status) {
+    case "Ok":
+      return res.value;
+    case "Err":
+      console.log("decodeResult: got error result: ", res);
+      const errVal = deserializeError(res.errVal);
+      throw errVal;
+  }
+}
+
 /**
  * Implementation of ReltabConnection interface using lower level
  * TransportClient remote invocation
@@ -209,7 +227,9 @@ export class RemoteReltabConnection implements ReltabConnection {
   }
 
   async getDataSources(): Promise<DataSourceNodeId[]> {
-    const ret = await jsonInvoke(this.tconn, "getDataSources", {});
+    const ret = (await jsonInvoke(this.tconn, "getDataSources", {}).then(
+      decodeResult
+    )) as any;
     return ret["nodeIds"];
   }
 
@@ -218,7 +238,9 @@ export class RemoteReltabConnection implements ReltabConnection {
    * @param path Absolute path to data source.
    */
   async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
-    const ret = await jsonInvoke(this.tconn, "getSourceInfo", { path });
+    const ret = (await jsonInvoke(this.tconn, "getSourceInfo", { path }).then(
+      decodeResult
+    )) as any;
     return ret["sourceInfo"];
   }
 }
