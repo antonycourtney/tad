@@ -14,9 +14,11 @@ import { read } from "fs";
 import {
   DbConnection,
   DbConnectionKey,
+  EncodedRequestHandler,
   EvalQueryOptions,
   getConnection,
-  getSourceInfo,
+  serverInit,
+  TransportServer,
 } from "reltab";
 
 const SRV_DIR = "./public/csv";
@@ -101,89 +103,19 @@ const handleGetRowCount = async (
   }
 };
 
-// TODO: really should cache fileName to table name, so we don't have to re-import CSV file every time
-const handleImportFile = async (
-  dbc: reltab.DbConnection,
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    const ctx = dbc as SqliteContext;
-    log.info("POST importFile: got request: ", req.body);
-    const tiReq = req.body;
-    // const tableInfo = await dbc.getTableInfo(tiReq.tableName);
-    const { fileName } = tiReq;
-    const filePath = path.join(SRV_DIR, fileName);
-    log.info("handleImportFile: importing: " + filePath);
+const testImportFile = async (
+  dbc: DbConnection,
+  fileName: string
+): Promise<void> => {
+  const ctx = dbc as SqliteContext;
+  const filePath = path.join(SRV_DIR, fileName);
+  log.info("handleImportFile: importing: " + filePath);
 
-    const md = await reltabSqlite.fastImport(ctx.db, filePath);
-    const ti = reltabSqlite.mkTableInfo(md);
-    const tableName = ti.tableName;
-    log.info("imported CSV, table name: ", tableName);
-    ctx.registerTable(ti);
-    const resObj = { tableName };
-    log.info("getTableInfo: sending response: ", resObj);
-    res.json(resObj);
-  } catch (err) {
-    log.error("importFile: ", err, err.stack);
-  }
-};
-
-const handleGetTableInfo = async (
-  dbc: reltab.DbConnection,
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    log.info("POST getTableInfo: got request: ", req.body);
-    const tiReq = req.body;
-    const tableInfo = await dbc.getTableInfo(tiReq.tableName);
-    const resObj = { tableInfo };
-    log.info(
-      "getTableInfo: sending response: ",
-      JSON.stringify(resObj, null, 2)
-    );
-    res.json(resObj);
-  } catch (err) {
-    log.error("getTableInfo: ", err, err.stack);
-  }
-};
-
-const handleGetSourceInfo = async (
-  dbc: reltab.DbConnection,
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    log.info("POST getSourceInfo: got request: ", JSON.stringify(req.body));
-    const tiReq = req.body;
-    const sourceInfo = await getSourceInfo(tiReq.path);
-    const resObj = { sourceInfo };
-    log.info(
-      "getSourceInfo: sending response w/ node Id: ",
-      JSON.stringify(sourceInfo.nodeId)
-    );
-    res.json(resObj);
-  } catch (err) {
-    log.error("getSourceInfo: ", err, err.stack);
-  }
-};
-
-const handleGetDataSources = async (
-  dbc: reltab.DbConnection,
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    log.info("POST getDataSource: got request: ", req.body);
-    const tiReq = req.body;
-    const nodeIds = await reltab.getDataSources();
-    const resObj = { nodeIds };
-    log.info("getDataSource: sending response: ", JSON.stringify(nodeIds));
-    res.json(resObj);
-  } catch (err) {
-    log.error("getDataSources: ", err, err.stack);
-  }
+  const md = await reltabSqlite.fastImport(ctx.db, filePath);
+  const ti = reltabSqlite.mkTableInfo(md);
+  const tableName = ti.tableName;
+  log.info("imported CSV, table name: ", tableName);
+  ctx.registerTable(ti);
 };
 
 const viewerUrl = "/tadweb-app/index.html";
@@ -192,12 +124,58 @@ const rootRedirect = (req: express.Request, res: express.Response) => {
   res.redirect(viewerUrl);
 };
 
+type InvokeHandlerMap = { [functionName: string]: EncodedRequestHandler };
+
+class WebTransportServer implements TransportServer {
+  private handlers: InvokeHandlerMap = {};
+
+  registerInvokeHandler(
+    functionName: string,
+    handler: EncodedRequestHandler
+  ): void {
+    this.handlers[functionName] = handler;
+  }
+
+  async handleRequest(
+    functionName: string,
+    encodedReq: string
+  ): Promise<string> {
+    const handler: EncodedRequestHandler | undefined = this.handlers[
+      functionName
+    ];
+    if (handler !== null) {
+      const retStr = handler(encodedReq);
+      return retStr;
+    } else {
+      throw new Error('No registered handler for "' + functionName + '"');
+    }
+  }
+}
+
+const handleInvoke = async (
+  ts: WebTransportServer,
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    // log.info("POST handleInvoke: got request: ", req.body);
+    const { functionName, encodedReq } = req.body;
+    const resStr = await ts.handleRequest(functionName, encodedReq);
+    // log.info("handleInvoke: sending response: ", resStr);
+    res.json(resStr);
+  } catch (err) {
+    log.error("handleInvoke: ", err, err.stack);
+  }
+};
+
 async function main() {
   log.setLevel(log.levels.INFO);
 
   await initBigquery();
 
   const dbc = await initSqlite();
+  testImportFile(dbc, "movie_metadata.csv");
+
   /*
   const dbc = new BigQueryConnection(
     "bigquery-public-data",
@@ -234,26 +212,10 @@ async function main() {
 
   app.use(express.static("./public"));
 
-  app.post("/tadweb/evalQuery", (req, res) => handleEvalQuery(dbc, req, res));
+  const ts = new WebTransportServer();
+  serverInit(ts);
 
-  app.post("/tadweb/getRowCount", (req, res) =>
-    handleGetRowCount(dbc, req, res)
-  );
-
-  app.post("/tadweb/getTableInfo", (req, res) =>
-    handleGetTableInfo(dbc, req, res)
-  );
-
-  app.post("/tadweb/importFile", (req, res) => handleImportFile(dbc, req, res));
-
-  app.post("/tadweb/getSourceInfo", (req, res) =>
-    handleGetSourceInfo(dbc, req, res)
-  );
-
-  app.post("/tadweb/getDataSources", (req, res) =>
-    handleGetDataSources(dbc, req, res)
-  );
-
+  app.post("/tadweb/invoke", (req, res) => handleInvoke(ts, req, res));
   const server = app.listen(portNumber, () => {
     const addr = server.address() as AddressInfo;
     log.info("Listening on port ", addr.port);

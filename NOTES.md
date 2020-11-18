@@ -81,6 +81,7 @@ operation that can end up in a SQL select column expression. Probably time for a
 ### Features to add before next release:
 
 [X] Multiple database support (at least bigquery)
+[ ] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
 [ ] Delayed calc mode
 [ ] Datasets and table selector UI
 [ ] column extensions

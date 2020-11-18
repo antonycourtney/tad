@@ -13,8 +13,8 @@ import { ViewParams } from "tadviewer";
 import { initAppState } from "tadviewer";
 import * as reltab from "reltab";
 import log from "loglevel";
-import { WebReltabConnection } from "./reltabWebClient";
-import { DbConnectionKey } from "reltab";
+import { WebTransportClient } from "./reltabWebClient";
+import { DbConnectionKey, RemoteReltabConnection } from "reltab";
 
 const testBaseUrl = "http://localhost:9000";
 // const TEST_FILE = "sample.csv";
@@ -51,9 +51,13 @@ const init = async () => {
   );
 
   // const tableName = TEST_TABLE;
+  // const rtc = new WebReltabConnection(testBaseUrl);
 
-  const rtc = new WebReltabConnection(testBaseUrl);
   // const tableName = await rtc.importFile(TEST_FILE);
+
+  const wtc = new WebTransportClient(testBaseUrl);
+
+  const rtc = new RemoteReltabConnection(wtc);
 
   const connKey: DbConnectionKey = {
     providerName: "sqlite",
@@ -61,11 +65,12 @@ const init = async () => {
   };
 
   const dbc = await rtc.connect(connKey, TEST_TABLE);
-  const baseQuery = reltab.tableQuery(tableName);
+
+  const baseQuery = reltab.tableQuery(TEST_TABLE);
 
   var pivotRequester: PivotRequester | undefined | null = null;
 
-  await initAppState(rtc, dbc, tableName, baseQuery, viewParams, stateRef);
+  await initAppState(rtc, dbc, TEST_TABLE, baseQuery, viewParams, stateRef);
 
   ReactDOM.render(<App />, document.getElementById("app"));
 
