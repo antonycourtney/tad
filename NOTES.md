@@ -171,3 +171,16 @@ Right now:
 - Importing a CSV is one place where web and Electron UIs will differ a bit. Straightforward
   local file picker for Electron, but need some kind of upload dialog, possibly also allowing something
   like an URL or s3 bucket address.
+
+  #### Notes to self, 18Nov20
+
+  - We now have a single common client/server in (reltab/remote) that is used by both Electron and Web. Big relief.
+  - But: We still have a handful of assumptions we need to fix:
+    [ ] The main function of both apps is still built around importing a single CSV file
+    [ ] AppState assumes a single table and a single pivot table. Need to support an empty / New state where no
+    table has been selected, and add support for multiple tabs.
+    [ ] Need to be able to identify ViewState as dirty, and allow tree selection of tables from data sources so
+    long as no edits have been made to view state.
+    [ ] Need to modify UI to support multiple tabs, move tree selector to individual tabs.
+    [ ] Need some UI for importing a CSV into a database as a table
+  - Let's build a Snowflake data source and dialect.

@@ -1,3 +1,10 @@
+/*
+ * NOTE:  This code is now totally broken / deprecated.
+ *
+ * TODO: Get this working again, using the /tadweb/invoke endpoint and the common reltab remote server
+ *
+ */
+
 import fetch from "node-fetch";
 import * as reltab from "reltab";
 import * as log from "loglevel";
