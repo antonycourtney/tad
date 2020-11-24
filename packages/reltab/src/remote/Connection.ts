@@ -16,7 +16,7 @@ import { Result } from "./result";
 import { deserializeError } from "serialize-error";
 
 // Static registry of globally unique DbProvider names:
-export type DbProviderName = "aws-athena" | "bigquery" | "sqlite";
+export type DbProviderName = "aws-athena" | "bigquery" | "sqlite" | "snowflake";
 export interface DbConnectionKey {
   providerName: DbProviderName;
   connectionInfo: any;
