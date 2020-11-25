@@ -8,6 +8,7 @@ import {
   EvalQueryOptions,
   DbProvider,
   registerProvider,
+  DataSourceNodeId,
 } from "reltab";
 import {
   TableInfoMap,
@@ -219,7 +220,71 @@ export class SnowflakeConnection implements DbConnection {
   }
 
   async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
-    throw new Error("getSourceInfo not yet implemented for Snowflake");
+    if (path.length === 0) {
+      const sqlQuery = `SHOW databases`;
+
+      const qres = await executeQuery(this.snowConn, sqlQuery);
+      const metaRows = qres as Row[];
+
+      const children: DataSourceNodeId[] = metaRows.map((row) => ({
+        kind: "Database",
+        id: row.name as string,
+        displayName: row.name as string,
+      }));
+
+      let nodeId: DataSourceNodeId = {
+        kind: "Database",
+        id: "snowflake",
+        displayName: "snowflake",
+      };
+      let node: DataSourceNode = {
+        nodeId,
+        children,
+      };
+      return node;
+    } else {
+      if (path.length === 1) {
+        const nodeId = path[0];
+        const dbName = nodeId.id;
+
+        const sqlQuery = `SHOW schemas in ${dbName}`;
+
+        const qres = await executeQuery(this.snowConn, sqlQuery);
+        const metaRows = qres as Row[];
+  
+        const children: DataSourceNodeId[] = metaRows.map((row) => ({
+          kind: "Dataset",
+          id: row.name as string,
+          displayName: row.name as string,
+        }));
+        let node: DataSourceNode = {
+          nodeId,
+          children,
+        };
+        return node;
+      } else if (path.length === 2) {
+        const [dbNodeId, schemaNodeId] = path;
+        const dbName = dbNodeId.id;
+        const schemaName = schemaNodeId.id;
+
+        const sqlQuery = `SHOW tables in ${dbName}.${schemaName}`;
+
+        const qres = await executeQuery(this.snowConn, sqlQuery);
+        const metaRows = qres as Row[];
+  
+        const children: DataSourceNodeId[] = metaRows.map((row) => ({
+          kind: "Table",
+          id: `${dbName}.${schemaName}.${row.name}`,
+          displayName: row.name as string,
+        }));
+        let node: DataSourceNode = {
+          nodeId: schemaNodeId,
+          children
+        };
+        return node;
+      }
+      throw new Error("nested getSourceInfo not yet implemented");
+    }
   }
 }
 

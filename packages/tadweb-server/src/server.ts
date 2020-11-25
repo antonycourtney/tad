@@ -8,6 +8,8 @@ import { SqliteContext } from "reltab-sqlite";
 import { BigQueryConnection } from "reltab-bigquery";
 import "reltab-bigquery";
 import { AWSAthenaConnection } from "reltab-aws-athena";
+import { getAuthConnectionOptions, SnowflakeConnection } from "reltab-snowflake";
+import "reltab-snowflake";
 import * as reltab from "reltab";
 import { monitorEventLoopDelay } from "perf_hooks";
 import { read } from "fs";
@@ -52,6 +54,21 @@ const initBigquery = async () => {
   )) as BigQueryConnection;
 };
 
+const initSnowflake = async () => {
+  let connOpts = getAuthConnectionOptions();
+  connOpts.database = "CITIBIKE";
+  connOpts.schema = "PUBLIC";
+  
+  const snowflakeConnKey: DbConnectionKey = {
+    providerName: "snowflake",
+    connectionInfo: connOpts,
+  };
+  
+  const rtc = (await reltab.getConnection(
+    snowflakeConnKey
+  )) as SnowflakeConnection;
+}
+/*
 const handleEvalQuery = async (
   dbc: reltab.DbConnection,
   req: express.Request,
@@ -102,6 +119,7 @@ const handleGetRowCount = async (
     // TODO: return an error
   }
 };
+*/
 
 const testImportFile = async (
   dbc: DbConnection,
@@ -172,6 +190,7 @@ async function main() {
   log.setLevel(log.levels.INFO);
 
   await initBigquery();
+  await initSnowflake();
 
   const dbc = await initSqlite();
   testImportFile(dbc, "movie_metadata.csv");

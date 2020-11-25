@@ -8,7 +8,7 @@ import { PathTree } from "aggtree";
 import { DbConnectionKey } from "reltab";
 import * as snowflake from "snowflake-sdk";
 
-let testCtx: SnowflakeConnection;
+let testConn: SnowflakeConnection;
 
 let connOpts = getAuthConnectionOptions();
 connOpts.database = "CITIBIKE";
@@ -22,18 +22,18 @@ const snowflakeConnKey: DbConnectionKey = {
 beforeAll(async () => {
   // log.setLevel(log.levels.DEBUG);
 
-  testCtx = (await reltab.getConnection(
+  testConn = (await reltab.getConnection(
     snowflakeConnKey
   )) as SnowflakeConnection;
-  log.debug("got testCtx: ", testCtx);
-  const ti = await testCtx.getTableInfo("TRIPS");
+  log.debug("got testConn: ", testConn);
+  const ti = await testConn.getTableInfo("TRIPS");
   log.debug("trips table info: ", ti);
 });
 
 const tripsTableQuery = reltab.tableQuery("TRIPS");
 
 test("t2 - basic table query", async () => {
-  const qres = await testCtx.evalQuery(tripsTableQuery, 0, 20);
+  const qres = await testConn.evalQuery(tripsTableQuery, 0, 20);
 
   util.logTable(qres, { maxRows: 10 });
 
@@ -41,7 +41,7 @@ test("t2 - basic table query", async () => {
 });
 
 test("basic rowcount", async () => {
-  const rowCount = await testCtx.rowCount(tripsTableQuery);
+  const rowCount = await testConn.rowCount(tripsTableQuery);
 
   console.log("row count: ", rowCount);
 });

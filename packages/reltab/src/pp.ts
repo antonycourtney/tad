@@ -115,7 +115,11 @@ const ppSQLSelect = (
   const fromVal = ss.from;
 
   if (typeof fromVal === "string") {
-    dst.push(dialect.quoteCol(fromVal) + "\n");
+    // Hmmm. We previously enclosed fromVal with quoteCol, but
+    // this broke Snowflake when it had a fully qualified table name.
+    // Let's try eliminating for now, but if we need to restore, may need
+    // a special 'quoteTableName' method added to dialect....
+    dst.push(fromVal + "\n");
   } else if (fromVal.expType === "join") {
     // join condition:
     const { lhs, lhsTblAlias, rhs, rhsTblAlias } = fromVal;
