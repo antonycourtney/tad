@@ -51,7 +51,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     pivotSidebar = (
       <PivotSidebar
         expanded={pivotPropsExpanded}
-        schema={appState.baseSchema}
+        schema={viewState.baseSchema}
         viewParams={viewState.viewParams}
         stateRef={stateRef}
       />

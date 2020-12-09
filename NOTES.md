@@ -172,7 +172,7 @@ Right now:
   local file picker for Electron, but need some kind of upload dialog, possibly also allowing something
   like an URL or s3 bucket address.
 
-  #### Notes to self, 18Nov20
+#### Notes to self, 18Nov20
 
   - We now have a single common client/server in (reltab/remote) that is used by both Electron and Web. Big relief.
   - But: We still have a handful of assumptions we need to fix:
@@ -184,4 +184,10 @@ Right now:
     [ ] Need to modify UI to support multiple tabs, move tree selector to individual tabs.
     [ ] Need some UI for importing a CSV into a database as a table
   - Let's build a Snowflake data source and dialect.
-  
+
+### Nov24
+
+OK, we have a basic Snowflake data provider.
+Now let's tackle the refactor for having multiple tabs, and being able to use Tad as a table browser.
+Let's start by tweaking AppState to be able to support an empty grid (no source table selected)
+

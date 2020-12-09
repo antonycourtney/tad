@@ -14,10 +14,6 @@ export interface AppStateProps {
   windowTitle: string; // Usually just the table name or file name
 
   rtc: reltab.ReltabConnection | null;
-  dbc: reltab.DbConnection | null;
-  targetPath: string;
-  baseQuery: reltab.QueryExp | null;
-  baseSchema: reltab.Schema | null; // always in sync with baseQuery
 
   viewState: ViewState;
   exportDialogOpen: boolean;
@@ -29,11 +25,6 @@ const defaultAppStateProps: AppStateProps = {
   initialized: false,
   windowTitle: "",
   rtc: null,
-  dbc: null,
-  targetPath: "",
-  // path to CSV file
-  baseQuery: null,
-  baseSchema: null,
   viewState: new ViewState(),
   exportDialogOpen: false,
   exportFilename: "",
@@ -46,10 +37,6 @@ export class AppState extends Immutable.Record(defaultAppStateProps) {
   public readonly windowTitle!: string; // Usually just the table name or file name
 
   public readonly rtc!: reltab.ReltabConnection;
-  public readonly dbc!: reltab.DbConnection;
-  public readonly targetPath!: string;
-  public readonly baseQuery!: reltab.QueryExp;
-  public readonly baseSchema!: reltab.Schema; // always in sync with baseQuery
 
   public readonly viewState!: ViewState;
   public readonly exportDialogOpen!: boolean;

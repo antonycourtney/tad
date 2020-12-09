@@ -68,58 +68,6 @@ const initSnowflake = async () => {
     snowflakeConnKey
   )) as SnowflakeConnection;
 }
-/*
-const handleEvalQuery = async (
-  dbc: reltab.DbConnection,
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    log.debug(
-      "POST evalQuery: got request: ",
-      JSON.stringify(req.body, undefined, 2)
-    );
-    const queryReq = req.body;
-    log.info("evalQuery: got query:\n", queryReq.query.toJS(), "\n\n");
-    const hrstart = process.hrtime();
-    const tableRep = await (queryReq.offset !== undefined
-      ? dbc.evalQuery(queryReq.query, queryReq.offset, queryReq.limit)
-      : dbc.evalQuery(queryReq.query));
-    const [es, ens] = process.hrtime(hrstart);
-    log.info("\nevalQuery: evaluated query in %ds %dms", es, ens / 1e6);
-    const resObj = { tableRep };
-    log.info(`sending response w/ ${tableRep.rowData.length} rows.\n`);
-    res.json(resObj);
-  } catch (err) {
-    log.error("evalQuery: ", err, err.stack);
-    // TODO: return an error
-  }
-};
-
-const handleGetRowCount = async (
-  dbc: reltab.DbConnection,
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    log.debug(
-      "POST getRowcount: got request: ",
-      JSON.stringify(req.body, undefined, 2)
-    );
-    const queryReq = req.body;
-    const hrstart = process.hrtime();
-    const rowCount = await dbc.rowCount(queryReq.query);
-    const [es, ens] = process.hrtime(hrstart);
-    log.info("getRowCount: evaluated query in %ds %dms", es, ens / 1e6);
-    const resObj = { rowCount };
-    log.info("sending response: ", resObj);
-    res.json(resObj);
-  } catch (err) {
-    log.error("getRowCount: ", err, err.stack);
-    // TODO: return an error
-  }
-};
-*/
 
 const testImportFile = async (
   dbc: DbConnection,

@@ -7,6 +7,7 @@ import AsyncSelect from "react-select/async";
 import { StateRef } from "oneref";
 import { render } from "react-dom";
 import { useState } from "react";
+import { ViewState } from "../ViewState";
 type Option = { value: string; label: string };
 type OptionsRet = Option[];
 type OptionsLoader = (input: string) => Promise<OptionsRet>;
@@ -24,11 +25,11 @@ const validRow = (
 };
 
 const mkColValsLoader = (
-  appState: AppState,
+  viewState: ViewState,
   columnId: string
 ): OptionsLoader => {
-  const dbc = appState.dbc;
-  const baseQuery = appState.baseQuery;
+  const dbc = viewState.dbc;
+  const baseQuery = viewState.baseQuery;
   return async (input: string): Promise<OptionsRet> => {
     let dq = baseQuery.distinct(columnId);
     if (input.length > 0) {
@@ -225,7 +226,7 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
     if (valInput == null) {
       const compVal = value ? value : ""; // eslint-disable-line
       if (op === "IN" || op === "NOTIN") {
-        const loader = mkColValsLoader(appState, columnId);
+        const loader = mkColValsLoader(appState.viewState, columnId);
         /* Adding 'key' here as proposed workaround for
          * https://github.com/JedWatson/react-select/issues/1771
          */

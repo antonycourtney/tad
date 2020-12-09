@@ -11,87 +11,15 @@ import { DataSourcePath, DbConnectionKey } from "reltab";
 
 export async function initAppState(
   rtc: reltab.ReltabConnection,
-  dbc: reltab.DbConnection,
-  windowTitle: string,
-  baseQuery: reltab.QueryExp,
-  initialViewParams: ViewParams | undefined | null,
   stateRef: StateRef<AppState>
 ): Promise<void> {
-  const baseSchema = await aggtree.getBaseSchema(dbc, baseQuery);
-
-  // start off with all columns displayed:
-  const displayColumns = baseSchema.columns.slice();
-  let viewParams;
-
-  if (initialViewParams != null) {
-    viewParams = initialViewParams;
-  } else {
-    const openPaths = new PathTree();
-    viewParams = new ViewParams({
-      displayColumns,
-      openPaths,
-    });
-  }
-
-  const viewState = new ViewState({
-    viewParams,
-  }); // We explicitly set rather than merge() because merge
-  // will attempt to deep convert JS objects to Immutables
-
   const st = await awaitableUpdate_(
     stateRef,
     (st: AppState): AppState =>
-      st
-        .set("windowTitle", windowTitle)
-        .set("rtc", rtc)
-        .set("dbc", dbc)
-        .set("baseSchema", baseSchema)
-        .set("baseQuery", baseQuery)
-        .set("viewState", viewState)
-        .set("initialized", true) as AppState
+      st.set("rtc", rtc).set("initialized", true) as AppState
   );
   console.log("initAppState: st: ", st.toJS());
 }
-
-export const openTable = async (
-  tableName: string,
-  stateRef: StateRef<AppState>
-): Promise<void> => {
-  const appState = mutableGet(stateRef);
-  const dbc = appState.dbc;
-
-  // TODO: This shouldn't actually be needed, but let's do it for now:
-  const ti = await dbc.getTableInfo(tableName);
-  console.log("openTable: tableInfo: ", ti);
-
-  const windowTitle = tableName;
-  const baseQuery = reltab.tableQuery(tableName);
-  const baseSchema = await aggtree.getBaseSchema(dbc, baseQuery);
-
-  // start off with all columns displayed:
-  const displayColumns = baseSchema.columns.slice();
-
-  const openPaths = new PathTree();
-  const viewParams = new ViewParams({
-    displayColumns,
-    openPaths,
-  });
-
-  const viewState = new ViewState({
-    viewParams,
-  }); // We explicitly set rather than merge() because merge
-  // will attempt to deep convert JS objects to Immutables
-
-  update(
-    stateRef,
-    (st: AppState): AppState =>
-      st
-        .set("windowTitle", windowTitle)
-        .set("baseSchema", baseSchema)
-        .set("baseQuery", baseQuery)
-        .set("viewState", viewState) as AppState
-  );
-};
 
 export const openDataSourcePath = async (
   path: DataSourcePath,
@@ -124,19 +52,17 @@ export const openDataSourcePath = async (
   });
 
   const viewState = new ViewState({
+    dbc,
+    path,
+    baseSchema,
+    baseQuery,
     viewParams,
   }); // We explicitly set rather than merge() because merge
   // will attempt to deep convert JS objects to Immutables
 
   update(
     stateRef,
-    (st: AppState): AppState =>
-      st
-        .set("dbc", dbc)
-        .set("windowTitle", windowTitle)
-        .set("baseSchema", baseSchema)
-        .set("baseQuery", baseQuery)
-        .set("viewState", viewState) as AppState
+    (st: AppState): AppState => st.set("viewState", viewState) as AppState
   );
 };
 
@@ -157,7 +83,7 @@ export const toggleShown = (
 };
 export const toggleAllShown = (stateRef: StateRef<AppState>): void => {
   update(stateRef, (s) => {
-    const schema = s.baseSchema;
+    const schema = s.viewState.baseSchema;
     const viewParams = s.viewState.viewParams;
     const allShown = schema.columns.length === viewParams.displayColumns.length;
     const nextDisplayColumns = allShown ? [] : schema.columns;

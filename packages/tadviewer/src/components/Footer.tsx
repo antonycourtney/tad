@@ -70,7 +70,7 @@ export const Footer: React.FunctionComponent<FooterProps> = ({
     <FilterEditor
       appState={appState}
       stateRef={stateRef}
-      schema={appState.baseSchema}
+      schema={viewState.baseSchema}
       filterExp={filterExp}
       onCancel={handleFilterCancel}
       onApply={handleFilterApply}

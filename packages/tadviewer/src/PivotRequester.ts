@@ -244,7 +244,7 @@ export class PivotRequester {
     this.pendingOffset = offset;
     this.pendingLimit = limit;
     const dreq = requestDataView(
-      appState.dbc,
+      viewState.dbc,
       viewParams,
       queryView,
       offset,
@@ -274,23 +274,23 @@ export class PivotRequester {
     const viewState = appState.viewState;
     const viewParams = viewState.viewParams;
 
+    console.log("PivotRequester.onStateChange: ", viewParams.toJS());
+
     if (viewParams !== this.pendingViewParams) {
-      /*
       console.log(
         "onStateChange: requesting new query: ",
         viewState.toJS(),
         this.pendingViewParams?.toJS()
       );
-      */
       // Might be nice to cancel any pending request here...
       // failing that we could calculate additional pages we need
       // if viewParams are same and only page range differs.
       const prevViewParams = this.pendingViewParams;
       this.pendingViewParams = viewParams;
       const qreq = requestQueryView(
-        appState.dbc,
-        appState.baseQuery,
-        appState.baseSchema,
+        viewState.dbc,
+        viewState.baseQuery,
+        viewState.baseSchema,
         this.pendingViewParams
       );
       this.pendingQueryRequest = qreq;
