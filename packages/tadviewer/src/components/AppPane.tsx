@@ -42,12 +42,16 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
 
   const { viewState } = appState;
 
-  let centerPane: JSX.Element;
+  let centerPane: JSX.Element | null;
 
   // We should probably make pivot sidebar deal better with an empty table, but...
   let pivotSidebar: JSX.Element | null;
 
-  if (appState.initialized && viewState.dataView !== null) {
+  if (
+    appState.initialized &&
+    viewState !== null &&
+    viewState.dataView !== null
+  ) {
     pivotSidebar = (
       <PivotSidebar
         expanded={pivotPropsExpanded}
@@ -69,7 +73,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     );
   } else {
     pivotSidebar = null;
-    centerPane = <LoadingModal />;
+    centerPane = null; // was <LoadingModal />;
   }
   mainContents = (
     <div className="container-fluid full-height main-container">

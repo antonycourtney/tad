@@ -57,11 +57,6 @@ const init = async () => {
 
   const rtc = new RemoteReltabConnection(wtc);
 
-  const connKey: DbConnectionKey = {
-    providerName: "sqlite",
-    connectionInfo: ":memory:",
-  };
-
   console.log("before initAppState");
 
   var pivotRequester: PivotRequester | undefined | null = null;
@@ -71,7 +66,6 @@ const init = async () => {
   ReactDOM.render(<App />, document.getElementById("app"));
 
   console.log("before creating pivotRequester");
-  return;
   pivotRequester = new PivotRequester(stateRef);
 
   /*

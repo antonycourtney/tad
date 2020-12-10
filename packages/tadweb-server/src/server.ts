@@ -3,12 +3,15 @@ import * as log from "loglevel";
 import * as commandLineArgs from "command-line-args";
 import { AddressInfo } from "net";
 import * as path from "path";
-import * as reltabSqlite from "reltab-sqlite";
-import { SqliteContext } from "reltab-sqlite";
+// import * as reltabSqlite from "reltab-sqlite";
+// import { SqliteContext } from "reltab-sqlite";
 import { BigQueryConnection } from "reltab-bigquery";
 import "reltab-bigquery";
-import { AWSAthenaConnection } from "reltab-aws-athena";
-import { getAuthConnectionOptions, SnowflakeConnection } from "reltab-snowflake";
+// import { AWSAthenaConnection } from "reltab-aws-athena";
+import {
+  getAuthConnectionOptions,
+  SnowflakeConnection,
+} from "reltab-snowflake";
 import "reltab-snowflake";
 import * as reltab from "reltab";
 import { monitorEventLoopDelay } from "perf_hooks";
@@ -56,19 +59,20 @@ const initBigquery = async () => {
 
 const initSnowflake = async () => {
   let connOpts = getAuthConnectionOptions();
-  connOpts.database = "CITIBIKE";
-  connOpts.schema = "PUBLIC";
-  
+  connOpts.database = "SNOWFLAKE";
+  connOpts.schema = "ACCOUNT_USAGE";
+
   const snowflakeConnKey: DbConnectionKey = {
     providerName: "snowflake",
     connectionInfo: connOpts,
   };
-  
+
   const rtc = (await reltab.getConnection(
     snowflakeConnKey
   )) as SnowflakeConnection;
-}
+};
 
+/*
 const testImportFile = async (
   dbc: DbConnection,
   fileName: string
@@ -83,6 +87,7 @@ const testImportFile = async (
   log.info("imported CSV, table name: ", tableName);
   ctx.registerTable(ti);
 };
+*/
 
 const viewerUrl = "/tadweb-app/index.html";
 
@@ -138,10 +143,10 @@ async function main() {
   log.setLevel(log.levels.INFO);
 
   await initBigquery();
-  await initSnowflake();
+  // await initSnowflake();
 
-  const dbc = await initSqlite();
-  testImportFile(dbc, "movie_metadata.csv");
+  // const dbc = await initSqlite();
+  // testImportFile(dbc, "movie_metadata.csv");
 
   /*
   const dbc = new BigQueryConnection(

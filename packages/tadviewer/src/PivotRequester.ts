@@ -272,9 +272,19 @@ export class PivotRequester {
   onStateChange(stateRef: oneref.StateRef<AppState>) {
     const appState: AppState = mutableGet(stateRef);
     const viewState = appState.viewState;
-    const viewParams = viewState.viewParams;
 
-    console.log("PivotRequester.onStateChange: ", viewParams.toJS());
+    // console.log("PivotRequester.onStateChange: ", appState.toJS());
+    if (viewState === null) {
+      return;
+    }
+
+    const viewParams = viewState.viewParams;
+    /*
+    console.log(
+      "PivotRequester.onStateChange: viewParams: ",
+      viewParams.toJS()
+    );
+*/
 
     if (viewParams !== this.pendingViewParams) {
       console.log(

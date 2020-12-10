@@ -15,7 +15,7 @@ export interface AppStateProps {
 
   rtc: reltab.ReltabConnection | null;
 
-  viewState: ViewState;
+  viewState: ViewState | null;
   exportDialogOpen: boolean;
   exportFilename: string;
   exportPercent: number;
@@ -25,7 +25,7 @@ const defaultAppStateProps: AppStateProps = {
   initialized: false,
   windowTitle: "",
   rtc: null,
-  viewState: new ViewState(),
+  viewState: null,
   exportDialogOpen: false,
   exportFilename: "",
   exportPercent: 0,

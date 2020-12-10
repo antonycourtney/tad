@@ -190,4 +190,57 @@ Right now:
 OK, we have a basic Snowflake data provider.
 Now let's tackle the refactor for having multiple tabs, and being able to use Tad as a table browser.
 Let's start by tweaking AppState to be able to support an empty grid (no source table selected)
+  
+### Notes, building for snowvation-2020
 
+Getting errors with slickgrid, due to:
+
+imagemin-pngquant failing
+
+gifsicle failing
+
+Trying:  brew install gifsicle
+
+Also getting issues with:
+
+    ERROR in /Users/acourtney/repos/tad-pkg/node_modules/slickgrid-es6/images/sort-desc.png
+    Module build failed (from /Users/acourtney/repos/tad-pkg/node_modules/image-webpack-loader/index.js):
+    Error:
+        at afterWriteDispatched (internal/stream_base_commons.js:150:25)
+        at writeGeneric (internal/stream_base_commons.js:141:3)
+        at Socket._writeGeneric (net.js:771:11)
+        at Socket._write (net.js:783:8)
+        at doWrite (_stream_writable.js:431:12)
+        at writeOrBuffer (_stream_writable.js:415:5)
+        at Socket.Writable.write (_stream_writable.js:305:11)
+        at Socket.Writable.end (_stream_writable.js:594:10)
+        at Socket.end (net.js:575:31)
+        at handleInput (/Users/acourtney/repos/tad-pkg/node_modules/imagemin-pngquant/node_modules/execa/index.js:87:17)
+        at module.exports (/Users/acourtney/repos/tad-pkg/node_modules/imagemin-pngquant/node_modules/execa/index.js:310:2)
+        at /Users/acourtney/repos/tad-pkg/node_modules/imagemin-pngquant/index.js:57:21
+        at /Users/acourtney/repos/tad-pkg/node_modules/p-pipe/index.js:12:25
+     @ ./src/slickgrid.scss (/Users/acourtney/repos/tad-pkg/node_modules/css-loader/dist/cjs.js!/Users/acourtney/repos/tad-pkg/node_modules/resolve-url-loader!/Users/acourtney/repos/tad-pkg/node_modules/sass-loader/dist/cjs.js!./src/slickgrid.scss) 4:36-103
+     @ ./src/slickgrid.scss
+     @ ./src/tadviewer.ts
+
+Based on some random similar issues in this SO question:
+https://stackoverflow.com/questions/54354644/error-in-module-build-failed-from-node-modules-sass-loader-lib-loader-js
+
+went with:
+
+```
+npm install --save-dev node-sass
+```
+
+in tadviewer, which seemed to resolve the issue.
+
+(This dependency existed elsewhere, also needed to make versions consistent and up to latest)
+
+----
+9Dec20:
+
+Need to build in an environment with a slightly older version of Node, incompatible with my recent updates to node-sqlite.
+Turning off reltab-sqlite for the web based builds for now.  Revisit when attempting to build the Electron app again.
+Note: I temporarily removed sqlite from Lerna bootstrap in lerna.json.  Need to rethink at some point when I revist building the standalone app. 
+
+---

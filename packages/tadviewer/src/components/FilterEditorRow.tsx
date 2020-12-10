@@ -149,7 +149,9 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
     handleUpdate(columnId, nextOp, value);
   };
 
-  const handleSelectChange = (nextValue: Array<Option>) => {
+  // TODO: nextValue can have a tighter type; look up API
+  // to AsyncSelect
+  const handleSelectChange = (nextValue: any) => {
     setValue(nextValue);
     handleUpdate(columnId, op, nextValue);
   };
