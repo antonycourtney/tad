@@ -2,12 +2,16 @@
  *  Common type definitions used throughout reltab
  */
 import { SQLDialect } from "./dialect";
-import { SQLiteDialect } from "./dialects/SQLiteDialect";
+import { SQLiteDialect, SQLiteDialectClass } from "./dialects/SQLiteDialect";
 
 // Exported so that we can do things like pretty print a FilterExp for
 // UI or debugging even when no db connection / preferred dialect
 // available
 export const defaultDialect = SQLiteDialect;
+
+export const getDefaultDialect = (): SQLDialect => {
+  return SQLiteDialectClass.getInstance();
+}
 
 export type Scalar = number | string | boolean | null;
 

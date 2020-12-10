@@ -175,6 +175,8 @@ const requestQueryView = async (
   return ret;
 };
 
+const queryOptions: reltab.EvalQueryOptions = { showQueries: true };
+
 const requestDataView = async (
   rt: DbConnection,
   viewParams: ViewParams,
@@ -183,7 +185,7 @@ const requestDataView = async (
   limit: number
 ): Promise<PagedDataView> => {
   // console.log("requestDataView: ", { query: queryView.query });
-  const tableData = await rt.evalQuery(queryView.query, offset, limit);
+  const tableData = await rt.evalQuery(queryView.query, offset, limit, queryOptions);
   const dataView = mkDataView(
     viewParams,
     queryView.rowCount,

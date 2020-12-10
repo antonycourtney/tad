@@ -131,7 +131,9 @@ export class SnowflakeConnection implements DbConnection {
     if (trueOptions.showQueries) {
       log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
       log.debug("SqliteContext.evalQuery: evaluating:");
-      log.info(sqlQuery);
+      const jsQuery = query.toJS();
+      log.info(jsQuery, "\n");
+      log.info(sqlQuery, "\n");
     }
 
     const t2 = process.hrtime();

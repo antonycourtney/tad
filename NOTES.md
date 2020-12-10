@@ -244,3 +244,15 @@ Turning off reltab-sqlite for the web based builds for now.  Revisit when attemp
 Note: I temporarily removed sqlite from Lerna bootstrap in lerna.json.  Need to rethink at some point when I revist building the standalone app. 
 
 ---
+
+Snowvation-2020: 9Dec20:
+
+Filters are failing because defaultDialect from reltab is null, so can't render in Footer.
+
+X let's figure out how to turn on showQueries.
+  and show the reltab JS
+
+Sort order messed up with null values in pivot column
+
+column names and types overflowing in column selector
+

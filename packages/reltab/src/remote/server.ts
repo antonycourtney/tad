@@ -37,7 +37,8 @@ const dbConnEvalQuery = async (
   const hrstart = process.hrtime();
   const offset = req.offset ? req.offset : undefined;
   const limit = req.limit ? req.limit : undefined;
-  const qres = await conn.evalQuery(query, offset, limit);
+  const options = req.options ? req.options : undefined;
+  const qres = await conn.evalQuery(query, offset, limit, options);
   const [es, ens] = process.hrtime(hrstart);
   log.info("runQuery: evaluated query in %ds %dms", es, ens / 1e6);
   const qresStr = JSON.stringify(qres, null, 2);
