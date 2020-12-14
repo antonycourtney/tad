@@ -3,6 +3,7 @@ import * as reltab from "reltab";
 import { AppState } from "../AppState";
 import { Button } from "@blueprintjs/core";
 import { FilterEditorRow } from "./FilterEditorRow";
+import { DelayedCalcFooter } from "./DelayedCalcFooter";
 import { StateRef } from "oneref";
 import { useState } from "react";
 import { FilterExp, SubExp } from "reltab";
@@ -14,7 +15,7 @@ export interface FilterEditorProps {
   stateRef: StateRef<AppState>;
   schema: reltab.Schema;
   filterExp: reltab.FilterExp | null;
-  onCancel: (e: any) => void;
+  onCancel: () => void;
   onApply: (fe: reltab.FilterExp) => void;
   onDone: () => void;
 }
@@ -119,19 +120,12 @@ export const FilterEditor: React.FunctionComponent<FilterEditorProps> = ({
           </div>
         </div>
       </div>
-      <div className="filter-editor-footer">
-        <Button text="Cancel" onClick={(e: any) => onCancel(e)} />
-        <Button
-          disabled={!dirty}
-          text="Apply"
-          onClick={(e: any) => handleApply()}
-        />
-        <Button
-          className="bp3-intent-primary"
-          onClick={(e: any) => handleDone()}
-          text="Done"
-        />
-      </div>
+      <DelayedCalcFooter
+        dirty={dirty}
+        onCancel={onCancel}
+        onApply={handleApply}
+        onDone={handleDone}
+      />
     </div>
   );
 };

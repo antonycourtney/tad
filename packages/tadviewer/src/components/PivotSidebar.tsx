@@ -19,6 +19,7 @@ export interface PivotSidebarProps {
   expanded: boolean;
   schema: reltab.Schema;
   viewParams: ViewParams;
+  delayedCalcMode: boolean;
   onColumnClick?: (cid: string) => void;
   stateRef: StateRef<AppState>;
 }
@@ -27,6 +28,7 @@ export const PivotSidebar: React.FC<PivotSidebarProps> = ({
   expanded,
   schema,
   viewParams,
+  delayedCalcMode,
   onColumnClick,
   stateRef,
 }) => {
@@ -72,6 +74,7 @@ export const PivotSidebar: React.FC<PivotSidebarProps> = ({
   const formatPanel = (
     <FormatPanel schema={schema} viewParams={viewParams} stateRef={stateRef} />
   );
+
   return (
     <Sidebar expanded={expanded}>
       <div className="ui-block">

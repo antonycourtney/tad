@@ -42,7 +42,7 @@ export const Footer: React.FunctionComponent<FooterProps> = ({
     setExpandedState(nextState);
   };
 
-  const handleFilterCancel = (event: any) => {
+  const handleFilterCancel = () => {
     // restore previous filter:
     const fe = prevFilter || new reltab.FilterExp();
     actions.setFilter(fe, stateRef);

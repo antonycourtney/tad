@@ -15,7 +15,8 @@ require("../less/modal.less");
 
 require("../less/footer.less");
 
-require("../less/filterEditor.less"); // require('babel-polyfill')
+require("../less/filterEditor.less");
+require("../less/delayedCalcFooter.less");
 
 export * from "./components/AppPane";
 export * from "./PivotRequester";

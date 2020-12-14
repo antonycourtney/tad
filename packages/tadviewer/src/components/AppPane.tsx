@@ -57,6 +57,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
         expanded={pivotPropsExpanded}
         schema={viewState.baseSchema}
         viewParams={viewState.viewParams}
+        delayedCalcMode={viewState.delayedCalcMode}
         stateRef={stateRef}
       />
     );

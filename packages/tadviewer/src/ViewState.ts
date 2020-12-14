@@ -25,6 +25,8 @@ export interface ViewStateProps {
   viewportBottom: number;
   queryView: QueryView | undefined | null;
   dataView: PagedDataView | undefined | null;
+
+  delayedCalcMode: boolean; // If true, don't recalc from view params until user hits "apply"
 }
 
 const defaultViewStateProps: ViewStateProps = {
@@ -37,19 +39,22 @@ const defaultViewStateProps: ViewStateProps = {
   viewportTop: 0,
   viewportBottom: 0,
   queryView: null,
-  dataView: null
+  dataView: null,
+  delayedCalcMode: true,
 };
 
-export class ViewState extends Immutable.Record(defaultViewStateProps)
+export class ViewState
+  extends Immutable.Record(defaultViewStateProps)
   implements ViewStateProps {
   public readonly dbc!: reltab.DbConnection;
   public readonly path!: DataSourcePath;
   public readonly baseQuery!: reltab.QueryExp;
-  public readonly baseSchema!: reltab.Schema; // always in sync with baseQuery  
+  public readonly baseSchema!: reltab.Schema; // always in sync with baseQuery
   public readonly viewParams!: ViewParams;
   public readonly loadingTimer!: Timer;
   public readonly viewportTop!: number;
   public readonly viewportBottom!: number;
   public readonly queryView!: QueryView | undefined | null;
   public readonly dataView!: PagedDataView | undefined | null;
+  public readonly delayedCalcMode!: boolean;
 }
