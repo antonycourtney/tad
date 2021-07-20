@@ -3,8 +3,8 @@ import * as log from "loglevel";
 import * as commandLineArgs from "command-line-args";
 import { AddressInfo } from "net";
 import * as path from "path";
-// import * as reltabSqlite from "reltab-sqlite";
-// import { SqliteContext } from "reltab-sqlite";
+import * as reltabSqlite from "reltab-sqlite";
+import { SqliteContext } from "reltab-sqlite";
 import { BigQueryConnection } from "reltab-bigquery";
 import "reltab-bigquery";
 // import { AWSAthenaConnection } from "reltab-aws-athena";
@@ -72,7 +72,6 @@ const initSnowflake = async () => {
   )) as SnowflakeConnection;
 };
 
-/*
 const testImportFile = async (
   dbc: DbConnection,
   fileName: string
@@ -87,7 +86,7 @@ const testImportFile = async (
   log.info("imported CSV, table name: ", tableName);
   ctx.registerTable(ti);
 };
-*/
+
 
 const viewerUrl = "/tadweb-app/index.html";
 
@@ -143,10 +142,10 @@ async function main() {
   log.setLevel(log.levels.INFO);
 
   await initBigquery();
-  await initSnowflake();
+  // await initSnowflake();
 
-  // const dbc = await initSqlite();
-  // testImportFile(dbc, "movie_metadata.csv");
+  const dbc = await initSqlite();
+  testImportFile(dbc, "movie_metadata.csv");
 
   /*
   const dbc = new BigQueryConnection(

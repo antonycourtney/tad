@@ -7,6 +7,7 @@ import { TableInfoMap } from "./TableRep";
 
 export abstract class BaseSQLDialect implements SQLDialect {
   abstract readonly dialectName: string;
+  readonly requireSubqueryAlias: boolean = false;
 
   quoteCol(cid: string): string {
     return '"' + cid + '"';

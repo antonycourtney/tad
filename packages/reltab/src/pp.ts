@@ -101,12 +101,20 @@ const ppSortColExp = (dialect: SQLDialect, exp: SQLSortColExp): string => {
   return `${dialect.quoteCol(exp.col)}${optDescStr}`;
 };
 
+let aliasCounter = 0;
+
+const genAliasName = (): string => {
+  const ret = `tableAlias_${aliasCounter++}`;
+  return ret;
+}
+
 const ppSQLSelect = (
   dialect: SQLDialect,
   dst: StringBuffer,
   depth: number,
   ss: SQLSelectAST
 ) => {
+  console.log('ppSQLSelect: dialect: ', dialect.dialectName);
   const selColStr = ss.selectCols
     .map((exp) => ppSelListItem(dialect, exp))
     .join(", ");
@@ -136,7 +144,12 @@ const ppSQLSelect = (
   } else {
     dst.push("(\n");
     auxPPSQLQuery(dialect, dst, depth + 1, fromVal.query);
-    ppOut(dst, depth, ")\n");
+    ppOut(dst, depth, ")");
+    if (dialect.requireSubqueryAlias) {
+      const aliasName = genAliasName();
+      ppOut(dst, depth, ` AS ${aliasName}`);
+    }
+    ppOut(dst, depth, "\n");
   }
 
   if (ss.where) {
@@ -195,8 +208,10 @@ export const ppSQLQuery = (dialect: SQLDialect, query: SQLQueryAST): string => {
   } catch (err) {
     console.error(
       "ppSQLQuery: Caught exception pretty printing SQLQuery: ",
+      err, 
       JSON.stringify(query, undefined, 2)
     );
+    
     throw err;
   }
 };

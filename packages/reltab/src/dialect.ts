@@ -10,6 +10,7 @@ import { SQLQueryAST } from "./SQLQuery";
 
 export interface SQLDialect {
   readonly dialectName: string;
+  readonly requireSubqueryAlias: boolean;
   quoteCol(cid: string): string;
   ppAggNull(aggStr: string, subExpStr: string, expType: ColumnType): string;
 

@@ -1,6 +1,4 @@
 import { AggFn, numericAggFns, basicAggFns } from "./AggFn";
-import { defaultDialect } from "./defs";
-import { AggColSpec } from "./QueryRep";
 
 // Classification of column types:
 export type ColumnKind =
