@@ -29,15 +29,8 @@ test("t0 - trivial query generation", () => {
   `);
 });
 
-const importCsv = async (dbConn: duckdb.Connection, path: string) => {
-/*
-  const md = await reltabDuckDB.fastImport(dbConn, path);
-
-  const ti = reltabDuckDB.mkTableInfo(md);
-  testCtx.registerTable(ti);
-  // console.log("importCsv: table info: ", JSON.stringify(ti, null, 2));
-*/
-  await reltabDuckDB.nativeCSVImport(dbConn, path);
+const importCsv = async (db: duckdb.DuckDB, path: string) => {
+  await reltabDuckDB.nativeCSVImport(db, path);
 };
 
 beforeAll(
@@ -50,10 +43,8 @@ beforeAll(
 
     testCtx = ctx as reltabDuckDB.DuckDBContext;
 
-    const dbConn = testCtx.dbConn;
-
-    await importCsv(dbConn, "test/support/sample.csv");
-    await importCsv(dbConn, "test/support/barttest.csv");
+    await importCsv(testCtx.db, "test/support/sample.csv");
+    await importCsv(testCtx.db, "test/support/barttest.csv");
 
     return testCtx;
   }

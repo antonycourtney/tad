@@ -35,10 +35,37 @@ const typeLookup = (tnm: string): ColumnType => {
   return ret;
 };
 
+/* A little ConnectionPool class because it turns out node-duckdb
+ * doesn't allow concurrent queries on a connection.
+ */
+class ConnectionPool {
+  db: DuckDB;
+  private pool: Connection[];
+
+  constructor(db: DuckDB) {
+    this.db = db;
+    this.pool = [];
+  }
+
+  take(): Connection {
+    if (this.pool.length > 0) {
+      return this.pool.pop()!;
+    } else {
+      const conn = new Connection(this.db);
+      return conn;
+    }
+  }
+
+  giveBack(conn: Connection) {
+    this.pool.push(conn);
+  }
+}
 
 const dbAll = async (dbConn: Connection, query: string): Promise<any>  => {
-  const resObj = await dbConn.executeIterator(query);
-  return resObj.fetchAllRows();
+  const resIter = await dbConn.executeIterator(query);
+  const resRows = resIter.fetchAllRows();
+  resIter.close();
+  return resRows;
 };
 
 export class DuckDBContext implements DbConnection {
@@ -46,7 +73,7 @@ export class DuckDBContext implements DbConnection {
   readonly connectionKey: DbConnectionKey;
   dbfile: string;
   db: DuckDB;
-  dbConn: Connection;
+  connPool: ConnectionPool;
   private tableMap: TableInfoMap;
 
   constructor(dbfile: string, db: DuckDB, dbConn: Connection) {
@@ -54,8 +81,19 @@ export class DuckDBContext implements DbConnection {
     this.displayName = dbfile;
     this.connectionKey = { providerName: "duckdb", connectionInfo: dbfile };
     this.db = db;
-    this.dbConn = dbConn;
+    this.connPool = new ConnectionPool(db);
     this.tableMap = {};
+  }
+
+  async runSQLQuery(query: string): Promise<any> {
+    const conn = this.connPool.take();
+    let ret: any;
+    try {
+      ret = await dbAll(conn, query);
+    } finally {
+      this.connPool.giveBack(conn);
+    }
+    return ret;
   }
 
   async getDisplayName(): Promise<string> {
@@ -104,7 +142,7 @@ export class DuckDBContext implements DbConnection {
     }
 
     const t2 = process.hrtime();
-    const dbRows = await dbAll(this.dbConn, sqlQuery);
+    const dbRows = await this.runSQLQuery(sqlQuery);
     const rows = dbRows as Row[];
     const t3 = process.hrtime(t2);
     const [t3s, t3ns] = t3;
@@ -138,7 +176,7 @@ export class DuckDBContext implements DbConnection {
     }
 
     const t2 = process.hrtime();
-    const qp = dbAll(this.dbConn, countSql);
+    const qp = this.runSQLQuery(countSql);
     return qp.then((rows) => {
       const t3 = process.hrtime(t2);
       const [t3s, t3ns] = t3;
@@ -155,7 +193,7 @@ export class DuckDBContext implements DbConnection {
   // Get table info directly from duckdb db
   dbGetTableInfo(tableName: string): Promise<TableInfo> {
     const tiQuery = `PRAGMA table_info(${tableName})`;
-    const qp = dbAll(this.dbConn, tiQuery);
+    const qp = this.runSQLQuery(tiQuery);
     return qp.then((dbRows) => {
       const rows = dbRows as Row[];
       log.debug("getTableInfo: ", rows);
@@ -204,7 +242,7 @@ export class DuckDBContext implements DbConnection {
 
   async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
     const tiQuery = `PRAGMA show_tables;`;
-    const dbRows = await dbAll(this.dbConn, tiQuery);
+    const dbRows = await this.runSQLQuery(tiQuery);
     const children: DataSourceNodeId[] = dbRows.map((row: any) => ({
       kind: "Table",
       id: row.name,

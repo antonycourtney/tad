@@ -110,7 +110,7 @@ const duckDBImportFile = async (
   const filePath = path.join(SRV_DIR, fileName);
   log.info("handleImportFile: importing: " + filePath);
 
-  await reltabDuckDB.nativeCSVImport(ctx.dbConn, filePath);
+  await reltabDuckDB.nativeCSVImport(ctx.db, filePath);
 };
 
 const viewerUrl = "/tadweb-app/index.html";

@@ -114,7 +114,6 @@ const ppSQLSelect = (
   depth: number,
   ss: SQLSelectAST
 ) => {
-  console.log('ppSQLSelect: dialect: ', dialect.dialectName);
   const selColStr = ss.selectCols
     .map((exp) => ppSelListItem(dialect, exp))
     .join(", ");

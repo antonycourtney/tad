@@ -41,7 +41,7 @@ const dbConnEvalQuery = async (
   const qres = await conn.evalQuery(query, offset, limit, options);
   const [es, ens] = process.hrtime(hrstart);
   log.info("runQuery: evaluated query in %ds %dms", es, ens / 1e6);
-  const qresStr = JSON.stringify(qres, null, 2);
+  const qresStr = JSON.stringify(qres, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2);
   return qres;
 };
 
@@ -254,7 +254,7 @@ const simpleJSONHandler = (hf: AnyReqHandler): EncodedRequestHandler => async (
 ): Promise<string> => {
   const req = JSON.parse(encodedReq);
   const resp = await hf(req);
-  return JSON.stringify(resp, null, 2);
+  return JSON.stringify(resp, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2);
 };
 
 export const serverInit = (ts: TransportServer) => {

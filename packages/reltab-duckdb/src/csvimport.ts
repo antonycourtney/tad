@@ -3,7 +3,7 @@
  */
 
 import * as path from "path";
-import { Connection } from "node-duckdb";
+import { Connection, DuckDB } from "node-duckdb";
 
 let uniqMap: { [cid: string]: number } = {};
 
@@ -42,7 +42,8 @@ const genTableName = (pathname: string): string => {
 /**
  * Native import using DuckDB's built-in import facilities.
  */
-export const nativeCSVImport = async (dbConn: Connection, filePath: string)  => {
+export const nativeCSVImport = async (db: DuckDB, filePath: string)  => {
+  const dbConn = new Connection(db);
   const tableName = genTableName(filePath);
   const query = 
 `CREATE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}')`;
@@ -52,8 +53,10 @@ export const nativeCSVImport = async (dbConn: Connection, filePath: string)  => 
   const resRows = resObj.fetchAllRows() as any[];
   // console.log('nativeCSVImport: result: ', resRows[0]);
   const info = resRows[0];
-  console.log('info.Count: \"' + info.Count + '\", type: ', typeof info.Count);
+  // console.log('info.Count: \"' + info.Count + '\", type: ', typeof info.Count);
   } catch (err) {
     console.log('caught exception while importing: ', err);
+  } finally {
+    dbConn.close();
   }
 };
