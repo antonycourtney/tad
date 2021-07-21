@@ -25,6 +25,8 @@ import {
   serverInit,
   TransportServer,
 } from "reltab";
+import { DuckDBContext } from "reltab-duckdb";
+import * as reltabDuckDB from "reltab-duckdb";
 
 const SRV_DIR = "./public/csv";
 
@@ -87,6 +89,26 @@ const testImportFile = async (
   ctx.registerTable(ti);
 };
 
+const initDuckDB = async (): Promise<DbConnection> => {
+  const rtOptions: any = { showQueries: true };
+  const connKey: DbConnectionKey = {
+    providerName: "duckdb",
+    connectionInfo: ":memory:",
+  };
+  const dbc = await getConnection(connKey);
+  return dbc;
+};
+
+const duckDBImportFile = async (
+  dbc: DbConnection,
+  fileName: string
+): Promise<void> => {
+  const ctx = dbc as DuckDBContext;
+  const filePath = path.join(SRV_DIR, fileName);
+  log.info("handleImportFile: importing: " + filePath);
+
+  await reltabDuckDB.nativeCSVImport(ctx.dbConn, filePath);
+};
 
 const viewerUrl = "/tadweb-app/index.html";
 
@@ -146,6 +168,10 @@ async function main() {
 
   const dbc = await initSqlite();
   testImportFile(dbc, "movie_metadata.csv");
+
+  const ddbc = await initDuckDB();
+  duckDBImportFile(ddbc, "movie_metadata.csv");
+
 
   /*
   const dbc = new BigQueryConnection(

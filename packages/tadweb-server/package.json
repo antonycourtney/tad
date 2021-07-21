@@ -36,6 +36,7 @@
     "reltab-aws-athena": "^0.10.0",
     "reltab-bigquery": "^0.10.0",
     "reltab-snowflake": "^0.10.0",
+    "reltab-duckdb": "^0.10.0",
     "tadweb-app": "^0.10.0",
     "typed-promisify": "^0.4.0"
   },
