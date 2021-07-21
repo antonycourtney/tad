@@ -256,3 +256,26 @@ Sort order messed up with null values in pivot column
 
 column names and types overflowing in column selector
 
+======
+21Jul21:
+
+Getting annoying issues again with the sqlite3 dependency in reltab-sqlite,
+and can no longer do:
+
+```sh
+$ npm install --build-from-source
+```
+
+in reltab-sqlite because it's attempting to install reltab from npm, even after it has been
+npm linked.
+
+Trying to remove:
+    "bootstrap": {
+      "ignore": "reltab-sqlite"
+    },
+
+from lerna.json (under "command") to see if it helps.
+
+Right thing here is probably going to be to either publish my fork of node-sqlite3 in npm,
+or possibly just rip it out entirely, since we're hopefully moving to DuckDB as the default
+engine.

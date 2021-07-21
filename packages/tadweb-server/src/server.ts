@@ -3,8 +3,8 @@ import * as log from "loglevel";
 import * as commandLineArgs from "command-line-args";
 import { AddressInfo } from "net";
 import * as path from "path";
-import * as reltabSqlite from "reltab-sqlite";
-import { SqliteContext } from "reltab-sqlite";
+// import * as reltabSqlite from "reltab-sqlite";
+// import { SqliteContext } from "reltab-sqlite";
 import { BigQueryConnection } from "reltab-bigquery";
 import "reltab-bigquery";
 // import { AWSAthenaConnection } from "reltab-aws-athena";
@@ -32,6 +32,7 @@ const SRV_DIR = "./public/csv";
 
 const portNumber = 9000;
 
+/*
 const initSqlite = async (): Promise<DbConnection> => {
   const rtOptions: any = { showQueries: true };
   const connKey: DbConnectionKey = {
@@ -41,6 +42,7 @@ const initSqlite = async (): Promise<DbConnection> => {
   const dbc = await getConnection(connKey);
   return dbc;
 };
+*/
 
 const covid19ConnKey: DbConnectionKey = {
   providerName: "bigquery",
@@ -74,6 +76,7 @@ const initSnowflake = async () => {
   )) as SnowflakeConnection;
 };
 
+/*
 const testImportFile = async (
   dbc: DbConnection,
   fileName: string
@@ -88,7 +91,7 @@ const testImportFile = async (
   log.info("imported CSV, table name: ", tableName);
   ctx.registerTable(ti);
 };
-
+*/
 const initDuckDB = async (): Promise<DbConnection> => {
   const rtOptions: any = { showQueries: true };
   const connKey: DbConnectionKey = {
@@ -166,9 +169,10 @@ async function main() {
   await initBigquery();
   // await initSnowflake();
 
+  /*
   const dbc = await initSqlite();
   testImportFile(dbc, "movie_metadata.csv");
-
+*/
   const ddbc = await initDuckDB();
   duckDBImportFile(ddbc, "movie_metadata.csv");
 
