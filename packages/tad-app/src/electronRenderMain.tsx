@@ -13,7 +13,7 @@ import * as reltab from "reltab";
 import log from "loglevel";
 import { ElectronTransportClient } from "./electronClient";
 import * as electron from "electron";
-import { DbConnectionKey, RemoteReltabConnection, TableInfo } from "reltab";
+import { DataSourcePath, DbConnectionKey, RemoteReltabConnection, TableInfo } from "reltab";
 
 const remote = electron.remote;
 const remoteInitMain = remote.getGlobal("initMain");
@@ -63,9 +63,7 @@ const init = async () => {
     viewParams = ViewParams.deserialize(savedFileState.viewParams);
   }
 
-  const appState = new AppState({
-    targetPath,
-  });
+  const appState = new AppState();
   const stateRef = mkRef(appState);
   const [App, listenerId] = refContainer<AppState, AppPaneBaseProps>(
     stateRef,
@@ -74,6 +72,7 @@ const init = async () => {
 
   try {
     const initInfo = await initMainProcess(targetPath, srcFile!);
+    console.log('initInfo: ', initInfo);
     const ti = initInfo.tableInfo;
     const rtEngine = initInfo.connKey;
 
@@ -81,19 +80,19 @@ const init = async () => {
 
     const rtc = new RemoteReltabConnection(tconn);
 
-    const dbc = await rtc.connect(
-      initInfo.connKey,
-      initInfo.tableInfo.tableName
-    );
-
-    const baseQuery = reltab.tableQuery(ti.tableName);
-
     var pivotRequester: PivotRequester | undefined | null = null;
 
     await initAppState(rtc, stateRef);
 
     ReactDOM.render(<App />, document.getElementById("app"));
     pivotRequester = new PivotRequester(stateRef);
+
+    // TODO: really need a better way to construct these paths!
+    // (And displayName is a mess here)
+    const tableName = initInfo.tableInfo.tableName;
+    const targetDSPath: DataSourcePath = [ {kind: "Database", id: initInfo.connKey, displayName: tableName}, {kind: "Table", id: tableName, displayName: "tableName" }]; 
+
+    await actions.openDataSourcePath(targetDSPath, stateRef);
 
     ipcRenderer.on("request-serialize-app-state", (event, req) => {
       console.log("got request-serialize-app-state: ", req);

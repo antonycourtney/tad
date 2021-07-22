@@ -279,3 +279,17 @@ from lerna.json (under "command") to see if it helps.
 Right thing here is probably going to be to either publish my fork of node-sqlite3 in npm,
 or possibly just rip it out entirely, since we're hopefully moving to DuckDB as the default
 engine.
+
+=====
+22Jul21:
+
+To get working *right now*:
+
+[X] Open specific file in all when file given via command line
+[ ] Show loading indicator during initial load
+[ ] Better loading indicator!
+[ ] Switch engine for tad-app to DuckDb
+
+What I probably want to figure out for a release:
+
+[ ] Multiple tabs
