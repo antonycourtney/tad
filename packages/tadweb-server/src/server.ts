@@ -174,9 +174,17 @@ async function main() {
   testImportFile(dbc, "movie_metadata.csv");
 */
   const ddbc = await initDuckDB();
-  duckDBImportFile(ddbc, "movie_metadata.csv");
+  await duckDBImportFile(ddbc, "movie_metadata.csv");
 
-
+  /*
+  console.log('importing metObjects:');
+  const t0 = process.hrtime();
+  await duckDBImportFile(ddbc, "MetObjects.csv");
+  const t1 = process.hrtime(t0);
+  const [t1s, t1ns] = t1;
+  log.info("file imported in : %ds %dms", t1s, t1ns / 1e6);
+  */
+ 
   /*
   const dbc = new BigQueryConnection(
     "bigquery-public-data",

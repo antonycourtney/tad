@@ -81,6 +81,7 @@ operation that can end up in a SQL select column expression. Probably time for a
 ### Features to add before next release:
 
 [X] Multiple database support (at least bigquery)
+[ ] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
 [ ] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
 [ ] Delayed calc mode
 [ ] Datasets and table selector UI
@@ -96,7 +97,6 @@ operation that can end up in a SQL select column expression. Probably time for a
 [ ] Save views to view store in tadweb-server
 [ ] Views loadable by URL
 [ ] Open to Depth
-[ ] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
 [ ] Duplicate detection / elimination. Constructing the groupBy using schema an interesting example
 of reltab.
 

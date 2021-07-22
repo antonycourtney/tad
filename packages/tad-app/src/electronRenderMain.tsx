@@ -90,7 +90,7 @@ const init = async () => {
 
     var pivotRequester: PivotRequester | undefined | null = null;
 
-    await initAppState(rtc, dbc, ti.tableName, baseQuery, viewParams, stateRef);
+    await initAppState(rtc, stateRef);
 
     ReactDOM.render(<App />, document.getElementById("app"));
     pivotRequester = new PivotRequester(stateRef);
@@ -113,6 +113,7 @@ const init = async () => {
     ipcRenderer.on("set-show-hidden-cols", (event, val) => {
       actions.setShowHiddenCols(val, stateRef);
     });
+    /*
     ipcRenderer.on("request-serialize-filter-query", (event, req) => {
       console.log("got request-serialize-filter-query: ", req);
       const { requestId } = req;
@@ -130,6 +131,7 @@ const init = async () => {
         contents,
       });
     });
+    */
     ipcRenderer.on("open-export-dialog", (event, req) => {
       const { openState, saveFilename } = req;
       actions.setExportDialogOpen(openState, saveFilename, stateRef);
