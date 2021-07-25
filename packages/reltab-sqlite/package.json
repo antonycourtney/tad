@@ -23,7 +23,7 @@
     "@types/through": "0.0.30",
     "byline": "^5.0.0",
     "csv-sniffer": "^0.1.1",
-    "fast-csv": "^4.1.3",
+    "fast-csv": "^4.3.6",
     "gauge": "^3.0.0",
     "loglevel": "^1.6.8",
     "reltab": "^0.10.0",

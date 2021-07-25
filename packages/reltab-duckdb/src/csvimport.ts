@@ -42,7 +42,7 @@ const genTableName = (pathname: string): string => {
 /**
  * Native import using DuckDB's built-in import facilities.
  */
-export const nativeCSVImport = async (db: DuckDB, filePath: string)  => {
+export const nativeCSVImport = async (db: DuckDB, filePath: string): Promise<string>  => {
   const dbConn = new Connection(db);
   const tableName = genTableName(filePath);
   const query = 
@@ -59,4 +59,5 @@ export const nativeCSVImport = async (db: DuckDB, filePath: string)  => {
   } finally {
     dbConn.close();
   }
+  return tableName;
 };

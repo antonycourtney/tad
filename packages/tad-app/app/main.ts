@@ -7,6 +7,8 @@ import * as reltabBigQuery from "reltab-bigquery";
 import "reltab-bigquery";
 import * as reltabSqlite from "reltab-sqlite";
 import "reltab-sqlite";
+import * as reltabDuckDB from "reltab-duckdb";
+import "reltab-duckdb";
 import * as setup from "./setup";
 import * as quickStart from "./quickStart";
 import * as appMenu from "./appMenu";
@@ -93,6 +95,7 @@ const initMainAsync = async (
 
   await initBigquery();
 
+  /*
   let rtc: reltabSqlite.SqliteContext;
   let connKey: DbConnectionKey;
 
@@ -101,7 +104,15 @@ const initMainAsync = async (
     connectionInfo: ":memory:",
   };
   rtc = (await getConnection(connKey)) as reltabSqlite.SqliteContext;
+  */
+  let connKey: DbConnectionKey;
 
+  connKey = {
+    providerName: "duckdb",
+    connectionInfo: ":memory:",
+  };
+  const rtc = await getConnection(connKey);
+ 
   (global as any).appRtc = rtc;
 
   const ts = new ElectronTransportServer();
@@ -126,6 +137,23 @@ const importCSV = async (
     throw new Error(msg);
   }
 
+  const ctx = (global as any).appRtc as reltabDuckDB.DuckDBContext;
+  const tableName = await reltabDuckDB.nativeCSVImport(ctx.db, targetPath);
+
+  return tableName;
+}
+
+const importCSVSqlite = async (
+  targetPath: string
+): Promise<string> => {
+  let pathname = targetPath; 
+    
+  // check if pathname exists
+  if (!fs.existsSync(pathname)) {
+    let msg = '"' + pathname + '": file not found.';
+    throw new Error(msg);
+  }
+
 // TODO:
 //   const noHeaderRow = options["no-headers"] || false;
   const noHeaderRow = false;
@@ -136,6 +164,8 @@ const importCSV = async (
   });
   return tableName;
 }
+
+
 
 /*
  * OLD initMain -- will probably have to move some of this initialization to seperate
