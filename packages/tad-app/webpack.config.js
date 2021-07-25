@@ -27,7 +27,7 @@ function config(nodeEnv) {
           enforce: "pre",
           test: /\.js$/,
           loader: "source-map-loader",
-          exclude: [/node_modules\/export-to-csv/],
+          exclude: [/node_modules\/export-to-csv/, /fast-csv/],
         },
         {
           test: /\.less$/,
