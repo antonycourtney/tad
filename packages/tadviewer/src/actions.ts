@@ -25,7 +25,6 @@ export const openDataSourcePath = async (
   path: DataSourcePath,
   stateRef: StateRef<AppState>
 ): Promise<void> => {
-  console.log("openDataSourcePath: path: ", path);
   const appState = mutableGet(stateRef);
 
   const dbConnKey = path[0].id as DbConnectionKey;
@@ -34,9 +33,7 @@ export const openDataSourcePath = async (
   const tableName = path[path.length - 1].id as string;
 
   // TODO: This shouldn't actually be needed, but let's do it for now:
-  console.log("openDataSourcePath: calling getTableInfo: ", dbc, tableName);
-  const ti = await dbc.getTableInfo(tableName);
-  console.log("openPath: tableInfo: ", ti);
+  // const ti = await dbc.getTableInfo(tableName);
 
   const windowTitle = tableName;
   const baseQuery = reltab.tableQuery(tableName);

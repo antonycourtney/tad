@@ -21,7 +21,7 @@ export const Footer: React.FunctionComponent<FooterProps> = ({
   const [dirty, setDirty] = useState(false);
   const [prevFilter, setPrevFilter] = useState<reltab.FilterExp | null>(null);
 
-  console.log("Footer: ", appState.toJS());
+  // console.log("Footer: ", appState.toJS());
 
   const viewState = appState.viewState;
 

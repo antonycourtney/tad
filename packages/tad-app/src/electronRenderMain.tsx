@@ -18,26 +18,36 @@ import { DataSourcePath, DbConnectionKey, RemoteReltabConnection, TableInfo } fr
 const remote = electron.remote;
 const remoteInitMain = remote.getGlobal("initMain");
 const remoteErrorDialog = remote.getGlobal("errorDialog");
+const remoteImportCSV = remote.getGlobal("importCSV");
 
 const ipcRenderer = electron.ipcRenderer;
 
 type InitInfo = {
-  tableInfo: TableInfo;
   connKey: DbConnectionKey;
 };
 
-const initMainProcess = (
-  targetPath: string,
-  srcFile: string
-): Promise<InitInfo> => {
+const initMainProcess = (): Promise<InitInfo> => {
   return new Promise((resolve, reject) => {
-    remoteInitMain(targetPath, srcFile, (err: any, initStr: string) => {
+    remoteInitMain((err: any, initStr: string) => {
       if (err) {
         console.error("initMain error: ", err);
         reject(err);
       } else {
         const initInfo: InitInfo = JSON.parse(initStr);
         resolve(initInfo);
+      }
+    });
+  });
+};
+
+const importCSV = (targetPath: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    remoteImportCSV(targetPath, (err: any, tableName: string) => {
+      if (err) {
+        console.error("importCSV error: ", err);
+        reject(err);
+      } else {
+        resolve(tableName);
       }
     });
   });
@@ -71,9 +81,8 @@ const init = async () => {
   );
 
   try {
-    const initInfo = await initMainProcess(targetPath, srcFile!);
+    const initInfo = await initMainProcess();
     console.log('initInfo: ', initInfo);
-    const ti = initInfo.tableInfo;
     const rtEngine = initInfo.connKey;
 
     const tconn = new ElectronTransportClient();
@@ -87,11 +96,18 @@ const init = async () => {
     ReactDOM.render(<App />, document.getElementById("app"));
     pivotRequester = new PivotRequester(stateRef);
 
+    /*
+    TODO: get tableName by doing an async, remote csv import; should return imported
+    table name.
+    */
+    const tableName = await importCSV(targetPath);
+
     // TODO: really need a better way to construct these paths!
     // (And displayName is a mess here)
-    const tableName = initInfo.tableInfo.tableName;
-    const targetDSPath: DataSourcePath = [ {kind: "Database", id: initInfo.connKey, displayName: tableName}, {kind: "Table", id: tableName, displayName: "tableName" }]; 
-
+    const targetDSPath: DataSourcePath = [ 
+      {kind: "Database", id: initInfo.connKey, displayName: tableName}, 
+      {kind: "Table", id: tableName, displayName: "tableName" }
+    ]; 
     await actions.openDataSourcePath(targetDSPath, stateRef);
 
     ipcRenderer.on("request-serialize-app-state", (event, req) => {

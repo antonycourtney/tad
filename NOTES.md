@@ -293,3 +293,17 @@ To get working *right now*:
 What I probably want to figure out for a release:
 
 [ ] Multiple tabs
+
+23Jul21:
+
+To show loading indicator, need to initialize before doing import.
+
+This requires pretty much over-hauling the initialization path to make a bunch
+of things that currently happen during initialization happen later.
+
+Specifically, need to deal with:
+
+[ ] Specifying a path to a sqlite db file
+[ ] Opening a Tad file
+
+Probably want a way to specify (multiple) data sources and files to open on command line. 

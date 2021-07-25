@@ -86,10 +86,6 @@ const testImportFile = async (
   log.info("handleImportFile: importing: " + filePath);
 
   const md = await reltabSqlite.fastImport(ctx.db, filePath);
-  const ti = reltabSqlite.mkTableInfo(md);
-  const tableName = ti.tableName;
-  log.info("imported CSV, table name: ", tableName);
-  ctx.registerTable(ti);
 };
 */
 const initDuckDB = async (): Promise<DbConnection> => {
@@ -184,7 +180,7 @@ async function main() {
   const [t1s, t1ns] = t1;
   log.info("file imported in : %ds %dms", t1s, t1ns / 1e6);
   */
- 
+
   /*
   const dbc = new BigQueryConnection(
     "bigquery-public-data",

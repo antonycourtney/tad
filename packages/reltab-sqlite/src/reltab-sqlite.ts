@@ -59,10 +59,6 @@ export class SqliteContext implements DbConnection {
     return this.displayName;
   }
 
-  registerTable(ti: TableInfo) {
-    this.tableMap[ti.tableName] = ti;
-  }
-
   // ensure every table mentioned in query is registered:
   async ensureTables(query: QueryExp): Promise<void> {
     const tblNames = query.getTables();

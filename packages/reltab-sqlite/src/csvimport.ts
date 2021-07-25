@@ -617,7 +617,7 @@ export const fastImport = async (
   db: sqlite3.Database,
   pathname: string,
   options: ImportOpts = {}
-): Promise<FileMetadata> => {
+): Promise<string> => {
   const importStart = process.hrtime();
   try {
     const sampleLines = await readSampleLines(pathname, 2);
@@ -626,7 +626,8 @@ export const fastImport = async (
     const delimiter = sniffRes.delimiter;
     if (delimiter === ";") {
       // assume European number format, use JS import impl:
-      return importSqlite(db, pathname, delimiter, options);
+      const md = await importSqlite(db, pathname, delimiter, options);
+      return md.tableName;
     } else {
       const firstRowData = await extractRowData(sampleLines[0], delimiter);
       let columnNames;
@@ -651,7 +652,7 @@ export const fastImport = async (
         tableName: res.tableName,
         csvOptions: {},
       };
-      return fileMetadata;
+      return res.tableName;
     }
   } catch (err) {
     log.error("caught error during fastImport: ", err, err.stack);

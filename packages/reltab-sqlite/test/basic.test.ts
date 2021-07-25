@@ -31,10 +31,6 @@ test("t0 - trivial query generation", () => {
 
 const importCsv = async (db: sqlite3.Database, path: string) => {
   const md = await reltabSqlite.fastImport(db, path);
-
-  const ti = reltabSqlite.mkTableInfo(md);
-  testCtx.registerTable(ti);
-  // console.log("importCsv: table info: ", JSON.stringify(ti, null, 2));
 };
 
 beforeAll(

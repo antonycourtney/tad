@@ -8,6 +8,7 @@ import { delimiter } from "path";
 import * as log from "loglevel";
 import * as util from "./testUtils";
 import { executionAsyncId } from "async_hooks";
+import { DbConnectionKey, getConnection } from "reltab";
 
 log.setLevel("info");
 
@@ -15,9 +16,6 @@ let testCtx: reltabSqlite.SqliteContext;
 
 const importCsv = async (db: sqlite3.Database, path: string) => {
   const md = await reltabSqlite.fastImport(db, path);
-
-  const ti = reltabSqlite.mkTableInfo(md);
-  testCtx.registerTable(ti);
 };
 
 const pcols = ["JobFamily", "Title", "Union", "Name", "Base", "TCOE"];
@@ -29,8 +27,12 @@ beforeAll(
   async (): Promise<reltabSqlite.SqliteContext> => {
     log.setLevel("info"); // use "debug" for even more verbosity
     const showQueries = true;
-    const ctx = await reltabSqlite.getContext(":memory:", { showQueries });
-
+    const connKey: DbConnectionKey = {
+      providerName: "sqlite",
+      connectionInfo: ":memory:",
+    };
+    const ctx = await getConnection(connKey);
+  
     testCtx = ctx as reltabSqlite.SqliteContext;
 
     const db = testCtx.db;

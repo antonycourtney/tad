@@ -6,6 +6,7 @@ import * as reltab from "reltab";
 import * as reltabBigQuery from "reltab-bigquery";
 import "reltab-bigquery";
 import * as reltabSqlite from "reltab-sqlite";
+import "reltab-sqlite";
 import * as setup from "./setup";
 import * as quickStart from "./quickStart";
 import * as appMenu from "./appMenu";
@@ -75,11 +76,72 @@ class ElectronTransportServer implements TransportServer {
  *
  * invoked via electron remote
  *
- * arguments:
- * targetPath -- filename or sqlite URL we are opening
- * srcfile (optional) -- path we are opening from
  */
 
+const initMainAsync = async (
+  options: any,
+) => {
+  console.log("initMainAsync: ", options);
+  let rtOptions: any = {};
+
+  if (options["show-queries"]) {
+    rtOptions.showQueries = true;
+    // *sigh*: This doesn't seem to propapagate to reltab-sqlite...npm duplication issue?
+    logLevel.setLevel(logLevel.levels.INFO);
+    log.info("initMainAsync: set log level to INFO");
+  }
+
+  await initBigquery();
+
+  let rtc: reltabSqlite.SqliteContext;
+  let connKey: DbConnectionKey;
+
+  connKey = {
+    providerName: "sqlite",
+    connectionInfo: ":memory:",
+  };
+  rtc = (await getConnection(connKey)) as reltabSqlite.SqliteContext;
+
+  (global as any).appRtc = rtc;
+
+  const ts = new ElectronTransportServer();
+  serverInit(ts);
+
+  const initInfo = { connKey };
+  const initStr = JSON.stringify(initInfo, null, 2);
+  return initStr;
+};
+
+/*
+ * Remotable function to import a CSV file
+ */
+const importCSV = async (
+  targetPath: string
+): Promise<string> => {
+  let pathname = targetPath; 
+    
+  // check if pathname exists
+  if (!fs.existsSync(pathname)) {
+    let msg = '"' + pathname + '": file not found.';
+    throw new Error(msg);
+  }
+
+// TODO:
+//   const noHeaderRow = options["no-headers"] || false;
+  const noHeaderRow = false;
+
+  const rtc = (global as any).appRtc as reltabSqlite.SqliteContext;
+  const tableName = await reltabSqlite.fastImport(rtc.db, pathname, {
+    noHeaderRow,
+  });
+  return tableName;
+}
+
+/*
+ * OLD initMain -- will probably have to move some of this initialization to seperate
+ * functions exposed remotely:
+ */
+/*
 const initMainAsync = async (
   options: any,
   targetPath: string,
@@ -100,7 +162,6 @@ const initMainAsync = async (
   let rtc: reltabSqlite.SqliteContext;
   let tableInfo: TableInfo;
   const sqlUrlPrefix = "sqlite://";
-
   let connKey: DbConnectionKey;
 
   if (targetPath.startsWith(sqlUrlPrefix)) {
@@ -120,8 +181,9 @@ const initMainAsync = async (
       connectionInfo: ":memory:",
     };
     rtc = (await getConnection(connKey)) as reltabSqlite.SqliteContext;
-    let pathname = targetPath; // check if pathname exists
-
+    let pathname = targetPath; 
+    
+    // check if pathname exists
     if (!fs.existsSync(pathname)) {
       let found = false;
       let srcdir = null;
@@ -156,35 +218,41 @@ const initMainAsync = async (
       noHeaderRow,
     });
     // const md = await csvimport.importSqlite(pathname, ',', { noHeaderRow })
-
-    tableInfo = reltabSqlite.mkTableInfo(md);
   }
-
-  rtc.registerTable(tableInfo);
 
   (global as any).appRtc = rtc;
 
   const ts = new ElectronTransportServer();
   serverInit(ts);
 
-  const initInfo = { tableInfo, connKey };
+  const initInfo = { connKey };
   const initStr = JSON.stringify(initInfo, null, 2);
   return initStr;
 };
+*/
+
 
 const mkInitMain = (options: any) => (
-  pathname: string,
-  srcfile: string,
   cb: (res: any, err: any) => void
 ) => {
-  initMainAsync(options, pathname, srcfile)
+  initMainAsync(options)
     .then((mdStr) => cb(null, mdStr))
     .catch((err) => cb(err, null));
 }; // App initialization:
 
+const remotableImportCSV = (
+  targetPath: string,
+  cb: (res: any, err: any) => void
+) => {
+  importCSV(targetPath)
+    .then((tableName) => cb(null, tableName))
+    .catch((err) => cb(err, null));
+}; 
+
 const appInit = (options: any) => {
   // log.log('appInit: ', options)
   (global as any).initMain = mkInitMain(options);
+  (global as any).importCSV = remotableImportCSV;
   (global as any).errorDialog = errorDialog;
   appMenu.createMenu(); // log.log('appInit: done')
 };
@@ -277,8 +345,9 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
   if (fatal) {
     app.quit();
   }
-}; // construct targetPath based on options:
+}; 
 
+// construct targetPath based on options:
 const getTargetPath = (options: any, filePath: string) => {
   let targetPath = null;
   const srcDir = options["executed-from"];
@@ -440,7 +509,7 @@ const initApp = (firstInstance: any) => (
           appWindow.create(targetPath);
         } else {
           log.warn("initApp called with no targetPath");
-          app.focus(); // appWindow.openDialog()
+          app.focus();
         }
       }
     }
