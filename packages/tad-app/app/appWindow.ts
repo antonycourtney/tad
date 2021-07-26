@@ -55,6 +55,8 @@ export const create = (targetPath: string) => {
     y: 0,
     webPreferences: {
       nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
     },
   };
 
