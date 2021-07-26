@@ -26,6 +26,14 @@ type InitInfo = {
   connKey: DbConnectionKey;
 };
 
+let delay = (ms: number) => {
+  if (ms > 0) {
+    log.log("injecting delay of ", ms, " ms");
+  }
+
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
 const initMainProcess = (): Promise<InitInfo> => {
   return new Promise((resolve, reject) => {
     remoteInitMain((err: any, initStr: string) => {
@@ -55,6 +63,7 @@ const importCSV = (targetPath: string): Promise<string> => {
 
 // TODO: figure out how to initialize based on saved views or different file / table names
 const init = async () => {
+  const tStart = performance.now();
   log.setLevel(log.levels.DEBUG);
   // console.log("testing, testing, one two...");
   log.debug("Hello, Electron!");
@@ -94,12 +103,10 @@ const init = async () => {
     await initAppState(rtc, stateRef);
 
     ReactDOM.render(<App />, document.getElementById("app"));
+    const tRender = performance.now();
+    log.debug('Time to initial render: ', (tRender - tStart) / 1000, ' sec');
     pivotRequester = new PivotRequester(stateRef);
 
-    /*
-    TODO: get tableName by doing an async, remote csv import; should return imported
-    table name.
-    */
     actions.startAppLoadingTimer(stateRef);
     const tableName = await importCSV(targetPath);
     actions.stopAppLoadingTimer(stateRef);
