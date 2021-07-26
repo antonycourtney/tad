@@ -489,7 +489,9 @@ const initApp = (firstInstance: any) => (
           handleOpen(event, url);
         });
         const firstRun = setup.postInstallCheck();
-        const showQuickStart = firstRun;
+        // const showQuickStart = firstRun;
+        const showQuickStart = false;
+
         process.on("uncaughtException", function (error) {
           log.error(error.message);
           log.error(error.stack);

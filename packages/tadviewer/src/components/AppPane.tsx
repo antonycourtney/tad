@@ -74,7 +74,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     );
   } else {
     pivotSidebar = null;
-    centerPane = null; // was <LoadingModal />;
+    centerPane = appState.appLoadingTimer.running ? <LoadingModal /> : null; 
   }
   mainContents = (
     <div className="container-fluid full-height main-container">

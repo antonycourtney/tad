@@ -286,9 +286,9 @@ engine.
 To get working *right now*:
 
 [X] Open specific file in all when file given via command line
-[ ] Show loading indicator during initial load
+[X] Show loading indicator during initial load
 [ ] Better loading indicator!
-[ ] Switch engine for tad-app to DuckDb
+[X] Switch engine for tad-app to DuckDb
 
 What I probably want to figure out for a release:
 
@@ -305,5 +305,6 @@ Specifically, need to deal with:
 
 [ ] Specifying a path to a sqlite db file
 [ ] Opening a Tad file
+[ ] Restore Quick Start guide / show quick start on first run
 
 Probably want a way to specify (multiple) data sources and files to open on command line. 

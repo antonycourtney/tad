@@ -8,6 +8,7 @@ import * as aggtree from "aggtree";
 import { StateRef, update, mutableGet, awaitableUpdate_ } from "oneref";
 import log from "loglevel";
 import { DataSourcePath, DbConnectionKey } from "reltab";
+import * as util from "./util";
 
 export async function initAppState(
   rtc: reltab.ReltabConnection,
@@ -21,6 +22,29 @@ export async function initAppState(
   console.log("initAppState: st: ", st.toJS());
 }
 
+export async function startAppLoadingTimer(
+  stateRef: StateRef<AppState>
+): Promise<void> {
+  // hard to precisely type the path-dependent type of pathUpdater, so use any
+  const ltUpdater = util.pathUpdater(stateRef, [
+    "appLoadingTimer",
+  ]) as any;
+  update(
+    stateRef,
+    (st: AppState): AppState => st.set("appLoadingTimer", st.appLoadingTimer.run(200, ltUpdater)) as AppState
+  );
+}
+
+export async function stopAppLoadingTimer(
+  stateRef: StateRef<AppState>
+): Promise<void> {
+  update(
+    stateRef,
+    (st: AppState): AppState => st.set("appLoadingTimer", st.appLoadingTimer.stop()) as AppState
+  );
+}
+
+
 export const openDataSourcePath = async (
   path: DataSourcePath,
   stateRef: StateRef<AppState>
@@ -31,9 +55,6 @@ export const openDataSourcePath = async (
   const dbc = await appState.rtc.connect(dbConnKey, path[0].displayName);
 
   const tableName = path[path.length - 1].id as string;
-
-  // TODO: This shouldn't actually be needed, but let's do it for now:
-  // const ti = await dbc.getTableInfo(tableName);
 
   const windowTitle = tableName;
   const baseQuery = reltab.tableQuery(tableName);

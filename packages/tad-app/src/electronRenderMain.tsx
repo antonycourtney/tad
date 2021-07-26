@@ -100,7 +100,9 @@ const init = async () => {
     TODO: get tableName by doing an async, remote csv import; should return imported
     table name.
     */
+    actions.startAppLoadingTimer(stateRef);
     const tableName = await importCSV(targetPath);
+    actions.stopAppLoadingTimer(stateRef);
 
     // TODO: really need a better way to construct these paths!
     // (And displayName is a mess here)

@@ -43,6 +43,8 @@ const genTableName = (pathname: string): string => {
  * Native import using DuckDB's built-in import facilities.
  */
 export const nativeCSVImport = async (db: DuckDB, filePath: string): Promise<string>  => {
+  const importStart = process.hrtime();
+
   const dbConn = new Connection(db);
   const tableName = genTableName(filePath);
   const query = 
@@ -59,5 +61,8 @@ export const nativeCSVImport = async (db: DuckDB, filePath: string): Promise<str
   } finally {
     dbConn.close();
   }
+  const [es, ens] = process.hrtime(importStart);
+  console.log("fastImport: import completed in %ds %dms", es, ens / 1e6);
+
   return tableName;
 };
