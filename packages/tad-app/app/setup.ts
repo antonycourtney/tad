@@ -14,6 +14,16 @@ const app = electron.app;
 const isDarwin = process.platform === "darwin";
 const MARKER_BASENAME = "install-marker-";
 
+/**
+ * @returns true iff we're running the packaged version of the app
+ */
+export const runningPackaged = (): boolean => {
+  const appPath = app.getAppPath();
+  const appBase = path.basename(appPath);
+
+  return appBase === "app.asar";
+};
+
 const postInstall = (markerPath: string | number | Buffer | URL) => {
   const appPath = app.getAppPath();
   const appBase = path.basename(appPath);

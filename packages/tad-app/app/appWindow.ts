@@ -24,10 +24,10 @@ const POS_OFFSET = 25; // pixel offset of new windows
 // If we're opening a CSV file, we just pass the target path.
 // If we're opening a Tad workspace, we read its contents
 
-const encodeOpenParams = (targetPath: string): object => {
+const encodeOpenParams = (targetPath: string | null): object => {
   let openParams;
 
-  if (path.extname(targetPath) === ".tad") {
+  if (targetPath && path.extname(targetPath) === ".tad") {
     const fileContents = fs.readFileSync(targetPath, "utf8");
     openParams = {
       fileType: "tad",
@@ -44,9 +44,8 @@ const encodeOpenParams = (targetPath: string): object => {
   return openParams;
 };
 
-export const create = (targetPath: string) => {
-  const pathBasename = path.basename(targetPath);
-  const title = "Tad - " + pathBasename;
+export const create = (targetPath: string | null) => {
+  const title = targetPath ? "Tad - " + path.basename(targetPath) : "Tad";
   let winProps = {
     width: 1280,
     height: 980,

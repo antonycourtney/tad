@@ -34,7 +34,7 @@ export const showQuickStart = () => {
     });
     win.loadURL(
       url.format({
-        pathname: path.join(__dirname, "quickstart.html"),
+        pathname: path.join(__dirname, "userdocs", "quickstart.html"),
         protocol: "file:",
         slashes: true,
       })

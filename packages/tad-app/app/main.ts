@@ -80,9 +80,7 @@ class ElectronTransportServer implements TransportServer {
  *
  */
 
-const initMainAsync = async (
-  options: any,
-) => {
+const initMainAsync = async (options: any) => {
   console.log("initMainAsync: ", options);
   let rtOptions: any = {};
 
@@ -112,7 +110,7 @@ const initMainAsync = async (
     connectionInfo: ":memory:",
   };
   const rtc = await getConnection(connKey);
- 
+
   (global as any).appRtc = rtc;
 
   const ts = new ElectronTransportServer();
@@ -126,11 +124,9 @@ const initMainAsync = async (
 /*
  * Remotable function to import a CSV file
  */
-const importCSV = async (
-  targetPath: string
-): Promise<string> => {
-  let pathname = targetPath; 
-    
+const importCSV = async (targetPath: string): Promise<string> => {
+  let pathname = targetPath;
+
   // check if pathname exists
   if (!fs.existsSync(pathname)) {
     let msg = '"' + pathname + '": file not found.';
@@ -141,21 +137,19 @@ const importCSV = async (
   const tableName = await reltabDuckDB.nativeCSVImport(ctx.db, targetPath);
 
   return tableName;
-}
+};
 
-const importCSVSqlite = async (
-  targetPath: string
-): Promise<string> => {
-  let pathname = targetPath; 
-    
+const importCSVSqlite = async (targetPath: string): Promise<string> => {
+  let pathname = targetPath;
+
   // check if pathname exists
   if (!fs.existsSync(pathname)) {
     let msg = '"' + pathname + '": file not found.';
     throw new Error(msg);
   }
 
-// TODO:
-//   const noHeaderRow = options["no-headers"] || false;
+  // TODO:
+  //   const noHeaderRow = options["no-headers"] || false;
   const noHeaderRow = false;
 
   const rtc = (global as any).appRtc as reltabSqlite.SqliteContext;
@@ -163,9 +157,7 @@ const importCSVSqlite = async (
     noHeaderRow,
   });
   return tableName;
-}
-
-
+};
 
 /*
  * OLD initMain -- will probably have to move some of this initialization to seperate
@@ -261,10 +253,7 @@ const initMainAsync = async (
 };
 */
 
-
-const mkInitMain = (options: any) => (
-  cb: (res: any, err: any) => void
-) => {
+const mkInitMain = (options: any) => (cb: (res: any, err: any) => void) => {
   initMainAsync(options)
     .then((mdStr) => cb(null, mdStr))
     .catch((err) => cb(err, null));
@@ -277,7 +266,7 @@ const remotableImportCSV = (
   importCSV(targetPath)
     .then((tableName) => cb(null, tableName))
     .catch((err) => cb(err, null));
-}; 
+};
 
 const appInit = (options: any) => {
   // log.log('appInit: ', options)
@@ -375,10 +364,13 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
   if (fatal) {
     app.quit();
   }
-}; 
+};
 
 // construct targetPath based on options:
-const getTargetPath = (options: any, filePath: string) => {
+const getTargetPath = (
+  options: any,
+  filePath: string | null
+): string | null => {
   let targetPath = null;
   const srcDir = options["executed-from"];
 
@@ -410,149 +402,152 @@ const getTargetPath = (options: any, filePath: string) => {
 let openFilePath: string | null = null;
 
 // callback for app.makeSingleInstance:
-const initApp = (firstInstance: any) => (
-  instanceArgv: string[],
-  workingDirectory: string | null
-) => {
-  try {
-    let argv = instanceArgv.slice(1);
-    let awaitingOpenEvent = false; // macOS OpenWith peculiarity
-    // Using context menu on Windows results in invoking .exe with
-    // just the filename as argument, no directory passed in and
-    // no shell wrapper, hence the check for argv.length > 1 here.
-    // deal with weird difference between starting from npm and starting
-    // from packaged shell wrapper:
-    // Update (5/28/17): See also:
-    // https://github.com/electron/electron/issues/4690
-    //
-    // argv && (argv.length > 1) && !(argv[0].startsWith('--executed-from'))
+const initApp =
+  (firstInstance: any) =>
+  (instanceArgv: string[], workingDirectory: string | null) => {
+    try {
+      let argv = instanceArgv.slice(1);
+      let awaitingOpenEvent = false; // macOS OpenWith peculiarity
+      // Using context menu on Windows results in invoking .exe with
+      // just the filename as argument, no directory passed in and
+      // no shell wrapper, hence the check for argv.length > 1 here.
+      // deal with weird difference between starting from npm and starting
+      // from packaged shell wrapper:
+      // Update (5/28/17): See also:
+      // https://github.com/electron/electron/issues/4690
+      //
+      // argv && (argv.length > 1) && !(argv[0].startsWith('--executed-from'))
 
-    if (process.defaultApp) {
-      // npm / electron start -- passes '.' as first argument
-      argv.unshift("--executed-from");
-    } // macOS insanity:  If we're started via Open With..., we get invoked
-    // with -psn_0_XXXXX argument; let's just kill it:
+      if (process.defaultApp) {
+        // npm / electron start -- passes '.' as first argument
+        argv.unshift("--executed-from");
+      } // macOS insanity:  If we're started via Open With..., we get invoked
+      // with -psn_0_XXXXX argument; let's just kill it:
 
-    if (
-      process.platform === "darwin" &&
-      argv &&
-      argv.length > 0 &&
-      argv[0].startsWith("-psn_")
-    ) {
-      argv = argv.slice(1);
-      awaitingOpenEvent = true;
-    }
+      if (
+        process.platform === "darwin" &&
+        argv &&
+        argv.length > 0 &&
+        argv[0].startsWith("-psn_")
+      ) {
+        argv = argv.slice(1);
+        awaitingOpenEvent = true;
+      }
 
-    const options = commandLineArgs(optionDefinitions, {
-      argv,
-    });
-    let quickExit = false;
+      const options = commandLineArgs(optionDefinitions, {
+        argv,
+      });
+      let quickExit = false;
 
-    if (options.help) {
-      showUsage();
-      quickExit = true;
-    }
+      if (options.help) {
+        showUsage();
+        quickExit = true;
+      }
 
-    if (options.version) {
-      showVersion();
-      quickExit = true;
-    }
+      if (options.version) {
+        showVersion();
+        quickExit = true;
+      }
 
-    if (quickExit) {
-      app.quit();
-    } else {
-      const targetPath = getTargetPath(options, options.srcfile); // set at end of ready event handler:
+      if (quickExit) {
+        app.quit();
+      } else {
+        const targetPath = getTargetPath(options, options.srcfile); // set at end of ready event handler:
+        log.log(
+          "after arg parsing + getTargetPath:",
+          options.srcfile,
+          targetPath
+        );
 
-      let isReady = false; // This method will be called when Electron has finished
-      // initialization and is ready to create browser windows.
-      // Some APIs can only be used after this event occurs.
+        let isReady = false; // This method will be called when Electron has finished
+        // initialization and is ready to create browser windows.
+        // Some APIs can only be used after this event occurs.
 
-      if (firstInstance) {
-        const handleOpen = (event: electron.Event, filePath: string) => {
-          log.log("handleOpen called!");
-          log.warn("got open-file event for: ", filePath);
-          event.preventDefault();
-          const targetPath = getTargetPath(options, filePath);
+        if (firstInstance) {
+          const handleOpen = (event: electron.Event, filePath: string) => {
+            log.log("handleOpen called!");
+            log.warn("got open-file event for: ", filePath);
+            event.preventDefault();
+            const targetPath = getTargetPath(options, filePath);
 
-          if (isReady) {
-            log.warn("open-file: app is ready, opening in new window");
-            appWindow.create(targetPath);
-          } else {
-            openFilePath = targetPath;
-            log.warn("open-file: set openFilePath " + targetPath);
-          }
-        };
+            if (isReady) {
+              log.warn("open-file: app is ready, opening in new window");
+              appWindow.create(targetPath);
+            } else {
+              openFilePath = targetPath;
+              log.warn("open-file: set openFilePath " + targetPath);
+            }
+          };
 
-        app.on("open-file", handleOpen);
-        app.on("open-url", (event, url) => {
-          log.warn("got open-url: ", event, url);
-          handleOpen(event, url);
-        });
-        const firstRun = setup.postInstallCheck();
-        // const showQuickStart = firstRun;
-        const showQuickStart = false;
+          app.on("open-file", handleOpen);
+          app.on("open-url", (event, url) => {
+            log.warn("got open-url: ", event, url);
+            handleOpen(event, url);
+          });
+          const firstRun = setup.postInstallCheck();
+          const showQuickStart = firstRun && setup.runningPackaged();
 
-        process.on("uncaughtException", function (error) {
-          log.error(error.message);
-          log.error(error.stack);
-          reportFatalError(error.message);
-        }); // Quit when all windows are closed.
+          process.on("uncaughtException", function (error) {
+            log.error(error.message);
+            log.error(error.stack);
+            reportFatalError(error.message);
+          }); // Quit when all windows are closed.
 
-        app.on("window-all-closed", function () {
-          // On OS X it is common for applications and their menu bar
-          // to stay active until the user quits explicitly with Cmd + Q
-          if (process.platform !== "darwin") {
-            app.quit();
-          }
-        });
-        app.on("activate", function () {
-          // On OS X it's common to re-create a window in the app when the
-          // dock icon is clicked and there are no other windows open.
-        });
-        app.on("ready", () => {
-          // const startMsg = `pid ${process.pid}: Tad started, version: ${app.getVersion()}`
-          // log.log(startMsg)
-          // dialog.showMessageBox({ message: startMsg })
-          appInit(options);
+          app.on("window-all-closed", function () {
+            // On OS X it is common for applications and their menu bar
+            // to stay active until the user quits explicitly with Cmd + Q
+            if (process.platform !== "darwin") {
+              app.quit();
+            }
+          });
+          app.on("activate", function () {
+            // On OS X it's common to re-create a window in the app when the
+            // dock icon is clicked and there are no other windows open.
+          });
+          app.on("ready", () => {
+            // const startMsg = `pid ${process.pid}: Tad started, version: ${app.getVersion()}`
+            // log.log(startMsg)
+            // dialog.showMessageBox({ message: startMsg })
+            appInit(options);
 
+            if (targetPath) {
+              appWindow.create(targetPath);
+            }
+
+            if (showQuickStart) {
+              quickStart.showQuickStart();
+            }
+
+            if (openFilePath) {
+              const openMsg = `pid ${process.pid}: Got open-file for ${openFilePath}`;
+              log.warn(openMsg);
+              appWindow.create(openFilePath); // dialog.showMessageBox({ message: openMsg })
+            } else {
+              if (!targetPath && !awaitingOpenEvent) {
+                app.focus();
+                appWindow.openDialog();
+              }
+            }
+
+            isReady = true;
+          });
+        } else {
           if (targetPath) {
             appWindow.create(targetPath);
-          }
-
-          if (showQuickStart) {
-            quickStart.showQuickStart();
-          }
-
-          if (openFilePath) {
-            const openMsg = `pid ${process.pid}: Got open-file for ${openFilePath}`;
-            log.warn(openMsg);
-            appWindow.create(openFilePath); // dialog.showMessageBox({ message: openMsg })
           } else {
-            if (!targetPath && !awaitingOpenEvent) {
-              app.focus();
-              appWindow.openDialog();
-            }
+            log.warn("initApp called with no targetPath");
+            app.focus();
           }
-
-          isReady = true;
-        });
-      } else {
-        if (targetPath) {
-          appWindow.create(targetPath);
-        } else {
-          log.warn("initApp called with no targetPath");
-          app.focus();
         }
       }
+    } catch (err) {
+      reportFatalError(err.message);
+      log.error("Error: ", err.message);
+      log.error(err.stack);
+      showUsage();
+      app.quit();
     }
-  } catch (err) {
-    reportFatalError(err.message);
-    log.error("Error: ", err.message);
-    log.error(err.stack);
-    showUsage();
-    app.quit();
-  }
-};
+  };
 
 const main = () => {
   // turn off console logging on win32:
