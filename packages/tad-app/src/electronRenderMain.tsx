@@ -13,7 +13,12 @@ import * as reltab from "reltab";
 import log from "loglevel";
 import { ElectronTransportClient } from "./electronClient";
 import * as electron from "electron";
-import { DataSourcePath, DbConnectionKey, RemoteReltabConnection, TableInfo } from "reltab";
+import {
+  DataSourcePath,
+  DbConnectionKey,
+  RemoteReltabConnection,
+  TableInfo,
+} from "reltab";
 
 const remote = electron.remote;
 const remoteInitMain = remote.getGlobal("initMain");
@@ -91,7 +96,7 @@ const init = async () => {
 
   try {
     const initInfo = await initMainProcess();
-    console.log('initInfo: ', initInfo);
+    console.log("initInfo: ", initInfo);
     const rtEngine = initInfo.connKey;
 
     const tconn = new ElectronTransportClient();
@@ -104,7 +109,7 @@ const init = async () => {
 
     ReactDOM.render(<App />, document.getElementById("app"));
     const tRender = performance.now();
-    log.debug('Time to initial render: ', (tRender - tStart) / 1000, ' sec');
+    log.debug("Time to initial render: ", (tRender - tStart) / 1000, " sec");
     pivotRequester = new PivotRequester(stateRef);
 
     actions.startAppLoadingTimer(stateRef);
@@ -113,10 +118,10 @@ const init = async () => {
 
     // TODO: really need a better way to construct these paths!
     // (And displayName is a mess here)
-    const targetDSPath: DataSourcePath = [ 
-      {kind: "Database", id: initInfo.connKey, displayName: tableName}, 
-      {kind: "Table", id: tableName, displayName: "tableName" }
-    ]; 
+    const targetDSPath: DataSourcePath = [
+      { kind: "Database", id: initInfo.connKey, displayName: tableName },
+      { kind: "Table", id: tableName, displayName: "tableName" },
+    ];
     await actions.openDataSourcePath(targetDSPath, stateRef);
 
     ipcRenderer.on("request-serialize-app-state", (event, req) => {

@@ -80,7 +80,13 @@ class ElectronTransportServer implements TransportServer {
  *
  */
 
+// JSON encoded init info to return from initMainAsync
+let initStr: string | null = null;
+
 const initMainAsync = async (options: any) => {
+  if (initStr !== null) {
+    return initStr;
+  }
   console.log("initMainAsync: ", options);
   let rtOptions: any = {};
 
@@ -117,7 +123,7 @@ const initMainAsync = async (options: any) => {
   serverInit(ts);
 
   const initInfo = { connKey };
-  const initStr = JSON.stringify(initInfo, null, 2);
+  initStr = JSON.stringify(initInfo, null, 2);
   return initStr;
 };
 
