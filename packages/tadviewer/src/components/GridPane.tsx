@@ -5,7 +5,6 @@ import _ from "lodash";
 
 /* /// <reference path="slickgrid-es6.d.ts"> */
 import * as SlickGrid from "slickgrid-es6";
-import WindowSizeListener from "react-window-size-listener";
 import * as reltab from "reltab";
 import * as actions from "../actions";
 import { LoadingModal } from "./LoadingModal";
@@ -24,6 +23,7 @@ import log from "loglevel";
 const { Slick } = SlickGrid;
 const { Plugins } = SlickGrid as any;
 const { CellRangeSelector, CellSelectionModel, CellCopyManager } = Plugins;
+import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
 
 const container = "#epGrid"; // for now
 
@@ -428,7 +428,15 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
     }
   });
 
+  const handleGridResize = (entries: ResizeEntry[]) => {
+    // TODO: debounce?
+    if (gridState) {
+      gridState.grid.resizeCanvas();
+    }
+  };
+
   const handleWindowResize = (e: any) => {
+    console.log("handleWindowResize: ", e);
     if (gridState) {
       /*
       const $container = $(container)
@@ -449,9 +457,10 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   const lm = lt.running && lt.elapsed > 500 ? <LoadingModal /> : null;
   return (
     <div className="gridPaneOuter">
-      <WindowSizeListener onResize={handleWindowResize} />
       <div className="gridPaneInner">
-        <div id="epGrid" className="slickgrid-container full-height" />
+        <ResizeSensor onResize={handleGridResize}>
+          <div id="epGrid" className="slickgrid-container full-height" />
+        </ResizeSensor>
       </div>
       {lm}
     </div>

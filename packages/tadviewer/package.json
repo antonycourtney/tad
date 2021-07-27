@@ -36,7 +36,6 @@
     "react-dnd": "^10.0.2",
     "react-dnd-html5-backend": "^10.0.2",
     "react-select": "^3.1.0",
-    "react-window-size-listener": "^1.5.4",
     "reltab": "^0.10.0",
     "slickgrid-es6": "^3.0.3",
     "url-loader": "^4.1.0",

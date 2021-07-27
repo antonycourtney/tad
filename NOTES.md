@@ -297,10 +297,11 @@ To show loading indicator, need to initialize before doing import.
 This requires pretty much over-hauling the initialization path to make a bunch
 of things that currently happen during initialization happen later.
 
-Specifically, need to deal with:
+Was tempted to add multiple tab support, but this will be more involved than I
+have time to address, and isn't worth not releasing.
 
 [X] Restore Quick Start guide / show quick start on first run
-[ ] Verify that "Open Example" works from Quickstart guide
+[X] Verify that "Open Example" works from Quickstart guide
 [-] Add multiple tab support
 [ ] Fix tree open control to not accidentally replace a modified view.
 Options: replace current view, open in new window. File...Open should probably work
@@ -318,12 +319,14 @@ the same
 [X] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
 [ ] Better naming for DuckDb in data source explorer tree
 [ ] Specifying a path to a sqlite db file
-[ ] Replace resize handler / ResizeObserver with Blueprint's React supporting one
+[X] Replace resize handler / ResizeObserver with Blueprint's React supporting one
 [ ] Reduce height of column selector to fit in standard window without scrolling
 [ ] tweak column widths in column selector to avoid overflow of column type
 [ ] test of column types. MetObjects.csv seems to have a TIMESTAMP
 [ ] Status bar in footer
 [ ] Query console
+[ ] Verify that tad command line utility works for launching tad
+[ ] Check that all command-line arguments work as advertised
 
 Probably want a way to specify (multiple) data sources and files to open on command line.
 
