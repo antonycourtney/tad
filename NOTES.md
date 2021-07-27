@@ -174,23 +174,22 @@ Right now:
 
 #### Notes to self, 18Nov20
 
-  - We now have a single common client/server in (reltab/remote) that is used by both Electron and Web. Big relief.
-  - But: We still have a handful of assumptions we need to fix:
-    [ ] The main function of both apps is still built around importing a single CSV file
-    [ ] AppState assumes a single table and a single pivot table. Need to support an empty / New state where no
-    table has been selected, and add support for multiple tabs.
-    [ ] Need to be able to identify ViewState as dirty, and allow tree selection of tables from data sources so
-    long as no edits have been made to view state.
-    [ ] Need to modify UI to support multiple tabs, move tree selector to individual tabs.
-    [ ] Need some UI for importing a CSV into a database as a table
-  - Let's build a Snowflake data source and dialect.
+- We now have a single common client/server in (reltab/remote) that is used by both Electron and Web. Big relief.
+- But: We still have a handful of assumptions we need to fix:
+  [X] The main function of both apps is still built around importing a single CSV file
+  [ ] AppState assumes a single table and a single pivot table. Need to support an empty / New state where no
+  table has been selected, and add support for multiple tabs.
+  [ ] Need to be able to identify ViewState as dirty, and allow tree selection of tables from data sources so long as no edits have been made to view state.
+  [ ] Need to modify UI to support multiple tabs, move tree selector to individual tabs.
+  [ ] Need some UI for importing a CSV into a database as a table
+- Let's build a Snowflake data source and dialect.
 
 ### Nov24
 
 OK, we have a basic Snowflake data provider.
 Now let's tackle the refactor for having multiple tabs, and being able to use Tad as a table browser.
 Let's start by tweaking AppState to be able to support an empty grid (no source table selected)
-  
+
 ### Notes, building for snowvation-2020
 
 Getting errors with slickgrid, due to:
@@ -199,7 +198,7 @@ imagemin-pngquant failing
 
 gifsicle failing
 
-Trying:  brew install gifsicle
+Trying: brew install gifsicle
 
 Also getting issues with:
 
@@ -236,12 +235,13 @@ in tadviewer, which seemed to resolve the issue.
 
 (This dependency existed elsewhere, also needed to make versions consistent and up to latest)
 
-----
+---
+
 9Dec20:
 
 Need to build in an environment with a slightly older version of Node, incompatible with my recent updates to node-sqlite.
-Turning off reltab-sqlite for the web based builds for now.  Revisit when attempting to build the Electron app again.
-Note: I temporarily removed sqlite from Lerna bootstrap in lerna.json.  Need to rethink at some point when I revist building the standalone app. 
+Turning off reltab-sqlite for the web based builds for now. Revisit when attempting to build the Electron app again.
+Note: I temporarily removed sqlite from Lerna bootstrap in lerna.json. Need to rethink at some point when I revist building the standalone app.
 
 ---
 
@@ -250,7 +250,7 @@ Snowvation-2020: 9Dec20:
 Filters are failing because defaultDialect from reltab is null, so can't render in Footer.
 
 X let's figure out how to turn on showQueries.
-  and show the reltab JS
+and show the reltab JS
 
 Sort order messed up with null values in pivot column
 
@@ -270,9 +270,9 @@ in reltab-sqlite because it's attempting to install reltab from npm, even after 
 npm linked.
 
 Trying to remove:
-    "bootstrap": {
-      "ignore": "reltab-sqlite"
-    },
+"bootstrap": {
+"ignore": "reltab-sqlite"
+},
 
 from lerna.json (under "command") to see if it helps.
 
@@ -283,16 +283,12 @@ engine.
 =====
 22Jul21:
 
-To get working *right now*:
+To get working _right now_:
 
 [X] Open specific file in all when file given via command line
 [X] Show loading indicator during initial load
-[ ] Better loading indicator!
+[X] Better loading indicator!
 [X] Switch engine for tad-app to DuckDb
-
-What I probably want to figure out for a release:
-
-[ ] Multiple tabs
 
 23Jul21:
 
@@ -305,6 +301,20 @@ Specifically, need to deal with:
 
 [ ] Specifying a path to a sqlite db file
 [ ] Opening a Tad file
-[ ] Restore Quick Start guide / show quick start on first run
+[X] Restore Quick Start guide / show quick start on first run
+[ ] Verify that "Open Example" works from Quickstart guide
+[ ] Add multiple tab support
+[ ] Add option to open a file / table in a new tab or new window.
+[ ] Parquet file support
+[ ] compressed, gzipped file support
+[ ] Ability to save and open Tad files
+[ ] Ability to open directories with DuckDb import/export format
+[ ] Ability to open CSV / Parquet files directly from s3
+[ ] Test all the ways that Tad might be opened: Finder context menu, dragging on to app icon, etc.
+[ ] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
+[ ] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
 
-Probably want a way to specify (multiple) data sources and files to open on command line. 
+Probably want a way to specify (multiple) data sources and files to open on command line.
+
+Looks like electron-builder is making some bad assumptions about finding node dependencies
+directly in node_modules. Let's put off this part until everything else is done.
