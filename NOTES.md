@@ -299,12 +299,16 @@ of things that currently happen during initialization happen later.
 
 Specifically, need to deal with:
 
-[ ] Add multiple tab support
 [X] Restore Quick Start guide / show quick start on first run
 [ ] Verify that "Open Example" works from Quickstart guide
-[ ] Add option to open a file / table in a new tab or new window.
+[-] Add multiple tab support
+[ ] Fix tree open control to not accidentally replace a modified view.
+Options: replace current view, open in new window. File...Open should probably work
+the same
+[-] Add option to open a file / table in a new tab or new window.
 [ ] Parquet file support
 [ ] compressed, gzipped file support
+[ ] Ensure all menu actions (like export filtered CSV) work
 [ ] Ability to save and open Tad files
 [ ] Opening a Tad file
 [ ] Ability to open directories with DuckDb import/export format

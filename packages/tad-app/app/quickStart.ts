@@ -31,6 +31,11 @@ export const showQuickStart = () => {
     win = new BrowserWindow({
       width: 850,
       height: 600,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+        enableRemoteModule: true,
+      },
     });
     win.loadURL(
       url.format({
