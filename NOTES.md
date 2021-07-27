@@ -299,20 +299,27 @@ of things that currently happen during initialization happen later.
 
 Specifically, need to deal with:
 
-[ ] Specifying a path to a sqlite db file
-[ ] Opening a Tad file
+[ ] Add multiple tab support
 [X] Restore Quick Start guide / show quick start on first run
 [ ] Verify that "Open Example" works from Quickstart guide
-[ ] Add multiple tab support
 [ ] Add option to open a file / table in a new tab or new window.
 [ ] Parquet file support
 [ ] compressed, gzipped file support
 [ ] Ability to save and open Tad files
+[ ] Opening a Tad file
 [ ] Ability to open directories with DuckDb import/export format
 [ ] Ability to open CSV / Parquet files directly from s3
 [ ] Test all the ways that Tad might be opened: Finder context menu, dragging on to app icon, etc.
-[ ] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
-[ ] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
+[X] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
+[X] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
+[ ] Better naming for DuckDb in data source explorer tree
+[ ] Specifying a path to a sqlite db file
+[ ] Replace resize handler / ResizeObserver with Blueprint's React supporting one
+[ ] Reduce height of column selector to fit in standard window without scrolling
+[ ] tweak column widths in column selector to avoid overflow of column type
+[ ] test of column types. MetObjects.csv seems to have a TIMESTAMP
+[ ] Status bar in footer
+[ ] Query console
 
 Probably want a way to specify (multiple) data sources and files to open on command line.
 
