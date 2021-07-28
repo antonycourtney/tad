@@ -10,7 +10,7 @@ const ipcMain = electron.ipcMain;
 import fs from "fs";
 import log from "electron-log";
 import * as csvexport from "./csvexport";
-import reltab from "reltab";
+import * as reltab from "reltab";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -200,7 +200,6 @@ export const saveAsDialog = async () => {
   });
 };
 export const exportFiltered = async (win: BrowserWindow) => {
-  console.log("exportFiltered");
   const queryStr: string = await getFilterQuery(win);
   const req = reltab.deserializeQueryReq(queryStr);
   const { query, filterRowCount } = req;

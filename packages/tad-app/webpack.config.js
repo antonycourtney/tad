@@ -99,7 +99,7 @@ fs.readdirSync("node_modules")
 nodeModules["timer"] = "timer";
 
 var app = {
-  target: "electron-renderer",
+  target: "electron-main",
   entry: {
     main: "./app/main.ts",
   },

@@ -1,12 +1,9 @@
-import reltab from "reltab";
-import reltabSqlite from "reltab-sqlite";
-
-import csv from "fast-csv";
-
-import fs from "fs";
+import * as reltab from "reltab";
+import * as reltabSqlite from "reltab-sqlite";
+import * as csv from "fast-csv";
+import * as fs from "fs";
+import * as reltabDuckDB from "reltab-duckdb";
 import { BrowserWindow } from "electron";
-
-declare var appRtc: reltabSqlite.SqliteContext;
 
 // maximum number of items outstanding before pause and commit:
 // Some studies of sqlite found this number about optimal
@@ -28,6 +25,8 @@ export const exportAs = async (
   });
   const writableStream = fs.createWriteStream(saveFilename);
   csvStream.pipe(writableStream);
+  const appRtc = (global as any).appRtc as reltabDuckDB.DuckDBContext;
+
   const schema = await appRtc.getSchema(query); // Map entries in a row object to array of [displayName, value] pairs
 
   const mapRow = (row: reltab.Row) => {

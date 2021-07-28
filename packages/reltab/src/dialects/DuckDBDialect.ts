@@ -2,7 +2,7 @@ import { ColumnType, CoreColumnTypes, ColumnTypeMap } from "../ColumnType";
 import { BaseSQLDialect } from "../BaseSQLDialect";
 
 const intCT = new ColumnType("INTEGER", "integer");
-const realCT = new ColumnType("REAL", "real");
+const realCT = new ColumnType("DOUBLE", "real");
 const textCT = new ColumnType("VARCHAR", "string");
 
 export class DuckDBDialectClass extends BaseSQLDialect {
@@ -19,6 +19,7 @@ export class DuckDBDialectClass extends BaseSQLDialect {
   readonly columnTypes: ColumnTypeMap = {
     INTEGER: intCT,
     BIGINT: intCT,
+    DOUBLE: realCT,
     REAL: realCT,
     TEXT: textCT,
     VARCHAR: textCT,

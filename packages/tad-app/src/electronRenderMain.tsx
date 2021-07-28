@@ -1,6 +1,7 @@
 /*
  * main module for render process
  */
+import "source-map-support/register";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import OneRef, { mkRef, refContainer, mutableGet } from "oneref";
@@ -142,12 +143,11 @@ const init = async () => {
     ipcRenderer.on("set-show-hidden-cols", (event, val) => {
       actions.setShowHiddenCols(val, stateRef);
     });
-    /*
     ipcRenderer.on("request-serialize-filter-query", (event, req) => {
       console.log("got request-serialize-filter-query: ", req);
       const { requestId } = req;
       const curState = mutableGet(stateRef);
-      const baseQuery = curState.baseQuery;
+      const baseQuery = curState.viewState.baseQuery;
       const viewParams = curState.viewState.viewParams;
       const filterRowCount = curState.viewState.queryView!.filterRowCount;
       const queryObj = {
@@ -160,7 +160,6 @@ const init = async () => {
         contents,
       });
     });
-    */
     ipcRenderer.on("open-export-dialog", (event, req) => {
       const { openState, saveFilename } = req;
       actions.setExportDialogOpen(openState, saveFilename, stateRef);

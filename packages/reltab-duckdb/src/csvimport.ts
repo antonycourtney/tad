@@ -42,27 +42,33 @@ const genTableName = (pathname: string): string => {
 /**
  * Native import using DuckDB's built-in import facilities.
  */
-export const nativeCSVImport = async (db: DuckDB, filePath: string): Promise<string>  => {
+export const nativeCSVImport = async (
+  db: DuckDB,
+  filePath: string
+): Promise<string> => {
   const importStart = process.hrtime();
 
   const dbConn = new Connection(db);
   const tableName = genTableName(filePath);
-  const query = 
-`CREATE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}')`;
+  const query = `CREATE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}')`;
   // console.log('nativeCSVImport: executing: ', query);
   try {
-  const resObj = await dbConn.executeIterator(query);
-  const resRows = resObj.fetchAllRows() as any[];
-  // console.log('nativeCSVImport: result: ', resRows[0]);
-  const info = resRows[0];
-  // console.log('info.Count: \"' + info.Count + '\", type: ', typeof info.Count);
+    const resObj = await dbConn.executeIterator(query);
+    const resRows = resObj.fetchAllRows() as any[];
+    // console.log('nativeCSVImport: result: ', resRows[0]);
+    const info = resRows[0];
+    // console.log('info.Count: \"' + info.Count + '\", type: ', typeof info.Count);
   } catch (err) {
-    console.log('caught exception while importing: ', err);
+    console.log("caught exception while importing: ", err);
   } finally {
     dbConn.close();
   }
   const [es, ens] = process.hrtime(importStart);
-  console.log("fastImport: import completed in %ds %dms", es, ens / 1e6);
+  console.log(
+    "DuckDB nativeCSVImport: import completed in %ds %dms",
+    es,
+    ens / 1e6
+  );
 
   return tableName;
 };

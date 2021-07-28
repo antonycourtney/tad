@@ -302,31 +302,32 @@ have time to address, and isn't worth not releasing.
 
 [X] Restore Quick Start guide / show quick start on first run
 [X] Verify that "Open Example" works from Quickstart guide
-[-] Add multiple tab support
+[X] Ensure all menu actions (like export filtered CSV) work
 [ ] Fix tree open control to not accidentally replace a modified view.
 Options: replace current view, open in new window. File...Open should probably work
 the same
-[-] Add option to open a file / table in a new tab or new window.
+[ ] Status bar in footer
+[ ] Query console
 [ ] Parquet file support
 [ ] compressed, gzipped file support
-[ ] Ensure all menu actions (like export filtered CSV) work
 [ ] Ability to save and open Tad files
 [ ] Opening a Tad file
+[ ] Get rid of BigQuery support by default -- ~/tad.conf.json
 [ ] Ability to open directories with DuckDb import/export format
 [ ] Ability to open CSV / Parquet files directly from s3
 [ ] Test all the ways that Tad might be opened: Finder context menu, dragging on to app icon, etc.
-[X] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
-[X] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
 [ ] Better naming for DuckDb in data source explorer tree
 [ ] Specifying a path to a sqlite db file
-[X] Replace resize handler / ResizeObserver with Blueprint's React supporting one
 [ ] Reduce height of column selector to fit in standard window without scrolling
 [ ] tweak column widths in column selector to avoid overflow of column type
 [ ] test of column types. MetObjects.csv seems to have a TIMESTAMP
-[ ] Status bar in footer
-[ ] Query console
 [ ] Verify that tad command line utility works for launching tad
 [ ] Check that all command-line arguments work as advertised
+[X] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
+[X] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
+[X] Replace resize handler / ResizeObserver with Blueprint's React supporting one
+[-] Add multiple tab support
+[-] Add option to open a file / table in a new tab or new window.
 
 Probably want a way to specify (multiple) data sources and files to open on command line.
 

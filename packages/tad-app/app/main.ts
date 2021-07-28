@@ -1,3 +1,4 @@
+import "source-map-support/register";
 import commandLineArgs from "command-line-args";
 import getUsage from "command-line-usage";
 import log from "electron-log";

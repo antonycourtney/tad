@@ -353,12 +353,14 @@ const getGridCols = (gs: GridState, viewState: ViewState) => {
 const updateGrid = (gs: GridState, viewState: ViewState) => {
   const { viewParams, dataView } = viewState;
   if (dataView == null) return;
+  /*
   console.log(
     "updateGrid: dataView: offset: ",
     dataView.getOffset(),
     "length: ",
     dataView.getLength()
   );
+  */
   gs.slickColMap = mkSlickColMap(dataView.schema, viewParams, gs.colWidthsMap!);
   const gridCols = getGridCols(gs, viewState);
 
@@ -405,7 +407,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   const viewStateRef = useRef<ViewState>(viewState);
 
   viewStateRef.current = viewState;
-  log.debug("RawGridPane: ", appState.toJS(), viewState.toJS());
+  // log.debug("RawGridPane: ", appState.toJS(), viewState.toJS());
 
   React.useEffect(() => {
     let gs = gridState;
@@ -418,13 +420,13 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
       gs.grid.resizeCanvas();
       setGridState(gs);
     }
-    log.debug("GridPane effect: ", prevDataView, dataView);
+    // log.debug("GridPane effect: ", prevDataView, dataView);
     if (dataView !== prevDataView && dataView != null) {
-      log.debug("RawGridPane: updating grid");
+      // log.debug("RawGridPane: updating grid");
       updateGrid(gs, viewStateRef.current);
       setPrevDataView(dataView);
     } else {
-      log.debug("RawGridPane: no view change, skipping grid update");
+      // log.debug("RawGridPane: no view change, skipping grid update");
     }
   });
 
