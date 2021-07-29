@@ -4,6 +4,7 @@ import { BaseSQLDialect } from "../BaseSQLDialect";
 const intCT = new ColumnType("INTEGER", "integer");
 const realCT = new ColumnType("DOUBLE", "real");
 const textCT = new ColumnType("VARCHAR", "string");
+const timestampCT = new ColumnType("TIMESTAMP", "timestamp");
 
 export class DuckDBDialectClass extends BaseSQLDialect {
   private static instance: DuckDBDialectClass;
@@ -21,7 +22,9 @@ export class DuckDBDialectClass extends BaseSQLDialect {
     BIGINT: intCT,
     DOUBLE: realCT,
     REAL: realCT,
+    FLOAT: realCT,
     TEXT: textCT,
+    TIMESTAMP: timestampCT,
     VARCHAR: textCT,
   };
 

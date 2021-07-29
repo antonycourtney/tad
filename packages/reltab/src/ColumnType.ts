@@ -17,6 +17,8 @@ export const defaultAggForKind = (kind: ColumnKind): AggFn => {
     case "string":
     case "boolean":
     case "date":
+    case "time":
+    case "timestamp":
       return "uniq";
     case "integer":
     case "real":

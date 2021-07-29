@@ -139,7 +139,6 @@ const init = async () => {
       } else if (fileType === "parquet") {
         tableName = await importParquet(targetPath);
       }
-      actions.stopAppLoadingTimer(stateRef);
 
       // TODO: really need a better way to construct these paths!
       // (And displayName is a mess here)
@@ -150,6 +149,7 @@ const init = async () => {
         ];
         await actions.openDataSourcePath(targetDSPath, stateRef);
       }
+      actions.stopAppLoadingTimer(stateRef);
     }
     ipcRenderer.on("request-serialize-app-state", (event, req) => {
       console.log("got request-serialize-app-state: ", req);
