@@ -25,6 +25,7 @@ const remote = electron.remote;
 const remoteInitMain = remote.getGlobal("initMain");
 const remoteErrorDialog = remote.getGlobal("errorDialog");
 const remoteImportCSV = remote.getGlobal("importCSV");
+const remoteImportParquet = remote.getGlobal("importParquet");
 
 const ipcRenderer = electron.ipcRenderer;
 
@@ -67,6 +68,19 @@ const importCSV = (targetPath: string): Promise<string> => {
   });
 };
 
+const importParquet = (targetPath: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    remoteImportParquet(targetPath, (err: any, tableName: string) => {
+      if (err) {
+        console.error("importParquet error: ", err);
+        reject(err);
+      } else {
+        resolve(tableName);
+      }
+    });
+  });
+};
+
 // TODO: figure out how to initialize based on saved views or different file / table names
 const init = async () => {
   const tStart = performance.now();
@@ -74,20 +88,24 @@ const init = async () => {
   // console.log("testing, testing, one two...");
   log.debug("Hello, Electron!");
   const openParams: any = (remote.getCurrentWindow() as any).openParams;
-  let targetPath: string = "";
+  let targetPath: string | null = null;
   let srcFile: string | null = null;
   let viewParams: ViewParams | null = null;
-  if (openParams.fileType === "csv") {
-    targetPath = openParams.targetPath;
-  } else if (openParams.fileType === "tad") {
-    const parsedFileState = JSON.parse(openParams.fileContents);
-    // This would be the right place to validate / migrate tadFileFormatVersion
-    const savedFileState = parsedFileState.contents;
-    targetPath = savedFileState.targetPath;
-    srcFile = openParams.srcFile;
-    viewParams = ViewParams.deserialize(savedFileState.viewParams);
+  const { fileType } = openParams;
+  switch (fileType) {
+    case "csv":
+    case "parquet":
+      targetPath = openParams.targetPath;
+      break;
+    case "tad":
+      const parsedFileState = JSON.parse(openParams.fileContents);
+      // This would be the right place to validate / migrate tadFileFormatVersion
+      const savedFileState = parsedFileState.contents;
+      targetPath = savedFileState.targetPath;
+      srcFile = openParams.srcFile;
+      viewParams = ViewParams.deserialize(savedFileState.viewParams);
+      break;
   }
-
   const appState = new AppState();
   const stateRef = mkRef(appState);
   const [App, listenerId] = refContainer<AppState, AppPaneBaseProps>(
@@ -113,18 +131,26 @@ const init = async () => {
     log.debug("Time to initial render: ", (tRender - tStart) / 1000, " sec");
     pivotRequester = new PivotRequester(stateRef);
 
-    actions.startAppLoadingTimer(stateRef);
-    const tableName = await importCSV(targetPath);
-    actions.stopAppLoadingTimer(stateRef);
+    if (targetPath) {
+      let tableName: string | null = null;
+      actions.startAppLoadingTimer(stateRef);
+      if (fileType === "csv") {
+        tableName = await importCSV(targetPath);
+      } else if (fileType === "parquet") {
+        tableName = await importParquet(targetPath);
+      }
+      actions.stopAppLoadingTimer(stateRef);
 
-    // TODO: really need a better way to construct these paths!
-    // (And displayName is a mess here)
-    const targetDSPath: DataSourcePath = [
-      { kind: "Database", id: initInfo.connKey, displayName: tableName },
-      { kind: "Table", id: tableName, displayName: "tableName" },
-    ];
-    await actions.openDataSourcePath(targetDSPath, stateRef);
-
+      // TODO: really need a better way to construct these paths!
+      // (And displayName is a mess here)
+      if (tableName !== null) {
+        const targetDSPath: DataSourcePath = [
+          { kind: "Database", id: initInfo.connKey, displayName: tableName },
+          { kind: "Table", id: tableName, displayName: "tableName" },
+        ];
+        await actions.openDataSourcePath(targetDSPath, stateRef);
+      }
+    }
     ipcRenderer.on("request-serialize-app-state", (event, req) => {
       console.log("got request-serialize-app-state: ", req);
       const { requestId } = req;

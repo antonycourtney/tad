@@ -24,7 +24,10 @@ const POS_OFFSET = 25; // pixel offset of new windows
 // If we're opening a CSV file, we just pass the target path.
 // If we're opening a Tad workspace, we read its contents
 
-const encodeOpenParams = (targetPath: string | null): object => {
+const encodeOpenParams = (
+  targetPath: string | null,
+  forceParquetFile: boolean
+): object => {
   let openParams;
 
   if (targetPath && path.extname(targetPath) === ".tad") {
@@ -35,8 +38,17 @@ const encodeOpenParams = (targetPath: string | null): object => {
       fileContents,
     };
   } else {
+    let fileType: string;
+    if (
+      (targetPath && path.extname(targetPath) === ".parquet") ||
+      forceParquetFile
+    ) {
+      fileType = "parquet";
+    } else {
+      fileType = "csv";
+    }
     openParams = {
-      fileType: "csv",
+      fileType,
       targetPath,
     };
   }
@@ -44,7 +56,7 @@ const encodeOpenParams = (targetPath: string | null): object => {
   return openParams;
 };
 
-export const create = (targetPath: string | null) => {
+export const create = (targetPath: string | null, forcePaquetFile: boolean) => {
   const title = targetPath ? "Tad - " + path.basename(targetPath) : "Tad";
   let winProps = {
     width: 1280,
@@ -73,7 +85,7 @@ export const create = (targetPath: string | null) => {
     baseY = bounds.y;
   } // win.targetPath = targetPath
 
-  (win as any).openParams = encodeOpenParams(targetPath);
+  (win as any).openParams = encodeOpenParams(targetPath, forcePaquetFile);
   const targetUrl = url.format({
     pathname: path.join(__dirname, "index.html"),
     protocol: "file:",
@@ -108,6 +120,10 @@ export const openDialog = () => {
         extensions: ["csv"],
       },
       {
+        name: "Parquet files",
+        extensions: ["parquet"],
+      },
+      {
         name: "TSV files",
         extensions: ["tsv"],
       },
@@ -120,7 +136,7 @@ export const openDialog = () => {
 
   if (openPaths && openPaths.length > 0) {
     const filePath = openPaths[0];
-    create(filePath);
+    create(filePath, false);
   }
 };
 let stateRequestId = 100;

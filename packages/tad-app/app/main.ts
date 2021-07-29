@@ -146,6 +146,24 @@ const importCSV = async (targetPath: string): Promise<string> => {
   return tableName;
 };
 
+/*
+ * Remotable function to import a CSV file
+ */
+const importParquet = async (targetPath: string): Promise<string> => {
+  let pathname = targetPath;
+
+  // check if pathname exists
+  if (!fs.existsSync(pathname)) {
+    let msg = '"' + pathname + '": file not found.';
+    throw new Error(msg);
+  }
+
+  const ctx = (global as any).appRtc as reltabDuckDB.DuckDBContext;
+  const tableName = await reltabDuckDB.nativeParquetImport(ctx.db, targetPath);
+
+  return tableName;
+};
+
 const importCSVSqlite = async (targetPath: string): Promise<string> => {
   let pathname = targetPath;
 
@@ -275,10 +293,20 @@ const remotableImportCSV = (
     .catch((err) => cb(err, null));
 };
 
+const remotableImportParquet = (
+  targetPath: string,
+  cb: (res: any, err: any) => void
+) => {
+  importParquet(targetPath)
+    .then((tableName) => cb(null, tableName))
+    .catch((err) => cb(err, null));
+};
+
 const appInit = (options: any) => {
   // log.log('appInit: ', options)
   (global as any).initMain = mkInitMain(options);
   (global as any).importCSV = remotableImportCSV;
+  (global as any).importParquet = remotableImportParquet;
   (global as any).errorDialog = errorDialog;
   appMenu.createMenu(); // log.log('appInit: done')
 };
@@ -290,16 +318,15 @@ const optionDefinitions = [
     defaultOption: true,
     typeLabel:
       "{underline file}.csv or {underline file}.tad or sqlite://{underline file}/{underline table}",
-    description: "CSV file(.csv with header row), Tad(.tad) file, or to view",
+    description:
+      "CSV file(.csv with header row), Tad(.tad) file, Parquet file or sqlite file to view",
   },
-  /*  {
+  {
     name: "parquet",
-    type: String,
-    typeLabel:
-      "{underline path}",
-    description: "Path to Parquet file to view",
+    type: Boolean,
+    typeLabel: "{underline path}",
+    description: "Interpret source path as a Parquet file",
   },
-*/
   {
     name: "executed-from",
     type: String,
@@ -350,6 +377,8 @@ const usageInfo = [
       "$ tad [{italic options}] {underline file}.csv",
       "$ tad [{italic options}] {underline file}.tad",
       "$ tad [{italic options}] sqlite://{underline /path/to/sqlite-file}/{underline table}",
+      "$ tad [{italic options}] {underline file}.parquet",
+      "$ tad [{italic options}] --parquet {underline path}",
     ],
   },
   {
@@ -411,7 +440,7 @@ const getTargetPath = (
   console.log("appPath: ", appPath);
   const appDir = process.defaultApp ? appPath : path.dirname(appPath);
   const exampleFilePath = path.join(appDir, "examples", "movie_metadata.csv");
-  appWindow.create(exampleFilePath);
+  appWindow.create(exampleFilePath, false);
 };
 
 let openFilePath: string | null = null;
@@ -481,9 +510,8 @@ const initApp =
           targetPath
         );
 
-        let isReady = false; // This method will be called when Electron has finished
-        // initialization and is ready to create browser windows.
-        // Some APIs can only be used after this event occurs.
+        // Set in "ready" event handler:
+        let isReady = false;
 
         if (firstInstance) {
           const handleOpen = (event: electron.Event, filePath: string) => {
@@ -494,7 +522,7 @@ const initApp =
 
             if (isReady) {
               log.warn("open-file: app is ready, opening in new window");
-              appWindow.create(targetPath);
+              appWindow.create(targetPath, options.parquet);
             } else {
               openFilePath = targetPath;
               log.warn("open-file: set openFilePath " + targetPath);
@@ -526,6 +554,10 @@ const initApp =
             // On OS X it's common to re-create a window in the app when the
             // dock icon is clicked and there are no other windows open.
           });
+
+          // This method will be called when Electron has finished
+          // initialization and is ready to create browser windows.
+          // Some APIs can only be used after this event occurs.
           app.on("ready", () => {
             // const startMsg = `pid ${process.pid}: Tad started, version: ${app.getVersion()}`
             // log.log(startMsg)
@@ -533,7 +565,7 @@ const initApp =
             appInit(options);
 
             if (targetPath) {
-              appWindow.create(targetPath);
+              appWindow.create(targetPath, options.parquet);
             }
 
             if (showQuickStart) {
@@ -543,7 +575,7 @@ const initApp =
             if (openFilePath) {
               const openMsg = `pid ${process.pid}: Got open-file for ${openFilePath}`;
               log.warn(openMsg);
-              appWindow.create(openFilePath); // dialog.showMessageBox({ message: openMsg })
+              appWindow.create(openFilePath, false); // dialog.showMessageBox({ message: openMsg })
             } else {
               if (!targetPath && !awaitingOpenEvent) {
                 app.focus();
@@ -555,7 +587,7 @@ const initApp =
           });
         } else {
           if (targetPath) {
-            appWindow.create(targetPath);
+            appWindow.create(targetPath, options.parquet);
           } else {
             log.warn("initApp called with no targetPath");
             app.focus();

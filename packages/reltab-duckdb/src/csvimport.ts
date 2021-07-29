@@ -72,3 +72,36 @@ export const nativeCSVImport = async (
 
   return tableName;
 };
+
+/**
+ * Native import using DuckDB's built-in import facilities.
+ */
+export const nativeParquetImport = async (
+  db: DuckDB,
+  filePath: string
+): Promise<string> => {
+  const importStart = process.hrtime();
+
+  const dbConn = new Connection(db);
+  const tableName = genTableName(filePath);
+  const query = `CREATE TABLE ${tableName} AS SELECT * FROM parquet_scan('${filePath}')`;
+  try {
+    const resObj = await dbConn.executeIterator(query);
+    const resRows = resObj.fetchAllRows() as any[];
+    // console.log('nativeParquetImport: result: ', resRows[0]);
+    const info = resRows[0];
+    // console.log('info.Count: \"' + info.Count + '\", type: ', typeof info.Count);
+  } catch (err) {
+    console.log("caught exception while importing: ", err);
+  } finally {
+    dbConn.close();
+  }
+  const [es, ens] = process.hrtime(importStart);
+  console.log(
+    "DuckDB nativeParquetImport: import completed in %ds %dms",
+    es,
+    ens / 1e6
+  );
+
+  return tableName;
+};

@@ -308,8 +308,9 @@ Options: replace current view, open in new window. File...Open should probably w
 the same
 [ ] Status bar in footer
 [ ] Query console
-[ ] Parquet file support
-[ ] compressed, gzipped file support
+[X] Parquet file support: --parquet argument
+[X] Parquet file support: .parquet suffix
+[ ] compressed, gzipped CSV file support
 [ ] Ability to save and open Tad files
 [ ] Opening a Tad file
 [ ] Get rid of BigQuery support by default -- ~/tad.conf.json
