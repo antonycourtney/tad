@@ -1,5 +1,5 @@
 import "source-map-support/register";
-import commandLineArgs from "command-line-args";
+import commandLineArgs, { CommandLineOptions } from "command-line-args";
 import getUsage from "command-line-usage";
 import log from "electron-log";
 import * as logLevel from "loglevel";
@@ -289,9 +289,17 @@ const optionDefinitions = [
     type: String,
     defaultOption: true,
     typeLabel:
-      "[underline]{file}.csv or [underline]{file}.tad or sqlite://[underline]{file}/[underline]{table}",
-    description: "CSV file(.csv with header row), Tad(.tad) file to view",
+      "{underline file}.csv or {underline file}.tad or sqlite://{underline file}/{underline table}",
+    description: "CSV file(.csv with header row), Tad(.tad) file, or to view",
   },
+  /*  {
+    name: "parquet",
+    type: String,
+    typeLabel:
+      "{underline path}",
+    description: "Path to Parquet file to view",
+  },
+*/
   {
     name: "executed-from",
     type: String,
@@ -339,9 +347,9 @@ const usageInfo = [
   {
     header: "Synopsis",
     content: [
-      "$ tad [[italic]{options}] [underline]{file}.csv",
-      "$ tad [[italic]{options}] [underline]{file}.tad",
-      "$ tad [[italic]{options}] sqlite://[underline]{/path/to/sqlite-file}/[underline]{table}",
+      "$ tad [{italic options}] {underline file}.csv",
+      "$ tad [{italic options}] {underline file}.tad",
+      "$ tad [{italic options}] sqlite://{underline /path/to/sqlite-file}/{underline table}",
     ],
   },
   {
@@ -352,12 +360,12 @@ const usageInfo = [
 
 const showVersion = () => {
   const version = pkgInfo.version;
-  log.log(version);
+  console.log(version);
 };
 
 const showUsage = () => {
   const usage = getUsage(usageInfo);
-  log.log(usage);
+  console.log(usage);
 };
 
 const reportFatalError = (msg: string) => {
@@ -414,7 +422,8 @@ const initApp =
   (instanceArgv: string[], workingDirectory: string | null) => {
     try {
       let argv = instanceArgv.slice(1);
-      let awaitingOpenEvent = false; // macOS OpenWith peculiarity
+      let awaitingOpenEvent = false;
+      // macOS OpenWith peculiarity
       // Using context menu on Windows results in invoking .exe with
       // just the filename as argument, no directory passed in and
       // no shell wrapper, hence the check for argv.length > 1 here.
@@ -441,9 +450,15 @@ const initApp =
         awaitingOpenEvent = true;
       }
 
-      const options = commandLineArgs(optionDefinitions, {
-        argv,
-      });
+      let options: CommandLineOptions;
+      try {
+        options = commandLineArgs(optionDefinitions, {
+          argv,
+        });
+      } catch (argErr) {
+        console.error("Error parsing command line arguments: ", argErr.message);
+        options = { help: true };
+      }
       let quickExit = false;
 
       if (options.help) {
@@ -563,7 +578,8 @@ const main = () => {
   }
 
   log.warn("Tad started, argv: ", process.argv);
-  const shouldQuit = false; //  const shouldQuit = app.makeSingleInstance(initApp(false))
+  const shouldQuit = false;
+  //  const shouldQuit = app.makeSingleInstance(initApp(false))
   //  log.warn('After call to makeSingleInstance: ', shouldQuit)
 
   if (shouldQuit) {
