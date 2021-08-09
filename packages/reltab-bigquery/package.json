@@ -25,13 +25,13 @@
     "@google-cloud/bigquery": "4.7.0"
   },
   "devDependencies": {
-    "@types/jest": "^25.2.1",
-    "@types/node": "^13.11.0",
-    "jest": "^25.2.7",
+    "@types/jest": "^25.2.3",
+    "@types/node": "^13.13.52",
+    "jest": "^25.5.4",
     "mkdirp": "^1.0.4",
-    "prettier": "^2.0.2",
-    "ts-jest": "^25.3.1",
-    "typescript": "^3.8.3",
+    "prettier": "^2.3.2",
+    "ts-jest": "^25.5.1",
+    "typescript": "^3.9.10",
     "console.table": "^0.10.0",
     "aggtree": "^0.10.0"
   }

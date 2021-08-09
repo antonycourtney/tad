@@ -19,12 +19,12 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "@types/sqlite3": "^3.1.6",
+    "@types/sqlite3": "^3.1.7",
     "@types/through": "0.0.30",
     "byline": "^5.0.0",
     "csv-sniffer": "^0.1.1",
     "fast-csv": "^4.3.6",
-    "gauge": "^3.0.0",
+    "gauge": "^3.0.1",
     "loglevel": "^1.7.1",
     "reltab": "^0.10.0",
     "sqlite3": "git+https://github.com/antonycourtney/node-sqlite3.git",
@@ -32,13 +32,13 @@
     "typed-promisify": "^0.4.0"
   },
   "devDependencies": {
-    "@types/byline": "^4.2.31",
-    "@types/jest": "^25.2.1",
-    "@types/node": "^13.11.0",
-    "jest": "^25.2.7",
+    "@types/byline": "^4.2.33",
+    "@types/jest": "^25.2.3",
+    "@types/node": "^13.13.52",
+    "jest": "^25.5.4",
     "mkdirp": "^1.0.4",
-    "prettier": "^2.0.2",
-    "ts-jest": "^25.3.1",
-    "typescript": "^3.8.3"
+    "prettier": "^2.3.2",
+    "ts-jest": "^25.5.1",
+    "typescript": "^3.9.10"
   }
 }
