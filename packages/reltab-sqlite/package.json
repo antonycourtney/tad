@@ -25,7 +25,7 @@
     "csv-sniffer": "^0.1.1",
     "fast-csv": "^4.3.6",
     "gauge": "^3.0.0",
-    "loglevel": "^1.6.8",
+    "loglevel": "^1.7.1",
     "reltab": "^0.10.0",
     "sqlite3": "git+https://github.com/antonycourtney/node-sqlite3.git",
     "through": "^2.3.8",

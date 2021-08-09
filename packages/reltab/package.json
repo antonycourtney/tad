@@ -20,7 +20,7 @@
   "dependencies": {
     "@types/serialize-error": "^4.0.1",
     "lodash": "^4.17.15",
-    "loglevel": "^1.6.8",
+    "loglevel": "^1.7.1",
     "serialize-error": "^7.0.1"
   },
   "devDependencies": {

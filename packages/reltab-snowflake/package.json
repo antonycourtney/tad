@@ -20,7 +20,7 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "loglevel": "^1.6.8",
+    "loglevel": "^1.7.1",
     "reltab": "^0.10.0",
     "snowflake-sdk": "^1.5.3"
   },

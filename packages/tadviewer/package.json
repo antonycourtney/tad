@@ -31,7 +31,7 @@
     "he": "^1.2.0",
     "immutable": "^3.8.2",
     "lodash": "^4.17.15",
-    "loglevel": "^1.6.8",
+    "loglevel": "^1.7.1",
     "oneref": "^0.7.0",
     "react-dnd": "^10.0.2",
     "react-dnd-html5-backend": "^10.0.2",
