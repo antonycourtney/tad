@@ -31,26 +31,54 @@ function config(nodeEnv) {
         },
         {
           test: /\.less$/,
-          loader: "style-loader!css-loader!less-loader",
+          use: ["style-loader", "css-loader", "less-loader"],
         },
         {
           test: /\.scss$/,
-          loader: "style-loader!css-loader!resolve-url-loader!sass-loader",
+          use: [
+            "style-loader",
+            "css-loader",
+            "resolve-url-loader",
+            "sass-loader",
+          ],
         },
         {
           test: /\.css$/,
-          loader: "style-loader!css-loader",
+          use: ["style-loader", "css-loader"],
         },
         {
           test: /\.(jpe?g|png|gif|svg)$/i,
-          loaders: [
-            "file-loader?hash=sha512&digest=hex&name=[hash].[ext]",
-            "image-webpack-loader?bypassOnDebug&optipng.optimizationLevel=7&gifsicle.interlaced=false",
+          use: [
+            {
+              loader: "file-loader",
+              options: {
+                hash: "sha512",
+                digest: "hex",
+                name: "[hash].[ext]",
+              },
+            },
+            {
+              loader: "image-webpack-loader",
+              options: {
+                bypassOnDebug: true,
+                optipng: {
+                  optimizationLevel: 7,
+                },
+                gifsicle: {
+                  interlaced: false,
+                },
+              },
+            },
           ],
         },
         {
           test: /\.(eot|svg|ttf|woff|woff2)$/,
-          loader: "file-loader?name=public/fonts/[name].[ext]",
+          use: {
+            loader: "file-loader",
+            options: {
+              name: "public/fonts/[name].[ext]",
+            },
+          },
         },
       ],
     },
@@ -76,7 +104,6 @@ function development() {
 
 function production() {
   var prod = config("production");
-  prod.plugins.push(new webpack.optimize.OccurrenceOrderPlugin(true));
   prod.optimization.minimize = true;
   return prod;
 }
@@ -104,13 +131,13 @@ function merge(config, env) {
 }
 
 const configMap = {
-  dev: [
+  development: [
     merge(
       webRender,
       development()
     ) /* merge(render, development()), merge(app, development()) */,
   ],
-  prod: [
+  production: [
     merge(
       webRender,
       production()
@@ -118,9 +145,13 @@ const configMap = {
   ],
 };
 
-module.exports = function (env) {
-  if (!env) {
-    env = "dev";
+module.exports = function (env, argv) {
+  let mode;
+  if (!argv || !argv.mode) {
+    mode = "development";
+  } else {
+    mode = argv.mode;
   }
-  return configMap[env];
+  let conf = configMap[mode];
+  return conf;
 };

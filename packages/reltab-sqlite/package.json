@@ -33,12 +33,12 @@
   },
   "devDependencies": {
     "@types/byline": "^4.2.33",
-    "@types/jest": "^25.2.3",
-    "@types/node": "^13.13.52",
-    "jest": "^25.5.4",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.4.13",
+    "jest": "^27.0.6",
     "mkdirp": "^1.0.4",
     "prettier": "^2.3.2",
-    "ts-jest": "^25.5.1",
-    "typescript": "^3.9.10"
+    "ts-jest": "^27.0.4",
+    "typescript": "^3.9.4"
   }
 }

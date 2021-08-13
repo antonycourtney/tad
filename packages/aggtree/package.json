@@ -20,14 +20,14 @@
     "reltab-sqlite": "^0.10.0"
   },
   "devDependencies": {
-    "@types/jest": "^25.2.3",
-    "@types/node": "^13.13.52",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.4.13",
     "babel-plugin-flow-to-typescript": "^0.6.0",
-    "jest": "^25.5.4",
+    "jest": "^27.0.6",
     "mkdirp": "^1.0.4",
     "prettier": "^2.3.2",
-    "ts-jest": "^25.5.1",
-    "typescript": "^3.9.10"
+    "ts-jest": "^27.0.4",
+    "typescript": "^3.9.4"
   },
   "repository": {
     "type": "git",

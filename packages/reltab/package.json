@@ -21,14 +21,14 @@
     "@types/serialize-error": "^4.0.1",
     "lodash": "^4.17.21",
     "loglevel": "^1.7.1",
-    "serialize-error": "^7.0.1"
+    "serialize-error": "^8.1.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.172",
-    "@types/jest": "^25.2.3",
-    "jest": "^25.5.4",
+    "@types/jest": "^26.0.24",
+    "jest": "^27.0.6",
     "mkdirp": "^1.0.4",
-    "ts-jest": "^25.5.1",
-    "typescript": "^3.9.10"
+    "ts-jest": "^27.0.4",
+    "typescript": "^3.9.4"
   }
 }

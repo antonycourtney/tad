@@ -4,9 +4,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import OneRef, { mkRef, refContainer } from "oneref";
-import { AppPane, AppPaneBaseProps } from "tadviewer";
-import { PivotRequester } from "tadviewer";
-import { AppState } from "tadviewer";
+import { AppState, AppPane, AppPaneBaseProps, PivotRequester } from "tadviewer";
 import { ViewParams } from "tadviewer";
 import { initAppState } from "tadviewer";
 import * as reltab from "reltab";
@@ -57,72 +55,12 @@ const init = async () => {
 
   const rtc = new RemoteReltabConnection(wtc);
 
-  console.log("before initAppState");
-
   var pivotRequester: PivotRequester | undefined | null = null;
 
   await initAppState(rtc, stateRef);
 
   ReactDOM.render(<App />, document.getElementById("app"));
 
-  console.log("before creating pivotRequester");
   pivotRequester = new PivotRequester(stateRef);
-
-  /*
-          ipcRenderer.on("request-serialize-app-state", (event, req) => {
-            console.log("got request-serialize-app-state: ", req);
-            const { requestId } = req;
-            const curState = stateRef.getValue();
-            const viewParamsJS = curState.viewState.viewParams.toJS();
-            const serState = {
-              targetPath,
-              viewParams: viewParamsJS,
-            };
-            console.log("current viewParams: ", viewParamsJS);
-            ipcRenderer.send("response-serialize-app-state", {
-              requestId,
-              contents: serState,
-            });
-          });
-          ipcRenderer.on("set-show-hidden-cols", (event, val) => {
-            actions.setShowHiddenCols(val, updater);
-          });
-          ipcRenderer.on("request-serialize-filter-query", (event, req) => {
-            console.log("got request-serialize-filter-query: ", req);
-            const { requestId } = req;
-            const curState = stateRef.getValue();
-            const baseQuery = curState.baseQuery;
-            const viewParams = curState.viewState.viewParams;
-            const filterRowCount = curState.viewState.queryView.filterRowCount;
-            const queryObj = {
-              query: baseQuery.filter(viewParams.filterExp),
-              filterRowCount,
-            };
-            const contents = JSON.stringify(queryObj, null, 2);
-            ipcRenderer.send("response-serialize-filter-query", {
-              requestId,
-              contents,
-            });
-          });
-          ipcRenderer.on("open-export-dialog", (event, req) => {
-            const { openState, saveFilename } = req;
-            actions.setExportDialogOpen(openState, saveFilename, updater);
-          });
-          ipcRenderer.on("export-progress", (event, req) => {
-            const { percentComplete } = req;
-            actions.setExportProgress(percentComplete, updater);
-          });
-        });
-    })
-    .catch((err) => {
-      console.error(
-        "renderMain: caught error during initialization: ",
-        err.message,
-        err.stack
-      );
-      remoteErrorDialog("Error initializing Tad", err.message, true);
-    });
-  */
 };
-
 init();

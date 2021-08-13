@@ -306,6 +306,7 @@ have time to address, and isn't worth not releasing.
 [ ] Fix tree open control to not accidentally replace a modified view.
 Options: replace current view, open in new window. File...Open should probably work
 the same
+[ ] Smoke test select control for "in..." filter queries. Try one from Blueprint directly?
 [ ] Status bar in footer
 [ ] Query console
 [X] Parquet file support: --parquet argument
@@ -334,3 +335,7 @@ Probably want a way to specify (multiple) data sources and files to open on comm
 
 Looks like electron-builder is making some bad assumptions about finding node dependencies
 directly in node_modules. Let's put off this part until everything else is done.
+
+8Aug21:
+
+Trying to sort out an issue with webpack apparently creating multiple instances of loglevel module.

@@ -3,7 +3,7 @@ import { ActivityBar } from "./ActivityBar";
 import { PivotSidebar } from "./PivotSidebar";
 import { DataSourceSidebar } from "./DataSourceSidebar";
 import { DndProvider } from "react-dnd";
-import Backend from "react-dnd-html5-backend";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import {
   FocusStyleManager,
   Button,
@@ -74,11 +74,11 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     );
   } else {
     pivotSidebar = null;
-    centerPane = appState.appLoadingTimer.running ? <LoadingModal /> : null; 
+    centerPane = appState.appLoadingTimer.running ? <LoadingModal /> : null;
   }
   mainContents = (
     <div className="container-fluid full-height main-container">
-      <DndProvider backend={Backend}>
+      <DndProvider backend={HTML5Backend}>
         <ActivityBar
           activity={activity}
           setActivity={setActivity}

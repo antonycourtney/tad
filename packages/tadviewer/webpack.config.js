@@ -21,10 +21,18 @@ function config(nodeEnv) {
     output: {
       path: path.resolve(__dirname, "dist"),
       filename: "[name].js",
-      library: pkg.name,
       libraryTarget: "commonjs2",
+      /* Note!  Do NOT use the library target -- it will cause the top-level exports to be replaced
+         with a single "tadviewer" export.
+         See: https://github.com/webpack/webpack/issues/11800 for details
+      library: {
+        name: pkg.name,
+        export: "tadviewer",
+        type: "commonjs2",
+      },
+      */
     },
-    target: "node",
+    externalsPresets: { node: true }, // in order to ignore built-in modules like path, fs, etc.
     externals: [
       nodeExternals(),
       nodeExternals({ modulesDir: "../../node_modules" }),
@@ -43,42 +51,28 @@ function config(nodeEnv) {
         },
         {
           test: /\.less$/,
-          loader: "style-loader!css-loader!less-loader",
+          use: ["style-loader", "css-loader", "less-loader"],
         },
         {
           test: /\.scss$/,
-          loader: "style-loader!css-loader!resolve-url-loader!sass-loader",
+          use: [
+            "style-loader",
+            "css-loader",
+            "resolve-url-loader",
+            "sass-loader",
+          ],
         },
         {
           test: /\.css$/,
-          loader: "style-loader!css-loader",
+          use: ["style-loader", "css-loader"],
         },
         {
           test: /\.(jpe?g|png|gif|svg)$/i,
-          use: [
-            {
-              loader: "url-loader",
-              options: {
-                limit: 8000,
-                name: "[hash]-[name].[ext]",
-              },
-            },
-            {
-              loader:
-                "image-webpack-loader?bypassOnDebug&optipng.optimizationLevel=7&gifsicle.interlaced=false",
-            },
-          ],
+          type: "asset/inline",
         },
         {
           test: /\.(eot|svg|ttf|woff|woff2)$/,
-          use: [
-            {
-              loader: "url-loader",
-              options: {
-                name: "font-[name].[ext]",
-              },
-            },
-          ],
+          type: "asset/inline",
         },
       ],
     },
@@ -104,19 +98,22 @@ function development() {
 
 function production() {
   var prod = config("production");
-  prod.plugins.push(new webpack.optimize.OccurrenceOrderPlugin(true));
   prod.optimization.minimize = true;
   return prod;
 }
 
 const configMap = {
-  dev: [development()],
-  prod: [production()],
+  development: [development()],
+  production: [production()],
 };
 
-module.exports = function (env) {
-  if (!env) {
-    env = "dev";
+module.exports = function (env, argv) {
+  let mode;
+  if (!argv || !argv.mode) {
+    mode = "development";
+  } else {
+    mode = argv.mode;
   }
-  return configMap[env];
+  let conf = configMap[mode];
+  return conf;
 };
