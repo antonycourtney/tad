@@ -95,7 +95,10 @@ const initMainAsync = async (options: any) => {
     rtOptions.showQueries = true;
     // *sigh*: This doesn't seem to propapagate to reltab-sqlite...npm duplication issue?
     logLevel.setLevel(logLevel.levels.INFO);
-    log.info("initMainAsync: set log level to INFO");
+    logLevel.getLogger("wtftest");
+    log.info("initMainAsync: set log level to INFO -- ", logLevel.levels.INFO);
+    log.info("getLevel returns: ", logLevel.getLevel());
+    console.log("all loggers: ", Object.keys(logLevel.getLoggers()));
   }
 
   await initBigquery();

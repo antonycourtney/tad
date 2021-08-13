@@ -131,9 +131,8 @@ class WebTransportServer implements TransportServer {
     functionName: string,
     encodedReq: string
   ): Promise<string> {
-    const handler: EncodedRequestHandler | undefined = this.handlers[
-      functionName
-    ];
+    const handler: EncodedRequestHandler | undefined =
+      this.handlers[functionName];
     if (handler !== null) {
       const retStr = handler(encodedReq);
       return retStr;
@@ -161,6 +160,10 @@ const handleInvoke = async (
 
 async function main() {
   log.setLevel(log.levels.INFO);
+  log.getLogger("wtftest");
+  log.info("main: set log level to INFO -- ", log.levels.INFO);
+  log.info("getLevel returns: ", log.getLevel());
+  console.log("all loggers: ", Object.keys(log.getLoggers()));
 
   await initBigquery();
   // await initSnowflake();

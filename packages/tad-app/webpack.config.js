@@ -3,6 +3,7 @@
 var webpack = require("webpack");
 var path = require("path");
 var fs = require("fs");
+var nodeExternals = require("webpack-node-externals");
 
 process.traceDeprecation = true;
 
@@ -115,22 +116,16 @@ var render = {
   },
 };
 
-var nodeModules = {};
-fs.readdirSync("node_modules")
-  .filter(function (x) {
-    return [".bin"].indexOf(x) === -1;
-  })
-  .forEach(function (mod) {
-    nodeModules[mod] = "commonjs " + mod;
-  });
-nodeModules["timer"] = "timer";
-
 var app = {
   target: "electron-main",
   entry: {
     main: "./app/main.ts",
   },
-  externals: nodeModules,
+  externalsPresets: { node: true }, // in order to ignore built-in modules like path, fs, etc.
+  externals: [
+    nodeExternals(),
+    nodeExternals({ modulesDir: "../../node_modules" }),
+  ],
   node: {
     __dirname: false,
     __filename: false,

@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "npm run build && node dist/server.js",
     "testClient": "node dist/testClient.js",
-    "test": ""
+    "test": "",
+    "pack": "webpack --mode development"
   },
   "keywords": [
     "relational",
