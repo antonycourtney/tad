@@ -93,12 +93,8 @@ const initMainAsync = async (options: any) => {
 
   if (options["show-queries"]) {
     rtOptions.showQueries = true;
-    // *sigh*: This doesn't seem to propapagate to reltab-sqlite...npm duplication issue?
     logLevel.setLevel(logLevel.levels.INFO);
-    logLevel.getLogger("wtftest");
-    log.info("initMainAsync: set log level to INFO -- ", logLevel.levels.INFO);
-    log.info("getLevel returns: ", logLevel.getLevel());
-    console.log("all loggers: ", Object.keys(logLevel.getLoggers()));
+    log.info("initMainAsync -- showQueries enabled, set log level to INFO");
   }
 
   await initBigquery();

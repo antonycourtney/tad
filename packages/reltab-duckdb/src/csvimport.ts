@@ -60,6 +60,20 @@ export const nativeCSVImport = async (
     // console.log('info.Count: \"' + info.Count + '\", type: ', typeof info.Count);
   } catch (err) {
     console.log("caught exception while importing: ", err);
+    console.log("retrying with SAMPLE_SIZE=-1:");
+    const noSampleQuery = `CREATE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}', sample_size=-1)`;
+    try {
+      const resObj = await dbConn.executeIterator(noSampleQuery);
+      const resRows = resObj.fetchAllRows() as any[];
+      // console.log('nativeCSVImport: result: ', resRows[0]);
+      const info = resRows[0];
+      console.log(
+        'nativeCSVImport: info.Count: "' + info.Count + '", type: ',
+        typeof info.Count
+      );
+    } catch (noSampleErr) {
+      console.log("caught exception with no sampling: ", noSampleErr);
+    }
   } finally {
     dbConn.close();
   }

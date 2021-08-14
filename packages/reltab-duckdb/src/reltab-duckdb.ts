@@ -68,11 +68,6 @@ const dbAll = async (dbConn: Connection, query: string): Promise<any> => {
   return resRows;
 };
 
-export function duckDbInstanceCheck() {
-  console.log("duckDbInstanceCheck log level: ", log.getLevel());
-  console.log("duckDbInstanceCheck loggers:", Object.keys(log.getLoggers()));
-}
-
 export class DuckDBContext implements DbConnection {
   readonly displayName: string;
   readonly connectionKey: DbConnectionKey;
@@ -136,8 +131,6 @@ export class DuckDBContext implements DbConnection {
     const [t1s, t1ns] = t1;
 
     const trueOptions = options ? options : defaultEvalQueryOptions;
-    console.log("DuckDB evalQuery: ", trueOptions.showQueries, log.getLevel());
-    console.log("DuckDb - all loggers: ", Object.keys(log.getLoggers()));
 
     if (trueOptions.showQueries) {
       // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
