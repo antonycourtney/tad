@@ -200,7 +200,7 @@ const init = async () => {
       err.message,
       err.stack
     );
-    // remoteErrorDialog("Error initializing Tad", err.message, true);
+    remoteErrorDialog("Error initializing Tad", err.message, true);
   }
 };
 console.log("before init");

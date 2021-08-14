@@ -4,6 +4,7 @@
  */
 
 import * as log from "loglevel";
+import * as prettyHRTime from "pretty-hrtime";
 import {
   DbConnection,
   DbConnectionKey,
@@ -39,9 +40,13 @@ const dbConnEvalQuery = async (
   const limit = req.limit ? req.limit : undefined;
   const options = req.options ? req.options : undefined;
   const qres = await conn.evalQuery(query, offset, limit, options);
-  const [es, ens] = process.hrtime(hrstart);
-  log.info("runQuery: evaluated query in %ds %dms", es, ens / 1e6);
-  const qresStr = JSON.stringify(qres, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2);
+  const elapsed = process.hrtime(hrstart);
+  log.info("runQuery: evaluated query in  ", prettyHRTime(elapsed));
+  const qresStr = JSON.stringify(
+    qres,
+    (_, v) => (typeof v === "bigint" ? v.toString() : v),
+    2
+  );
   return qres;
 };
 
@@ -52,8 +57,8 @@ const dbConnRowCount = async (
   const query = deserializeQueryReq(req.queryStr) as any;
   const hrstart = process.hrtime();
   const count = await conn.rowCount(query, req.options);
-  const [es, ens] = process.hrtime(hrstart);
-  log.info("rowCount: evaluated query in %ds %dms", es, ens / 1e6);
+  const elapsed = process.hrtime(hrstart);
+  log.info("rowCount: evaluated query in", prettyHRTime(elapsed));
   return count;
 };
 
@@ -64,8 +69,8 @@ const dbConnGetSourceInfo = async (
   const hrstart = process.hrtime();
   const { path } = req;
   const sourceInfo = await conn.getSourceInfo(path);
-  const [es, ens] = process.hrtime(hrstart);
-  log.info("dbGetSourceInfo: evaluated query in %ds %dms", es, ens / 1e6);
+  const elapsed = process.hrtime(hrstart);
+  log.info("dbGetSourceInfo: evaluated query in", prettyHRTime(elapsed));
   return sourceInfo;
 };
 
@@ -76,8 +81,8 @@ const dbConnGetTableInfo = async (
   const hrstart = process.hrtime();
   const { tableName } = req;
   const tableInfo = await conn.getTableInfo(tableName);
-  const [es, ens] = process.hrtime(hrstart);
-  log.info("dbGetTableInfo: evaluated query in %ds %dms", es, ens / 1e6);
+  const elapsed = process.hrtime(hrstart);
+  log.info("dbGetTableInfo: evaluated query in", prettyHRTime(elapsed));
   return tableInfo;
 };
 
@@ -174,17 +179,16 @@ interface GetDataSourcesResult {
 }
 
 async function getDataSources(): Promise<DataSourceNodeId[]> {
-  const nodeIds: Promise<DataSourceNodeId>[] = resolvedConnections.map(
-    connectionNodeId
-  );
+  const nodeIds: Promise<DataSourceNodeId>[] =
+    resolvedConnections.map(connectionNodeId);
   return Promise.all(nodeIds);
 }
 
 const handleGetDataSources = async (): Promise<GetDataSourcesResult> => {
   const hrstart = process.hrtime();
   const nodeIds = await getDataSources();
-  const [es, ens] = process.hrtime(hrstart);
-  log.info("getDataSources: evaluated in %ds %dms", es, ens / 1e6);
+  const elapsed = process.hrtime(hrstart);
+  log.info("getDataSources: evaluated in  ", prettyHRTime(elapsed));
   const resObj = {
     nodeIds,
   };
@@ -225,8 +229,8 @@ async function handleGetSourceInfo(
   const hrstart = process.hrtime();
   const { path } = req;
   const sourceInfo = await getSourceInfo(path);
-  const [es, ens] = process.hrtime(hrstart);
-  log.info("getSourceInfo: evaluated query in %ds %dms", es, ens / 1e6);
+  const elapsed = process.hrtime(hrstart);
+  log.info("getSourceInfo: evaluated query in", prettyHRTime(elapsed));
   const resObj = {
     sourceInfo,
   };
@@ -237,25 +241,29 @@ type AnyReqHandler = (req: any) => Promise<any>;
 
 type ResultReqHandler<T> = (req: any) => Promise<Result<T>>;
 
-const exceptionHandler = (hf: AnyReqHandler): ResultReqHandler<any> => async (
-  req: any
-) => {
-  try {
-    const value = await hf(req);
-    return { status: "Ok", value };
-  } catch (errVal) {
-    console.error("exceptionHandler caught error: ", errVal);
-    return { status: "Err", errVal: serializeError(errVal) };
-  }
-};
+const exceptionHandler =
+  (hf: AnyReqHandler): ResultReqHandler<any> =>
+  async (req: any) => {
+    try {
+      const value = await hf(req);
+      return { status: "Ok", value };
+    } catch (errVal) {
+      console.error("exceptionHandler caught error: ", errVal);
+      return { status: "Err", errVal: serializeError(errVal) };
+    }
+  };
 
-const simpleJSONHandler = (hf: AnyReqHandler): EncodedRequestHandler => async (
-  encodedReq: string
-): Promise<string> => {
-  const req = JSON.parse(encodedReq);
-  const resp = await hf(req);
-  return JSON.stringify(resp, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2);
-};
+const simpleJSONHandler =
+  (hf: AnyReqHandler): EncodedRequestHandler =>
+  async (encodedReq: string): Promise<string> => {
+    const req = JSON.parse(encodedReq);
+    const resp = await hf(req);
+    return JSON.stringify(
+      resp,
+      (_, v) => (typeof v === "bigint" ? v.toString() : v),
+      2
+    );
+  };
 
 export const serverInit = (ts: TransportServer) => {
   ts.registerInvokeHandler(

@@ -4,6 +4,7 @@
 
 import * as path from "path";
 import { Connection, DuckDB } from "node-duckdb";
+import * as prettyHRTime from "pretty-hrtime";
 
 let uniqMap: { [cid: string]: number } = {};
 
@@ -73,15 +74,15 @@ export const nativeCSVImport = async (
       );
     } catch (noSampleErr) {
       console.log("caught exception with no sampling: ", noSampleErr);
+      throw noSampleErr;
     }
   } finally {
     dbConn.close();
   }
-  const [es, ens] = process.hrtime(importStart);
+  const importTime = process.hrtime(importStart);
   console.log(
-    "DuckDB nativeCSVImport: import completed in %ds %dms",
-    es,
-    ens / 1e6
+    "DuckDB nativeCSVImport: import completed in ",
+    prettyHRTime(importTime)
   );
 
   return tableName;
