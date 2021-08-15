@@ -151,7 +151,7 @@ export class SqliteContext implements DbConnection {
     const qp = dbAll(this.db, tiQuery);
     return qp.then((dbRows) => {
       const rows = dbRows as Row[];
-      log.debug("getTableInfo: ", rows);
+      // log.debug("getTableInfo: ", rows);
 
       const extendCMap = (
         cmm: ColumnMetaMap,

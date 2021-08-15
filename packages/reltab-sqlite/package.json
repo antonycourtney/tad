@@ -27,7 +27,7 @@
     "gauge": "^3.0.1",
     "loglevel": "^1.7.1",
     "reltab": "^0.10.0",
-    "sqlite3": "git+https://github.com/antonycourtney/node-sqlite3.git",
+    "sqlite3": "^5.0.2",
     "through": "^2.3.8",
     "typed-promisify": "^0.4.0"
   },

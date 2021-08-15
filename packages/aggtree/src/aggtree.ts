@@ -302,7 +302,9 @@ export class VPivotTree {
       let joinKey = _.range(0, depth).map((j) => "_path" + j);
 
       jtq = jtq.join(sq, joinKey);
-    } // Now let's work out the sort key:
+    } 
+    
+    // Now let's work out the sort key:
     // potential opt: Eliminate if root not shown
 
     let tsortKey: [string, boolean][] = [["_isRoot", false]];

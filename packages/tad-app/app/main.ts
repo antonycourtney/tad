@@ -263,7 +263,7 @@ const initMainAsync = async (
     const md = await reltabSqlite.fastImport(rtc.db, pathname, {
       noHeaderRow,
     });
-    // const md = await csvimport.importSqlite(pathname, ',', { noHeaderRow })
+    // const md = await csvimport.streamCSVImport(pathname, ',', { noHeaderRow })
   }
 
   (global as any).appRtc = rtc;

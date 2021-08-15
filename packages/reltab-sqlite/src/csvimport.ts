@@ -108,30 +108,36 @@ export const mkTableInfo = (md: FileMetadata): TableInfo => {
  * We use the order int <: real <: text, and a guess will only become more general.
  * TODO: support various date formats
  */
-const guessColumnType = (numREs: { [tname: string]: RegExp }) => (
-  cg: ColumnType | null | undefined,
-  cs: string | null | undefined
-): ColumnType | null | undefined => {
-  if (cg === coreTypes.string) {
-    return cg; // already most general case
-  }
-  if (cs == null || cs.length === 0) {
-    return cg; // empty cells don't affect current guess
-  }
-  if (cg === null || coreTypes.integer) {
-    let match = numREs.intRE.exec(cs);
-    if (match !== null && match.index === 0 && match[0].length === cs.length) {
-      return coreTypes.integer;
+const guessColumnType =
+  (numREs: { [tname: string]: RegExp }) =>
+  (
+    cg: ColumnType | null | undefined,
+    cs: string | null | undefined
+  ): ColumnType | null | undefined => {
+    if (cg === coreTypes.string) {
+      return cg; // already most general case
     }
-  }
-  // assert: cg !== 'text
-  let match = numREs.realRE.exec(cs);
-  if (match !== null && match.index === 0 && match[0].length === cs.length) {
-    return coreTypes.real;
-  } else {
-    return coreTypes.string;
-  }
-};
+    if (cs == null || cs.length === 0) {
+      return cg; // empty cells don't affect current guess
+    }
+    if (cg === null || coreTypes.integer) {
+      let match = numREs.intRE.exec(cs);
+      if (
+        match !== null &&
+        match.index === 0 &&
+        match[0].length === cs.length
+      ) {
+        return coreTypes.integer;
+      }
+    }
+    // assert: cg !== 'text
+    let match = numREs.realRE.exec(cs);
+    if (match !== null && match.index === 0 && match[0].length === cs.length) {
+      return coreTypes.real;
+    } else {
+      return coreTypes.string;
+    }
+  };
 
 /**
  * prepare a raw value string for db insert based on column type
@@ -264,9 +270,9 @@ const metaScan = (
   options: ImportOpts
 ): Promise<FileMetadata> => {
   return new Promise((resolve, reject) => {
-    log.debug("starting metascan...");
+    // log.debug("starting metascan...");
     const pathStats = fs.statSync(pathname);
-    log.debug("file size: ", pathStats.size);
+    // log.debug("file size: ", pathStats.size);
     const msStart = process.hrtime();
     let firstRow = true;
     var colTypes: Array<ColumnType>;
@@ -324,15 +330,16 @@ const metaScan = (
       })
       .on("end", () => {
         // default any remaining null column types to text:
-        const columnTypes = colTypes.map((ct) =>
-          ct == null ? "text" : (ct as any)
+        const columnTypes = colTypes.map((ct) => ct ?? "text");
+        const columnTypeNameStrs = columnTypes.map(
+          (ct) => ct.sqlTypeName as string
         );
         const [es, ens] = process.hrtime(msStart);
-        log.info("metascan completed in %ds %dms", es, ens / 1e6);
+        log.debug("metascan completed in %ds %dms", es, ens / 1e6);
         resolve({
           columnIds,
           columnNames,
-          columnTypes,
+          columnTypes: columnTypeNameStrs,
           rowCount,
           tableName,
           csvOptions,
@@ -342,6 +349,10 @@ const metaScan = (
     pathStream.pipe(countStream).pipe(csvStream);
   });
 };
+
+/*
+ * A simplified import, since our more complex import is
+ */
 
 // maximum number of items outstanding before pause and commit:
 // Some studies of sqlite found this number about optimal
@@ -358,7 +369,6 @@ const BATCHSIZE = 10000;
 const consumeStream = (
   s: stream.Readable,
   wrf: (buf: any) => Promise<any>,
-  wrBatch: (isFinal: boolean) => Promise<any>,
   totalItems: number,
   skipFirst: boolean
 ): Promise<number> => {
@@ -366,6 +376,7 @@ const consumeStream = (
     let firstItem = true;
     let writeCount = 0;
     let readCount = 0;
+    let batchCount = 0;
     let inputDone = false;
     let paused = false;
     let gauge = new Gauge();
@@ -385,11 +396,13 @@ const consumeStream = (
       if (numOutstanding >= BATCHSIZE) {
         s.pause();
         paused = true;
-        wrBatch(inputDone);
+        batchCount = 0;
       }
       wrf(row)
         .then(() => {
+          // console.log("wrf completed writing one row");
           writeCount++;
+          batchCount++;
           const numOutstanding = readCount - writeCount;
           // We may want to use a low water mark rather than zero here
           if (paused && numOutstanding === 0) {
@@ -410,7 +423,7 @@ const consumeStream = (
           }
           if (inputDone && numOutstanding === 0) {
             gauge.hide();
-            wrBatch(inputDone);
+            batchCount = 0;
             resolve(writeCount);
           }
         })
@@ -423,7 +436,7 @@ const consumeStream = (
       if (writeCount === readCount) {
         // may have already written all read items
         gauge.hide();
-        wrBatch(inputDone);
+        batchCount = 0;
         resolve(writeCount);
       } else {
         // log.debug('consumeStream: readCount: ', readCount, ', writeCount: ', writeCount)
@@ -436,9 +449,51 @@ const consumeStream = (
 };
 
 const dbRun = tp.promisify(
-  (db: sqlite3.Database, query: string, cb: (err: any, res: any) => void) =>
+  (db: sqlite3.Database, query: string, cb: (res: any, err: any) => void) =>
     db.run(query, cb)
 );
+const dbRunStmt = tp.promisify(
+  (
+    db: sqlite3.Database,
+    query: string,
+    params: any[],
+    cb: (res: any, err: any) => void
+  ) => db.run(query, params, cb)
+);
+
+/*
+const stmtRun = tp.promisify(
+  (stmt: sqlite3.Statement, params: any[], cb: (res: any, err: any) => void) =>
+    stmt.run(...params, cb)
+);
+*/
+function stmtRun(stmt: sqlite3.Statement, params: any[]): Promise<any> {
+  return new Promise((resolve, reject) => {
+    stmt.run(params, (res: any, err: any) => {
+      console.log("stmt run callback: ", res, err);
+      if (res) {
+        resolve(res);
+      }
+      if (err) {
+        reject(err);
+      }
+    });
+  });
+}
+
+async function stmtRunWrap(
+  stmt: sqlite3.Statement,
+  params: any[]
+): Promise<any> {
+  console.log("stmtRunWrap: ", stmt, params);
+  try {
+    const ret = await stmtRun(stmt, params);
+    return ret;
+  } catch (err) {
+    console.error("caught error in stmtRun: ", err);
+    throw err;
+  }
+}
 
 /**
  * Use metadata to create and populate sqlite table from CSV data
@@ -465,24 +520,24 @@ const importData = async (
     const schemaStr = typedCols.join(", ");
     const createStmt = "create table " + qTableName + " ( " + schemaStr + " )";
 
-    const qs = Array(md.columnNames.length).fill("?");
-    const insertStmtStr =
-      "insert into " + qTableName + " values (" + qs.join(", ") + ")";
-    const insertRow = (insertStmt: any) => (row: any) => {
+    const insertColIds = [...md.columnIds, "rowid"].map((cid) => `'${cid}'`);
+    const insertColIdsStr = "(" + insertColIds.join(", ") + ")";
+    const qs = Array(md.columnNames.length + 1).fill("?");
+    const insertStmtStr = `insert into ${qTableName}${insertColIdsStr} values (${qs.join(
+      ", "
+    )})`;
+    // console.log("insertStmt: [" + insertStmtStr + "]");
+    let insertRowId = 0;
+    const insertRow = (row: any): Promise<any> => {
       let rowVals = [];
       for (let i = 0; i < row.length; i++) {
         const t = md.columnTypes[i];
         const v = row[i];
         rowVals.push(prepValue(typeLookup(t!), v, isEuroFormat));
       }
-      return insertStmt.run(rowVals);
-    };
-
-    const commitBatch = (isFinal: boolean) => {
-      const retp = dbRun(db, "commit").then(() =>
-        isFinal ? null : db.run("begin")
-      );
-      return retp;
+      rowVals.push(insertRowId++);
+      // console.log("insertRow: rowVals: ", rowVals);
+      return dbRunStmt(db, insertStmtStr, rowVals);
     };
 
     /*
@@ -492,19 +547,19 @@ const importData = async (
      * this into more reasonable (50K rows?) chunks.
      */
     await db.run(dropStmt);
+    // log.debug("about to run: ", createStmt);
     await db.run(createStmt);
-    log.debug("table created");
-    await db.run("begin");
-    const insertStmt = await db.prepare(insertStmtStr);
+    // log.debug("table created");
+    // await db.run("begin");
+    // const insertStmt = await db.prepare(insertStmtStr);
     const rowCount = await consumeStream(
       csv.parseFile(pathname, md.csvOptions),
-      insertRow(insertStmt),
-      commitBatch,
+      insertRow,
       md.rowCount,
       hasHeaderRow
     );
     log.debug("consumeStream completed, rowCount: ", rowCount);
-    insertStmt.finalize();
+    // insertStmt.finalize();
     return md;
   } catch (err) {
     log.error(err, err.stack);
@@ -513,19 +568,22 @@ const importData = async (
 };
 
 /*
- * import the specified CSV file into an in-memory sqlite table
+ * import the specified CSV file into an in-memory sqlite table,
+ * using nodeJS streams for processing the data.
+ *
+ * Not particularly fast, but should be fairly maintainable.
  *
  * returns: Promise<tableName: string>
  *
  */
-export const importSqlite = async (
+export const streamCSVImport = async (
   db: sqlite3.Database,
   pathname: string,
   delimiter: string,
   options: ImportOpts
 ): Promise<FileMetadata> => {
   const md = await metaScan(pathname, delimiter, options);
-  log.debug("metascan complete. metadata:", md);
+  // log.debug("metascan complete. metadata:", md);
   return importData(db, md, pathname, delimiter, options);
 };
 
@@ -592,9 +650,7 @@ const dbImport: (
   fnm: string,
   tnm: string,
   opts: ImportOpts
-) => Promise<
-  ImportResult
-> = tp.promisify(
+) => Promise<ImportResult> = tp.promisify(
   (
     db: sqlite3.Database,
     fnm: string,
@@ -624,9 +680,15 @@ export const fastImport = async (
     const sample = sampleLines.join("\n");
     const sniffRes = sniffer.sniff(sample, { hasHeader: true });
     const delimiter = sniffRes.delimiter;
+    // We use to only call streamCSVImport for cases (like European CSV format)
+    // that couldn't be handled by the dbImport function (implemented in C++)
+    // But we're ditching our fork of sqlite3, so now we call streamCSVImport unconditionally:
+    const md = await streamCSVImport(db, pathname, delimiter, options);
+    return md.tableName;
+    /*
     if (delimiter === ";") {
       // assume European number format, use JS import impl:
-      const md = await importSqlite(db, pathname, delimiter, options);
+      const md = await streamCSVImport(db, pathname, delimiter, options);
       return md.tableName;
     } else {
       const firstRowData = await extractRowData(sampleLines[0], delimiter);
@@ -654,6 +716,7 @@ export const fastImport = async (
       };
       return res.tableName;
     }
+*/
   } catch (err) {
     log.error("caught error during fastImport: ", err, err.stack);
     throw err;

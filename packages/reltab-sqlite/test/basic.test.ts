@@ -33,24 +33,22 @@ const importCsv = async (db: sqlite3.Database, path: string) => {
   const md = await reltabSqlite.fastImport(db, path);
 };
 
-beforeAll(
-  async (): Promise<reltabSqlite.SqliteContext> => {
-    log.setLevel("info"); // use "debug" for even more verbosity
-    const ctx = await reltab.getConnection({
-      providerName: "sqlite",
-      connectionInfo: ":memory:",
-    });
+beforeAll(async (): Promise<reltabSqlite.SqliteContext> => {
+  log.setLevel("info"); // use "debug" for even more verbosity
+  const ctx = await reltab.getConnection({
+    providerName: "sqlite",
+    connectionInfo: ":memory:",
+  });
 
-    testCtx = ctx as reltabSqlite.SqliteContext;
+  testCtx = ctx as reltabSqlite.SqliteContext;
 
-    const db = testCtx.db;
+  const db = testCtx.db;
 
-    await importCsv(db, "test/support/sample.csv");
-    await importCsv(db, "test/support/barttest.csv");
+  await importCsv(db, "test/support/sample.csv");
+  await importCsv(db, "test/support/barttest.csv");
 
-    return testCtx;
-  }
-);
+  return testCtx;
+});
 
 test("t1 - basic sqlite tableQuery", async () => {
   const q1 = reltab.tableQuery("sample");
@@ -61,7 +59,9 @@ test("t1 - basic sqlite tableQuery", async () => {
 const bartTableQuery = reltab.tableQuery("barttest");
 
 test("t2 - basic bart table query", async () => {
-  const qres = await testCtx.evalQuery(bartTableQuery);
+  const qres = await testCtx.evalQuery(bartTableQuery.sort([["rowid", true]]));
+
+  // console.log("t2 query result: ", JSON.stringify(qres, null, 2));
 
   expect(qres).toMatchSnapshot();
 });
