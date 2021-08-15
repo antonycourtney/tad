@@ -302,32 +302,43 @@ export class VPivotTree {
       let joinKey = _.range(0, depth).map((j) => "_path" + j);
 
       jtq = jtq.join(sq, joinKey);
-    } 
-    
+    }
+
     // Now let's work out the sort key:
     // potential opt: Eliminate if root not shown
 
-    let tsortKey: [string, boolean][] = [["_isRoot", false]];
+    let tsortKey: [string, boolean][] = [];
 
-    for (let i = 0; i < this.pivotColumns.length; i++) {
-      // should be able to do a simple tsortKey.push for next line, but flow being lame
-      tsortKey = tsortKey.concat([["_sortVal_" + i.toString(), true]]); // sort keys for this depth:
+    if (this.rootQuery !== null) {
+      tsortKey.push(["_isRoot", false]);
+    }
+    let stq: reltab.QueryExp = jtq;
 
-      let dsortKey: [string, boolean][] = _.range(
-        0,
-        this.sortKey.length
-      ).map((j) => ["_sortVal_" + i + "_" + j, this.sortKey[j][1]]);
+    if (this.pivotColumns.length > 0 || this.sortKey.length > 0) {
+      for (let i = 0; i < this.pivotColumns.length; i++) {
+        tsortKey.push(["_sortVal_" + i.toString(), true]);
 
-      tsortKey = tsortKey.concat(dsortKey); // splice in path at this depth:
+        // sort keys for this depth:
+        let dsortKey: [string, boolean][] = _.range(0, this.sortKey.length).map(
+          (j) => ["_sortVal_" + i + "_" + j, this.sortKey[j][1]]
+        );
 
-      tsortKey = tsortKey.concat([["_path" + i, true]]);
-    } // Add the final _sortVal_i:
+        tsortKey = tsortKey.concat(dsortKey); // splice in path at this depth:
 
-    const maxDepth = this.pivotColumns.length;
-    tsortKey = tsortKey.concat([["_sortVal_" + maxDepth.toString(), true]]); // Finally, add the sort key columns itself for leaf level:
+        tsortKey.push(["_path" + i, true]);
+      }
 
-    tsortKey = tsortKey.concat(this.sortKey);
-    const stq = jtq.sort(tsortKey);
+      // Add the final _sortVal_i:
+      const maxDepth = this.pivotColumns.length;
+      tsortKey.push(["_sortVal_" + maxDepth.toString(), true]); // Finally, add the sort key columns itself for leaf level:
+
+      tsortKey = tsortKey.concat(this.sortKey);
+    }
+
+    if (tsortKey.length > 0) {
+      stq = stq.sort(tsortKey);
+    }
+
     return stq;
   }
 }

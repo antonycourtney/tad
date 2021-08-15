@@ -23,39 +23,37 @@ const q0 = reltab.tableQuery("barttest").project(pcols);
 
 let tree0: aggtree.VPivotTree;
 
-beforeAll(
-  async (): Promise<reltabSqlite.SqliteContext> => {
-    log.setLevel("info"); // use "debug" for even more verbosity
-    const showQueries = true;
-    const connKey: DbConnectionKey = {
-      providerName: "sqlite",
-      connectionInfo: ":memory:",
-    };
-    const ctx = await getConnection(connKey);
-  
-    testCtx = ctx as reltabSqlite.SqliteContext;
+beforeAll(async (): Promise<reltabSqlite.SqliteContext> => {
+  log.setLevel("info"); // use "debug" for even more verbosity
+  const showQueries = true;
+  const connKey: DbConnectionKey = {
+    providerName: "sqlite",
+    connectionInfo: ":memory:",
+  };
+  const ctx = await getConnection(connKey);
 
-    const db = testCtx.db;
+  testCtx = ctx as reltabSqlite.SqliteContext;
 
-    await importCsv(db, "../reltab-sqlite/test/support/sample.csv");
-    await importCsv(db, "../reltab-sqlite/test/support/barttest.csv");
+  const db = testCtx.db;
 
-    const schema = await aggtree.getBaseSchema(testCtx, q0);
-    log.debug("got schema: ", schema);
+  await importCsv(db, "../reltab-sqlite/test/support/sample.csv");
+  await importCsv(db, "../reltab-sqlite/test/support/barttest.csv");
 
-    tree0 = aggtree.vpivot(
-      testCtx,
-      q0,
-      schema,
-      ["JobFamily", "Title"],
-      "Name",
-      true,
-      []
-    );
+  const schema = await aggtree.getBaseSchema(testCtx, q0);
+  log.debug("got schema: ", schema);
 
-    return testCtx;
-  }
-);
+  tree0 = aggtree.vpivot(
+    testCtx,
+    q0,
+    schema,
+    ["JobFamily", "Title"],
+    "Name",
+    true,
+    []
+  );
+
+  return testCtx;
+});
 
 test("rootQuery Test", async () => {
   const rq0 = tree0.rootQuery;
@@ -223,6 +221,28 @@ test("async aggTree sortedTreeQuery test", async () => {
   const stq = tree0.getSortedTreeQuery(openPaths);
 
   console.log("full sorted tree query:\n", stq.toJS());
+
+  const sres = await rtc.evalQuery(stq);
+
+  // console.log("result of sorted tree query:");
+  // util.logTable(sres, { maxRows: 50 });
+  expect(sres).toMatchSnapshot();
+});
+
+test("basic initial view test", async () => {
+  const q0 = reltab.tableQuery("barttest").project(pcols);
+  const schema = await aggtree.getBaseSchema(testCtx, q0);
+  const tree0 = aggtree.vpivot(testCtx, q0, schema, [], null, false, []);
+  const rtc = testCtx;
+  const openPaths = new PathTree({});
+
+  const stq = tree0.getSortedTreeQuery(openPaths);
+
+  console.log("full sorted tree query:\n", stq.toJS());
+
+  const sqlStr = await rtc.toSql(stq);
+
+  console.log("SQL query: ", sqlStr);
 
   const sres = await rtc.evalQuery(stq);
 

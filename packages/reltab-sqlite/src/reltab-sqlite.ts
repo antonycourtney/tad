@@ -76,6 +76,16 @@ export class SqliteContext implements DbConnection {
     return schema;
   }
 
+  async toSql(
+    query: QueryExp,
+    offset?: number,
+    limit?: number
+  ): Promise<string> {
+    const schema = await this.getSchema(query);
+    const sqlQuery = query.toSql(SQLiteDialect, this.tableMap, offset, limit);
+    return sqlQuery;
+  }
+
   async evalQuery(
     query: QueryExp,
     offset?: number,
@@ -83,9 +93,8 @@ export class SqliteContext implements DbConnection {
     options?: EvalQueryOptions
   ): Promise<TableRep> {
     let t0 = process.hrtime();
-    await this.ensureTables(query);
-    const schema = query.getSchema(SQLiteDialect, this.tableMap);
-    const sqlQuery = query.toSql(SQLiteDialect, this.tableMap, offset, limit);
+    const schema = await this.getSchema(query);
+    const sqlQuery = await this.toSql(query, offset, limit);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
 
