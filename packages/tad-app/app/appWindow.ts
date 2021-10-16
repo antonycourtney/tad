@@ -3,7 +3,7 @@ import url from "url";
 import path from "path";
 
 import electron, { BrowserWindow, IpcMainEvent } from "electron";
-
+import { FileType, OpenParams } from "../src/openParams";
 const dialog = electron.dialog;
 const ipcMain = electron.ipcMain;
 
@@ -11,6 +11,8 @@ import fs from "fs";
 import log from "electron-log";
 import * as csvexport from "./csvexport";
 import * as reltab from "reltab";
+import { formatGroupLabel } from "react-select/src/builtins";
+import { DataSourcePath } from "reltab";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -24,11 +26,12 @@ const POS_OFFSET = 25; // pixel offset of new windows
 // If we're opening a CSV file, we just pass the target path.
 // If we're opening a Tad workspace, we read its contents
 
-const encodeOpenParams = (
-  targetPath: string | null,
+const encodeFileOpenParams = (
+  title: string,
+  targetPath: string | undefined,
   forceParquetFile: boolean
-): object => {
-  let openParams;
+): OpenParams => {
+  let openParams: OpenParams;
 
   if (targetPath && path.extname(targetPath) === ".tad") {
     const fileContents = fs.readFileSync(targetPath, "utf8");
@@ -36,9 +39,10 @@ const encodeOpenParams = (
       fileType: "tad",
       srcFile: targetPath,
       fileContents,
+      title,
     };
   } else {
-    let fileType: string;
+    let fileType: FileType;
     if (
       (targetPath && path.extname(targetPath) === ".parquet") ||
       forceParquetFile
@@ -50,18 +54,18 @@ const encodeOpenParams = (
     openParams = {
       fileType,
       targetPath,
+      title,
     };
   }
 
   return openParams;
 };
 
-export const create = (targetPath: string | null, forcePaquetFile: boolean) => {
-  const title = targetPath ? "Tad - " + path.basename(targetPath) : "Tad";
+const create = (openParams: OpenParams) => {
   let winProps = {
     width: 1280,
     height: 980,
-    title,
+    title: openParams.title,
     x: 0,
     y: 0,
     webPreferences: {
@@ -85,7 +89,7 @@ export const create = (targetPath: string | null, forcePaquetFile: boolean) => {
     baseY = bounds.y;
   } // win.targetPath = targetPath
 
-  (win as any).openParams = encodeOpenParams(targetPath, forcePaquetFile);
+  (win as any).openParams = openParams;
   const targetUrl = url.format({
     pathname: path.join(__dirname, "index.html"),
     protocol: "file:",
@@ -111,6 +115,28 @@ export const create = (targetPath: string | null, forcePaquetFile: boolean) => {
   openCount += 1;
   return win;
 };
+
+export const createFromFile = (
+  targetPath: string | undefined,
+  forcePaquetFile: boolean
+) => {
+  const title = targetPath ? "Tad - " + path.basename(targetPath) : "Tad";
+  const openParams = encodeFileOpenParams(title, targetPath, forcePaquetFile);
+  create(openParams);
+};
+
+export const createFromDSPath = (path: DataSourcePath): string => {
+  const displayName = path[path.length - 1].displayName;
+  const title = "Tad - " + displayName;
+  const openParams: OpenParams = {
+    fileType: "dspath",
+    targetPath: JSON.stringify(path),
+    title,
+  };
+  create(openParams);
+  return displayName;
+};
+
 export const openDialog = () => {
   const openPaths = dialog.showOpenDialogSync({
     properties: ["openFile"],
@@ -136,7 +162,7 @@ export const openDialog = () => {
 
   if (openPaths && openPaths.length > 0) {
     const filePath = openPaths[0];
-    create(filePath, false);
+    createFromFile(filePath, false);
   }
 };
 let stateRequestId = 100;

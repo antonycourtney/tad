@@ -4,7 +4,7 @@
 import "source-map-support/register";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import OneRef, { mkRef, refContainer, mutableGet } from "oneref";
+import OneRef, { mkRef, refContainer, mutableGet, StateRef } from "oneref";
 import { AppPane, AppPaneBaseProps } from "tadviewer";
 import { PivotRequester } from "tadviewer";
 import { AppState } from "tadviewer";
@@ -20,12 +20,14 @@ import {
   RemoteReltabConnection,
   TableInfo,
 } from "reltab";
+import { OpenParams } from "./openParams";
 
 const remote = electron.remote;
 const remoteInitMain = remote.getGlobal("initMain");
 const remoteErrorDialog = remote.getGlobal("errorDialog");
 const remoteImportCSV = remote.getGlobal("importCSV");
 const remoteImportParquet = remote.getGlobal("importParquet");
+const remoteNewWindowFromDSPath = remote.getGlobal("newWindowFromDSPath");
 
 const ipcRenderer = electron.ipcRenderer;
 
@@ -81,24 +83,45 @@ const importParquet = (targetPath: string): Promise<string> => {
   });
 };
 
+const newWindowFromDSPath = (
+  dsPath: DataSourcePath,
+  stateRef: StateRef<AppState>
+) => {
+  return new Promise((resolve, reject) => {
+    remoteNewWindowFromDSPath(
+      JSON.stringify(dsPath),
+      (err: any, displayName: string) => {
+        if (err) {
+          console.error("importParquet error: ", err);
+          reject(err);
+        } else {
+          resolve(displayName);
+        }
+      }
+    );
+  });
+};
+
 // TODO: figure out how to initialize based on saved views or different file / table names
 const init = async () => {
   const tStart = performance.now();
   log.setLevel(log.levels.DEBUG);
   // console.log("testing, testing, one two...");
   log.debug("Hello, Electron!");
-  const openParams: any = (remote.getCurrentWindow() as any).openParams;
-  let targetPath: string | null = null;
-  let srcFile: string | null = null;
+  const win = remote.getCurrentWindow() as any;
+  const openParams = win.openParams as OpenParams;
+  let targetPath: string | undefined;
+  let srcFile: string | undefined;
   let viewParams: ViewParams | null = null;
   const { fileType } = openParams;
   switch (fileType) {
     case "csv":
     case "parquet":
+    case "dspath":
       targetPath = openParams.targetPath;
       break;
     case "tad":
-      const parsedFileState = JSON.parse(openParams.fileContents);
+      const parsedFileState = JSON.parse(openParams.fileContents!);
       // This would be the right place to validate / migrate tadFileFormatVersion
       const savedFileState = parsedFileState.contents;
       targetPath = savedFileState.targetPath;
@@ -126,27 +149,38 @@ const init = async () => {
 
     await initAppState(rtc, stateRef);
 
-    ReactDOM.render(<App />, document.getElementById("app"));
+    ReactDOM.render(
+      <App newWindow={newWindowFromDSPath} />,
+      document.getElementById("app")
+    );
     const tRender = performance.now();
     log.debug("Time to initial render: ", (tRender - tStart) / 1000, " sec");
     pivotRequester = new PivotRequester(stateRef);
 
+    let targetDSPath: DataSourcePath | null = null;
+
     if (targetPath) {
       let tableName: string | null = null;
       actions.startAppLoadingTimer(stateRef);
-      if (fileType === "csv") {
-        tableName = await importCSV(targetPath);
-      } else if (fileType === "parquet") {
-        tableName = await importParquet(targetPath);
+      if (fileType === "dspath") {
+        targetDSPath = JSON.parse(targetPath);
+      } else {
+        if (fileType === "csv") {
+          tableName = await importCSV(targetPath);
+        } else if (fileType === "parquet") {
+          tableName = await importParquet(targetPath);
+        }
+        // TODO: really need a better way to construct these paths!
+        // (And displayName is a mess here)
+        if (tableName !== null) {
+          targetDSPath = [
+            { kind: "Database", id: initInfo.connKey, displayName: tableName },
+            { kind: "Table", id: tableName, displayName: "tableName" },
+          ];
+        }
       }
 
-      // TODO: really need a better way to construct these paths!
-      // (And displayName is a mess here)
-      if (tableName !== null) {
-        const targetDSPath: DataSourcePath = [
-          { kind: "Database", id: initInfo.connKey, displayName: tableName },
-          { kind: "Table", id: tableName, displayName: "tableName" },
-        ];
+      if (targetDSPath !== null) {
         await actions.openDataSourcePath(targetDSPath, stateRef);
       }
       actions.stopAppLoadingTimer(stateRef);
@@ -194,7 +228,8 @@ const init = async () => {
       const { percentComplete } = req;
       actions.setExportProgress(percentComplete, stateRef);
     });
-  } catch (err) {
+  } catch (e) {
+    const err = e as any;
     console.error(
       "renderMain: caught error during initialization: ",
       err.message,

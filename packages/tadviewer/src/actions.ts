@@ -26,12 +26,14 @@ export async function startAppLoadingTimer(
   stateRef: StateRef<AppState>
 ): Promise<void> {
   // hard to precisely type the path-dependent type of pathUpdater, so use any
-  const ltUpdater = util.pathUpdater(stateRef, [
-    "appLoadingTimer",
-  ]) as any;
+  const ltUpdater = util.pathUpdater(stateRef, ["appLoadingTimer"]) as any;
   update(
     stateRef,
-    (st: AppState): AppState => st.set("appLoadingTimer", st.appLoadingTimer.run(200, ltUpdater)) as AppState
+    (st: AppState): AppState =>
+      st.set(
+        "appLoadingTimer",
+        st.appLoadingTimer.run(200, ltUpdater)
+      ) as AppState
   );
 }
 
@@ -40,12 +42,12 @@ export async function stopAppLoadingTimer(
 ): Promise<void> {
   update(
     stateRef,
-    (st: AppState): AppState => st.set("appLoadingTimer", st.appLoadingTimer.stop()) as AppState
+    (st: AppState): AppState =>
+      st.set("appLoadingTimer", st.appLoadingTimer.stop()) as AppState
   );
 }
 
-
-export const openDataSourcePath = async (
+export const replaceCurrentView = async (
   path: DataSourcePath,
   stateRef: StateRef<AppState>
 ): Promise<void> => {
@@ -68,6 +70,7 @@ export const openDataSourcePath = async (
     displayColumns,
     openPaths,
   });
+  const initialViewParams = viewParams;
 
   const viewState = new ViewState({
     dbc,
@@ -75,7 +78,10 @@ export const openDataSourcePath = async (
     baseSchema,
     baseQuery,
     viewParams,
-  }); // We explicitly set rather than merge() because merge
+    initialViewParams,
+  });
+
+  // We explicitly set rather than merge() because merge
   // will attempt to deep convert JS objects to Immutables
 
   update(
@@ -84,11 +90,28 @@ export const openDataSourcePath = async (
   );
 };
 
+export const openDataSourcePath = async (
+  path: DataSourcePath,
+  stateRef: StateRef<AppState>
+): Promise<void> => {
+  const appState = mutableGet(stateRef);
+
+  const modifiedViewParams =
+    appState.viewState?.viewParams !== appState.viewState?.initialViewParams;
+
+  if (modifiedViewParams) {
+    setViewConfirmDialogOpen(true, path, stateRef);
+  } else {
+    replaceCurrentView(path, stateRef);
+  }
+};
+
 // helper to hoist a ViewParams => ViewParams fn to an AppState => AppState
 // Always resets the viewport
-const vpUpdate = (f: (vp: ViewParams) => ViewParams) => (
-  s: AppState
-): AppState => s.updateIn(["viewState", "viewParams"], f) as AppState;
+const vpUpdate =
+  (f: (vp: ViewParams) => ViewParams) =>
+  (s: AppState): AppState =>
+    s.updateIn(["viewState", "viewParams"], f) as AppState;
 
 export const toggleShown = (
   cid: string,
@@ -325,6 +348,20 @@ export const setExportDialogOpen = (
       s
         .set("exportDialogOpen", openState)
         .set("exportFilename", saveFilename) as AppState
+  );
+};
+
+export const setViewConfirmDialogOpen = (
+  openState: boolean,
+  path: DataSourcePath | null,
+  stateRef: StateRef<AppState>
+) => {
+  update(
+    stateRef,
+    (s) =>
+      s
+        .set("viewConfirmDialogOpen", openState)
+        .set("viewConfirmSourcePath", path) as AppState
   );
 };
 

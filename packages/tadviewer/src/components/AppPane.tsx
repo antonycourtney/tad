@@ -19,16 +19,148 @@ import { AppState } from "../AppState";
 import * as oneref from "oneref";
 import { useState } from "react";
 import { Activity } from "./defs";
+import { mutableGet, StateRef } from "oneref";
+import { DataSourcePath } from "reltab";
 
 /**
  * top level application pane
  */
 
-export interface AppPaneBaseProps {}
+export type NewWindowFn = (
+  path: DataSourcePath,
+  stateRef: StateRef<AppState>
+) => void;
+
+export interface AppPaneBaseProps {
+  newWindow: NewWindowFn;
+}
 
 type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
 
+const handleExportDialogClose = (stateRef: StateRef<AppState>) => {
+  actions.setExportDialogOpen(false, "", stateRef);
+};
+
+const handleViewConfirmDialogReplace = async (stateRef: StateRef<AppState>) => {
+  const appState = mutableGet(stateRef);
+  actions.setViewConfirmDialogOpen(false, null, stateRef);
+  actions.replaceCurrentView(appState.viewConfirmSourcePath!, stateRef);
+};
+
+const handleViewConfirmDialogNewWindow = (
+  newWindow: NewWindowFn,
+  stateRef: StateRef<AppState>
+) => {
+  const appState = mutableGet(stateRef);
+  actions.setViewConfirmDialogOpen(false, null, stateRef);
+  newWindow(appState.viewConfirmSourcePath!, stateRef);
+};
+
+const handleViewConfirmDialogClose = (stateRef: StateRef<AppState>) => {
+  actions.setViewConfirmDialogOpen(false, null, stateRef);
+};
+
+type ExportDialogProps = oneref.StateRefProps<AppState>;
+
+const ExportDialog: React.FunctionComponent<ExportDialogProps> = ({
+  appState,
+  stateRef,
+}: ExportDialogProps) => {
+  let filterCountStr = "";
+
+  const { viewState } = appState;
+
+  if (
+    appState.initialized &&
+    viewState !== null &&
+    viewState.dataView !== null
+  ) {
+    const viewParams = viewState.viewParams;
+    const queryView = appState.viewState.queryView;
+
+    if (queryView) {
+      const { filterRowCount } = queryView;
+      filterCountStr = filterRowCount.toLocaleString(undefined, {
+        useGrouping: true,
+      });
+    }
+  }
+  return (
+    <Dialog
+      title="Export Filtered CSV"
+      onClose={() => handleExportDialogClose(stateRef)}
+      isOpen={appState.exportDialogOpen}
+    >
+      <div className={Classes.DIALOG_BODY}>
+        <p className="bp3-text-large">
+          Exporting {filterCountStr} rows to {appState.exportFilename}
+        </p>
+        <ProgressBar stripes={false} value={appState.exportPercent} />
+      </div>
+      <div className={Classes.DIALOG_FOOTER}>
+        <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+          <Button
+            disabled={appState.exportPercent < 1}
+            onClick={() => handleExportDialogClose(stateRef)}
+          >
+            OK
+          </Button>
+        </div>
+      </div>
+    </Dialog>
+  );
+};
+
+interface ViewConfirmDialogBaseProps {
+  newWindow: NewWindowFn;
+}
+
+type ViewConfirmDialogProps = ViewConfirmDialogBaseProps &
+  oneref.StateRefProps<AppState>;
+
+const ViewConfirmDialog: React.FunctionComponent<ViewConfirmDialogProps> = ({
+  newWindow,
+  appState,
+  stateRef,
+}: ViewConfirmDialogProps) => {
+  return (
+    <Dialog
+      title="Open Table"
+      onClose={() => handleViewConfirmDialogClose(stateRef)}
+      isOpen={appState.viewConfirmDialogOpen}
+    >
+      <div className={Classes.DIALOG_BODY}>
+        <p className="bp3-text-large">
+          You have unsaved changes to the current view. <br />
+          Do you want to:
+        </p>
+      </div>
+      <div className={Classes.DIALOG_FOOTER}>
+        <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+          <Button onClick={() => handleViewConfirmDialogReplace(stateRef)}>
+            Replace Current View
+          </Button>
+          <Button
+            onClick={() =>
+              handleViewConfirmDialogNewWindow(newWindow, stateRef)
+            }
+          >
+            Open in New Window
+          </Button>
+          <Button
+            intent="primary"
+            onClick={() => handleViewConfirmDialogClose(stateRef)}
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </Dialog>
+  );
+};
+
 export const AppPane: React.FunctionComponent<AppPaneProps> = ({
+  newWindow,
   appState,
   stateRef,
 }: AppPaneProps) => {
@@ -88,103 +220,13 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
         {pivotSidebar}
         {centerPane}
       </DndProvider>
+      <ExportDialog appState={appState} stateRef={stateRef} />
+      <ViewConfirmDialog
+        newWindow={newWindow}
+        appState={appState}
+        stateRef={stateRef}
+      />
     </div>
   );
   return mainContents;
 };
-
-/*
-class AppPane extends React.Component {
-  grid: any;
-
-  handleSlickGridCreated(grid: any) {
-    this.grid = grid;
-  }
-  /*
-   * Attempt to scroll column into view on click in column selector
-   *
-   * Doesn't actually seem to work reliably in practice; seems like a
-   * bug in SlickGrid, so is turned off.
-   *
-   * add  onColumnClick={cid => this.handleColumnClick(cid)} to
-   * Sidebar to re-enable.
-   *
-
-
-  handleColumnClick(cid: string) {
-    if (this.grid) {
-      const columnIdx = this.grid.getColumnIndex(cid);
-
-      if (columnIdx !== undefined) {
-        const vp = this.grid.getViewport();
-        this.grid.scrollCellIntoView(vp.top, columnIdx);
-      }
-    }
-  }
-
-  handleFilterToggled(isShown: boolean) {
-    if (this.grid) {
-      // put this on a timer so that it happens after animated transition:
-      setTimeout(() => {
-        this.grid.resizeCanvas();
-      }, 350);
-    }
-  }
-
-  componentDidMount() {
-    FocusStyleManager.onlyShowFocusOnTabs();
-  }
-
-  handleExportDialogClose() {
-    actions.setExportDialogOpen(false, '', this.props.stateRef);
-  }
-
-  render() {
-    const appState = this.props.appState;
-    let mainContents;
-
-    if (appState.initialized) {
-      const viewState = appState.viewState;
-      const viewParams = viewState.viewParams;
-      const queryView = appState.viewState.queryView;
-      let filterCountStr = '';
-
-      if (queryView) {
-        const {
-          filterRowCount
-        } = queryView;
-        filterCountStr = filterRowCount.toLocaleString(undefined, {
-          grouping: true
-        });
-      }
-
-      mainContents = <div className='container-fluid full-height main-container'>
-          <Sidebar baseSchema={appState.baseSchema} viewParams={viewParams} stateRef={this.props.stateRef} />
-          <div className='center-app-pane'>
-            <GridPane onSlickGridCreated={grid => this.handleSlickGridCreated(grid)} appState={appState} viewState={viewState} stateRef={this.props.stateRef} />
-            <Footer appState={appState} viewState={viewState} stateRef={this.props.stateRef} />
-          </div>
-          <Dialog title='Export Filtered CSV' onClose={() => this.handleExportDialogClose()} isOpen={appState.exportDialogOpen}>
-            <div className={Classes.DIALOG_BODY}>
-              <p className="bp3-text-large">Exporting {filterCountStr} rows to {appState.exportFilename}</p>
-              <ProgressBar stripes={false} value={appState.exportPercent} />
-            </div>
-            <div className={Classes.DIALOG_FOOTER}>
-              <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-                <Button disabled={appState.exportPercent < 1} onClick={() => this.handleExportDialogClose()}>OK</Button>
-              </div>
-            </div>
-          </Dialog>
-        </div>;
-    } else {
-      mainContents = <div className='container-fluid full-height main-container'>
-          <LoadingModal />
-        </div>;
-    }
-
-    return mainContents;
-  }
-}
-
-export DragDropContext(HTML5Backend)(AppPane);
-*/

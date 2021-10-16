@@ -303,17 +303,22 @@ have time to address, and isn't worth not releasing.
 [X] Restore Quick Start guide / show quick start on first run
 [X] Verify that "Open Example" works from Quickstart guide
 [X] Ensure all menu actions (like export filtered CSV) work
-[ ] Fix tree open control to not accidentally replace a modified view.
+[X] Fix tree open control to not accidentally replace a modified view.
 Options: replace current view, open in new window. File...Open should probably work
 the same
+[ ] Figure out saving and loading of Tad files, since we support in-memory tables as well
+as file imports
+[ ] Ability to save and open Tad files
+[ ] Opening a Tad file
+[ ] Change window title when loading new data set
+[ ] refresh db tree after File...Open
+[ ] change name of db for DuckDb from :memory:
 [ ] Smoke test select control for "in..." filter queries. Try one from Blueprint directly?
 [ ] Status bar in footer
 [ ] Query console
 [X] Parquet file support: --parquet argument
 [X] Parquet file support: .parquet suffix
 [ ] compressed, gzipped CSV file support
-[ ] Ability to save and open Tad files
-[ ] Opening a Tad file
 [ ] Get rid of BigQuery support by default -- ~/tad.conf.json
 [ ] Ability to open directories with DuckDb import/export format
 [ ] Ability to open CSV / Parquet files directly from s3
@@ -338,4 +343,9 @@ directly in node_modules. Let's put off this part until everything else is done.
 
 8Aug21:
 
-Trying to sort out an issue with webpack apparently creating multiple instances of loglevel module.
+[X] Trying to sort out an issue with webpack apparently creating multiple instances of loglevel module.
+
+16Oct21:
+[ ] Rethink how we present data sources, and handle importing. Probably we should not
+show the DuckDb instance that is used for importing a CSV; we probably all references
+to refer to the original CSV file path. Especially true if we start supporting s3 buckets.

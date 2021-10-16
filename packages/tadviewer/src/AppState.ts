@@ -1,7 +1,7 @@
 import * as Immutable from "immutable";
 import { ViewState } from "./ViewState";
 import * as reltab from "reltab";
-import { DbConnectionKey } from "reltab";
+import { DataSourcePath, DbConnectionKey } from "reltab";
 import { Timer } from "./Timer";
 /**
  * Immutable representation of application state
@@ -20,6 +20,10 @@ export interface AppStateProps {
   exportDialogOpen: boolean;
   exportFilename: string;
   exportPercent: number;
+
+  viewConfirmDialogOpen: boolean;
+  viewConfirmSourcePath: DataSourcePath | null;
+
   appLoadingTimer: Timer;
 }
 
@@ -31,7 +35,9 @@ const defaultAppStateProps: AppStateProps = {
   exportDialogOpen: false,
   exportFilename: "",
   exportPercent: 0,
-  appLoadingTimer: new Timer()
+  viewConfirmDialogOpen: false,
+  viewConfirmSourcePath: null,
+  appLoadingTimer: new Timer(),
 };
 
 export class AppState extends Immutable.Record(defaultAppStateProps) {
@@ -45,5 +51,7 @@ export class AppState extends Immutable.Record(defaultAppStateProps) {
   public readonly exportDialogOpen!: boolean;
   public readonly exportFilename!: string;
   public readonly exportPercent!: number;
+  public readonly viewConfirmDialogOpen!: boolean;
+  public readonly viewConfirmSourcePath!: DataSourcePath | null;
   public readonly appLoadingTimer!: Timer;
 }

@@ -33,6 +33,7 @@ import {
   TableRep,
   TransportServer,
   serverInit,
+  DataSourcePath,
 } from "reltab";
 import { BigQueryConnection } from "reltab-bigquery";
 
@@ -146,7 +147,7 @@ const importCSV = async (targetPath: string): Promise<string> => {
 };
 
 /*
- * Remotable function to import a CSV file
+ * Remotable function to import a Parquet file
  */
 const importParquet = async (targetPath: string): Promise<string> => {
   let pathname = targetPath;
@@ -161,6 +162,11 @@ const importParquet = async (targetPath: string): Promise<string> => {
   const tableName = await reltabDuckDB.nativeParquetImport(ctx.db, targetPath);
 
   return tableName;
+};
+
+const newWindowFromDSPath = async (path: DataSourcePath): Promise<string> => {
+  const displayName = appWindow.createFromDSPath(path);
+  return displayName;
 };
 
 const importCSVSqlite = async (targetPath: string): Promise<string> => {
@@ -182,100 +188,6 @@ const importCSVSqlite = async (targetPath: string): Promise<string> => {
   });
   return tableName;
 };
-
-/*
- * OLD initMain -- will probably have to move some of this initialization to seperate
- * functions exposed remotely:
- */
-/*
-const initMainAsync = async (
-  options: any,
-  targetPath: string,
-  srcfile: string
-) => {
-  console.log("initMainAsync: ", options, targetPath, srcfile);
-  let rtOptions: any = {};
-
-  if (options["show-queries"]) {
-    rtOptions.showQueries = true;
-    // *sigh*: This doesn't seem to propapagate to reltab-sqlite...npm duplication issue?
-    logLevel.setLevel(logLevel.levels.INFO);
-    log.info("initMainAsync: set log level to INFO");
-  }
-
-  await initBigquery();
-
-  let rtc: reltabSqlite.SqliteContext;
-  let tableInfo: TableInfo;
-  const sqlUrlPrefix = "sqlite://";
-  let connKey: DbConnectionKey;
-
-  if (targetPath.startsWith(sqlUrlPrefix)) {
-    const urlPath = targetPath.slice(sqlUrlPrefix.length);
-    const tableSepIndex = urlPath.lastIndexOf("/");
-    const tableName = urlPath.slice(tableSepIndex + 1);
-    const dbFileName = urlPath.slice(0, tableSepIndex);
-    connKey = {
-      providerName: "sqlite",
-      connectionInfo: dbFileName,
-    };
-    rtc = (await getConnection(connKey)) as reltabSqlite.SqliteContext;
-    tableInfo = await rtc.getTableInfo(tableName);
-  } else {
-    connKey = {
-      providerName: "sqlite",
-      connectionInfo: ":memory:",
-    };
-    rtc = (await getConnection(connKey)) as reltabSqlite.SqliteContext;
-    let pathname = targetPath; 
-    
-    // check if pathname exists
-    if (!fs.existsSync(pathname)) {
-      let found = false;
-      let srcdir = null;
-      let srcDirTarget = null;
-      log.warn("initMain: pathname not found: ", pathname);
-      const basename = path.basename(pathname);
-
-      if (srcfile) {
-        srcdir = path.dirname(srcfile);
-        srcDirTarget = path.join(srcdir, basename);
-
-        if (fs.existsSync(srcDirTarget)) {
-          log.warn("initMain: using " + srcDirTarget + " instead");
-          pathname = srcDirTarget;
-          found = true;
-        }
-      }
-
-      if (!found) {
-        let msg = '"' + pathname + '": file not found.';
-
-        if (srcdir) {
-          msg += '\n(Also tried "' + srcDirTarget + '")';
-        }
-
-        throw new Error(msg);
-      }
-    }
-
-    const noHeaderRow = options["no-headers"] || false;
-    const md = await reltabSqlite.fastImport(rtc.db, pathname, {
-      noHeaderRow,
-    });
-    // const md = await csvimport.streamCSVImport(pathname, ',', { noHeaderRow })
-  }
-
-  (global as any).appRtc = rtc;
-
-  const ts = new ElectronTransportServer();
-  serverInit(ts);
-
-  const initInfo = { connKey };
-  const initStr = JSON.stringify(initInfo, null, 2);
-  return initStr;
-};
-*/
 
 const mkInitMain = (options: any) => (cb: (res: any, err: any) => void) => {
   initMainAsync(options)
@@ -301,12 +213,23 @@ const remotableImportParquet = (
     .catch((err) => cb(err, null));
 };
 
+const remotableNewWindowFromDSPath = (
+  dsPathStr: string,
+  cb: (res: any, err: any) => void
+) => {
+  const dsPath: DataSourcePath = JSON.parse(dsPathStr) as DataSourcePath;
+  newWindowFromDSPath(dsPath)
+    .then((displayName) => cb(null, displayName))
+    .catch((err) => cb(err, null));
+};
+
 const appInit = (options: any) => {
   // log.log('appInit: ', options)
   (global as any).initMain = mkInitMain(options);
   (global as any).importCSV = remotableImportCSV;
   (global as any).importParquet = remotableImportParquet;
   (global as any).errorDialog = errorDialog;
+  (global as any).newWindowFromDSPath = remotableNewWindowFromDSPath;
   appMenu.createMenu(); // log.log('appInit: done')
 };
 
@@ -413,8 +336,8 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
 const getTargetPath = (
   options: any,
   filePath: string | null
-): string | null => {
-  let targetPath = null;
+): string | undefined => {
+  let targetPath = undefined;
   const srcDir = options["executed-from"];
 
   if (
@@ -427,7 +350,7 @@ const getTargetPath = (
     targetPath = path.join(srcDir, filePath);
   } else {
     // absolute pathname or no srcDir:
-    targetPath = filePath;
+    targetPath = filePath ?? undefined;
   }
 
   return targetPath;
@@ -439,7 +362,7 @@ const getTargetPath = (
   console.log("appPath: ", appPath);
   const appDir = process.defaultApp ? appPath : path.dirname(appPath);
   const exampleFilePath = path.join(appDir, "examples", "movie_metadata.csv");
-  appWindow.create(exampleFilePath, false);
+  appWindow.createFromFile(exampleFilePath, false);
 };
 
 let openFilePath: string | null = null;
@@ -483,7 +406,8 @@ const initApp =
         options = commandLineArgs(optionDefinitions, {
           argv,
         });
-      } catch (argErr) {
+      } catch (e) {
+        const argErr = e as any;
         console.error("Error parsing command line arguments: ", argErr.message);
         options = { help: true };
       }
@@ -521,9 +445,9 @@ const initApp =
 
             if (isReady) {
               log.warn("open-file: app is ready, opening in new window");
-              appWindow.create(targetPath, options.parquet);
+              appWindow.createFromFile(targetPath, options.parquet);
             } else {
-              openFilePath = targetPath;
+              openFilePath = targetPath ?? null;
               log.warn("open-file: set openFilePath " + targetPath);
             }
           };
@@ -564,7 +488,7 @@ const initApp =
             appInit(options);
 
             if (targetPath) {
-              appWindow.create(targetPath, options.parquet);
+              appWindow.createFromFile(targetPath, options.parquet);
             }
 
             if (showQuickStart) {
@@ -574,7 +498,7 @@ const initApp =
             if (openFilePath) {
               const openMsg = `pid ${process.pid}: Got open-file for ${openFilePath}`;
               log.warn(openMsg);
-              appWindow.create(openFilePath, false); // dialog.showMessageBox({ message: openMsg })
+              appWindow.createFromFile(openFilePath, false); // dialog.showMessageBox({ message: openMsg })
             } else {
               if (!targetPath && !awaitingOpenEvent) {
                 app.focus();
@@ -586,14 +510,15 @@ const initApp =
           });
         } else {
           if (targetPath) {
-            appWindow.create(targetPath, options.parquet);
+            appWindow.createFromFile(targetPath, options.parquet);
           } else {
             log.warn("initApp called with no targetPath");
             app.focus();
           }
         }
       }
-    } catch (err) {
+    } catch (e) {
+      const err = e as any;
       reportFatalError(err.message);
       log.error("Error: ", err.message);
       log.error(err.stack);
