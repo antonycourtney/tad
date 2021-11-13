@@ -1,11 +1,14 @@
 import * as reltab from "reltab";
-import { SnowflakeConnection, getAuthConnectionOptions } from "../src/reltab-snowflake";
+import {
+  SnowflakeConnection,
+  getAuthConnectionOptions,
+} from "../src/reltab-snowflake";
 import "../src/reltab-snowflake";
 import * as util from "./testUtils";
 import * as log from "loglevel";
 import * as aggtree from "aggtree";
 import { PathTree } from "aggtree";
-import { DbConnectionKey } from "reltab";
+import { DataSourceId } from "reltab";
 import * as snowflake from "snowflake-sdk";
 
 let testConn: SnowflakeConnection;
@@ -14,9 +17,9 @@ let connOpts = getAuthConnectionOptions();
 connOpts.database = "CITIBIKE";
 connOpts.schema = "PUBLIC";
 
-const snowflakeConnKey: DbConnectionKey = {
+const snowflakeConnKey: DataSourceId = {
   providerName: "snowflake",
-  connectionInfo: connOpts,
+  resourceId: connOpts,
 };
 
 beforeAll(async () => {

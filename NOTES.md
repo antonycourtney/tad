@@ -349,3 +349,47 @@ directly in node_modules. Let's put off this part until everything else is done.
 [ ] Rethink how we present data sources, and handle importing. Probably we should not
 show the DuckDb instance that is used for importing a CSV; we probably all references
 to refer to the original CSV file path. Especially true if we start supporting s3 buckets.
+
+17Oct21:
+
+Let's clean up data sources.
+[X] get rid of displayName passed to connect()
+[X] get rid of displayName on paths
+[ ] think about how to represent files, directories and s3 buckets as data sources - the import and cached table should be linked to the data source, but shouldn't show up in source tree
+
+Thinking about paths and data sources:
+
+What's missing in paths right now is having a DataSource itself as the initial path component.
+
+Going to have to re-think providers, connections, connection keys, data sources, and paths.
+
+Right now we don't really have the notion of files, directories (or things like s3 buckets); just databases.
+
+Maybe we should separate the notion of a _data source_ from a _database engine_.
+Let's say that _data sources_ are a hierarchy of containers with tables (or views) at the leaf level.
+
+Actually, we won't do that. Let's just call these DataSources, and have filesystem-like data sources
+delegate to some other DataSource engine for queries
+
+---
+
+We used to have `displayName` as part of a path element (now DataSourceNodeInfo), which was clearly wrong.
+
+We could think about adding it as optional in `DataSourceNode`.
+But also: It's kind of weird to have `DataSourceNodeInfo` that is just a 'kind' paired with the id,
+and `description?` living outside.
+
+It should probably be more like:
+
+```typescript
+export interface DataSourceNodeMetadata {
+  kind: DataSourceKind;
+  displayName: string;
+}
+
+export interface DataSourceNode {
+  id: string;
+  meta: DataSourceNodeMetadata;
+  children: string[]; // ids to stuff into a path
+}
+```

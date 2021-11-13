@@ -6,9 +6,7 @@
 import * as log from "loglevel";
 import * as prettyHRTime from "pretty-hrtime";
 import {
-  DbConnection,
-  DbConnectionKey,
-  DbProviderName,
+  DataSourceConnection,
   EngineReq,
   DbConnEvalQueryRequest,
   DbConnRowCountRequest,
@@ -16,8 +14,10 @@ import {
   DbConnGetSourceInfoRequest,
 } from "./Connection";
 import {
+  DataSourceProviderName,
+  DataSourceId,
   DataSourceNode,
-  DataSourceNodeId,
+  DataSourceNodeInfo,
   DataSourcePath,
 } from "../DataSource";
 import { deserializeQueryReq, QueryExp } from "../QueryExp";
@@ -31,7 +31,7 @@ import { Result } from "./result";
 import { serializeError } from "serialize-error";
 
 const dbConnEvalQuery = async (
-  conn: DbConnection,
+  conn: DataSourceConnection,
   req: DbConnEvalQueryRequest
 ): Promise<TableRep> => {
   const query = deserializeQueryReq(req.queryStr) as any;
@@ -51,7 +51,7 @@ const dbConnEvalQuery = async (
 };
 
 const dbConnRowCount = async (
-  conn: DbConnection,
+  conn: DataSourceConnection,
   req: DbConnRowCountRequest
 ): Promise<number> => {
   const query = deserializeQueryReq(req.queryStr) as any;
@@ -63,7 +63,7 @@ const dbConnRowCount = async (
 };
 
 const dbConnGetSourceInfo = async (
-  conn: DbConnection,
+  conn: DataSourceConnection,
   req: DbConnGetSourceInfoRequest
 ): Promise<DataSourceNode> => {
   const hrstart = process.hrtime();
@@ -75,7 +75,7 @@ const dbConnGetSourceInfo = async (
 };
 
 const dbConnGetTableInfo = async (
-  conn: DbConnection,
+  conn: DataSourceConnection,
   req: DbConnGetTableInfoRequest
 ): Promise<TableInfo> => {
   const hrstart = process.hrtime();
@@ -87,13 +87,13 @@ const dbConnGetTableInfo = async (
 };
 
 // an EngineReqHandler wraps a req in an EngineReq that carries an
-// db engine identifier (DbConnectionKey) that is used to identify
+// db engine identifier (DataSourceId) that is used to identify
 // a particular Db instance for dispatching the Db request.
 
 type EngineReqHandler<Req, Resp> = (req: EngineReq<Req>) => Promise<Resp>;
 
 function mkEngineReqHandler<Req, Resp>(
-  srvFn: (dbConn: DbConnection, req: Req) => Promise<Resp>
+  srvFn: (dbConn: DataSourceConnection, req: Req) => Promise<Resp>
 ): EngineReqHandler<Req, Resp> {
   const handler = async (ereq: EngineReq<Req>): Promise<Resp> => {
     const { engine, req } = ereq;
@@ -109,29 +109,29 @@ const handleDbConnRowCount = mkEngineReqHandler(dbConnRowCount);
 const handleDbConnGetSourceInfo = mkEngineReqHandler(dbConnGetSourceInfo);
 const handleDbConnGetTableInfo = mkEngineReqHandler(dbConnGetTableInfo);
 
-export interface DbProvider {
-  readonly providerName: DbProviderName;
-  connect(connectionInfo: any): Promise<DbConnection>;
+export interface DataSourceProvider {
+  readonly providerName: DataSourceProviderName;
+  connect(resourceId: string): Promise<DataSourceConnection>;
 }
 
-let providerRegistry: { [providerName: string]: DbProvider } = {};
+let providerRegistry: { [providerName: string]: DataSourceProvider } = {};
 
 // Called during static initialization from linked provider library
-export function registerProvider(provider: DbProvider): void {
+export function registerProvider(provider: DataSourceProvider): void {
   providerRegistry[provider.providerName] = provider;
 }
 
-let instanceCache: { [key: string]: Promise<DbConnection> } = {};
+let instanceCache: { [key: string]: Promise<DataSourceConnection> } = {};
 
-let resolvedConnections: DbConnection[] = [];
+let resolvedConnections: DataSourceConnection[] = [];
 
 /*
- * internal utility to record a DbConnection in our connection cache
+ * internal utility to record a DataSourceConnection in our connection cache
  * when the initial connection promise resolves.
  */
 const saveOnResolve = async (
-  pconn: Promise<DbConnection>
-): Promise<DbConnection> => {
+  pconn: Promise<DataSourceConnection>
+): Promise<DataSourceConnection> => {
   const c = await pconn;
   resolvedConnections.push(c);
   return c;
@@ -142,55 +142,50 @@ const saveOnResolve = async (
  *
  */
 export async function getConnection(
-  connKey: DbConnectionKey
-): Promise<DbConnection> {
-  const key = JSON.stringify(connKey);
-  let connPromise: Promise<DbConnection> | undefined;
+  sourceId: DataSourceId
+): Promise<DataSourceConnection> {
+  const key = JSON.stringify(sourceId);
+  let connPromise: Promise<DataSourceConnection> | undefined;
   connPromise = instanceCache[key];
   if (!connPromise) {
-    const { providerName, connectionInfo } = connKey;
-    let provider: DbProvider | undefined = providerRegistry[providerName];
+    const { providerName, resourceId } = sourceId;
+    let provider: DataSourceProvider | undefined =
+      providerRegistry[providerName];
 
     if (!provider) {
       throw new Error(
-        `getConnection: no registered DbProvider for provider name '${providerName}'`
+        `getConnection: no registered DataSourceProvider for provider name '${providerName}'`
       );
     }
-    connPromise = saveOnResolve(provider.connect(connectionInfo));
+    connPromise = saveOnResolve(provider.connect(resourceId));
     instanceCache[key] = connPromise;
   }
   return connPromise;
 }
 
 const connectionNodeId = async (
-  conn: DbConnection
-): Promise<DataSourceNodeId> => {
-  const displayName = await conn.getDisplayName();
-  const nodeId: DataSourceNodeId = {
-    kind: "Database",
-    displayName,
-    id: conn.connectionKey,
-  };
-  return nodeId;
+  conn: DataSourceConnection
+): Promise<DataSourceId> => {
+  return conn.sourceId;
 };
 
 interface GetDataSourcesResult {
-  nodeIds: DataSourceNodeId[];
+  dataSourceIds: DataSourceId[];
 }
 
-async function getDataSources(): Promise<DataSourceNodeId[]> {
-  const nodeIds: Promise<DataSourceNodeId>[] =
+async function getDataSources(): Promise<DataSourceId[]> {
+  const nodeIds: Promise<DataSourceId>[] =
     resolvedConnections.map(connectionNodeId);
   return Promise.all(nodeIds);
 }
 
 const handleGetDataSources = async (): Promise<GetDataSourcesResult> => {
   const hrstart = process.hrtime();
-  const nodeIds = await getDataSources();
+  const dataSourceIds = await getDataSources();
   const elapsed = process.hrtime(hrstart);
   log.info("getDataSources: evaluated in  ", prettyHRTime(elapsed));
   const resObj = {
-    nodeIds,
+    dataSourceIds,
   };
   return resObj;
 };
@@ -198,19 +193,10 @@ const handleGetDataSources = async (): Promise<GetDataSourcesResult> => {
 /**
  * server side of getSourceInfo standalone function, which operates on absolute paths.
  */
-async function getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
-  if (path.length < 1) {
-    throw new Error("getSourceInfo: empty path argument");
-  }
-  const rootNodeId = path[0];
-  if (rootNodeId.kind !== "Database") {
-    throw new Error(
-      `getSourceInfo: Expected Database as first path component, found ${rootNodeId.kind}.\n  full path: {$path}`
-    );
-  }
-  const dbConn = await getConnection(rootNodeId.id);
-  const relPath = path.slice(1);
-  const sourceInfo = dbConn.getSourceInfo(relPath);
+async function getSourceInfo(dsPath: DataSourcePath): Promise<DataSourceNode> {
+  const { sourceId, path } = dsPath;
+  const dbConn = await getConnection(sourceId);
+  const sourceInfo = dbConn.getSourceInfo(dsPath);
   return sourceInfo;
 }
 
@@ -275,19 +261,19 @@ export const serverInit = (ts: TransportServer) => {
     simpleJSONHandler(exceptionHandler(handleGetSourceInfo))
   );
   ts.registerInvokeHandler(
-    "DbConnection.evalQuery",
+    "DataSourceConnection.evalQuery",
     simpleJSONHandler(exceptionHandler(handleDbConnEvalQuery))
   );
   ts.registerInvokeHandler(
-    "DbConnection.rowCount",
+    "DataSourceConnection.rowCount",
     simpleJSONHandler(exceptionHandler(handleDbConnRowCount))
   );
   ts.registerInvokeHandler(
-    "DbConnection.getSourceInfo",
+    "DataSourceConnection.getSourceInfo",
     simpleJSONHandler(exceptionHandler(handleDbConnGetSourceInfo))
   );
   ts.registerInvokeHandler(
-    "DbConnection.getTableInfo",
+    "DataSourceConnection.getTableInfo",
     simpleJSONHandler(exceptionHandler(handleDbConnGetTableInfo))
   );
 };

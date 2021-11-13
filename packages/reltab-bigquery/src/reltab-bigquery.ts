@@ -3,19 +3,17 @@ import {
   TableRep,
   QueryExp,
   Schema,
-  DataSourceNodeId,
-  DbConnectionKey,
+  DataSourceNodeInfo,
+  DataSourceId,
   EvalQueryOptions,
-  DbProvider,
+  DataSourceProvider,
   defaultEvalQueryOptions,
   registerProvider,
-} from "reltab";
-import {
   TableInfoMap,
   TableInfo,
   Row,
   ColumnMetaMap,
-  DbConnection,
+  DataSourceConnection,
   BigQueryDialect,
   DataSourceNode,
   DataSourcePath,
@@ -49,9 +47,9 @@ interface BigQueryConnectionInfo {
   datasetName: string;
 }
 
-export class BigQueryConnection implements DbConnection {
+export class BigQueryConnection implements DataSourceConnection {
   readonly displayName: string;
-  readonly connectionKey: DbConnectionKey;
+  readonly sourceId: DataSourceId;
   projectId: string;
   datasetName: string;
   bigquery: BigQuery;
@@ -61,10 +59,11 @@ export class BigQueryConnection implements DbConnection {
 
   constructor(connectionInfo: BigQueryConnectionInfo) {
     const { projectId, datasetName } = connectionInfo;
+    const resourceId = JSON.stringify(connectionInfo);
     this.displayName = `bigquery: ${projectId}`;
-    this.connectionKey = {
+    this.sourceId = {
       providerName: "bigquery",
-      connectionInfo,
+      resourceId,
     };
     this.projectId = projectId;
     this.datasetName = datasetName;
@@ -201,36 +200,24 @@ export class BigQueryConnection implements DbConnection {
     return ti;
   }
 
-  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
+  async getSourceInfo(dsPath: DataSourcePath): Promise<DataSourceNode> {
+    const path = dsPath.path;
     if (path.length === 0) {
       // Enumerate datasets and get their ids:
       const [datasets] = await this.bigquery_meta.getDatasets();
-      const children: DataSourceNodeId[] = datasets.map((dataset) => ({
-        kind: "Dataset",
-        id: dataset.id!,
-        displayName: dataset.id!,
-      }));
-
-      let nodeId: DataSourceNodeId = {
+      const children: string[] = datasets.map((dataset) => dataset.id!);
+      let nodeInfo: DataSourceNodeInfo = {
         kind: "Database",
-        id: this.projectId,
         displayName: this.projectId,
       };
       let node: DataSourceNode = {
-        nodeId,
+        nodeInfo,
+        id: this.projectId,
         children,
       };
       return node;
-    } else {
-      const nodeId = path[path.length - 1];
-      if (nodeId.kind != "Dataset") {
-        throw new Error(
-          `bigQuery.getSourceInfo: Can not provide source info for ${JSON.stringify(
-            nodeId
-          )}`
-        );
-      }
-      const datasetName = nodeId.id;
+    } else if (path.length == 1) {
+      const datasetName = path[path.length - 1];
       const dataset = this.bigquery_meta.dataset(datasetName);
 
       // get metadata on dataset for description:
@@ -239,27 +226,42 @@ export class BigQueryConnection implements DbConnection {
       console.log("got dataset info: ", dsInfo);
       // And enumerate tables:
       const [tables] = await dataset.getTables();
-      const tableIds = tables.map((table) => table.id);
-
-      const children: DataSourceNodeId[] = tableIds.map((tableId) => ({
-        kind: "Table",
-        id: `${this.projectId}.${datasetName}.${tableId!}`,
-        displayName: tableId!,
-      }));
-      const node: DataSourceNode = {
-        nodeId,
+      const tableIds = tables.map((table) => table.id!);
+      const nodeInfo: DataSourceNodeInfo = {
+        kind: "Dataset",
+        displayName: datasetName,
         description: dsInfo.metadata.description,
-        children,
+      };
+      const node: DataSourceNode = {
+        nodeInfo,
+        id: datasetName,
+        children: tableIds,
+      };
+      return node;
+    } else {
+      // table level
+      const [projectId, datasetName, tableId] = path;
+      const nodeInfo: DataSourceNodeInfo = {
+        kind: "Table",
+        displayName: tableId,
+      };
+      const node: DataSourceNode = {
+        nodeInfo,
+        id: `${projectId}.${datasetName}.${tableId}`,
+        children: [],
       };
       return node;
     }
   }
 }
 
-const bigqueryDbProvider: DbProvider = {
+const bigqueryDataSourceProvider: DataSourceProvider = {
   providerName: "bigquery",
-  connect: async (connectionInfo: any): Promise<DbConnection> =>
-    new BigQueryConnection(connectionInfo),
+  connect: async (resourceId: string): Promise<DataSourceConnection> => {
+    const connInfo = JSON.parse(resourceId);
+    const conn = new BigQueryConnection(connInfo);
+    return conn;
+  },
 };
 
-registerProvider(bigqueryDbProvider);
+registerProvider(bigqueryDataSourceProvider);

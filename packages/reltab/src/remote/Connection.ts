@@ -6,21 +6,16 @@ import {
 import { TableRep, TableInfo } from "../TableRep";
 import { SQLDialect } from "../dialect";
 import {
+  DataSourceProviderName,
+  DataSourceId,
   DataSourceNode,
   DataSourcePath,
-  DataSourceNodeId,
+  DataSourceNodeInfo,
 } from "../DataSource";
 import { TransportClient } from "./Transport";
 import * as log from "loglevel";
 import { Result } from "./result";
 import { deserializeError } from "serialize-error";
-
-// Static registry of globally unique DbProvider names:
-export type DbProviderName = "aws-athena" | "bigquery" | "duckdb" | "sqlite" | "snowflake";
-export interface DbConnectionKey {
-  providerName: DbProviderName;
-  connectionInfo: any;
-}
 
 export interface EvalQueryOptions {
   showQueries?: boolean;
@@ -52,8 +47,8 @@ export interface DbConnGetSourceInfoRequest {
 /**
  * A local or remote connection to a specific database instance.
  */
-export interface DbConnection {
-  readonly connectionKey: DbConnectionKey;
+export interface DataSourceConnection {
+  readonly sourceId: DataSourceId;
 
   evalQuery(
     query: QueryExp,
@@ -69,19 +64,19 @@ export interface DbConnection {
   getDisplayName(): Promise<string>;
 }
 
-export type EngineReq<T> = { engine: DbConnectionKey; req: T };
+export type EngineReq<T> = { engine: DataSourceId; req: T };
 
-// remote invoke a DbConnection member function, using DbConnectionKey to
+// remote invoke a DataSourceConnection member function, using DataSourceId to
 // identify the engine:
 async function invokeDbFunction<T>(
   tconn: TransportClient,
-  engine: DbConnectionKey,
+  engine: DataSourceId,
   methodName: string,
   req: T
 ): Promise<Result<any>> {
   const ereq: EngineReq<T> = { engine, req };
   const retStr = await tconn.invoke(
-    "DbConnection." + methodName,
+    "DataSourceConnection." + methodName,
     JSON.stringify(ereq)
   );
   // We could be more precise and try to only pass results from evalQuery through
@@ -90,23 +85,17 @@ async function invokeDbFunction<T>(
   return ret;
 }
 
-class RemoteDbConnection implements DbConnection {
+class RemoteDataSourceConnection implements DataSourceConnection {
   private tconn: TransportClient;
-  readonly connectionKey: DbConnectionKey;
-  private displayName: string;
+  readonly sourceId: DataSourceId;
 
-  constructor(
-    tconn: TransportClient,
-    connectionKey: DbConnectionKey,
-    displayName: string
-  ) {
+  constructor(tconn: TransportClient, sourceId: DataSourceId) {
     this.tconn = tconn;
-    this.connectionKey = connectionKey;
-    this.displayName = displayName;
+    this.sourceId = sourceId;
   }
 
   async getDisplayName(): Promise<string> {
-    return this.displayName;
+    return "TODO: remote getDisplayName";
   }
 
   async evalQuery(
@@ -123,7 +112,7 @@ class RemoteDbConnection implements DbConnection {
     };
     const ret = await invokeDbFunction(
       this.tconn,
-      this.connectionKey,
+      this.sourceId,
       "evalQuery",
       req
     ).then(decodeResult);
@@ -135,19 +124,16 @@ class RemoteDbConnection implements DbConnection {
       queryStr: JSON.stringify(query),
       options: options ? options : defaultEvalQueryOptions,
     };
-    return invokeDbFunction(
-      this.tconn,
-      this.connectionKey,
-      "rowCount",
-      req
-    ).then(decodeResult);
+    return invokeDbFunction(this.tconn, this.sourceId, "rowCount", req).then(
+      decodeResult
+    );
   }
 
   async getTableInfo(tableName: string): Promise<TableInfo> {
     const req: DbConnGetTableInfoRequest = { tableName };
     return invokeDbFunction(
       this.tconn,
-      this.connectionKey,
+      this.sourceId,
       "getTableInfo",
       req
     ).then(decodeResult);
@@ -157,7 +143,7 @@ class RemoteDbConnection implements DbConnection {
     const req: DbConnGetSourceInfoRequest = { path };
     return invokeDbFunction(
       this.tconn,
-      this.connectionKey,
+      this.sourceId,
       "getSourceInfo",
       req
     ).then(decodeResult);
@@ -168,15 +154,12 @@ class RemoteDbConnection implements DbConnection {
  * The ReltabConnection interface is the entry point for client-side access to
  * reltab via some client-specific transport mechanism.
  * The interface provides access to a set of data sources and the ability
- * to obtain a (proxy) DbConnection to those data sources.
+ * to obtain a (proxy) DataSourceConnection to those data sources.
  */
 export interface ReltabConnection {
-  connect(
-    connectionKey: DbConnectionKey,
-    displayName: string
-  ): Promise<DbConnection>;
+  connect(sourceId: DataSourceId): Promise<DataSourceConnection>;
 
-  getDataSources(): Promise<DataSourceNodeId[]>;
+  getDataSources(): Promise<DataSourceId[]>;
 
   /**
    * Expand an absolute DataSourcePath, rooted in an available Database.
@@ -218,19 +201,16 @@ export class RemoteReltabConnection implements ReltabConnection {
     this.tconn = tconn;
   }
 
-  async connect(
-    connectionKey: DbConnectionKey,
-    displayName: string
-  ): Promise<DbConnection> {
-    const conn = new RemoteDbConnection(this.tconn, connectionKey, displayName);
+  async connect(sourceId: DataSourceId): Promise<DataSourceConnection> {
+    const conn = new RemoteDataSourceConnection(this.tconn, sourceId);
     return conn;
   }
 
-  async getDataSources(): Promise<DataSourceNodeId[]> {
+  async getDataSources(): Promise<DataSourceId[]> {
     const ret = (await jsonInvoke(this.tconn, "getDataSources", {}).then(
       decodeResult
     )) as any;
-    return ret["nodeIds"];
+    return ret["dataSourceIds"];
   }
 
   /**

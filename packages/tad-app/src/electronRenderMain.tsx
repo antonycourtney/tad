@@ -16,7 +16,7 @@ import { ElectronTransportClient } from "./electronClient";
 import * as electron from "electron";
 import {
   DataSourcePath,
-  DbConnectionKey,
+  DataSourceId,
   RemoteReltabConnection,
   TableInfo,
 } from "reltab";
@@ -32,7 +32,7 @@ const remoteNewWindowFromDSPath = remote.getGlobal("newWindowFromDSPath");
 const ipcRenderer = electron.ipcRenderer;
 
 type InitInfo = {
-  connKey: DbConnectionKey;
+  connKey: DataSourceId;
 };
 
 let delay = (ms: number) => {
@@ -170,13 +170,8 @@ const init = async () => {
         } else if (fileType === "parquet") {
           tableName = await importParquet(targetPath);
         }
-        // TODO: really need a better way to construct these paths!
-        // (And displayName is a mess here)
         if (tableName !== null) {
-          targetDSPath = [
-            { kind: "Database", id: initInfo.connKey, displayName: tableName },
-            { kind: "Table", id: tableName, displayName: "tableName" },
-          ];
+          targetDSPath = { sourceId: initInfo.connKey, path: [tableName] };
         }
       }
 

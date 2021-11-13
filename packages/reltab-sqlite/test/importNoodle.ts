@@ -17,7 +17,7 @@ async function main() {
   log.setLevel("info"); // use "debug" for even more verbosity
   const ctx = await reltab.getConnection({
     providerName: "sqlite",
-    connectionInfo: ":memory:",
+    resourceId: ":memory:",
   });
 
   let testCtx = ctx as reltabSqlite.SqliteContext;

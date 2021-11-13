@@ -9,15 +9,15 @@ import {
   TableInfo,
   Row,
   ColumnMetaMap,
-  DbConnection,
+  DataSourceConnection,
   SQLiteDialect,
   ColumnType,
   DataSourcePath,
   DataSourceNode,
-  DataSourceNodeId,
-  DbConnectionKey,
+  DataSourceNodeInfo,
+  DataSourceId,
   EvalQueryOptions,
-  DbProvider,
+  DataSourceProvider,
   registerProvider,
   defaultEvalQueryOptions,
 } from "reltab"; // eslint-disable-line
@@ -40,9 +40,9 @@ const dbAll = tp.promisify(
     db.all(query, cb)
 );
 
-export class SqliteContext implements DbConnection {
+export class SqliteContext implements DataSourceConnection {
   readonly displayName: string;
-  readonly connectionKey: DbConnectionKey;
+  readonly sourceId: DataSourceId;
   dbfile: string;
   db: sqlite3.Database;
   private tableMap: TableInfoMap;
@@ -50,7 +50,7 @@ export class SqliteContext implements DbConnection {
   constructor(dbfile: string, db: any) {
     this.dbfile = dbfile;
     this.displayName = dbfile;
-    this.connectionKey = { providerName: "sqlite", connectionInfo: dbfile };
+    this.sourceId = { providerName: "sqlite", resourceId: dbfile };
     this.db = db;
     this.tableMap = {};
   }
@@ -207,21 +207,19 @@ export class SqliteContext implements DbConnection {
   async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
     const tiQuery = `select name,tbl_name from sqlite_master where type='table'`;
     const dbRows = await dbAll(this.db, tiQuery);
-    const children: DataSourceNodeId[] = dbRows.map((row: any) => ({
-      kind: "Table",
-      id: row.tbl_name,
-      displayName: row.name,
-    }));
-    let nodeId: DataSourceNodeId = {
+
+    // TODO: may need to answer about table nodes
+    const children: string[] = dbRows.map((row: any) => row.tbl_name);
+    const dbNodeInfo: DataSourceNodeInfo = {
       kind: "Database",
-      id: "",
       displayName: this.dbfile,
     };
-    let node: DataSourceNode = {
-      nodeId,
+    let dbNode: DataSourceNode = {
+      id: "",
+      nodeInfo: dbNodeInfo,
       children,
     };
-    return node;
+    return dbNode;
   }
 }
 
@@ -237,14 +235,14 @@ const open = (filename: string, mode: number): Promise<sqlite3.Database> => {
   });
 };
 
-const sqliteDbProvider: DbProvider = {
+const sqliteDataSourceProvider: DataSourceProvider = {
   providerName: "sqlite",
-  connect: async (connectionInfo: any): Promise<DbConnection> => {
-    const dbfile = connectionInfo as string;
+  connect: async (resourceId: any): Promise<DataSourceConnection> => {
+    const dbfile = resourceId as string;
     const db = await open(dbfile, sqlite3.OPEN_READWRITE);
     const ctx = new SqliteContext(dbfile, db);
     return ctx;
   },
 };
 
-registerProvider(sqliteDbProvider);
+registerProvider(sqliteDataSourceProvider);

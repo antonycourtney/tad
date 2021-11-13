@@ -17,8 +17,8 @@ import * as reltab from "reltab";
 import { monitorEventLoopDelay } from "perf_hooks";
 import { read } from "fs";
 import {
-  DbConnection,
-  DbConnectionKey,
+  DataSourceConnection,
+  DataSourceId,
   EncodedRequestHandler,
   EvalQueryOptions,
   getConnection,
@@ -33,20 +33,20 @@ const SRV_DIR = "./public/csv";
 const portNumber = 9000;
 
 /*
-const initSqlite = async (): Promise<DbConnection> => {
+const initSqlite = async (): Promise<DataSourceConnection> => {
   const rtOptions: any = { showQueries: true };
-  const connKey: DbConnectionKey = {
+  const connKey: DataSourceId = {
     providerName: "sqlite",
-    connectionInfo: ":memory:",
+    resourceId: ":memory:",
   };
   const dbc = await getConnection(connKey);
   return dbc;
 };
 */
 
-const covid19ConnKey: DbConnectionKey = {
+const covid19ConnKey: DataSourceId = {
   providerName: "bigquery",
-  connectionInfo: {
+  resourceId: {
     projectId: "bigquery-public-data",
     datasetName: "covid19_jhu_csse",
   },
@@ -66,9 +66,9 @@ const initSnowflake = async () => {
   connOpts.database = "SNOWFLAKE";
   connOpts.schema = "ACCOUNT_USAGE";
 
-  const snowflakeConnKey: DbConnectionKey = {
+  const snowflakeConnKey: DataSourceId = {
     providerName: "snowflake",
-    connectionInfo: connOpts,
+    resourceId: connOpts,
   };
 
   const rtc = (await reltab.getConnection(
@@ -78,7 +78,7 @@ const initSnowflake = async () => {
 
 /*
 const testImportFile = async (
-  dbc: DbConnection,
+  dbc: DataSourceConnection,
   fileName: string
 ): Promise<void> => {
   const ctx = dbc as SqliteContext;
@@ -88,18 +88,18 @@ const testImportFile = async (
   const md = await reltabSqlite.fastImport(ctx.db, filePath);
 };
 */
-const initDuckDB = async (): Promise<DbConnection> => {
+const initDuckDB = async (): Promise<DataSourceConnection> => {
   const rtOptions: any = { showQueries: true };
-  const connKey: DbConnectionKey = {
+  const connKey: DataSourceId = {
     providerName: "duckdb",
-    connectionInfo: ":memory:",
+    resourceId: ":memory:",
   };
   const dbc = await getConnection(connKey);
   return dbc;
 };
 
 const duckDBImportFile = async (
-  dbc: DbConnection,
+  dbc: DataSourceConnection,
   fileName: string
 ): Promise<void> => {
   const ctx = dbc as DuckDBContext;

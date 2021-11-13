@@ -1,4 +1,4 @@
-import * as duckdb from 'node-duckdb';
+import * as duckdb from "node-duckdb";
 import * as reltab from "reltab";
 import * as reltabDuckDB from "../src/reltab-duckdb";
 import * as tp from "typed-promisify";
@@ -33,22 +33,20 @@ const importCsv = async (db: duckdb.DuckDB, path: string) => {
   await reltabDuckDB.nativeCSVImport(db, path);
 };
 
-beforeAll(
-  async (): Promise<reltabDuckDB.DuckDBContext> => {
-    log.setLevel("debug"); // use "debug" for even more verbosity
-    const ctx = await reltab.getConnection({
-      providerName: "duckdb",
-      connectionInfo: ":memory:",
-    });
+beforeAll(async (): Promise<reltabDuckDB.DuckDBContext> => {
+  log.setLevel("debug"); // use "debug" for even more verbosity
+  const ctx = await reltab.getConnection({
+    providerName: "duckdb",
+    resourceId: ":memory:",
+  });
 
-    testCtx = ctx as reltabDuckDB.DuckDBContext;
+  testCtx = ctx as reltabDuckDB.DuckDBContext;
 
-    await importCsv(testCtx.db, "test/support/sample.csv");
-    await importCsv(testCtx.db, "test/support/barttest.csv");
+  await importCsv(testCtx.db, "test/support/sample.csv");
+  await importCsv(testCtx.db, "test/support/barttest.csv");
 
-    return testCtx;
-  }
-);
+  return testCtx;
+});
 
 test("t1 - basic sqlite tableQuery", async () => {
   const q1 = reltab.tableQuery("sample");

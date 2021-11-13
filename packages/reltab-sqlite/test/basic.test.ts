@@ -37,7 +37,7 @@ beforeAll(async (): Promise<reltabSqlite.SqliteContext> => {
   log.setLevel("info"); // use "debug" for even more verbosity
   const ctx = await reltab.getConnection({
     providerName: "sqlite",
-    connectionInfo: ":memory:",
+    resourceId: ":memory:",
   });
 
   testCtx = ctx as reltabSqlite.SqliteContext;

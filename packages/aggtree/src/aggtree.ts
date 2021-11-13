@@ -2,7 +2,7 @@ import * as reltab from "reltab";
 import * as _ from "lodash";
 import { Path, PathTree } from "./PathTree";
 import {
-  DbConnection,
+  DataSourceConnection,
   QueryExp,
   Schema,
   AggColSpec,
@@ -63,7 +63,7 @@ const addPathCols = (
 };
 
 export class VPivotTree {
-  rt: DbConnection;
+  rt: DataSourceConnection;
   baseQuery: QueryExp;
   pivotColumns: Array<string>;
   pivotLeafColumn: string | undefined | null;
@@ -79,7 +79,7 @@ export class VPivotTree {
     | null;
 
   constructor(
-    rt: DbConnection,
+    rt: DataSourceConnection,
     baseQuery: QueryExp,
     baseSchema: reltab.Schema,
     pivotColumns: Array<string>,
@@ -343,7 +343,7 @@ export class VPivotTree {
   }
 }
 export const getBaseSchema = (
-  rt: DbConnection,
+  rt: DataSourceConnection,
   baseQuery: QueryExp
 ): Promise<Schema> => {
   // add a count column and do the usual SQL where 1=0 trick:
@@ -354,7 +354,7 @@ export const getBaseSchema = (
   return schemap.then((schemaRes) => schemaRes.schema);
 };
 export function vpivot(
-  rt: DbConnection,
+  rt: DataSourceConnection,
   baseQuery: QueryExp,
   baseSchema: Schema,
   pivotColumns: Array<string>,

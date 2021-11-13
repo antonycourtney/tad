@@ -1,7 +1,7 @@
 import * as Immutable from "immutable";
 import { ViewState } from "./ViewState";
 import * as reltab from "reltab";
-import { DataSourcePath, DbConnectionKey } from "reltab";
+import { DataSourcePath, DataSourceId } from "reltab";
 import { Timer } from "./Timer";
 /**
  * Immutable representation of application state

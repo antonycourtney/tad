@@ -125,8 +125,9 @@ export const createFromFile = (
   create(openParams);
 };
 
-export const createFromDSPath = (path: DataSourcePath): string => {
-  const displayName = path[path.length - 1].displayName;
+export const createFromDSPath = (dsPath: DataSourcePath): string => {
+  const path = dsPath.path;
+  const displayName = path[path.length - 1];
   const title = "Tad - " + displayName;
   const openParams: OpenParams = {
     fileType: "dspath",

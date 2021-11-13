@@ -7,7 +7,7 @@ import { Path, PathTree } from "aggtree";
 import * as aggtree from "aggtree";
 import { StateRef, update, mutableGet, awaitableUpdate_ } from "oneref";
 import log from "loglevel";
-import { DataSourcePath, DbConnectionKey } from "reltab";
+import { DataSourcePath, DataSourceId } from "reltab";
 import * as util from "./util";
 
 export async function initAppState(
@@ -48,15 +48,15 @@ export async function stopAppLoadingTimer(
 }
 
 export const replaceCurrentView = async (
-  path: DataSourcePath,
+  dsPath: DataSourcePath,
   stateRef: StateRef<AppState>
 ): Promise<void> => {
   const appState = mutableGet(stateRef);
 
-  const dbConnKey = path[0].id as DbConnectionKey;
-  const dbc = await appState.rtc.connect(dbConnKey, path[0].displayName);
+  const dbc = await appState.rtc.connect(dsPath.sourceId);
 
-  const tableName = path[path.length - 1].id as string;
+  const { path } = dsPath;
+  const tableName = path[path.length - 1];
 
   const windowTitle = tableName;
   const baseQuery = reltab.tableQuery(tableName);

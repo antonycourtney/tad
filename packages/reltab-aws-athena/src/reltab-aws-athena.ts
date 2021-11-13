@@ -3,10 +3,10 @@ import {
   TableRep,
   QueryExp,
   Schema,
-  DbConnection,
+  DataSourceConnection,
   defaultEvalQueryOptions,
   EvalQueryOptions,
-  DbProvider,
+  DataSourceProvider,
   registerProvider,
 } from "reltab";
 import {
@@ -14,7 +14,7 @@ import {
   TableInfo,
   Row,
   ColumnMetaMap,
-  DbConnectionKey,
+  DataSourceId,
   PrestoDialect,
   DataSourceNode,
   DataSourcePath,
@@ -37,14 +37,14 @@ const mapIdent = (src: string): string => {
 
 const isAlpha = (ch: string): boolean => /^[A-Z]$/i.test(ch);
 
-export class AWSAthenaConnection implements DbConnection {
-  readonly connectionKey: DbConnectionKey;
+export class AWSAthenaConnection implements DataSourceConnection {
+  readonly sourceId: DataSourceId;
   tableMap: TableInfoMap;
 
   constructor() {
-    this.connectionKey = {
+    this.sourceId = {
       providerName: "aws-athena",
-      connectionInfo: {},
+      resourceId: {},
     };
     this.tableMap = {};
   }
@@ -163,10 +163,10 @@ export class AWSAthenaConnection implements DbConnection {
   }
 }
 
-const awsAthenaDbProvider: DbProvider = {
+const awsAthenaDataSourceProvider: DataSourceProvider = {
   providerName: "aws-athena",
-  connect: async (connectionInfo: any): Promise<DbConnection> =>
+  connect: async (resourceId: any): Promise<DataSourceConnection> =>
     new AWSAthenaConnection(),
 };
 
-registerProvider(awsAthenaDbProvider);
+registerProvider(awsAthenaDataSourceProvider);

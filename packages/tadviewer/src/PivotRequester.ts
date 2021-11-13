@@ -4,7 +4,7 @@ import { PagedDataView } from "./PagedDataView";
 import { ViewParams } from "./ViewParams";
 import { AppState } from "./AppState";
 import { QueryView } from "./QueryView";
-import { ReltabConnection, DbConnectionKey, DbConnection } from "reltab"; // eslint-disable-line
+import { ReltabConnection, DataSourceId, DataSourceConnection } from "reltab"; // eslint-disable-line
 
 import * as oneref from "oneref"; // eslint-disable-line
 import { mutableGet, addStateChangeListener } from "oneref";
@@ -89,7 +89,7 @@ const mkDataView = (
  */
 
 const fastFilterRowCount = async (
-  rt: DbConnection,
+  rt: DataSourceConnection,
   baseRowCount: number,
   filterExp: reltab.FilterExp,
   filterQuery: reltab.QueryExp
@@ -106,7 +106,7 @@ const fastFilterRowCount = async (
  */
 
 const fastViewRowCount = async (
-  rt: DbConnection,
+  rt: DataSourceConnection,
   filterRowCount: number,
   vpivots: Array<string>,
   viewQuery: reltab.QueryExp
@@ -126,7 +126,7 @@ const fastViewRowCount = async (
  */
 
 const requestQueryView = async (
-  rt: DbConnection,
+  rt: DataSourceConnection,
   baseQuery: reltab.QueryExp,
   baseSchema: reltab.Schema,
   viewParams: ViewParams
@@ -178,14 +178,19 @@ const requestQueryView = async (
 const queryOptions: reltab.EvalQueryOptions = { showQueries: true };
 
 const requestDataView = async (
-  rt: DbConnection,
+  rt: DataSourceConnection,
   viewParams: ViewParams,
   queryView: QueryView,
   offset: number,
   limit: number
 ): Promise<PagedDataView> => {
   // console.log("requestDataView: ", { query: queryView.query });
-  const tableData = await rt.evalQuery(queryView.query, offset, limit, queryOptions);
+  const tableData = await rt.evalQuery(
+    queryView.query,
+    offset,
+    limit,
+    queryOptions
+  );
   const dataView = mkDataView(
     viewParams,
     queryView.rowCount,

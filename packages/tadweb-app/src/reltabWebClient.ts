@@ -3,8 +3,8 @@ import * as reltab from "reltab";
 import {
   DataSourcePath,
   DataSourceNode,
-  DbConnection,
-  DbConnectionKey,
+  DataSourceConnection,
+  DataSourceId,
   ReltabConnection,
   DataSourceNodeId,
   TransportClient,

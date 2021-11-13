@@ -9,17 +9,17 @@ import {
   TableInfo,
   Row,
   ColumnMetaMap,
-  DbConnection,
+  DataSourceConnection,
   ColumnType,
   DataSourcePath,
   DataSourceNode,
-  DataSourceNodeId,
-  DbConnectionKey,
+  DataSourceId,
   EvalQueryOptions,
-  DbProvider,
+  DataSourceProvider,
   registerProvider,
   defaultEvalQueryOptions,
   DuckDBDialect,
+  DataSourceNodeInfo,
 } from "reltab"; // eslint-disable-line
 import { SQLDialect } from "reltab/dist/dialect";
 
@@ -68,9 +68,9 @@ const dbAll = async (dbConn: Connection, query: string): Promise<any> => {
   return resRows;
 };
 
-export class DuckDBContext implements DbConnection {
+export class DuckDBContext implements DataSourceConnection {
   readonly displayName: string;
-  readonly connectionKey: DbConnectionKey;
+  readonly sourceId: DataSourceId;
   dbfile: string;
   db: DuckDB;
   connPool: ConnectionPool;
@@ -79,7 +79,7 @@ export class DuckDBContext implements DbConnection {
   constructor(dbfile: string, db: DuckDB, dbConn: Connection) {
     this.dbfile = dbfile;
     this.displayName = dbfile;
-    this.connectionKey = { providerName: "duckdb", connectionInfo: dbfile };
+    this.sourceId = { providerName: "duckdb", resourceId: dbfile };
     this.db = db;
     this.connPool = new ConnectionPool(db);
     this.tableMap = {};
@@ -239,28 +239,24 @@ export class DuckDBContext implements DbConnection {
   async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
     const tiQuery = `PRAGMA show_tables;`;
     const dbRows = await this.runSQLQuery(tiQuery);
-    const children: DataSourceNodeId[] = dbRows.map((row: any) => ({
-      kind: "Table",
-      id: row.name,
-      displayName: row.name,
-    }));
-    let nodeId: DataSourceNodeId = {
+    const children: string[] = dbRows.map((row: any) => row.name);
+    let nodeInfo: DataSourceNodeInfo = {
       kind: "Database",
-      id: "",
       displayName: this.dbfile,
     };
     let node: DataSourceNode = {
-      nodeId,
+      id: this.dbfile,
+      nodeInfo,
       children,
     };
     return node;
   }
 }
 
-const duckdbDbProvider: DbProvider = {
+const duckdbDataSourceProvider: DataSourceProvider = {
   providerName: "duckdb",
-  connect: async (connectionInfo: any): Promise<DbConnection> => {
-    const dbfile = connectionInfo as string;
+  connect: async (resourceId: any): Promise<DataSourceConnection> => {
+    const dbfile = resourceId as string;
     const dbOpts: IDuckDBConfig = {};
     if (dbfile) {
       dbOpts.path = dbfile;
@@ -272,4 +268,4 @@ const duckdbDbProvider: DbProvider = {
   },
 };
 
-registerProvider(duckdbDbProvider);
+registerProvider(duckdbDataSourceProvider);

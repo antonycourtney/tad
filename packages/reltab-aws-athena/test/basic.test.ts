@@ -5,15 +5,15 @@ import * as util from "./testUtils";
 import * as log from "loglevel";
 import * as aggtree from "aggtree";
 import { PathTree } from "aggtree";
-import { DbConnectionKey } from "reltab";
+import { DataSourceId } from "reltab";
 
 const PROJECT_ID = "";
 
 let testCtx: AWSAthenaConnection;
 
-const awsConnKey: DbConnectionKey = {
+const awsConnKey: DataSourceId = {
   providerName: "aws-athena",
-  connectionInfo: {},
+  resourceId: {},
 };
 
 beforeAll(async () => {

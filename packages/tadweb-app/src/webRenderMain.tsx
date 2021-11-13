@@ -10,7 +10,7 @@ import { initAppState } from "tadviewer";
 import * as reltab from "reltab";
 import log from "loglevel";
 import { WebTransportClient } from "./reltabWebClient";
-import { DbConnectionKey, RemoteReltabConnection } from "reltab";
+import { DataSourceId, RemoteReltabConnection } from "reltab";
 
 const testBaseUrl = "http://localhost:9000";
 // const TEST_FILE = "movie_metadata.csv";

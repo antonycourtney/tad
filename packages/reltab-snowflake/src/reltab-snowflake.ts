@@ -3,10 +3,10 @@ import {
   TableRep,
   QueryExp,
   Schema,
-  DbConnection,
+  DataSourceConnection,
   defaultEvalQueryOptions,
   EvalQueryOptions,
-  DbProvider,
+  DataSourceProvider,
   registerProvider,
   DataSourceNodeId,
 } from "reltab";
@@ -15,7 +15,7 @@ import {
   TableInfo,
   Row,
   ColumnMetaMap,
-  DbConnectionKey,
+  DataSourceId,
   SnowflakeDialect,
   DataSourceNode,
   DataSourcePath,
@@ -41,7 +41,10 @@ export function getAuthConnectionOptions(): snowflake.ConnectionOptions {
   return connOpts;
 }
 
-function executeQuery(conn: snowflake.Connection, sqlText: string): Promise<any[]> {
+function executeQuery(
+  conn: snowflake.Connection,
+  sqlText: string
+): Promise<any[]> {
   return new Promise((resolve, reject) => {
     let stmt = conn.execute({
       sqlText,
@@ -64,24 +67,24 @@ function typeBaseName(origType: string): string {
   return origType.split("(", 1)[0];
 }
 
-export class SnowflakeConnection implements DbConnection {
-  readonly connectionKey: DbConnectionKey;
+export class SnowflakeConnection implements DataSourceConnection {
+  readonly sourceId: DataSourceId;
   tableMap: TableInfoMap;
   snowConn: snowflake.Connection;
 
-  constructor(connectionInfo: snowflake.ConnectionOptions) {
-    this.connectionKey = {
+  constructor(resourceId: snowflake.ConnectionOptions) {
+    this.sourceId = {
       providerName: "snowflake",
-      connectionInfo
+      resourceId,
     };
     this.tableMap = {};
     log.debug(
       "creating snowflake connection with: ",
-      JSON.stringify(connectionInfo, null, 2)
+      JSON.stringify(resourceId, null, 2)
     );
     // Enable this for hard-core debugging:
     // snowflake.configure({ logLevel: "TRACE" });
-    this.snowConn = snowflake.createConnection(connectionInfo);
+    this.snowConn = snowflake.createConnection(resourceId);
   }
 
   connect(): Promise<void> {
@@ -253,7 +256,7 @@ export class SnowflakeConnection implements DbConnection {
 
         const qres = await executeQuery(this.snowConn, sqlQuery);
         const metaRows = qres as Row[];
-  
+
         const children: DataSourceNodeId[] = metaRows.map((row) => ({
           kind: "Dataset",
           id: row.name as string,
@@ -273,7 +276,7 @@ export class SnowflakeConnection implements DbConnection {
 
         const qres = await executeQuery(this.snowConn, sqlQuery);
         const metaRows = qres as Row[];
-  
+
         const children: DataSourceNodeId[] = metaRows.map((row) => ({
           kind: "Table",
           id: `${dbName}.${schemaName}.${row.name}`,
@@ -281,7 +284,7 @@ export class SnowflakeConnection implements DbConnection {
         }));
         let node: DataSourceNode = {
           nodeId: schemaNodeId,
-          children
+          children,
         };
         return node;
       }
@@ -290,13 +293,13 @@ export class SnowflakeConnection implements DbConnection {
   }
 }
 
-const snowflakeDbProvider: DbProvider = {
+const snowflakeDataSourceProvider: DataSourceProvider = {
   providerName: "snowflake",
-  connect: async (connectionInfo: any): Promise<DbConnection> => {
-    const conn = new SnowflakeConnection(connectionInfo);
+  connect: async (resourceId: any): Promise<DataSourceConnection> => {
+    const conn = new SnowflakeConnection(resourceId);
     await conn.connect();
     return conn;
   },
 };
 
-registerProvider(snowflakeDbProvider);
+registerProvider(snowflakeDataSourceProvider);

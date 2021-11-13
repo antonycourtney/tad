@@ -5,7 +5,7 @@ import * as util from "./testUtils";
 import * as log from "loglevel";
 import * as aggtree from "aggtree";
 import { PathTree } from "aggtree";
-import { DbConnectionKey } from "reltab";
+import { DataSourceId } from "reltab";
 
 const PROJECT_ID = "";
 
@@ -27,7 +27,7 @@ beforeAll(async () => {
 
   testCtx = (await reltab.getConnection({
     providerName: "bigquery",
-    connectionInfo: {
+    resourceId: {
       projectId: "bigquery-test-project-276102",
       datasetName: "test_dataset",
     },
@@ -49,9 +49,9 @@ beforeAll(async () => {
   console.log("barttest tableInfo: ", JSON.stringify(ti, undefined, 2));
 });
 
-const covid19ConnKey: DbConnectionKey = {
+const covid19ConnKey: DataSourceId = {
   providerName: "bigquery",
-  connectionInfo: {
+  resourceId: {
     projectId: "bigquery-public-data",
     datasetName: "covid19_jhu_csse",
   },

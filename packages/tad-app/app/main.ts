@@ -25,11 +25,11 @@ import path from "path";
 import pkgInfo from "../package.json";
 import {
   getConnection,
-  DbConnectionKey,
+  DataSourceId,
   TableInfo,
   EvalQueryOptions,
   QueryExp,
-  DbConnection,
+  DataSourceConnection,
   TableRep,
   TransportServer,
   serverInit,
@@ -48,12 +48,12 @@ let delay = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-const covid19ConnKey: DbConnectionKey = {
+const covid19ConnKey: DataSourceId = {
   providerName: "bigquery",
-  connectionInfo: {
+  resourceId: JSON.stringify({
     projectId: "bigquery-public-data",
     datasetName: "covid19_jhu_csse",
-  },
+  }),
 };
 const connOpts: EvalQueryOptions = {
   showQueries: true,
@@ -102,19 +102,19 @@ const initMainAsync = async (options: any) => {
 
   /*
   let rtc: reltabSqlite.SqliteContext;
-  let connKey: DbConnectionKey;
+  let connKey: DataSourceId;
 
   connKey = {
     providerName: "sqlite",
-    connectionInfo: ":memory:",
+    resourceId: ":memory:",
   };
   rtc = (await getConnection(connKey)) as reltabSqlite.SqliteContext;
   */
-  let connKey: DbConnectionKey;
+  let connKey: DataSourceId;
 
   connKey = {
     providerName: "duckdb",
-    connectionInfo: ":memory:",
+    resourceId: ":memory:",
   };
   const rtc = await getConnection(connKey);
 
