@@ -10,7 +10,6 @@ import {
   DataSourceId,
   DataSourceNode,
   DataSourcePath,
-  DataSourceNodeInfo,
 } from "../DataSource";
 import { TransportClient } from "./Transport";
 import * as log from "loglevel";

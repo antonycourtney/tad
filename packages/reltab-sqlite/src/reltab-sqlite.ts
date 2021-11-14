@@ -14,7 +14,6 @@ import {
   ColumnType,
   DataSourcePath,
   DataSourceNode,
-  DataSourceNodeInfo,
   DataSourceId,
   EvalQueryOptions,
   DataSourceProvider,
@@ -210,13 +209,11 @@ export class SqliteContext implements DataSourceConnection {
 
     // TODO: may need to answer about table nodes
     const children: string[] = dbRows.map((row: any) => row.tbl_name);
-    const dbNodeInfo: DataSourceNodeInfo = {
-      kind: "Database",
-      displayName: this.dbfile,
-    };
     let dbNode: DataSourceNode = {
       id: "",
-      nodeInfo: dbNodeInfo,
+      kind: "Database",
+      displayName: this.dbfile,
+      isContainer: true,
       children,
     };
     return dbNode;

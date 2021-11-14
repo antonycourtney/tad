@@ -25,7 +25,13 @@ const tableGetSchema = (
   tableMap: TableInfoMap,
   query: TableQueryRep
 ): Schema => {
-  return tableMap[query.tableName].schema;
+  const ti = tableMap[query.tableName];
+  if (!ti) {
+    throw new Error(
+      'tableGetSchema: table "' + query.tableName + '" not found in tableMap'
+    );
+  }
+  return ti.schema;
 };
 
 const projectGetSchema = (

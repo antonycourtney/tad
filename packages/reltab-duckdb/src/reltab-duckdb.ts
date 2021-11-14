@@ -19,7 +19,6 @@ import {
   registerProvider,
   defaultEvalQueryOptions,
   DuckDBDialect,
-  DataSourceNodeInfo,
 } from "reltab"; // eslint-disable-line
 import { SQLDialect } from "reltab/dist/dialect";
 
@@ -236,19 +235,31 @@ export class DuckDBContext implements DataSourceConnection {
     return ti;
   }
 
-  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
-    const tiQuery = `PRAGMA show_tables;`;
-    const dbRows = await this.runSQLQuery(tiQuery);
-    const children: string[] = dbRows.map((row: any) => row.name);
-    let nodeInfo: DataSourceNodeInfo = {
-      kind: "Database",
-      displayName: this.dbfile,
-    };
-    let node: DataSourceNode = {
-      id: this.dbfile,
-      nodeInfo,
-      children,
-    };
+  async getSourceInfo(dsPath: DataSourcePath): Promise<DataSourceNode> {
+    const { path } = dsPath;
+    let node: DataSourceNode;
+    if (path.length === 0) {
+      const tiQuery = `PRAGMA show_tables;`;
+      const dbRows = await this.runSQLQuery(tiQuery);
+      const children: string[] = dbRows.map((row: any) => row.name);
+      node = {
+        id: this.dbfile,
+        kind: "Database",
+        displayName: this.dbfile,
+        isContainer: true,
+        children,
+      };
+    } else {
+      // table level
+      const tableName = path[path.length - 1];
+      node = {
+        id: tableName,
+        kind: "Table",
+        displayName: tableName,
+        isContainer: false,
+        children: [],
+      };
+    }
     return node;
   }
 }

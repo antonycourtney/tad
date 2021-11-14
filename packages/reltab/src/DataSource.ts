@@ -23,15 +23,11 @@ export interface DataSourcePath {
   path: string[];
 }
 
-// metadata about the node
-export interface DataSourceNodeInfo {
+export interface DataSourceNode {
+  id: string; // component of DataSourcePath.path, or fully qualified name for leaf nodes
   kind: DataSourceKind;
   displayName: string;
   description?: string;
-}
-
-export interface DataSourceNode {
-  id: string; // component of DataSourcePath.path
-  nodeInfo: DataSourceNodeInfo;
+  isContainer: boolean; // true iff this node can have children
   children: string[];
 }

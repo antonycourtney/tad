@@ -3,7 +3,6 @@ import {
   TableRep,
   QueryExp,
   Schema,
-  DataSourceNodeInfo,
   DataSourceId,
   EvalQueryOptions,
   DataSourceProvider,
@@ -78,6 +77,17 @@ export class BigQueryConnection implements DataSourceConnection {
     return this.displayName;
   }
 
+  // ensure every table mentioned in query is registered:
+  async ensureTables(query: QueryExp): Promise<void> {
+    const tblNames = query.getTables();
+    const namesArr = Array.from(tblNames);
+    for (let tblName of namesArr) {
+      if (this.tableMap[tblName] === undefined) {
+        await this.getTableInfo(tblName);
+      }
+    }
+  }
+
   async evalQuery(
     query: QueryExp,
     offset?: number,
@@ -85,6 +95,7 @@ export class BigQueryConnection implements DataSourceConnection {
     options?: EvalQueryOptions
   ): Promise<TableRep> {
     let t0 = process.hrtime();
+    await this.ensureTables(query);
     const schema = query.getSchema(BigQueryDialect, this.tableMap);
     const sqlQuery = query.toSql(BigQueryDialect, this.tableMap, offset, limit);
     let t1 = process.hrtime(t0);
@@ -121,6 +132,8 @@ export class BigQueryConnection implements DataSourceConnection {
 
   async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
     let t0 = process.hrtime();
+    await this.ensureTables(query);
+
     const countSql = query.toCountSql(BigQueryDialect, this.tableMap);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
@@ -206,13 +219,11 @@ export class BigQueryConnection implements DataSourceConnection {
       // Enumerate datasets and get their ids:
       const [datasets] = await this.bigquery_meta.getDatasets();
       const children: string[] = datasets.map((dataset) => dataset.id!);
-      let nodeInfo: DataSourceNodeInfo = {
+      let node: DataSourceNode = {
+        id: this.projectId,
         kind: "Database",
         displayName: this.projectId,
-      };
-      let node: DataSourceNode = {
-        nodeInfo,
-        id: this.projectId,
+        isContainer: true,
         children,
       };
       return node;
@@ -222,32 +233,26 @@ export class BigQueryConnection implements DataSourceConnection {
 
       // get metadata on dataset for description:
       const [dsInfo] = await dataset.get();
-
-      console.log("got dataset info: ", dsInfo);
       // And enumerate tables:
       const [tables] = await dataset.getTables();
       const tableIds = tables.map((table) => table.id!);
-      const nodeInfo: DataSourceNodeInfo = {
+      const node: DataSourceNode = {
+        id: datasetName,
         kind: "Dataset",
         displayName: datasetName,
         description: dsInfo.metadata.description,
-      };
-      const node: DataSourceNode = {
-        nodeInfo,
-        id: datasetName,
+        isContainer: true,
         children: tableIds,
       };
       return node;
     } else {
       // table level
-      const [projectId, datasetName, tableId] = path;
-      const nodeInfo: DataSourceNodeInfo = {
+      const [datasetName, tableId] = path;
+      const node: DataSourceNode = {
+        id: `${this.projectId}.${datasetName}.${tableId}`,
         kind: "Table",
         displayName: tableId,
-      };
-      const node: DataSourceNode = {
-        nodeInfo,
-        id: `${projectId}.${datasetName}.${tableId}`,
+        isContainer: false,
         children: [],
       };
       return node;

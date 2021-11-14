@@ -18,7 +18,6 @@ import {
 import { useState, useReducer } from "react";
 import {
   DataSourceKind,
-  DataSourceNodeInfo,
   DataSourceNode,
   DataSourcePath,
   DataSourceId,
@@ -54,13 +53,12 @@ const dsNodeTreeNode = (
   dsPath: DataSourcePath,
   dsNode: DataSourceNode
 ): DSTreeNodeInfo => {
-  const { nodeInfo } = dsNode;
   const ret: DSTreeNodeInfo = {
-    icon: dataKindIcon(nodeInfo.kind),
+    icon: dataKindIcon(dsNode.kind),
     id: JSON.stringify(dsNode.id),
-    label: nodeInfo.displayName,
+    label: dsNode.displayName,
     nodeData: { dsPath, dsNode },
-    hasCaret: nodeInfo.kind !== "Table",
+    hasCaret: dsNode.isContainer,
   };
   return ret;
 };
@@ -89,6 +87,7 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
           rootSources.map(async (sourceId) => {
             const rootPath = { sourceId, path: [] };
             const rootNode = await rtc.getSourceInfo(rootPath);
+            console.log("creating root node for", rootPath, rootNode);
             return dsNodeTreeNode(rootPath, rootNode);
           })
         );
@@ -109,6 +108,7 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
   };
   const handleNodeExpand = async (treeNode: DSTreeNodeInfo) => {
     const dsPath: DataSourcePath = treeNode.nodeData!.dsPath;
+    console.log("handleNodeExpand: expanding node for path ", dsPath);
     const appState = mutableGet(stateRef);
     const rtc = appState.rtc;
     const dsNode = await rtc.getSourceInfo(dsPath);
@@ -120,13 +120,12 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
       })
     );
     treeNode.isExpanded = true;
-    const dsInfo = dsNode.nodeInfo;
-    if (dsInfo.description) {
+    if (dsNode.description) {
       treeNode.secondaryLabel = (
         <Tooltip
           usePortal={true}
           boundary="window"
-          content={dsInfo.description}
+          content={dsNode.description}
         >
           <Icon icon="eye-open" />
         </Tooltip>
@@ -141,7 +140,7 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     e: React.MouseEvent<HTMLElement>
   ) => {
     const { dsPath, dsNode } = treeNode.nodeData!;
-    if (dsNode.nodeInfo.kind === "Table") {
+    if (dsNode.kind === "Table") {
       actions.openDataSourcePath(dsPath, stateRef);
       // actions.openTable(dsNodeId.id, stateRef);
     }

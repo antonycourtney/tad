@@ -17,7 +17,6 @@ import {
   DataSourceProviderName,
   DataSourceId,
   DataSourceNode,
-  DataSourceNodeInfo,
   DataSourcePath,
 } from "../DataSource";
 import { deserializeQueryReq, QueryExp } from "../QueryExp";
