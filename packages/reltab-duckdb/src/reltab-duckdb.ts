@@ -235,32 +235,36 @@ export class DuckDBContext implements DataSourceConnection {
     return ti;
   }
 
-  async getSourceInfo(dsPath: DataSourcePath): Promise<DataSourceNode> {
+  async getRootNode(): Promise<DataSourceNode> {
+    const rootNode: DataSourceNode = {
+      id: this.dbfile,
+      kind: "Database",
+      displayName: this.dbfile,
+      isContainer: true,
+    };
+    return rootNode;
+  }
+  async getChildren(dsPath: DataSourcePath): Promise<DataSourceNode[]> {
     const { path } = dsPath;
     let node: DataSourceNode;
-    if (path.length === 0) {
-      const tiQuery = `PRAGMA show_tables;`;
-      const dbRows = await this.runSQLQuery(tiQuery);
-      const children: string[] = dbRows.map((row: any) => row.name);
-      node = {
-        id: this.dbfile,
-        kind: "Database",
-        displayName: this.dbfile,
-        isContainer: true,
-        children,
-      };
-    } else {
-      // table level
-      const tableName = path[path.length - 1];
-      node = {
-        id: tableName,
-        kind: "Table",
-        displayName: tableName,
-        isContainer: false,
-        children: [],
-      };
+    const tiQuery = `PRAGMA show_tables;`;
+    const dbRows = await this.runSQLQuery(tiQuery);
+    const tableNames: string[] = dbRows.map((row: any) => row.name);
+    const childNodes: DataSourceNode[] = tableNames.map((tableName) => ({
+      id: tableName,
+      kind: "Table",
+      displayName: tableName,
+      isContainer: false,
+    }));
+    return childNodes;
+  }
+
+  async getTableName(dsPath: DataSourcePath): Promise<string> {
+    const { path } = dsPath;
+    if (path.length < 1) {
+      throw new Error("getTableName: empty path");
     }
-    return node;
+    return path[path.length - 1];
   }
 }
 

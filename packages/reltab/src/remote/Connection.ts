@@ -1,24 +1,16 @@
+import { deserializeError } from "serialize-error";
 import {
-  deserializeTableRepJson,
-  deserializeTableRepStr,
-  QueryExp,
-} from "../QueryExp";
-import { TableRep, TableInfo } from "../TableRep";
-import { SQLDialect } from "../dialect";
-import {
-  DataSourceProviderName,
+  DataSourceConnection,
   DataSourceId,
   DataSourceNode,
   DataSourcePath,
+  EvalQueryOptions,
 } from "../DataSource";
-import { TransportClient } from "./Transport";
-import * as log from "loglevel";
+import { deserializeTableRepStr, QueryExp } from "../QueryExp";
+import { TableInfo, TableRep } from "../TableRep";
 import { Result } from "./result";
-import { deserializeError } from "serialize-error";
+import { TransportClient } from "./Transport";
 
-export interface EvalQueryOptions {
-  showQueries?: boolean;
-}
 export const defaultEvalQueryOptions: EvalQueryOptions = {
   showQueries: false,
 };
@@ -39,28 +31,12 @@ export interface DbConnGetTableInfoRequest {
   tableName: string;
 }
 
-export interface DbConnGetSourceInfoRequest {
+export interface DbConnGetChildrenRequest {
   path: DataSourcePath;
 }
 
-/**
- * A local or remote connection to a specific database instance.
- */
-export interface DataSourceConnection {
-  readonly sourceId: DataSourceId;
-
-  evalQuery(
-    query: QueryExp,
-    offset?: number,
-    limit?: number,
-    options?: EvalQueryOptions
-  ): Promise<TableRep>;
-  rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number>;
-
-  getTableInfo(tableName: string): Promise<TableInfo>;
-  getSourceInfo(path: DataSourcePath): Promise<DataSourceNode>;
-
-  getDisplayName(): Promise<string>;
+export interface DbConnGetTableNameRequest {
+  path: DataSourcePath;
 }
 
 export type EngineReq<T> = { engine: DataSourceId; req: T };
@@ -138,12 +114,25 @@ class RemoteDataSourceConnection implements DataSourceConnection {
     ).then(decodeResult);
   }
 
-  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
-    const req: DbConnGetSourceInfoRequest = { path };
+  async getRootNode(): Promise<DataSourceNode> {
+    return invokeDbFunction(this.tconn, this.sourceId, "getRootNode", {}).then(
+      decodeResult
+    );
+  }
+
+  async getChildren(path: DataSourcePath): Promise<DataSourceNode[]> {
+    const req: DbConnGetChildrenRequest = { path };
+    return invokeDbFunction(this.tconn, this.sourceId, "getChildren", req).then(
+      decodeResult
+    );
+  }
+
+  async getTableName(path: DataSourcePath): Promise<string> {
+    const req: DbConnGetTableNameRequest = { path };
     return invokeDbFunction(
       this.tconn,
       this.sourceId,
-      "getSourceInfo",
+      "getTableName",
       req
     ).then(decodeResult);
   }
@@ -159,12 +148,6 @@ export interface ReltabConnection {
   connect(sourceId: DataSourceId): Promise<DataSourceConnection>;
 
   getDataSources(): Promise<DataSourceId[]>;
-
-  /**
-   * Expand an absolute DataSourcePath, rooted in an available Database.
-   * @param path Absolute path to data source.
-   */
-  getSourceInfo(path: DataSourcePath): Promise<DataSourceNode>;
 }
 
 async function jsonInvoke(
@@ -210,16 +193,5 @@ export class RemoteReltabConnection implements ReltabConnection {
       decodeResult
     )) as any;
     return ret["dataSourceIds"];
-  }
-
-  /**
-   * Expand an absolute DataSourcePath, rooted in an available Database.
-   * @param path Absolute path to data source.
-   */
-  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
-    const ret = (await jsonInvoke(this.tconn, "getSourceInfo", { path }).then(
-      decodeResult
-    )) as any;
-    return ret["sourceInfo"];
   }
 }

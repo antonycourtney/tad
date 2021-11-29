@@ -35,7 +35,7 @@ export const PivotSidebar: React.FC<PivotSidebarProps> = ({
   const onLeafColumnSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selStr = event.target.value;
     const cid = selStr === "__none" ? null : selStr;
-    console.log("onLeafColumnSelect: ", cid);
+    // console.log("onLeafColumnSelect: ", cid);
     update(
       stateRef,
       (appState) =>

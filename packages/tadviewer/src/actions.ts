@@ -56,13 +56,15 @@ export const replaceCurrentView = async (
   const dbc = await appState.rtc.connect(dsPath.sourceId);
 
   const { path } = dsPath;
-  const tableName = path[path.length - 1];
+  const baseTableName = path[path.length - 1];
 
-  const windowTitle = tableName;
+  const windowTitle = baseTableName;
 
-  const tableNode = await appState.rtc.getSourceInfo(dsPath);
+  const queryTableName = await dbc.getTableName(dsPath);
 
-  const baseQuery = reltab.tableQuery(tableNode.id);
+  // console.log("replaceCurrentView: queryTableName: ", dsPath, queryTableName);
+
+  const baseQuery = reltab.tableQuery(queryTableName);
   const baseSchema = await aggtree.getBaseSchema(dbc, baseQuery);
 
   // start off with all columns displayed:

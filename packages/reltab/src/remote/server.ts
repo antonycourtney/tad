@@ -6,18 +6,19 @@
 import * as log from "loglevel";
 import * as prettyHRTime from "pretty-hrtime";
 import {
-  DataSourceConnection,
   EngineReq,
   DbConnEvalQueryRequest,
   DbConnRowCountRequest,
   DbConnGetTableInfoRequest,
-  DbConnGetSourceInfoRequest,
+  DbConnGetChildrenRequest,
+  DbConnGetTableNameRequest,
 } from "./Connection";
 import {
-  DataSourceProviderName,
+  DataSourceConnection,
   DataSourceId,
   DataSourceNode,
   DataSourcePath,
+  DataSourceProvider,
 } from "../DataSource";
 import { deserializeQueryReq, QueryExp } from "../QueryExp";
 import {
@@ -61,16 +62,38 @@ const dbConnRowCount = async (
   return count;
 };
 
-const dbConnGetSourceInfo = async (
-  conn: DataSourceConnection,
-  req: DbConnGetSourceInfoRequest
+const dbConnGetRootNode = async (
+  conn: DataSourceConnection
 ): Promise<DataSourceNode> => {
   const hrstart = process.hrtime();
-  const { path } = req;
-  const sourceInfo = await conn.getSourceInfo(path);
+  const rootNode = await conn.getRootNode();
   const elapsed = process.hrtime(hrstart);
-  log.info("dbGetSourceInfo: evaluated query in", prettyHRTime(elapsed));
-  return sourceInfo;
+  log.info("dbGetRootNode: evaluated in", prettyHRTime(elapsed));
+  return rootNode;
+};
+
+const dbConnGetChildren = async (
+  conn: DataSourceConnection,
+  req: DbConnGetChildrenRequest
+): Promise<DataSourceNode[]> => {
+  const hrstart = process.hrtime();
+  const { path } = req;
+  const children = await conn.getChildren(path);
+  const elapsed = process.hrtime(hrstart);
+  log.info("dbGetChildren: evaluated query in", prettyHRTime(elapsed));
+  return children;
+};
+
+const dbConnGetTableName = async (
+  conn: DataSourceConnection,
+  req: DbConnGetTableNameRequest
+): Promise<string> => {
+  const hrstart = process.hrtime();
+  const { path } = req;
+  const tableName = await conn.getTableName(path);
+  const elapsed = process.hrtime(hrstart);
+  log.info("dbGetTableName: evaluated query in", prettyHRTime(elapsed));
+  return tableName;
 };
 
 const dbConnGetTableInfo = async (
@@ -105,13 +128,10 @@ function mkEngineReqHandler<Req, Resp>(
 
 const handleDbConnEvalQuery = mkEngineReqHandler(dbConnEvalQuery);
 const handleDbConnRowCount = mkEngineReqHandler(dbConnRowCount);
-const handleDbConnGetSourceInfo = mkEngineReqHandler(dbConnGetSourceInfo);
+const handleDbConnGetRootNode = mkEngineReqHandler(dbConnGetRootNode);
+const handleDbConnGetChildren = mkEngineReqHandler(dbConnGetChildren);
+const handleDbConnGetTableName = mkEngineReqHandler(dbConnGetTableName);
 const handleDbConnGetTableInfo = mkEngineReqHandler(dbConnGetTableInfo);
-
-export interface DataSourceProvider {
-  readonly providerName: DataSourceProviderName;
-  connect(resourceId: string): Promise<DataSourceConnection>;
-}
 
 let providerRegistry: { [providerName: string]: DataSourceProvider } = {};
 
@@ -192,34 +212,12 @@ const handleGetDataSources = async (): Promise<GetDataSourcesResult> => {
 /**
  * server side of getSourceInfo standalone function, which operates on absolute paths.
  */
-async function getSourceInfo(dsPath: DataSourcePath): Promise<DataSourceNode> {
-  const { sourceId, path } = dsPath;
-  const dbConn = await getConnection(sourceId);
-  const sourceInfo = dbConn.getSourceInfo(dsPath);
-  return sourceInfo;
-}
-
 interface GetSourceInfoRequest {
   path: DataSourcePath;
 }
 
 interface GetSourceInfoResult {
   sourceInfo: DataSourceNode;
-}
-
-// handler for getSourceInfo
-async function handleGetSourceInfo(
-  req: GetSourceInfoRequest
-): Promise<GetSourceInfoResult> {
-  const hrstart = process.hrtime();
-  const { path } = req;
-  const sourceInfo = await getSourceInfo(path);
-  const elapsed = process.hrtime(hrstart);
-  log.info("getSourceInfo: evaluated query in", prettyHRTime(elapsed));
-  const resObj = {
-    sourceInfo,
-  };
-  return resObj;
 }
 
 type AnyReqHandler = (req: any) => Promise<any>;
@@ -256,10 +254,6 @@ export const serverInit = (ts: TransportServer) => {
     simpleJSONHandler(exceptionHandler(handleGetDataSources))
   );
   ts.registerInvokeHandler(
-    "getSourceInfo",
-    simpleJSONHandler(exceptionHandler(handleGetSourceInfo))
-  );
-  ts.registerInvokeHandler(
     "DataSourceConnection.evalQuery",
     simpleJSONHandler(exceptionHandler(handleDbConnEvalQuery))
   );
@@ -268,8 +262,16 @@ export const serverInit = (ts: TransportServer) => {
     simpleJSONHandler(exceptionHandler(handleDbConnRowCount))
   );
   ts.registerInvokeHandler(
-    "DataSourceConnection.getSourceInfo",
-    simpleJSONHandler(exceptionHandler(handleDbConnGetSourceInfo))
+    "DataSourceConnection.getRootNode",
+    simpleJSONHandler(exceptionHandler(handleDbConnGetRootNode))
+  );
+  ts.registerInvokeHandler(
+    "DataSourceConnection.getChildren",
+    simpleJSONHandler(exceptionHandler(handleDbConnGetChildren))
+  );
+  ts.registerInvokeHandler(
+    "DataSourceConnection.getTableName",
+    simpleJSONHandler(exceptionHandler(handleDbConnGetTableName))
   );
   ts.registerInvokeHandler(
     "DataSourceConnection.getTableInfo",

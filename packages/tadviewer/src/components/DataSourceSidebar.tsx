@@ -21,6 +21,7 @@ import {
   DataSourceNode,
   DataSourcePath,
   DataSourceId,
+  DataSourceConnection,
 } from "reltab";
 import { actions } from "../tadviewer";
 
@@ -43,6 +44,7 @@ const dataKindIcon = (dsKind: DataSourceKind): IconName => {
 };
 
 type DSTreeNodeData = {
+  dsc: DataSourceConnection;
   dsPath: DataSourcePath;
   dsNode: DataSourceNode;
 };
@@ -50,6 +52,7 @@ type DSTreeNodeData = {
 type DSTreeNodeInfo = TreeNodeInfo<DSTreeNodeData>;
 
 const dsNodeTreeNode = (
+  dsc: DataSourceConnection,
   dsPath: DataSourcePath,
   dsNode: DataSourceNode
 ): DSTreeNodeInfo => {
@@ -57,9 +60,16 @@ const dsNodeTreeNode = (
     icon: dataKindIcon(dsNode.kind),
     id: JSON.stringify(dsNode.id),
     label: dsNode.displayName,
-    nodeData: { dsPath, dsNode },
+    nodeData: { dsc, dsPath, dsNode },
     hasCaret: dsNode.isContainer,
   };
+  if (dsNode.description) {
+    ret.secondaryLabel = (
+      <Tooltip usePortal={true} boundary="window" content={dsNode.description}>
+        <Icon icon="eye-open" />
+      </Tooltip>
+    );
+  }
   return ret;
 };
 
@@ -85,10 +95,11 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
         log.debug("DataSourceSideBar: rootSources: ", rootSources);
         const rootNodes = await Promise.all(
           rootSources.map(async (sourceId) => {
-            const rootPath = { sourceId, path: [] };
-            const rootNode = await rtc.getSourceInfo(rootPath);
-            console.log("creating root node for", rootPath, rootNode);
-            return dsNodeTreeNode(rootPath, rootNode);
+            const dsc = await rtc.connect(sourceId);
+            const rootNode = await dsc.getRootNode();
+            const rootPath: DataSourcePath = { sourceId, path: [rootNode.id] };
+            // console.log("creating root node for", rootPath, rootNode);
+            return dsNodeTreeNode(dsc, rootPath, rootNode);
           })
         );
         setTreeState(rootNodes);
@@ -107,30 +118,14 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     forceUpdate();
   };
   const handleNodeExpand = async (treeNode: DSTreeNodeInfo) => {
-    const dsPath: DataSourcePath = treeNode.nodeData!.dsPath;
-    console.log("handleNodeExpand: expanding node for path ", dsPath);
+    const { dsPath, dsc } = treeNode.nodeData!;
     const appState = mutableGet(stateRef);
-    const rtc = appState.rtc;
-    const dsNode = await rtc.getSourceInfo(dsPath);
-    treeNode.childNodes = await Promise.all(
-      dsNode.children.map(async (item) => {
-        const childPath = extendDSPath(dsPath, item);
-        const childNode = await rtc.getSourceInfo(childPath);
-        return dsNodeTreeNode(childPath, childNode);
-      })
-    );
+    const childNodes = await dsc.getChildren(dsPath);
+    treeNode.childNodes = childNodes.map((childNode) => {
+      const childPath = extendDSPath(dsPath, childNode.id);
+      return dsNodeTreeNode(dsc, childPath, childNode);
+    });
     treeNode.isExpanded = true;
-    if (dsNode.description) {
-      treeNode.secondaryLabel = (
-        <Tooltip
-          usePortal={true}
-          boundary="window"
-          content={dsNode.description}
-        >
-          <Icon icon="eye-open" />
-        </Tooltip>
-      );
-    }
     forceUpdate();
   };
 

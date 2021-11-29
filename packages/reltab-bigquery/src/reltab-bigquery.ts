@@ -213,50 +213,61 @@ export class BigQueryConnection implements DataSourceConnection {
     return ti;
   }
 
-  async getSourceInfo(dsPath: DataSourcePath): Promise<DataSourceNode> {
+  async getRootNode(): Promise<DataSourceNode> {
+    const rootNode: DataSourceNode = {
+      id: this.projectId,
+      kind: "Database",
+      displayName: this.projectId,
+      isContainer: true,
+    };
+    return rootNode;
+  }
+
+  async getChildren(dsPath: DataSourcePath): Promise<DataSourceNode[]> {
     const path = dsPath.path;
-    if (path.length === 0) {
+    let childNodes: DataSourceNode[];
+    if (path.length === 1) {
       // Enumerate datasets and get their ids:
       const [datasets] = await this.bigquery_meta.getDatasets();
-      const children: string[] = datasets.map((dataset) => dataset.id!);
-      let node: DataSourceNode = {
-        id: this.projectId,
-        kind: "Database",
-        displayName: this.projectId,
-        isContainer: true,
-        children,
-      };
-      return node;
-    } else if (path.length == 1) {
-      const datasetName = path[path.length - 1];
+      childNodes = await Promise.all(
+        datasets.map(async (dataset) => {
+          const datasetName = dataset.id!;
+          // get metadata on dataset for description:
+          const [dsInfo] = await dataset.get();
+          // And enumerate tables:
+          const node: DataSourceNode = {
+            id: datasetName,
+            kind: "Dataset",
+            displayName: datasetName,
+            description: dsInfo.metadata.description,
+            isContainer: true,
+          };
+          return node;
+        })
+      );
+    } else if (path.length == 2) {
+      const [dbName, datasetName] = path;
       const dataset = this.bigquery_meta.dataset(datasetName);
-
-      // get metadata on dataset for description:
-      const [dsInfo] = await dataset.get();
       // And enumerate tables:
       const [tables] = await dataset.getTables();
-      const tableIds = tables.map((table) => table.id!);
-      const node: DataSourceNode = {
-        id: datasetName,
-        kind: "Dataset",
-        displayName: datasetName,
-        description: dsInfo.metadata.description,
-        isContainer: true,
-        children: tableIds,
-      };
-      return node;
-    } else {
-      // table level
-      const [datasetName, tableId] = path;
-      const node: DataSourceNode = {
-        id: `${this.projectId}.${datasetName}.${tableId}`,
+      childNodes = tables.map((table) => ({
+        id: table.id!,
         kind: "Table",
-        displayName: tableId,
+        displayName: table.id!,
         isContainer: false,
-        children: [],
-      };
-      return node;
+      }));
+    } else {
+      throw new Error(`getChildren: Unexpected path length: ${path}`);
     }
+    return childNodes;
+  }
+
+  async getTableName(dsPath: DataSourcePath): Promise<string> {
+    const { path } = dsPath;
+    if (path.length < 2) {
+      throw new Error(`getTableName: non-table path: ${path.toString()}`);
+    }
+    return path.join(".");
   }
 }
 

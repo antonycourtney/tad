@@ -203,20 +203,35 @@ export class SqliteContext implements DataSourceConnection {
     return ti;
   }
 
-  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
-    const tiQuery = `select name,tbl_name from sqlite_master where type='table'`;
-    const dbRows = await dbAll(this.db, tiQuery);
-
-    // TODO: may need to answer about table nodes
-    const children: string[] = dbRows.map((row: any) => row.tbl_name);
-    let dbNode: DataSourceNode = {
+  async getRootNode(): Promise<DataSourceNode> {
+    const rootNode: DataSourceNode = {
       id: "",
       kind: "Database",
       displayName: this.dbfile,
       isContainer: true,
-      children,
     };
-    return dbNode;
+    return rootNode;
+  }
+  async getChildren(dsPath: DataSourcePath): Promise<DataSourceNode[]> {
+    const tiQuery = `select name,tbl_name from sqlite_master where type='table'`;
+    const dbRows = await dbAll(this.db, tiQuery);
+
+    const tableNames: string[] = dbRows.map((row: any) => row.tbl_name);
+    const childNodes: DataSourceNode[] = tableNames.map((tableName) => ({
+      id: tableName,
+      kind: "Table",
+      displayName: tableName,
+      isContainer: false,
+    }));
+    return childNodes;
+  }
+
+  async getTableName(dsPath: DataSourcePath): Promise<string> {
+    const { path } = dsPath;
+    if (path.length < 1) {
+      throw new Error("getTableName: empty path");
+    }
+    return path[path.length - 1];
   }
 }
 

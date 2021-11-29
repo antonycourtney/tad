@@ -60,9 +60,7 @@ const connOpts: EvalQueryOptions = {
 };
 
 const initBigquery = async () => {
-  const rtc = (await reltab.getConnection(
-    covid19ConnKey
-  )) as BigQueryConnection;
+  const rtc = await reltab.getConnection(covid19ConnKey);
 };
 
 class ElectronTransportServer implements TransportServer {
