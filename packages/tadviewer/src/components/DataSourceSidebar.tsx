@@ -4,6 +4,7 @@ import { StateRef, mutableGet } from "oneref";
 import { AppState } from "../AppState";
 import * as reltab from "reltab";
 import * as log from "loglevel";
+import _, { throttle } from "lodash";
 
 import {
   Classes,
@@ -15,7 +16,7 @@ import {
   Tree,
   IconName,
 } from "@blueprintjs/core";
-import { useState, useReducer } from "react";
+import { useState, useReducer, useRef, useEffect } from "react";
 import {
   DataSourceKind,
   DataSourceNode,
@@ -78,40 +79,62 @@ const extendDSPath = (basePath: DataSourcePath, item: string) => ({
   path: basePath.path.concat([item]),
 });
 
+type RootNodeMap = { [resourceId: string]: DSTreeNodeInfo };
+
 export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
   expanded,
   stateRef,
 }) => {
   const [initialized, setInitialized] = useState(false);
   const [treeState, setTreeState] = useState<DSTreeNodeInfo[]>([]);
+  const [rootNodeMap, setRootNodeMap] = useState<RootNodeMap>({});
   const [selectedNode, setSelectedNode] = useState<DSTreeNodeInfo | null>(null);
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
-  React.useEffect(() => {
-    async function fetchSourceInfo() {
+  const throttledRefresh = useRef(
+    throttle(async function refreshDataSources(): Promise<void> {
       const appState = mutableGet(stateRef);
       const rtc = appState.rtc;
+      let dirty = false;
       try {
+        const nextNodeMap = Object.assign(rootNodeMap) as RootNodeMap;
         const rootSources = await rtc.getDataSources();
-        log.debug("DataSourceSideBar: rootSources: ", rootSources);
         const rootNodes = await Promise.all(
           rootSources.map(async (sourceId) => {
-            const dsc = await rtc.connect(sourceId);
-            const rootNode = await dsc.getRootNode();
-            const rootPath: DataSourcePath = { sourceId, path: [rootNode.id] };
-            // console.log("creating root node for", rootPath, rootNode);
-            return dsNodeTreeNode(dsc, rootPath, rootNode);
+            const sourceIdStr = JSON.stringify(sourceId);
+            let rootTreeNode = nextNodeMap[sourceIdStr];
+            if (!rootTreeNode) {
+              const dsc = await rtc.connect(sourceId);
+              const rootNode = await dsc.getRootNode();
+              const rootPath: DataSourcePath = {
+                sourceId,
+                path: [rootNode.id],
+              };
+              log.debug(
+                "creating root node for",
+                sourceIdStr,
+                rootPath,
+                rootNode
+              );
+              rootTreeNode = dsNodeTreeNode(dsc, rootPath, rootNode);
+              nextNodeMap[sourceIdStr] = rootTreeNode;
+              dirty = true;
+            }
+            return rootTreeNode;
           })
         );
-        setTreeState(rootNodes);
+        if (dirty) {
+          setTreeState(rootNodes);
+          setRootNodeMap(nextNodeMap);
+        }
       } catch (err) {
-        console.error("Caught error getting data sources: ", err);
+        console.error("error refreshing data sources: ", err);
       }
-    }
-    if (!initialized) {
-      fetchSourceInfo();
-      setInitialized(true);
-    }
-  }, [initialized]);
+    }, 500)
+  );
+
+  useEffect(() => {
+    throttledRefresh.current();
+  });
 
   const handleNodeCollapse = (treeNode: DSTreeNodeInfo) => {
     treeNode.isExpanded = false;

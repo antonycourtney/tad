@@ -36,6 +36,7 @@
     "reltab-bigquery": "^0.10.0",
     "reltab-sqlite": "^0.10.0",
     "reltab-duckdb": "^0.10.0",
+    "reltab-fs": "^0.10.0",
     "tadviewer": "^0.10.0",
     "babel-cli": "^6.26.0",
     "babel-plugin-flow-to-typescript": "^0.6.0",

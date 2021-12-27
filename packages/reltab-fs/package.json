@@ -1,0 +1,36 @@
+{
+  "name": "reltab-fs",
+  "version": "0.10.0",
+  "description": "filesystem datasource for reltab",
+  "main": "dist/reltab-fs.js",
+  "types": "dist/reltab-fs.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "clean": "rimraf dist",
+    "build": "tsc -p tsconfig-build.json",
+    "test": "jest --config jest.config.json --no-cache"
+  },
+  "keywords": [
+    "relational",
+    "sql",
+    "database",
+    "sqlite"
+  ],
+  "author": "Antony Courtney <antony@antonycourtney.com>",
+  "license": "MIT",
+  "dependencies": {
+    "loglevel": "^1.7.1",
+    "reltab": "^0.10.0",
+    "reltab-duckdb": "^0.10.0",
+    "pretty-hrtime": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.4.13",
+    "jest": "^27.0.6",
+    "mkdirp": "^1.0.4",
+    "prettier": "^2.3.2",
+    "ts-jest": "^27.0.4",
+    "typescript": "^3.9.4"
+  }
+}

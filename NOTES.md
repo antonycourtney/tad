@@ -306,6 +306,7 @@ have time to address, and isn't worth not releasing.
 [X] Fix tree open control to not accidentally replace a modified view.
 Options: replace current view, open in new window. File...Open should probably work
 the same
+[ ] fix csvexport once we've gotten rid of appRtc (kill all refs to appRtc)
 [ ] Figure out saving and loading of Tad files, since we support in-memory tables as well
 as file imports
 [ ] Ability to save and open Tad files

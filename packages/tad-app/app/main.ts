@@ -10,6 +10,8 @@ import * as reltabSqlite from "reltab-sqlite";
 import "reltab-sqlite";
 import * as reltabDuckDB from "reltab-duckdb";
 import "reltab-duckdb";
+import * as reltabFS from "reltab-fs";
+import "reltab-fs";
 import * as setup from "./setup";
 import * as quickStart from "./quickStart";
 import * as appMenu from "./appMenu";
@@ -80,12 +82,11 @@ class ElectronTransportServer implements TransportServer {
  *
  */
 
-// JSON encoded init info to return from initMainAsync
-let initStr: string | null = null;
+let mainInitialized = false;
 
-const initMainAsync = async (options: any) => {
-  if (initStr !== null) {
-    return initStr;
+const initMainAsync = async (options: any): Promise<void> => {
+  if (mainInitialized) {
+    return;
   }
   console.log("initMainAsync: ", options);
   let rtOptions: any = {};
@@ -96,7 +97,7 @@ const initMainAsync = async (options: any) => {
     log.info("initMainAsync -- showQueries enabled, set log level to INFO");
   }
 
-  await initBigquery();
+  // await initBigquery();
 
   /*
   let rtc: reltabSqlite.SqliteContext;
@@ -110,20 +111,26 @@ const initMainAsync = async (options: any) => {
   */
   let connKey: DataSourceId;
 
+  /*
   connKey = {
     providerName: "duckdb",
     resourceId: ":memory:",
   };
+  */
+
+  /*
+  connKey = {
+    providerName: "localfs",
+    resourceId: "",
+  };
   const rtc = await getConnection(connKey);
 
   (global as any).appRtc = rtc;
-
+  */
   const ts = new ElectronTransportServer();
   serverInit(ts);
 
-  const initInfo = { connKey };
-  initStr = JSON.stringify(initInfo, null, 2);
-  return initStr;
+  mainInitialized = true;
 };
 
 /*
@@ -357,7 +364,6 @@ const getTargetPath = (
 (global as any).openExample = () => {
   const app = electron.app;
   const appPath = app.getAppPath();
-  console.log("appPath: ", appPath);
   const appDir = process.defaultApp ? appPath : path.dirname(appPath);
   const exampleFilePath = path.join(appDir, "examples", "movie_metadata.csv");
   appWindow.createFromFile(exampleFilePath, false);

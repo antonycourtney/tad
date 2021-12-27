@@ -149,11 +149,22 @@ let resolvedConnections: DataSourceConnection[] = [];
  * when the initial connection promise resolves.
  */
 const saveOnResolve = async (
-  pconn: Promise<DataSourceConnection>
+  pconn: Promise<DataSourceConnection>,
+  hidden: boolean
 ): Promise<DataSourceConnection> => {
   const c = await pconn;
-  resolvedConnections.push(c);
+  if (!hidden) {
+    resolvedConnections.push(c);
+  }
   return c;
+};
+
+interface GetConnectionOptions {
+  hidden: boolean; // hidden connections won't appear in getDataSources list
+}
+
+const defaultGetConnectionOptions: GetConnectionOptions = {
+  hidden: false,
 };
 
 /**
@@ -161,8 +172,10 @@ const saveOnResolve = async (
  *
  */
 export async function getConnection(
-  sourceId: DataSourceId
+  sourceId: DataSourceId,
+  options?: GetConnectionOptions
 ): Promise<DataSourceConnection> {
+  const opts = options ?? defaultGetConnectionOptions;
   const key = JSON.stringify(sourceId);
   let connPromise: Promise<DataSourceConnection> | undefined;
   connPromise = instanceCache[key];
@@ -176,7 +189,7 @@ export async function getConnection(
         `getConnection: no registered DataSourceProvider for provider name '${providerName}'`
       );
     }
-    connPromise = saveOnResolve(provider.connect(resourceId));
+    connPromise = saveOnResolve(provider.connect(resourceId), opts.hidden);
     instanceCache[key] = connPromise;
   }
   return connPromise;

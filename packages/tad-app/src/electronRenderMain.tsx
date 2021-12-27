@@ -43,15 +43,15 @@ let delay = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-const initMainProcess = (): Promise<InitInfo> => {
+const initMainProcess = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    remoteInitMain((err: any, initStr: string) => {
+    remoteInitMain((err: any) => {
       if (err) {
         console.error("initMain error: ", err);
         reject(err);
       } else {
-        const initInfo: InitInfo = JSON.parse(initStr);
-        resolve(initInfo);
+        console.log("initMain complete");
+        resolve();
       }
     });
   });
@@ -137,9 +137,7 @@ const init = async () => {
   );
 
   try {
-    const initInfo = await initMainProcess();
-    console.log("initInfo: ", initInfo);
-    const rtEngine = initInfo.connKey;
+    await initMainProcess();
 
     const tconn = new ElectronTransportClient();
 
@@ -166,13 +164,20 @@ const init = async () => {
         targetDSPath = JSON.parse(targetPath);
       } else {
         if (fileType === "csv") {
-          tableName = await importCSV(targetPath);
+          // tableName = await importCSV(targetPath);
+          const connKey: DataSourceId = {
+            providerName: "localfs",
+            resourceId: targetPath,
+          };
+          targetDSPath = { sourceId: connKey, path: [] };
         } else if (fileType === "parquet") {
           tableName = await importParquet(targetPath);
         }
+        /* TODO:
         if (tableName !== null) {
           targetDSPath = { sourceId: initInfo.connKey, path: [tableName] };
         }
+        */
       }
 
       if (targetDSPath !== null) {
