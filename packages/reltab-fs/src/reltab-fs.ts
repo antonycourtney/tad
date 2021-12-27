@@ -34,6 +34,7 @@ async function getDuckDbConnection(): Promise<DuckDBContext> {
     };
     _duckDbConn = getConnection(connKey, {
       hidden: true,
+      forExport: true,
     }) as Promise<DuckDBContext>;
   }
   return _duckDbConn;

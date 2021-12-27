@@ -25,7 +25,11 @@ export const exportAs = async (
   });
   const writableStream = fs.createWriteStream(saveFilename);
   csvStream.pipe(writableStream);
-  const appRtc = (global as any).appRtc as reltabDuckDB.DuckDBContext;
+  const appRtc = reltab.getExportConnection() as reltabDuckDB.DuckDBContext;
+  if (appRtc == null) {
+    console.error("exportCSV: no DataSource available for export");
+    return;
+  }
 
   const schema = await appRtc.getSchema(query); // Map entries in a row object to array of [displayName, value] pairs
 

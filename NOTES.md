@@ -323,14 +323,15 @@ as file imports
 [ ] Get rid of BigQuery support by default -- ~/tad.conf.json
 [ ] Ability to open directories with DuckDb import/export format
 [ ] Ability to open CSV / Parquet files directly from s3
+[ ] Ensure we can open new window from command line
+[ ] Verify that tad command line utility works for launching tad
+[ ] Check that all command-line arguments work as advertised
 [ ] Test all the ways that Tad might be opened: Finder context menu, dragging on to app icon, etc.
 [ ] Better naming for DuckDb in data source explorer tree
 [ ] Specifying a path to a sqlite db file
 [ ] Reduce height of column selector to fit in standard window without scrolling
 [ ] tweak column widths in column selector to avoid overflow of column type
 [ ] test of column types. MetObjects.csv seems to have a TIMESTAMP
-[ ] Verify that tad command line utility works for launching tad
-[ ] Check that all command-line arguments work as advertised
 [X] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
 [X] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
 [X] Replace resize handler / ResizeObserver with Blueprint's React supporting one

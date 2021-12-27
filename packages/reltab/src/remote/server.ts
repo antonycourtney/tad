@@ -144,27 +144,39 @@ let instanceCache: { [key: string]: Promise<DataSourceConnection> } = {};
 
 let resolvedConnections: DataSourceConnection[] = [];
 
+let exportConnection: DataSourceConnection | null = null;
+
+export function getExportConnection(): DataSourceConnection | null {
+  return exportConnection;
+}
+
 /*
  * internal utility to record a DataSourceConnection in our connection cache
  * when the initial connection promise resolves.
  */
 const saveOnResolve = async (
   pconn: Promise<DataSourceConnection>,
-  hidden: boolean
+  hidden: boolean,
+  forExport: boolean
 ): Promise<DataSourceConnection> => {
   const c = await pconn;
   if (!hidden) {
     resolvedConnections.push(c);
+  }
+  if (forExport) {
+    exportConnection = c;
   }
   return c;
 };
 
 interface GetConnectionOptions {
   hidden: boolean; // hidden connections won't appear in getDataSources list
+  forExport: boolean; // if true, use this connection for queries when exporting
 }
 
 const defaultGetConnectionOptions: GetConnectionOptions = {
   hidden: false,
+  forExport: false,
 };
 
 /**
@@ -189,7 +201,11 @@ export async function getConnection(
         `getConnection: no registered DataSourceProvider for provider name '${providerName}'`
       );
     }
-    connPromise = saveOnResolve(provider.connect(resourceId), opts.hidden);
+    connPromise = saveOnResolve(
+      provider.connect(resourceId),
+      opts.hidden,
+      opts.forExport
+    );
     instanceCache[key] = connPromise;
   }
   return connPromise;
