@@ -181,7 +181,12 @@ const init = async () => {
       }
 
       if (targetDSPath !== null) {
-        await actions.openDataSourcePath(targetDSPath, stateRef);
+        const conn = await rtc.connect(targetDSPath.sourceId);
+        const rootNode = await conn.getRootNode();
+        console.log("got rootNode: ", rootNode);
+        if (!rootNode.isContainer) {
+          await actions.openDataSourcePath(targetDSPath, stateRef);
+        }
       }
       actions.stopAppLoadingTimer(stateRef);
     }

@@ -5,7 +5,13 @@
 import { QueryExp } from "./QueryExp";
 import { TableInfo, TableRep } from "./TableRep";
 
-export type DataSourceKind = "DataSource" | "Database" | "Dataset" | "Table";
+export type DataSourceKind =
+  | "DataSource"
+  | "Database"
+  | "Dataset"
+  | "Table"
+  | "Directory"
+  | "File";
 
 // Static registry of globally unique DataSourceProvider names:
 export type DataSourceProviderName =

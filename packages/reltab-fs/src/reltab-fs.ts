@@ -40,19 +40,23 @@ async function getDuckDbConnection(): Promise<DuckDBContext> {
   return _duckDbConn;
 }
 
+// mapping from pathnames to imported table names:
+type ImportMap = { [path: string]: string };
+
 export class FSConnection implements DataSourceConnection {
   private dbc: DuckDBContext;
-  private path: string;
-  private tableName: string;
+  private rootPath: string;
+  private rootStats: fs.Stats;
+  private importMap: ImportMap = {};
   private readonly displayName: string;
   readonly sourceId: DataSourceId;
 
-  constructor(dbc: DuckDBContext, path: string, tableName: string) {
+  constructor(dbc: DuckDBContext, rootPath: string, rootStats: fs.Stats) {
     this.dbc = dbc;
-    this.path = path;
-    this.tableName = tableName;
-    this.displayName = path;
-    this.sourceId = { providerName: "localfs", resourceId: path };
+    this.rootPath = rootPath;
+    this.rootStats = rootStats;
+    this.displayName = rootPath;
+    this.sourceId = { providerName: "localfs", resourceId: rootPath };
   }
 
   evalQuery(
@@ -73,22 +77,50 @@ export class FSConnection implements DataSourceConnection {
   }
 
   async getRootNode(): Promise<DataSourceNode> {
-    const displayName = path.basename(this.path);
+    const displayName = path.basename(this.rootPath);
+    const isDir = this.rootStats.isDirectory();
     const rootNode: DataSourceNode = {
-      id: this.tableName,
-      kind: "Table",
+      id: ".",
+      kind: isDir ? "Directory" : "File",
       displayName,
-      isContainer: false,
+      isContainer: isDir,
     };
     return rootNode;
   }
-  async getChildren(path: DataSourcePath): Promise<DataSourceNode[]> {
-    return [];
+  async getChildren(dsPath: DataSourcePath): Promise<DataSourceNode[]> {
+    const targetPath = path.join(this.rootPath, ...dsPath.path);
+    const dirEnts = await fs.promises.readdir(targetPath, {
+      withFileTypes: true,
+    });
+    const childNodes = dirEnts.map((ent) => {
+      const isDir = ent.isDirectory();
+      const node: DataSourceNode = {
+        id: ent.name,
+        kind: isDir ? "Directory" : "File",
+        displayName: ent.name,
+        isContainer: isDir,
+      };
+      return node;
+    });
+    return childNodes;
   }
 
   // Get a table name that can be used in queries:
-  async getTableName(path: DataSourcePath): Promise<string> {
-    return this.tableName;
+  async getTableName(dsPath: DataSourcePath): Promise<string> {
+    const targetPath = path.join(this.rootPath, ...dsPath.path);
+    let tableName = this.importMap[targetPath];
+    if (!tableName) {
+      log.debug(
+        "getTableName: no entry found for ",
+        targetPath,
+        ", importing..."
+      );
+      tableName = await reltabDuckDB.nativeCSVImport(this.dbc.db, targetPath);
+      this.importMap[targetPath] = tableName;
+    } else {
+      log.debug(" getTableName: ", targetPath, " ---> ", tableName);
+    }
+    return tableName;
   }
 
   // display name for this connection
@@ -105,13 +137,10 @@ async function connectFileSource(
     let msg = '"' + pathname + '": file not found.';
     throw new Error(msg);
   }
+  const fstats = await fs.promises.stat(pathname);
 
-  console.log("getting local DuckDbConnection");
   const dbc = await getDuckDbConnection();
-  console.log("importing CSV");
-  const tableName = await reltabDuckDB.nativeCSVImport(dbc.db, pathname);
-  console.log("import complete");
-  const conn = new FSConnection(dbc, pathname, tableName);
+  const conn = new FSConnection(dbc, pathname, fstats);
   return conn;
 }
 

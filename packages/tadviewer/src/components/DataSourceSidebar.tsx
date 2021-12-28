@@ -39,6 +39,10 @@ const dataKindIcon = (dsKind: DataSourceKind): IconName => {
       return "folder-open";
     case "Table":
       return "th";
+    case "File":
+      return "document";
+    case "Directory":
+      return "folder-close";
     default:
       throw new Error("dataKindIcon: unknown kind '" + dsKind + "'");
   }
@@ -158,7 +162,7 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     e: React.MouseEvent<HTMLElement>
   ) => {
     const { dsPath, dsNode } = treeNode.nodeData!;
-    if (dsNode.kind === "Table") {
+    if (dsNode.kind === "Table" || dsNode.kind === "File") {
       actions.openDataSourcePath(dsPath, stateRef);
       // actions.openTable(dsNodeId.id, stateRef);
     }
