@@ -73,10 +73,11 @@ export class FSConnection implements DataSourceConnection {
   }
 
   async getRootNode(): Promise<DataSourceNode> {
+    const displayName = path.basename(this.path);
     const rootNode: DataSourceNode = {
       id: this.tableName,
       kind: "Table",
-      displayName: this.tableName,
+      displayName,
       isContainer: false,
     };
     return rootNode;

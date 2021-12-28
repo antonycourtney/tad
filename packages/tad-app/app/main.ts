@@ -242,6 +242,7 @@ const optionDefinitions = [
   {
     name: "srcfile",
     type: String,
+    multiple: true,
     defaultOption: true,
     typeLabel:
       "{underline file}.csv or {underline file}.tad or sqlite://{underline file}/{underline table}",
@@ -361,6 +362,14 @@ const getTargetPath = (
   return targetPath;
 };
 
+function createFileWindows(options: commandLineArgs.CommandLineOptions) {
+  for (const srcfile of options.srcfile) {
+    const targetPath = getTargetPath(options, srcfile); // set at end of ready event handler:
+    log.log("after arg parsing + getTargetPath:", srcfile, targetPath);
+    appWindow.createFromFile(targetPath, options.parquet);
+  }
+}
+
 (global as any).openExample = () => {
   const app = electron.app;
   const appPath = app.getAppPath();
@@ -430,13 +439,9 @@ const initApp =
       if (quickExit) {
         app.quit();
       } else {
-        const targetPath = getTargetPath(options, options.srcfile); // set at end of ready event handler:
-        log.log(
-          "after arg parsing + getTargetPath:",
-          options.srcfile,
-          targetPath
-        );
-
+        console.log("*** options.srcfile: ", options.srcfile);
+        const noSrcFile =
+          options.srcfile == null || options.srcfile.length == 0;
         // Set in "ready" event handler:
         let isReady = false;
 
@@ -449,7 +454,7 @@ const initApp =
 
             if (isReady) {
               log.warn("open-file: app is ready, opening in new window");
-              appWindow.createFromFile(targetPath, options.parquet);
+              createFileWindows(options);
             } else {
               openFilePath = targetPath ?? null;
               log.warn("open-file: set openFilePath " + targetPath);
@@ -491,8 +496,8 @@ const initApp =
             // dialog.showMessageBox({ message: startMsg })
             appInit(options);
 
-            if (targetPath) {
-              appWindow.createFromFile(targetPath, options.parquet);
+            if (!noSrcFile) {
+              createFileWindows(options);
             }
 
             if (showQuickStart) {
@@ -504,7 +509,7 @@ const initApp =
               log.warn(openMsg);
               appWindow.createFromFile(openFilePath, false); // dialog.showMessageBox({ message: openMsg })
             } else {
-              if (!targetPath && !awaitingOpenEvent) {
+              if (noSrcFile && !awaitingOpenEvent) {
                 app.focus();
                 appWindow.openDialog();
               }
@@ -513,8 +518,8 @@ const initApp =
             isReady = true;
           });
         } else {
-          if (targetPath) {
-            appWindow.createFromFile(targetPath, options.parquet);
+          if (!noSrcFile) {
+            createFileWindows(options);
           } else {
             log.warn("initApp called with no targetPath");
             app.focus();

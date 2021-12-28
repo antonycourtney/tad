@@ -260,7 +260,7 @@ const exceptionHandler =
       const value = await hf(req);
       return { status: "Ok", value };
     } catch (errVal) {
-      console.error("exceptionHandler caught error: ", errVal);
+      console.error("reltab server: exceptionHandler caught error: ", errVal);
       return { status: "Err", errVal: serializeError(errVal) };
     }
   };

@@ -107,7 +107,7 @@ export const openDataSourcePath = async (
   if (modifiedViewParams) {
     setViewConfirmDialogOpen(true, path, stateRef);
   } else {
-    replaceCurrentView(path, stateRef);
+    await replaceCurrentView(path, stateRef);
   }
 };
 
