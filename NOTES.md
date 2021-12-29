@@ -313,8 +313,11 @@ the same
 [X] folder view of fs directory
 [X] Opening of parquet files
 [X] Rip out old --parquet support
-[ ] Ensure we can open directories from open dialog (openDialog / showOpenDialogSync)
-[ ] opening of sqlite files
+[X] Ensure we can open directories from open dialog (openDialog / showOpenDialogSync)
+[X] opening of sqlite files from cmd line
+[ ] opening of sqlite files from open dialog
+[X] opening of duckdb files from cmd line
+[ ] opening of duckdb files from open dialog
 [ ] Do we still need --no-headers?
 [ ] Figure out saving and loading of Tad files, since we support in-memory tables as well
 as file imports
