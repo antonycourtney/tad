@@ -133,42 +133,6 @@ const initMainAsync = async (options: any): Promise<void> => {
   mainInitialized = true;
 };
 
-/*
- * Remotable function to import a CSV file
- */
-const importCSV = async (targetPath: string): Promise<string> => {
-  let pathname = targetPath;
-
-  // check if pathname exists
-  if (!fs.existsSync(pathname)) {
-    let msg = '"' + pathname + '": file not found.';
-    throw new Error(msg);
-  }
-
-  const ctx = (global as any).appRtc as reltabDuckDB.DuckDBContext;
-  const tableName = await reltabDuckDB.nativeCSVImport(ctx.db, targetPath);
-
-  return tableName;
-};
-
-/*
- * Remotable function to import a Parquet file
- */
-const importParquet = async (targetPath: string): Promise<string> => {
-  let pathname = targetPath;
-
-  // check if pathname exists
-  if (!fs.existsSync(pathname)) {
-    let msg = '"' + pathname + '": file not found.';
-    throw new Error(msg);
-  }
-
-  const ctx = (global as any).appRtc as reltabDuckDB.DuckDBContext;
-  const tableName = await reltabDuckDB.nativeParquetImport(ctx.db, targetPath);
-
-  return tableName;
-};
-
 const newWindowFromDSPath = async (path: DataSourcePath) => {
   await appWindow.createFromDSPath(path);
 };
@@ -199,24 +163,6 @@ const mkInitMain = (options: any) => (cb: (res: any, err: any) => void) => {
     .catch((err) => cb(err, null));
 }; // App initialization:
 
-const remotableImportCSV = (
-  targetPath: string,
-  cb: (res: any, err: any) => void
-) => {
-  importCSV(targetPath)
-    .then((tableName) => cb(null, tableName))
-    .catch((err) => cb(err, null));
-};
-
-const remotableImportParquet = (
-  targetPath: string,
-  cb: (res: any, err: any) => void
-) => {
-  importParquet(targetPath)
-    .then((tableName) => cb(null, tableName))
-    .catch((err) => cb(err, null));
-};
-
 const remotableNewWindowFromDSPath = (
   dsPathStr: string,
   cb: (res: any, err: any) => void
@@ -230,8 +176,6 @@ const remotableNewWindowFromDSPath = (
 const appInit = (options: any) => {
   // log.log('appInit: ', options)
   (global as any).initMain = mkInitMain(options);
-  (global as any).importCSV = remotableImportCSV;
-  (global as any).importParquet = remotableImportParquet;
   (global as any).errorDialog = errorDialog;
   (global as any).newWindowFromDSPath = remotableNewWindowFromDSPath;
   appMenu.createMenu(); // log.log('appInit: done')
@@ -247,12 +191,6 @@ const optionDefinitions = [
       "{underline file}.csv or {underline file}.tad or sqlite://{underline file}/{underline table}",
     description:
       "CSV file(.csv with header row), Tad(.tad) file, Parquet file or sqlite file to view",
-  },
-  {
-    name: "parquet",
-    type: Boolean,
-    typeLabel: "{underline path}",
-    description: "Interpret source path as a Parquet file",
   },
   {
     name: "executed-from",
@@ -305,7 +243,7 @@ const usageInfo = [
       "$ tad [{italic options}] {underline file}.tad",
       "$ tad [{italic options}] sqlite://{underline /path/to/sqlite-file}/{underline table}",
       "$ tad [{italic options}] {underline file}.parquet",
-      "$ tad [{italic options}] --parquet {underline path}",
+      "$ tad [{italic options}] {underline directory}",
     ],
   },
   {
@@ -362,7 +300,7 @@ async function createFileWindows(options: commandLineArgs.CommandLineOptions) {
   for (const srcfile of options.srcfile) {
     const targetPath = getTargetPath(options, srcfile);
     log.log("after arg parsing + getTargetPath:", srcfile, targetPath);
-    await appWindow.createFromFile(targetPath, options.parquet);
+    await appWindow.createFromFile(targetPath);
   }
 }
 
@@ -371,7 +309,7 @@ async function createFileWindows(options: commandLineArgs.CommandLineOptions) {
   const appPath = app.getAppPath();
   const appDir = process.defaultApp ? appPath : path.dirname(appPath);
   const exampleFilePath = path.join(appDir, "examples", "movie_metadata.csv");
-  appWindow.createFromFile(exampleFilePath, false);
+  appWindow.createFromFile(exampleFilePath);
 };
 
 let openFilePath: string | null = null;
@@ -506,7 +444,7 @@ const initApp =
             if (openFilePath) {
               const openMsg = `pid ${process.pid}: Got open-file for ${openFilePath}`;
               log.warn(openMsg);
-              appWindow.createFromFile(openFilePath, false); // dialog.showMessageBox({ message: openMsg })
+              appWindow.createFromFile(openFilePath); // dialog.showMessageBox({ message: openMsg })
             } else {
               if (noSrcFile && !awaitingOpenEvent) {
                 app.focus();

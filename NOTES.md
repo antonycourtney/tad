@@ -312,8 +312,10 @@ the same
 [X] import on-demand of files
 [X] folder view of fs directory
 [X] Opening of parquet files
-[ ] Rip out old --parquet support
+[X] Rip out old --parquet support
+[ ] Ensure we can open directories from open dialog (openDialog / showOpenDialogSync)
 [ ] opening of sqlite files
+[ ] Do we still need --no-headers?
 [ ] Figure out saving and loading of Tad files, since we support in-memory tables as well
 as file imports
 [ ] Ability to save and open Tad files

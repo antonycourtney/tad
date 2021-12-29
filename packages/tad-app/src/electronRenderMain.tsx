@@ -163,8 +163,7 @@ const init = async () => {
     if (openParams) {
       actions.startAppLoadingTimer(stateRef);
       switch (openParams.openType) {
-        case "csv":
-        case "parquet":
+        case "fspath":
           const connKey: DataSourceId = {
             providerName: "localfs",
             resourceId: openParams.path,
@@ -181,7 +180,6 @@ const init = async () => {
       if (targetDSPath !== null) {
         const conn = await rtc.connect(targetDSPath.sourceId);
         const rootNode = await conn.getRootNode();
-        console.log("got rootNode: ", rootNode);
         if (!rootNode.isContainer) {
           await actions.openDataSourcePath(targetDSPath, stateRef);
         }
