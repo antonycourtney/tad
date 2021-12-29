@@ -109,12 +109,12 @@ const init = async () => {
   // console.log("testing, testing, one two...");
   log.debug("Hello, Electron!");
   const win = remote.getCurrentWindow() as any;
-  const openParams = win.openParams as OpenParams;
-  let targetPath: string | undefined;
-  let srcFile: string | undefined;
   let viewParams: ViewParams | null = null;
-  const { fileType } = openParams;
-  switch (fileType) {
+
+  /*
+   * keep around until we add back opening Tad files:
+  const { openType } = openParams;
+  switch (openType) {
     case "csv":
     case "parquet":
     case "dspath":
@@ -129,6 +129,7 @@ const init = async () => {
       viewParams = ViewParams.deserialize(savedFileState.viewParams);
       break;
   }
+  */
   const appState = new AppState();
   const stateRef = mkRef(appState);
   const [App, listenerId] = refContainer<AppState, AppPaneBaseProps>(
@@ -157,29 +158,26 @@ const init = async () => {
 
     let targetDSPath: DataSourcePath | null = null;
 
-    if (targetPath) {
-      let tableName: string | null = null;
+    // TODO: what happens if we open Tad with no args?  Maybe win.openParams is undefined?
+    const openParams = win.openParams as OpenParams | undefined;
+    if (openParams) {
       actions.startAppLoadingTimer(stateRef);
-      if (fileType === "dspath") {
-        targetDSPath = JSON.parse(targetPath);
-      } else {
-        if (fileType === "csv") {
-          // tableName = await importCSV(targetPath);
+      switch (openParams.openType) {
+        case "csv":
+        case "parquet":
           const connKey: DataSourceId = {
             providerName: "localfs",
-            resourceId: targetPath,
+            resourceId: openParams.path,
           };
-          targetDSPath = { sourceId: connKey, path: [] };
-        } else if (fileType === "parquet") {
-          tableName = await importParquet(targetPath);
-        }
-        /* TODO:
-        if (tableName !== null) {
-          targetDSPath = { sourceId: initInfo.connKey, path: [tableName] };
-        }
-        */
+          targetDSPath = { sourceId: connKey, path: [openParams.path] };
+          break;
+        case "dspath":
+          targetDSPath = openParams.dsPath;
+          break;
+        case "tad":
+          // TODO
+          break;
       }
-
       if (targetDSPath !== null) {
         const conn = await rtc.connect(targetDSPath.sourceId);
         const rootNode = await conn.getRootNode();
@@ -195,8 +193,10 @@ const init = async () => {
       const { requestId } = req;
       const curState = mutableGet(stateRef);
       const viewParamsJS = curState.viewState.viewParams.toJS();
+      // TODO: figure out what to do with targetPath here
+      // after changes to openParams
       const serState = {
-        targetPath,
+        targetPath: "TODO",
         viewParams: viewParamsJS,
       };
       console.log("current viewParams: ", viewParamsJS);

@@ -54,7 +54,8 @@ Then should think about making Tad a more full-fledged database pivot table. Wan
 [ ] We choke in BigQuery when pivoting by an INT64 column (like ParentID in Hacker News dataset). Probably add an 'asString' option to mapColumns
 [X] DataSource support for sqlite
 [ ] Add assertive test using a sqlite db file (not a csv) as data source
-[ ] Optimize SQL construction a bit -- a sequence of projects currently looks very sub-optimal, as do multiple extends. Look at bigquery opps with sorted aggtree.
+[ ] Optimize SQL construction a bit -- a sequence of projects currently looks very sub-optimal, as do multiple extends.
+Look at bigquery ops with sorted aggtree.
 [X] JavaScript representation of QueryExp AST for debugging
 [X] How do we go from column type back to a Core Type for formatting? Example: int/float formatting panel. Ans: ColumnKind
 [X] Tweak extend to make column type optional, with clear rules for inference. number ==> integer by default.
@@ -306,20 +307,23 @@ have time to address, and isn't worth not releasing.
 [X] Fix tree open control to not accidentally replace a modified view.
 Options: replace current view, open in new window. File...Open should probably work
 the same
-[ ] fix csvexport once we've gotten rid of appRtc (kill all refs to appRtc)
+[X] fix csvexport once we've gotten rid of appRtc (kill all refs to appRtc)
+[X] allow multiple csv files on command line
+[X] import on-demand of files
+[X] folder view of fs directory
 [ ] Figure out saving and loading of Tad files, since we support in-memory tables as well
 as file imports
 [ ] Ability to save and open Tad files
 [ ] Opening a Tad file
 [ ] Change window title when loading new data set
 [ ] refresh db tree after File...Open
-[ ] change name of db for DuckDb from :memory:
+[-] change name of db for DuckDb from :memory:
 [ ] Smoke test select control for "in..." filter queries. Try one from Blueprint directly?
 [ ] Status bar in footer
 [ ] Query console
 [X] Parquet file support: --parquet argument
 [X] Parquet file support: .parquet suffix
-[ ] compressed, gzipped CSV file support
+[ ] compressed, gzipped CSV file support (supported by DuckDb?)
 [ ] Get rid of BigQuery support by default -- ~/tad.conf.json
 [ ] Ability to open directories with DuckDb import/export format
 [ ] Ability to open CSV / Parquet files directly from s3

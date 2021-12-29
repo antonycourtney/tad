@@ -22,7 +22,7 @@ const TEST_TABLE = "movie_metadata";
 
 /*
 const openParams = {
-  fileType: "csv",
+  openType: "csv",
   targetPath: testTable + ".csv",
   fileContents: null,
   srcFile: null,

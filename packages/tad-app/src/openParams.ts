@@ -1,10 +1,23 @@
-export type FileType = "csv" | "parquet" | "tad" | "dspath";
+import { DataSourcePath } from "reltab";
 
-// We could probably use an ADT to make this better
-export interface OpenParams {
-  fileType: FileType;
-  targetPath?: string;
-  srcFile?: string;
-  fileContents?: string;
-  title: string;
+// TODO: various database files / tables
+export type OpenType = "csv" | "parquet" | "tad" | "dspath";
+
+// For csv or parquet files
+export interface OpenDataFile {
+  openType: "csv" | "parquet";
+  path: string; // filesystem path
 }
+
+export interface OpenDSPath {
+  openType: "dspath";
+  dsPath: DataSourcePath;
+}
+
+export interface OpenTad {
+  openType: "tad";
+  fileContents: string;
+  fileBaseName: string; // for title
+}
+
+export type OpenParams = OpenDataFile | OpenDSPath | OpenTad;

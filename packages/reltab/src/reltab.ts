@@ -13,3 +13,4 @@ export * from "./toSql";
 export { AggColSpec, ColumnMapInfo } from "./QueryRep";
 export * from "./remote/Transport";
 export * from "./remote/server";
+export * from "./apiUtils";

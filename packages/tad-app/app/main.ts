@@ -169,9 +169,8 @@ const importParquet = async (targetPath: string): Promise<string> => {
   return tableName;
 };
 
-const newWindowFromDSPath = async (path: DataSourcePath): Promise<string> => {
-  const displayName = appWindow.createFromDSPath(path);
-  return displayName;
+const newWindowFromDSPath = async (path: DataSourcePath) => {
+  await appWindow.createFromDSPath(path);
 };
 
 const importCSVSqlite = async (targetPath: string): Promise<string> => {
@@ -224,7 +223,7 @@ const remotableNewWindowFromDSPath = (
 ) => {
   const dsPath: DataSourcePath = JSON.parse(dsPathStr) as DataSourcePath;
   newWindowFromDSPath(dsPath)
-    .then((displayName) => cb(null, displayName))
+    .then(() => cb(null, null))
     .catch((err) => cb(err, null));
 };
 
@@ -339,10 +338,7 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
 };
 
 // construct targetPath based on options:
-const getTargetPath = (
-  options: any,
-  filePath: string | null
-): string | undefined => {
+const getTargetPath = (options: any, filePath: string): string => {
   let targetPath = undefined;
   const srcDir = options["executed-from"];
 
@@ -356,17 +352,17 @@ const getTargetPath = (
     targetPath = path.join(srcDir, filePath);
   } else {
     // absolute pathname or no srcDir:
-    targetPath = filePath ?? undefined;
+    targetPath = filePath;
   }
 
   return targetPath;
 };
 
-function createFileWindows(options: commandLineArgs.CommandLineOptions) {
+async function createFileWindows(options: commandLineArgs.CommandLineOptions) {
   for (const srcfile of options.srcfile) {
-    const targetPath = getTargetPath(options, srcfile); // set at end of ready event handler:
+    const targetPath = getTargetPath(options, srcfile);
     log.log("after arg parsing + getTargetPath:", srcfile, targetPath);
-    appWindow.createFromFile(targetPath, options.parquet);
+    await appWindow.createFromFile(targetPath, options.parquet);
   }
 }
 
@@ -383,7 +379,7 @@ let openFilePath: string | null = null;
 // callback for app.makeSingleInstance:
 const initApp =
   (firstInstance: any) =>
-  (instanceArgv: string[], workingDirectory: string | null) => {
+  async (instanceArgv: string[], workingDirectory: string | null) => {
     try {
       let argv = instanceArgv.slice(1);
       let awaitingOpenEvent = false;
@@ -446,7 +442,10 @@ const initApp =
         let isReady = false;
 
         if (firstInstance) {
-          const handleOpen = (event: electron.Event, filePath: string) => {
+          const handleOpen = async (
+            event: electron.Event,
+            filePath: string
+          ) => {
             log.log("handleOpen called!");
             log.warn("got open-file event for: ", filePath);
             event.preventDefault();
@@ -454,7 +453,7 @@ const initApp =
 
             if (isReady) {
               log.warn("open-file: app is ready, opening in new window");
-              createFileWindows(options);
+              await createFileWindows(options);
             } else {
               openFilePath = targetPath ?? null;
               log.warn("open-file: set openFilePath " + targetPath);

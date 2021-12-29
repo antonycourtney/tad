@@ -80,7 +80,7 @@ export class FSConnection implements DataSourceConnection {
     const displayName = path.basename(this.rootPath);
     const isDir = this.rootStats.isDirectory();
     const rootNode: DataSourceNode = {
-      id: ".",
+      id: this.rootPath,
       kind: isDir ? "Directory" : "File",
       displayName,
       isContainer: isDir,
@@ -88,7 +88,7 @@ export class FSConnection implements DataSourceConnection {
     return rootNode;
   }
   async getChildren(dsPath: DataSourcePath): Promise<DataSourceNode[]> {
-    const targetPath = path.join(this.rootPath, ...dsPath.path);
+    const targetPath = path.join(...dsPath.path);
     const dirEnts = await fs.promises.readdir(targetPath, {
       withFileTypes: true,
     });
@@ -107,7 +107,7 @@ export class FSConnection implements DataSourceConnection {
 
   // Get a table name that can be used in queries:
   async getTableName(dsPath: DataSourcePath): Promise<string> {
-    const targetPath = path.join(this.rootPath, ...dsPath.path);
+    const targetPath = path.join(...dsPath.path);
     let tableName = this.importMap[targetPath];
     if (!tableName) {
       log.debug(

@@ -3,7 +3,13 @@ import url from "url";
 import path from "path";
 
 import electron, { BrowserWindow, IpcMainEvent } from "electron";
-import { FileType, OpenParams } from "../src/openParams";
+import {
+  OpenType,
+  OpenDataFile,
+  OpenDSPath,
+  OpenTad,
+  OpenParams,
+} from "../src/openParams";
 const dialog = electron.dialog;
 const ipcMain = electron.ipcMain;
 
@@ -12,7 +18,7 @@ import log from "electron-log";
 import * as csvexport from "./csvexport";
 import * as reltab from "reltab";
 import { formatGroupLabel } from "react-select/src/builtins";
-import { DataSourcePath } from "reltab";
+import { DataSourcePath, resolvePath } from "reltab";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -22,50 +28,69 @@ let openCount = 0;
 let baseX = 0;
 let baseY = 0;
 const POS_OFFSET = 25; // pixel offset of new windows
+
 // encode open parameters to pass to render process
 // If we're opening a CSV file, we just pass the target path.
 // If we're opening a Tad workspace, we read its contents
 
 const encodeFileOpenParams = (
-  title: string,
-  targetPath: string | undefined,
+  targetPath: string,
   forceParquetFile: boolean
 ): OpenParams => {
   let openParams: OpenParams;
 
   if (targetPath && path.extname(targetPath) === ".tad") {
     const fileContents = fs.readFileSync(targetPath, "utf8");
-    openParams = {
-      fileType: "tad",
-      srcFile: targetPath,
+    const openTad: OpenTad = {
+      openType: "tad",
       fileContents,
-      title,
+      fileBaseName: path.basename(targetPath),
     };
+    openParams = openTad;
   } else {
-    let fileType: FileType;
+    let openType: OpenType;
     if (
       (targetPath && path.extname(targetPath) === ".parquet") ||
       forceParquetFile
     ) {
-      fileType = "parquet";
+      openType = "parquet";
     } else {
-      fileType = "csv";
+      openType = "csv";
     }
-    openParams = {
-      fileType,
-      targetPath,
-      title,
+    const openDataFile: OpenDataFile = {
+      openType,
+      path: targetPath,
     };
+    openParams = openDataFile;
   }
 
   return openParams;
 };
 
-const create = (openParams: OpenParams) => {
+async function openParamsTitle(openParams: OpenParams): Promise<string> {
+  let titlePath: string;
+  switch (openParams.openType) {
+    case "csv":
+    case "parquet":
+      titlePath = path.basename(openParams.path);
+      break;
+    case "tad":
+      titlePath = openParams.fileBaseName;
+      break;
+    case "dspath":
+      const node = await resolvePath(openParams.dsPath);
+      titlePath = node.displayName;
+      break;
+  }
+  return "Tad - " + titlePath;
+}
+
+const create = async (openParams: OpenParams) => {
+  const title = await openParamsTitle(openParams);
   let winProps = {
     width: 1280,
     height: 980,
-    title: openParams.title,
+    title,
     x: 0,
     y: 0,
     webPreferences: {
@@ -116,29 +141,24 @@ const create = (openParams: OpenParams) => {
   return win;
 };
 
-export const createFromFile = (
-  targetPath: string | undefined,
+export const createFromFile = async (
+  targetPath: string,
   forcePaquetFile: boolean
 ) => {
-  const title = targetPath ? "Tad - " + path.basename(targetPath) : "Tad";
-  const openParams = encodeFileOpenParams(title, targetPath, forcePaquetFile);
-  create(openParams);
+  const openParams = encodeFileOpenParams(targetPath, forcePaquetFile);
+  await create(openParams);
 };
 
-export const createFromDSPath = (dsPath: DataSourcePath): string => {
-  const path = dsPath.path;
-  const displayName = path[path.length - 1];
-  const title = "Tad - " + displayName;
+export const createFromDSPath = async (dsPath: DataSourcePath) => {
   const openParams: OpenParams = {
-    fileType: "dspath",
-    targetPath: JSON.stringify(path),
-    title,
+    openType: "dspath",
+    dsPath,
   };
-  create(openParams);
-  return displayName;
+  console.log("createFromDSPath: ", openParams);
+  await create(openParams);
 };
 
-export const openDialog = () => {
+export const openDialog = async () => {
   const openPaths = dialog.showOpenDialogSync({
     properties: ["openFile"],
     filters: [
@@ -163,7 +183,7 @@ export const openDialog = () => {
 
   if (openPaths && openPaths.length > 0) {
     const filePath = openPaths[0];
-    createFromFile(filePath, false);
+    await createFromFile(filePath, false);
   }
 };
 let stateRequestId = 100;
