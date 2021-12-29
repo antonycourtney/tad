@@ -115,7 +115,17 @@ export class FSConnection implements DataSourceConnection {
         targetPath,
         ", importing..."
       );
-      tableName = await reltabDuckDB.nativeCSVImport(this.dbc.db, targetPath);
+      const extName = path.extname(targetPath);
+      console.log("extName: ", extName);
+      if (extName === ".parquet") {
+        console.log("importing parquet file...");
+        tableName = await reltabDuckDB.nativeParquetImport(
+          this.dbc.db,
+          targetPath
+        );
+      } else {
+        tableName = await reltabDuckDB.nativeCSVImport(this.dbc.db, targetPath);
+      }
       this.importMap[targetPath] = tableName;
     } else {
       log.debug(" getTableName: ", targetPath, " ---> ", tableName);

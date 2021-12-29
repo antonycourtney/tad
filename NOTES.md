@@ -311,6 +311,9 @@ the same
 [X] allow multiple csv files on command line
 [X] import on-demand of files
 [X] folder view of fs directory
+[X] Opening of parquet files
+[ ] Rip out old --parquet support
+[ ] opening of sqlite files
 [ ] Figure out saving and loading of Tad files, since we support in-memory tables as well
 as file imports
 [ ] Ability to save and open Tad files
