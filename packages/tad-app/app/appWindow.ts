@@ -138,7 +138,7 @@ export const createFromDSPath = async (dsPath: DataSourcePath) => {
 
 export const openDialog = async () => {
   const openPaths = dialog.showOpenDialogSync({
-    properties: ["openFile"],
+    properties: ["openFile", "openDirectory"],
     filters: [
       {
         name: "CSV files",
