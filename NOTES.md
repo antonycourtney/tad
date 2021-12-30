@@ -314,6 +314,7 @@ the same
 [X] Opening of parquet files
 [X] Rip out old --parquet support
 [X] Ensure we can open directories from open dialog (openDialog / showOpenDialogSync)
+[X] Probably want a way to specify (multiple) data sources and files to open on command line.
 [X] opening of sqlite files from cmd line
 [ ] opening of sqlite files from open dialog
 [X] opening of duckdb files from cmd line
@@ -339,8 +340,6 @@ as file imports
 [ ] Verify that tad command line utility works for launching tad
 [ ] Check that all command-line arguments work as advertised
 [ ] Test all the ways that Tad might be opened: Finder context menu, dragging on to app icon, etc.
-[ ] Better naming for DuckDb in data source explorer tree
-[ ] Specifying a path to a sqlite db file
 [ ] Reduce height of column selector to fit in standard window without scrolling
 [ ] tweak column widths in column selector to avoid overflow of column type
 [ ] test of column types. MetObjects.csv seems to have a TIMESTAMP
@@ -350,7 +349,8 @@ as file imports
 [-] Add multiple tab support
 [-] Add option to open a file / table in a new tab or new window.
 
-Probably want a way to specify (multiple) data sources and files to open on command line.
+Later:
+[ ] Command line options for specifying a sqlite or duckdb table path directly. (Maybe just any DataSourcePath)?
 
 Looks like electron-builder is making some bad assumptions about finding node dependencies
 directly in node_modules. Let's put off this part until everything else is done.
@@ -360,7 +360,7 @@ directly in node_modules. Let's put off this part until everything else is done.
 [X] Trying to sort out an issue with webpack apparently creating multiple instances of loglevel module.
 
 16Oct21:
-[ ] Rethink how we present data sources, and handle importing. Probably we should not
+[X] Rethink how we present data sources, and handle importing. Probably we should not
 show the DuckDb instance that is used for importing a CSV; we probably all references
 to refer to the original CSV file path. Especially true if we start supporting s3 buckets.
 
@@ -369,7 +369,7 @@ to refer to the original CSV file path. Especially true if we start supporting s
 Let's clean up data sources.
 [X] get rid of displayName passed to connect()
 [X] get rid of displayName on paths
-[ ] think about how to represent files, directories and s3 buckets as data sources - the import and cached table should be linked to the data source, but shouldn't show up in source tree
+[X] think about how to represent files, directories and s3 buckets as data sources - the import and cached table should be linked to the data source, but shouldn't show up in source tree
 
 Thinking about paths and data sources:
 

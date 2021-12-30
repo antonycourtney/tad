@@ -12,7 +12,12 @@ import log from "electron-log";
 import * as csvexport from "./csvexport";
 import * as reltab from "reltab";
 import { formatGroupLabel } from "react-select/src/builtins";
-import { DataSourcePath, resolvePath } from "reltab";
+import {
+  DataSourceId,
+  DataSourcePath,
+  DataSourceProviderName,
+  resolvePath,
+} from "reltab";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -123,11 +128,6 @@ const create = async (openParams: OpenParams) => {
   return win;
 };
 
-export const createFromFile = async (targetPath: string) => {
-  const openParams = encodeFileOpenParams(targetPath);
-  await create(openParams);
-};
-
 export const createFromDSPath = async (dsPath: DataSourcePath) => {
   const openParams: OpenParams = {
     openType: "dspath",
@@ -136,14 +136,51 @@ export const createFromDSPath = async (dsPath: DataSourcePath) => {
   await create(openParams);
 };
 
+/**
+ * Determines if the path refers to a database file based on its extension.
+ * @param fspath
+ * @returns providerName string suitable for use in a DataSourceId, or
+ * `null` if not a database file.
+ */
+function isDbFile(fspath: string): DataSourceProviderName | null {
+  const ext = path.extname(fspath);
+  switch (ext) {
+    case ".sqlite":
+      return "sqlite";
+    case ".duckdb":
+      return "duckdb";
+  }
+  return null;
+}
+
+export const createFromFile = async (targetPath: string) => {
+  const providerName = isDbFile(targetPath);
+  if (providerName !== null) {
+    const sourceId: DataSourceId = {
+      providerName,
+      resourceId: targetPath,
+    };
+    const targetDSPath = { sourceId, path: [] };
+    console.log("attempting to open db file: ", sourceId);
+    await createFromDSPath(targetDSPath);
+  } else {
+    const openParams = encodeFileOpenParams(targetPath);
+    await create(openParams);
+  }
+};
+
 export const openDialog = async () => {
   const openPaths = dialog.showOpenDialogSync({
     properties: ["openFile", "openDirectory"],
+    /* weirdly, showOpenDialogSync doesn't seem to respect multiple filters, but does respect a
+     * single filter with multiple extensions...
+     */
     filters: [
       {
-        name: "CSV files",
-        extensions: ["csv"],
+        name: "data files",
+        extensions: ["csv", "tsv", "parquet", "tad", "sqlite", "duckdb"],
       },
+      /*
       {
         name: "Parquet files",
         extensions: ["parquet"],
@@ -156,6 +193,9 @@ export const openDialog = async () => {
         name: "Tad Workspace files",
         extensions: ["tad"],
       },
+      { name: "SQLite files", extensions: ["sqlite"] },
+      { name: "DuckDb files", extensions: ["duckdb"] },
+      */
     ],
   });
 

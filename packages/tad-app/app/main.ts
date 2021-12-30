@@ -26,17 +26,11 @@ import path from "path";
 
 import pkgInfo from "../package.json";
 import {
-  getConnection,
   DataSourceId,
-  TableInfo,
   EvalQueryOptions,
-  QueryExp,
-  DataSourceConnection,
-  TableRep,
   TransportServer,
   serverInit,
   DataSourcePath,
-  DataSourceProviderName,
 } from "reltab";
 import { BigQueryConnection } from "reltab-bigquery";
 
@@ -297,39 +291,11 @@ const getTargetPath = (options: any, filePath: string): string => {
   return targetPath;
 };
 
-/**
- * Determines if the path refers to a database file based on its extension.
- * @param fspath
- * @returns providerName string suitable for use in a DataSourceId, or
- * `null` if not a database file.
- */
-function isDbFile(fspath: string): DataSourceProviderName | null {
-  const ext = path.extname(fspath);
-  switch (ext) {
-    case ".sqlite":
-      return "sqlite";
-    case ".duckdb":
-      return "duckdb";
-  }
-  return null;
-}
-
 async function createFileWindows(options: commandLineArgs.CommandLineOptions) {
   for (const srcfile of options.srcfile) {
     const targetPath = getTargetPath(options, srcfile);
-    const providerName = isDbFile(targetPath);
-    if (providerName !== null) {
-      const sourceId: DataSourceId = {
-        providerName,
-        resourceId: targetPath,
-      };
-      const targetDSPath = { sourceId, path: [] };
-      console.log("attempting to open db file: ", sourceId);
-      await appWindow.createFromDSPath(targetDSPath);
-    } else {
-      log.log("after arg parsing + getTargetPath:", srcfile, targetPath);
-      await appWindow.createFromFile(targetPath);
-    }
+    log.log("after arg parsing + getTargetPath:", srcfile, targetPath);
+    await appWindow.createFromFile(targetPath);
   }
 }
 
