@@ -83,7 +83,6 @@ const initMainAsync = async (options: any): Promise<void> => {
   if (mainInitialized) {
     return;
   }
-  console.log("initMainAsync: ", options);
   let rtOptions: any = {};
 
   if (options["show-queries"]) {
@@ -91,6 +90,7 @@ const initMainAsync = async (options: any): Promise<void> => {
     logLevel.setLevel(logLevel.levels.INFO);
     log.info("initMainAsync -- showQueries enabled, set log level to INFO");
   }
+  log.debug("initMainAsync: ", options);
 
   // await initBigquery();
 
@@ -210,11 +210,6 @@ const optionDefinitions = [
     description: "Show hidden columns (for debugging)",
   },
   {
-    name: "no-headers",
-    type: Boolean,
-    description: "source file has no header line",
-  },
-  {
     name: "show-queries",
     type: Boolean,
     description: "Show generated SQL queries on console when in foreground",
@@ -273,7 +268,7 @@ const errorDialog = (title: string, msg: string, fatal = false) => {
 // construct targetPath based on options:
 const getTargetPath = (options: any, filePath: string): string => {
   let targetPath = undefined;
-  const srcDir = options["executed-from"];
+  let srcDir = options["executed-from"];
 
   if (
     srcDir &&
@@ -281,8 +276,12 @@ const getTargetPath = (options: any, filePath: string): string => {
     !filePath.startsWith("/") &&
     !filePath.startsWith("sqlite://")
   ) {
+    if (srcDir === ".") {
+      srcDir = process.cwd();
+    }
     // relative path -- prepend executed-from
     targetPath = path.join(srcDir, filePath);
+    log.debug("relative path: ", srcDir, filePath, "--->", targetPath);
   } else {
     // absolute pathname or no srcDir:
     targetPath = filePath;
@@ -329,6 +328,7 @@ const initApp =
 
       if (process.defaultApp) {
         // npm / electron start -- passes '.' as first argument
+        console.log("*** defaultApp: injecting --executed-from");
         argv.unshift("--executed-from");
       } // macOS insanity:  If we're started via Open With..., we get invoked
       // with -psn_0_XXXXX argument; let's just kill it:

@@ -110,26 +110,6 @@ const init = async () => {
   log.debug("Hello, Electron!");
   const win = remote.getCurrentWindow() as any;
   let viewParams: ViewParams | null = null;
-
-  /*
-   * keep around until we add back opening Tad files:
-  const { openType } = openParams;
-  switch (openType) {
-    case "csv":
-    case "parquet":
-    case "dspath":
-      targetPath = openParams.targetPath;
-      break;
-    case "tad":
-      const parsedFileState = JSON.parse(openParams.fileContents!);
-      // This would be the right place to validate / migrate tadFileFormatVersion
-      const savedFileState = parsedFileState.contents;
-      targetPath = savedFileState.targetPath;
-      srcFile = openParams.srcFile;
-      viewParams = ViewParams.deserialize(savedFileState.viewParams);
-      break;
-  }
-  */
   const appState = new AppState();
   const stateRef = mkRef(appState);
   const [App, listenerId] = refContainer<AppState, AppPaneBaseProps>(
@@ -158,7 +138,6 @@ const init = async () => {
 
     let targetDSPath: DataSourcePath | null = null;
 
-    // TODO: what happens if we open Tad with no args?  Maybe win.openParams is undefined?
     const openParams = win.openParams as OpenParams | undefined;
     if (openParams) {
       actions.startAppLoadingTimer(stateRef);
@@ -168,21 +147,29 @@ const init = async () => {
             providerName: "localfs",
             resourceId: openParams.path,
           };
-          targetDSPath = { sourceId: connKey, path: [openParams.path] };
+          targetDSPath = { sourceId: connKey, path: ["."] };
           break;
         case "dspath":
           targetDSPath = openParams.dsPath;
           break;
         case "tad":
-          // TODO
+          const parsedFileState = JSON.parse(openParams.fileContents!);
+          // This would be the right place to validate / migrate tadFileFormatVersion
+          const savedFileState = parsedFileState.contents;
+          targetDSPath = savedFileState.dsPath;
+          console.log("tad file: ", targetDSPath, savedFileState);
+          viewParams = ViewParams.deserialize(savedFileState.viewParams);
+          console.log("tad file: decoded viewParams: ", viewParams.toJS());
           break;
       }
       if (targetDSPath !== null) {
         const conn = await rtc.connect(targetDSPath.sourceId);
         const rootNode = await conn.getRootNode();
-        if (!rootNode.isContainer) {
-          await actions.openDataSourcePath(targetDSPath, stateRef);
-        }
+        await actions.openDataSourcePath(
+          targetDSPath,
+          stateRef,
+          viewParams ?? undefined
+        );
       }
       actions.stopAppLoadingTimer(stateRef);
     }
@@ -190,14 +177,14 @@ const init = async () => {
       console.log("got request-serialize-app-state: ", req);
       const { requestId } = req;
       const curState = mutableGet(stateRef);
-      const viewParamsJS = curState.viewState.viewParams.toJS();
-      // TODO: figure out what to do with targetPath here
-      // after changes to openParams
+      const viewState = curState.viewState;
+      console.log("serialize-app-state: viewState: ", viewState);
+      const { dsPath } = viewState;
+      const viewParamsJS = viewState.viewParams.toJS();
       const serState = {
-        targetPath: "TODO",
+        dsPath,
         viewParams: viewParamsJS,
       };
-      console.log("current viewParams: ", viewParamsJS);
       ipcRenderer.send("response-serialize-app-state", {
         requestId,
         contents: serState,

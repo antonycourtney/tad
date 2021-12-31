@@ -7,7 +7,7 @@ import { Path, PathTree } from "aggtree";
 import * as aggtree from "aggtree";
 import { StateRef, update, mutableGet, awaitableUpdate_ } from "oneref";
 import log from "loglevel";
-import { DataSourcePath, DataSourceId } from "reltab";
+import { DataSourcePath, DataSourceId, resolvePath } from "reltab";
 import * as util from "./util";
 
 export async function initAppState(
@@ -49,9 +49,15 @@ export async function stopAppLoadingTimer(
 
 export const replaceCurrentView = async (
   dsPath: DataSourcePath,
-  stateRef: StateRef<AppState>
+  stateRef: StateRef<AppState>,
+  viewParams?: ViewParams
 ): Promise<void> => {
   const appState = mutableGet(stateRef);
+
+  const targetNode = await resolvePath(appState.rtc, dsPath);
+  if (targetNode.isContainer) {
+    return;
+  }
 
   const dbc = await appState.rtc.connect(dsPath.sourceId);
 
@@ -71,15 +77,17 @@ export const replaceCurrentView = async (
   const displayColumns = baseSchema.columns.slice();
 
   const openPaths = new PathTree();
-  const viewParams = new ViewParams({
-    displayColumns,
-    openPaths,
-  });
+  if (!viewParams) {
+    viewParams = new ViewParams({
+      displayColumns,
+      openPaths,
+    });
+  }
   const initialViewParams = viewParams;
 
   const viewState = new ViewState({
     dbc,
-    path,
+    dsPath,
     baseSchema,
     baseQuery,
     viewParams,
@@ -97,7 +105,8 @@ export const replaceCurrentView = async (
 
 export const openDataSourcePath = async (
   path: DataSourcePath,
-  stateRef: StateRef<AppState>
+  stateRef: StateRef<AppState>,
+  viewParams?: ViewParams
 ): Promise<void> => {
   const appState = mutableGet(stateRef);
 
@@ -107,7 +116,12 @@ export const openDataSourcePath = async (
   if (modifiedViewParams) {
     setViewConfirmDialogOpen(true, path, stateRef);
   } else {
-    await replaceCurrentView(path, stateRef);
+    try {
+      await startAppLoadingTimer(stateRef);
+      await replaceCurrentView(path, stateRef, viewParams);
+    } finally {
+      stopAppLoadingTimer(stateRef);
+    }
   }
 };
 

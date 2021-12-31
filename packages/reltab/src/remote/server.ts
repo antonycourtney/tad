@@ -12,6 +12,7 @@ import {
   DbConnGetTableInfoRequest,
   DbConnGetChildrenRequest,
   DbConnGetTableNameRequest,
+  ReltabConnection,
 } from "./Connection";
 import {
   DataSourceConnection,
@@ -307,3 +308,26 @@ export const serverInit = (ts: TransportServer) => {
     simpleJSONHandler(exceptionHandler(handleDbConnGetTableInfo))
   );
 };
+
+/**
+ * Useful when we want to make utility routines that can work either
+ * locally or remotely
+ */
+export class LocalReltabConnection implements ReltabConnection {
+  private static instance: LocalReltabConnection | null;
+  private constructor() {}
+  static getInstance(): LocalReltabConnection {
+    if (!LocalReltabConnection.instance) {
+      LocalReltabConnection.instance = new LocalReltabConnection();
+    }
+    return LocalReltabConnection.instance;
+  }
+
+  async connect(sourceId: DataSourceId): Promise<DataSourceConnection> {
+    return getConnection(sourceId);
+  }
+
+  async getDataSources(): Promise<DataSourceId[]> {
+    return getDataSources();
+  }
+}

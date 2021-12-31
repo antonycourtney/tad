@@ -1,12 +1,13 @@
 import { getConnection } from "./remote/server";
 import { DataSourceNode, DataSourcePath } from "./DataSource";
+import { ReltabConnection } from "./reltab";
 
 export async function resolvePath(
+  rtc: ReltabConnection,
   dsPath: DataSourcePath
 ): Promise<DataSourceNode> {
   const { sourceId, path } = dsPath;
-
-  const conn = await getConnection(sourceId);
+  const conn = await rtc.connect(sourceId);
   let node: DataSourceNode;
   if (path.length < 2) {
     node = await conn.getRootNode();

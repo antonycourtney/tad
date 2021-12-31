@@ -16,8 +16,10 @@ import {
   DataSourceId,
   DataSourcePath,
   DataSourceProviderName,
+  LocalReltabConnection,
   resolvePath,
 } from "reltab";
+import { dataFileExtensions } from "reltab-fs";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -65,7 +67,10 @@ async function openParamsTitle(openParams: OpenParams): Promise<string> {
       titlePath = openParams.fileBaseName;
       break;
     case "dspath":
-      const node = await resolvePath(openParams.dsPath);
+      const node = await resolvePath(
+        LocalReltabConnection.getInstance(),
+        openParams.dsPath
+      );
       titlePath = node.displayName;
       break;
   }
@@ -161,7 +166,6 @@ export const createFromFile = async (targetPath: string) => {
       resourceId: targetPath,
     };
     const targetDSPath = { sourceId, path: [] };
-    console.log("attempting to open db file: ", sourceId);
     await createFromDSPath(targetDSPath);
   } else {
     const openParams = encodeFileOpenParams(targetPath);
@@ -178,7 +182,7 @@ export const openDialog = async () => {
     filters: [
       {
         name: "data files",
-        extensions: ["csv", "tsv", "parquet", "tad", "sqlite", "duckdb"],
+        extensions: dataFileExtensions.concat(["tad", "sqlite", "duckdb"]),
       },
       /*
       {

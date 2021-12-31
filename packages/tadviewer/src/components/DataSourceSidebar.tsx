@@ -63,7 +63,7 @@ const dsNodeTreeNode = (
 ): DSTreeNodeInfo => {
   const ret: DSTreeNodeInfo = {
     icon: dataKindIcon(dsNode.kind),
-    id: JSON.stringify(dsNode.id),
+    id: JSON.stringify(dsPath),
     label: dsNode.displayName,
     nodeData: { dsc, dsPath, dsNode },
     hasCaret: dsNode.isContainer,
@@ -111,7 +111,7 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
               const rootNode = await dsc.getRootNode();
               const rootPath: DataSourcePath = {
                 sourceId,
-                path: [rootNode.id],
+                path: ["."],
               };
               log.debug(
                 "creating root node for",
@@ -145,7 +145,7 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     forceUpdate();
   };
   const handleNodeExpand = async (treeNode: DSTreeNodeInfo) => {
-    const { dsPath, dsc } = treeNode.nodeData!;
+    const { dsPath, dsc, dsNode } = treeNode.nodeData!;
     const appState = mutableGet(stateRef);
     const childNodes = await dsc.getChildren(dsPath);
     treeNode.childNodes = childNodes.map((childNode) => {

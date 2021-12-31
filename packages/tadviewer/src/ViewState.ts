@@ -15,7 +15,7 @@ import { DataSourcePath } from "reltab";
  */
 export interface ViewStateProps {
   dbc: reltab.DataSourceConnection | null;
-  path: DataSourcePath | null;
+  dsPath: DataSourcePath | null;
   baseQuery: reltab.QueryExp | null;
   baseSchema: reltab.Schema | null; // always in sync with baseQuery
 
@@ -32,7 +32,7 @@ export interface ViewStateProps {
 
 const defaultViewStateProps: ViewStateProps = {
   dbc: null,
-  path: null,
+  dsPath: null,
   baseQuery: null,
   baseSchema: null,
   viewParams: new ViewParams(),
@@ -50,7 +50,7 @@ export class ViewState
   implements ViewStateProps
 {
   public readonly dbc!: reltab.DataSourceConnection;
-  public readonly path!: DataSourcePath;
+  public readonly dsPath!: DataSourcePath;
   public readonly baseQuery!: reltab.QueryExp;
   public readonly baseSchema!: reltab.Schema; // always in sync with baseQuery
   public readonly viewParams!: ViewParams;

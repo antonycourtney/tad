@@ -17,6 +17,14 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 
+export const dataFileExtensions = [
+  "csv",
+  "tsv",
+  "parquet",
+  ".csv.gz",
+  ".tsv.gz",
+];
+
 interface ImportedFileInfo {
   baseName: string;
   tableName: string | null;
@@ -80,19 +88,35 @@ export class FSConnection implements DataSourceConnection {
     const displayName = path.basename(this.rootPath);
     const isDir = this.rootStats.isDirectory();
     const rootNode: DataSourceNode = {
-      id: this.rootPath,
+      id: ".",
       kind: isDir ? "Directory" : "File",
       displayName,
       isContainer: isDir,
     };
     return rootNode;
   }
+  getTargetPath(dsPath: DataSourcePath): string {
+    return path.join(this.rootPath, ...dsPath.path);
+  }
   async getChildren(dsPath: DataSourcePath): Promise<DataSourceNode[]> {
-    const targetPath = path.join(...dsPath.path);
+    const targetPath = this.getTargetPath(dsPath);
     const dirEnts = await fs.promises.readdir(targetPath, {
       withFileTypes: true,
     });
-    const childNodes = dirEnts.map((ent) => {
+    const dataEnts = dirEnts.filter((ent) => {
+      const isDir = ent.isDirectory();
+      if (isDir) {
+        return true;
+      }
+      const extName = path.extname(ent.name);
+      if (extName !== "") {
+        const ext = extName.slice(1);
+        const index = dataFileExtensions.findIndex((dext) => dext === ext);
+        return index !== -1;
+      }
+      return false;
+    });
+    const childNodes = dataEnts.map((ent) => {
       const isDir = ent.isDirectory();
       const node: DataSourceNode = {
         id: ent.name,
@@ -107,7 +131,7 @@ export class FSConnection implements DataSourceConnection {
 
   // Get a table name that can be used in queries:
   async getTableName(dsPath: DataSourcePath): Promise<string> {
-    const targetPath = path.join(...dsPath.path);
+    const targetPath = this.getTargetPath(dsPath);
     let tableName = this.importMap[targetPath];
     if (!tableName) {
       log.debug(
@@ -116,9 +140,7 @@ export class FSConnection implements DataSourceConnection {
         ", importing..."
       );
       const extName = path.extname(targetPath);
-      console.log("extName: ", extName);
       if (extName === ".parquet") {
-        console.log("importing parquet file...");
         tableName = await reltabDuckDB.nativeParquetImport(
           this.dbc.db,
           targetPath

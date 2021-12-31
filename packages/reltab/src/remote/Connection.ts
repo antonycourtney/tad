@@ -9,6 +9,7 @@ import {
 import { deserializeTableRepStr, QueryExp } from "../QueryExp";
 import { TableInfo, TableRep } from "../TableRep";
 import { Result } from "./result";
+import { getConnection } from "./server";
 import { TransportClient } from "./Transport";
 
 export const defaultEvalQueryOptions: EvalQueryOptions = {
