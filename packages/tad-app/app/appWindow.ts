@@ -88,7 +88,8 @@ const create = async (openParams: OpenParams) => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
+      preload: path.join(__dirname, "preload.js"),
+      additionalArguments: [JSON.stringify(openParams)],
     },
   };
 
@@ -106,7 +107,6 @@ const create = async (openParams: OpenParams) => {
     baseY = bounds.y;
   } // win.targetPath = targetPath
 
-  (win as any).openParams = openParams;
   const targetUrl = url.format({
     pathname: path.join(__dirname, "index.html"),
     protocol: "file:",

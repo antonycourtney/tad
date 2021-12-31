@@ -152,12 +152,6 @@ const importCSVSqlite = async (targetPath: string): Promise<string> => {
   return tableName;
 };
 
-const mkInitMain = (options: any) => (cb: (res: any, err: any) => void) => {
-  initMainAsync(options)
-    .then((mdStr) => cb(null, mdStr))
-    .catch((err) => cb(err, null));
-}; // App initialization:
-
 const remotableNewWindowFromDSPath = (
   dsPathStr: string,
   cb: (res: any, err: any) => void
@@ -170,9 +164,13 @@ const remotableNewWindowFromDSPath = (
 
 const appInit = (options: any) => {
   // log.log('appInit: ', options)
-  (global as any).initMain = mkInitMain(options);
-  (global as any).errorDialog = errorDialog;
-  (global as any).newWindowFromDSPath = remotableNewWindowFromDSPath;
+  ipcMain.handle("initMain", async (event) => initMainAsync(options));
+  ipcMain.handle("errorDialog", (event, title, msg, fatal) =>
+    errorDialog(title, msg, fatal)
+  );
+  ipcMain.handle("newWindowFromDSPath", (event, dsPath) =>
+    newWindowFromDSPath(dsPath)
+  );
   appMenu.createMenu(); // log.log('appInit: done')
 };
 
@@ -257,7 +255,12 @@ const reportFatalError = (msg: string) => {
   app.quit();
 };
 
-const errorDialog = (title: string, msg: string, fatal = false) => {
+const errorDialog = async (
+  title: string,
+  msg: string,
+  fatal = false
+): Promise<void> => {
+  console.log("*** errorDialog: ", title, msg, fatal);
   dialog.showErrorBox(title, msg);
 
   if (fatal) {

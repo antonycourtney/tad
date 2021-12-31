@@ -14,6 +14,7 @@ import * as reltab from "reltab";
 import log from "loglevel";
 import { ElectronTransportClient } from "./electronClient";
 import * as electron from "electron";
+import { ipcRenderer } from "electron";
 import {
   DataSourcePath,
   DataSourceId,
@@ -22,14 +23,15 @@ import {
 } from "reltab";
 import { OpenParams } from "./openParams";
 
-const remote = electron.remote;
-const remoteInitMain = remote.getGlobal("initMain");
-const remoteErrorDialog = remote.getGlobal("errorDialog");
-const remoteImportCSV = remote.getGlobal("importCSV");
-const remoteImportParquet = remote.getGlobal("importParquet");
-const remoteNewWindowFromDSPath = remote.getGlobal("newWindowFromDSPath");
-
-const ipcRenderer = electron.ipcRenderer;
+const initMainProcess = () => ipcRenderer.invoke("initMain");
+const remoteErrorDialog = (title: string, msg: string, fatal = false) => {
+  console.log("remoteErrorDialog: ", title, msg, fatal);
+  return ipcRenderer.invoke("errorDialog", title, msg, fatal);
+};
+const newWindowFromDSPath = (
+  dsPath: DataSourcePath,
+  stateRef: StateRef<AppState>
+) => ipcRenderer.invoke("newWindowFromDSPath", dsPath);
 
 type InitInfo = {
   connKey: DataSourceId;
@@ -43,72 +45,12 @@ let delay = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-const initMainProcess = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    remoteInitMain((err: any) => {
-      if (err) {
-        console.error("initMain error: ", err);
-        reject(err);
-      } else {
-        console.log("initMain complete");
-        resolve();
-      }
-    });
-  });
-};
-
-const importCSV = (targetPath: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    remoteImportCSV(targetPath, (err: any, tableName: string) => {
-      if (err) {
-        console.error("importCSV error: ", err);
-        reject(err);
-      } else {
-        resolve(tableName);
-      }
-    });
-  });
-};
-
-const importParquet = (targetPath: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    remoteImportParquet(targetPath, (err: any, tableName: string) => {
-      if (err) {
-        console.error("importParquet error: ", err);
-        reject(err);
-      } else {
-        resolve(tableName);
-      }
-    });
-  });
-};
-
-const newWindowFromDSPath = (
-  dsPath: DataSourcePath,
-  stateRef: StateRef<AppState>
-) => {
-  return new Promise((resolve, reject) => {
-    remoteNewWindowFromDSPath(
-      JSON.stringify(dsPath),
-      (err: any, displayName: string) => {
-        if (err) {
-          console.error("importParquet error: ", err);
-          reject(err);
-        } else {
-          resolve(displayName);
-        }
-      }
-    );
-  });
-};
-
 // TODO: figure out how to initialize based on saved views or different file / table names
 const init = async () => {
   const tStart = performance.now();
   log.setLevel(log.levels.DEBUG);
   // console.log("testing, testing, one two...");
   log.debug("Hello, Electron!");
-  const win = remote.getCurrentWindow() as any;
   let viewParams: ViewParams | null = null;
   const appState = new AppState();
   const stateRef = mkRef(appState);
@@ -138,7 +80,8 @@ const init = async () => {
 
     let targetDSPath: DataSourcePath | null = null;
 
-    const openParams = win.openParams as OpenParams | undefined;
+    const openParams = (window as any).openParams as OpenParams | undefined;
+    console.log("renderMain: got openParams", openParams);
     if (openParams) {
       actions.startAppLoadingTimer(stateRef);
       switch (openParams.openType) {

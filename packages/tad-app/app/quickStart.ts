@@ -34,7 +34,6 @@ export const showQuickStart = () => {
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
-        enableRemoteModule: true,
       },
     });
     win.loadURL(

@@ -78,7 +78,7 @@ function config(nodeEnv) {
     },
     optimization: {},
     plugins: [
-      new webpack.IgnorePlugin(/^\.\/stores\/appStore$/),
+      new webpack.IgnorePlugin({ resourceRegExp: /^\.\/stores\/appStore$/ }),
       new webpack.DefinePlugin({
         "process.env": {
           NODE_ENV: JSON.stringify(nodeEnv),
