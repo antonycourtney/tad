@@ -26,7 +26,7 @@
     "loglevel": "^1.7.1",
     "through": "^2.3.8",
     "typed-promisify": "^0.4.0",
-    "duckdb": "^0.2.8",
+    "duckdb": "^0.3.1",
     "node-duckdb": "^0.0.76",
     "pretty-hrtime": "^1.0.3"
   },
