@@ -296,7 +296,6 @@ const getTargetPath = (options: any, filePath: string): string => {
 async function createFileWindows(options: commandLineArgs.CommandLineOptions) {
   for (const srcfile of options.srcfile) {
     const targetPath = getTargetPath(options, srcfile);
-    log.log("after arg parsing + getTargetPath:", srcfile, targetPath);
     await appWindow.createFromFile(targetPath);
   }
 }

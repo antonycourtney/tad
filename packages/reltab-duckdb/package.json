@@ -24,7 +24,6 @@
     "fast-csv": "^4.3.6",
     "gauge": "^3.0.1",
     "loglevel": "^1.7.1",
-    "reltab": "^0.10.0",
     "through": "^2.3.8",
     "typed-promisify": "^0.4.0",
     "duckdb": "^0.2.8",
@@ -42,5 +41,8 @@
     "prettier": "^2.3.2",
     "ts-jest": "^27.0.4",
     "typescript": "^3.9.4"
+  },
+  "peerDependencies": {
+    "reltab": "^0.10.0"
   }
 }

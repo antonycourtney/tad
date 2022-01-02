@@ -21,7 +21,6 @@
   "license": "MIT",
   "dependencies": {
     "loglevel": "^1.7.1",
-    "reltab": "^0.10.0",
     "@google-cloud/bigquery": "5.7.0"
   },
   "devDependencies": {
@@ -34,5 +33,8 @@
     "typescript": "^3.9.4",
     "console.table": "^0.10.0",
     "aggtree": "^0.10.0"
+  },
+  "peerDependencies": {
+    "reltab": "^0.10.0"
   }
 }

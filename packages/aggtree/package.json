@@ -15,9 +15,7 @@
   },
   "dependencies": {
     "lodash": "^4.17.21",
-    "loglevel": "^1.7.1",
-    "reltab": "^0.10.0",
-    "reltab-sqlite": "^0.10.0"
+    "loglevel": "^1.7.1"
   },
   "devDependencies": {
     "@types/jest": "^26.0.24",
@@ -28,6 +26,10 @@
     "prettier": "^2.3.2",
     "ts-jest": "^27.0.4",
     "typescript": "^3.9.4"
+  },
+  "peerDependencies": {
+    "reltab": "^0.10.0",
+    "reltab-sqlite": "^0.10.0"
   },
   "repository": {
     "type": "git",

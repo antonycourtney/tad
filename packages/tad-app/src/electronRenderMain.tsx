@@ -25,7 +25,6 @@ import { OpenParams } from "./openParams";
 
 const initMainProcess = () => ipcRenderer.invoke("initMain");
 const remoteErrorDialog = (title: string, msg: string, fatal = false) => {
-  console.log("remoteErrorDialog: ", title, msg, fatal);
   return ipcRenderer.invoke("errorDialog", title, msg, fatal);
 };
 const newWindowFromDSPath = (
@@ -49,8 +48,6 @@ let delay = (ms: number) => {
 const init = async () => {
   const tStart = performance.now();
   log.setLevel(log.levels.DEBUG);
-  // console.log("testing, testing, one two...");
-  log.debug("Hello, Electron!");
   let viewParams: ViewParams | null = null;
   const appState = new AppState();
   const stateRef = mkRef(appState);
@@ -61,7 +58,6 @@ const init = async () => {
 
   try {
     await initMainProcess();
-
     const tconn = new ElectronTransportClient();
 
     const rtc = new RemoteReltabConnection(tconn);
@@ -81,7 +77,6 @@ const init = async () => {
     let targetDSPath: DataSourcePath | null = null;
 
     const openParams = (window as any).openParams as OpenParams | undefined;
-    console.log("renderMain: got openParams", openParams);
     if (openParams) {
       actions.startAppLoadingTimer(stateRef);
       switch (openParams.openType) {
@@ -100,9 +95,7 @@ const init = async () => {
           // This would be the right place to validate / migrate tadFileFormatVersion
           const savedFileState = parsedFileState.contents;
           targetDSPath = savedFileState.dsPath;
-          console.log("tad file: ", targetDSPath, savedFileState);
           viewParams = ViewParams.deserialize(savedFileState.viewParams);
-          console.log("tad file: decoded viewParams: ", viewParams.toJS());
           break;
       }
       if (targetDSPath !== null) {
@@ -117,11 +110,9 @@ const init = async () => {
       actions.stopAppLoadingTimer(stateRef);
     }
     ipcRenderer.on("request-serialize-app-state", (event, req) => {
-      console.log("got request-serialize-app-state: ", req);
       const { requestId } = req;
       const curState = mutableGet(stateRef);
       const viewState = curState.viewState;
-      console.log("serialize-app-state: viewState: ", viewState);
       const { dsPath } = viewState;
       const viewParamsJS = viewState.viewParams.toJS();
       const serState = {
@@ -171,5 +162,4 @@ const init = async () => {
     remoteErrorDialog("Error initializing Tad", err.message, true);
   }
 };
-console.log("before init");
 init();

@@ -21,8 +21,6 @@
   "license": "MIT",
   "dependencies": {
     "loglevel": "^1.7.1",
-    "reltab": "^0.10.0",
-    "reltab-duckdb": "^0.10.0",
     "pretty-hrtime": "^1.0.3"
   },
   "devDependencies": {
@@ -33,5 +31,9 @@
     "prettier": "^2.3.2",
     "ts-jest": "^27.0.4",
     "typescript": "^3.9.4"
+  },
+  "peerDependencies": {
+    "reltab": "^0.10.0",
+    "reltab-duckdb": "^0.10.0"
   }
 }
