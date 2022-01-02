@@ -13,7 +13,7 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "noEmit": true,
+    "noEmit": false,
     "jsx": "react",
     "downlevelIteration": true,
     "rootDirs": ["src/ts", "stories"]

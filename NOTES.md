@@ -326,7 +326,9 @@ the same
 [X] Figure out saving and loading of Tad files, since we support in-memory tables as well
 as file imports
 [X] Ability to save and open Tad files
-[ ] Make sure we can build all packages; add a 'build: lerna build' script at top level
+[X] Try switching back from atl to ts-loader to avoid deprecation warnings on build
+[ ] Make sure we can build all packages without errors
+[ ] add a build-all.sh at top level (and maybe build-web.sh, build-app.sh, with common script for topo sort?)
 [ ] Get sqlite (and other) tests working again
 [ ] Change window title when loading new data set
 [ ] refresh db tree after File...Open
@@ -340,10 +342,6 @@ as file imports
 [ ] Get rid of BigQuery support by default -- ~/tad.conf.json
 [X] Ability to open directories with DuckDb import/export format
 [ ] Ability to open CSV / Parquet files directly from s3
-[ ] Ensure we can open new window from command line
-[ ] Verify that tad command line utility works for launching tad
-[ ] Check that all command-line arguments work as advertised
-[ ] Test all the ways that Tad might be opened: Finder context menu, dragging on to app icon, etc.
 [ ] Reduce height of column selector to fit in standard window without scrolling
 [ ] tweak column widths in column selector to avoid overflow of column type
 [ ] test of column types. MetObjects.csv seems to have a TIMESTAMP
@@ -356,8 +354,13 @@ as file imports
 Later:
 [ ] Command line options for specifying a sqlite or duckdb table path directly. (Maybe just any DataSourcePath)?
 
-Looks like electron-builder is making some bad assumptions about finding node dependencies
-directly in node_modules. Let's put off this part until everything else is done.
+Packaged build stuff:
+[ ] Get quickstart working again in packaged build
+[ ] Verify that opening example and link clicking works in quickstart
+[ ] Ensure we can open new window from command line
+[ ] Verify that tad command line utility works for launching tad
+[ ] Check that all command-line arguments work as advertised
+[ ] Test all the ways that Tad might be opened: Finder context menu, dragging on to app icon, etc.
 
 8Aug21:
 
