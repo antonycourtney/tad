@@ -17,13 +17,7 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 
-export const dataFileExtensions = [
-  "csv",
-  "tsv",
-  "parquet",
-  ".csv.gz",
-  ".tsv.gz",
-];
+export const dataFileExtensions = ["csv", "tsv", "parquet", "csv.gz", "tsv.gz"];
 
 interface ImportedFileInfo {
   baseName: string;
@@ -46,6 +40,18 @@ async function getDuckDbConnection(): Promise<DuckDBContext> {
     }) as Promise<DuckDBContext>;
   }
   return _duckDbConn;
+}
+
+// our own impl of path.extName that uses the first '.'
+// (rather than last '.') to allow for extensions
+// like '.csv.gz':
+function extNameEx(path: string): string {
+  const dotIndex = path.indexOf(".");
+  if (dotIndex === -1) {
+    return "";
+  }
+  const ext = path.slice(dotIndex);
+  return ext;
 }
 
 // mapping from pathnames to imported table names:
@@ -108,7 +114,7 @@ export class FSConnection implements DataSourceConnection {
       if (isDir) {
         return true;
       }
-      const extName = path.extname(ent.name);
+      const extName = extNameEx(ent.name);
       if (extName !== "") {
         const ext = extName.slice(1);
         const index = dataFileExtensions.findIndex((dext) => dext === ext);

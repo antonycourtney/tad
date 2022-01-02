@@ -321,12 +321,13 @@ the same
 [X] opening of duckdb files from open dialog
 [ ] Make File...Open follow same approach as switching source table in sidebar: prompt if changed.
 (Requires also adding a "New Tad Window" and "Open in New Window..." to app menus)
-[ ] Only allow opening of known extensions (".csv", ".tsv", ".parquet") from reltab-fs (indicate in UI?)
-[ ] Do we still need --no-headers?
-[ ] Figure out saving and loading of Tad files, since we support in-memory tables as well
+[X] Only allow opening of known extensions (".csv", ".tsv", ".parquet") from reltab-fs (indicate in UI?)
+[X] Do we still need --no-headers?
+[X] Figure out saving and loading of Tad files, since we support in-memory tables as well
 as file imports
-[ ] Ability to save and open Tad files
-[ ] Opening a Tad file
+[X] Ability to save and open Tad files
+[ ] Make sure we can build all packages; add a 'build: lerna build' script at top level
+[ ] Get sqlite (and other) tests working again
 [ ] Change window title when loading new data set
 [ ] refresh db tree after File...Open
 [-] change name of db for DuckDb from :memory:
@@ -335,9 +336,9 @@ as file imports
 [ ] Query console
 [X] Parquet file support: --parquet argument
 [X] Parquet file support: .parquet suffix
-[ ] compressed, gzipped CSV file support (supported by DuckDb?)
+[X] compressed, gzipped CSV file support (supported by DuckDb?)
 [ ] Get rid of BigQuery support by default -- ~/tad.conf.json
-[ ] Ability to open directories with DuckDb import/export format
+[X] Ability to open directories with DuckDb import/export format
 [ ] Ability to open CSV / Parquet files directly from s3
 [ ] Ensure we can open new window from command line
 [ ] Verify that tad command line utility works for launching tad
@@ -375,6 +376,27 @@ Let's clean up data sources.
 [X] think about how to represent files, directories and s3 buckets as data sources - the import and cached table should be linked to the data source, but shouldn't show up in source tree
 
 Thinking about paths and data sources:
+
+======
+31Dec21:
+
+Trying electron-builder. Getting a binary, but when I open it I get:
+
+Uncaught Exception:
+Error: Cannot find module 'source-map-support/register'
+Require stack:
+
+- /Users/antony/home/src/tad-pkg/packages/tad-app/dist/mac/tad.app/Contents/Resources/app.asar/dist/main.bundle.js
+- at Module.\_resolveFilename (node:internal/modules/cjs/loader:940:15)
+  at Function.n.\_resolveFilename (node:electron/js2c/browser_init:249:1128)
+  at Module.\_load (node:internal/modules/cjs/loader:785:27)
+  at Function.c.\_load (node:electron/js2c/asar_bundle:5:13331)
+  at Module.require (node:internal/modules/cjs/loader:1012:19)
+  at require (node:internal/modules/cjs/helpers:94:18)
+  at Object.884 (/Users/antony/home/src/tad-pkg/packages/tad-app/dist/mac/tad.app/Contents/Resources/app.asar/dist/main.bundle.js:1:41)
+  at t (/Users/antony/home/src/tad-pkg/packages/tad-app/dist/mac/tad.app/Contents/Resources/app.asar/dist/main.bundle.js:1:18138)
+  at /Users/antony/home/src/tad-pkg/packages/tad-app/dist/mac/tad.app/Contents/Resources/app.asar/dist/main.bundle.js:1:18391
+  at Object.<anonymous> (/Users/antony/home/src/tad-pkg/packages/tad-app/dist/mac/tad.app/Contents/Resources/app.asar/d
 
 What's missing in paths right now is having a DataSource itself as the initial path component.
 
