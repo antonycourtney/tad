@@ -2,7 +2,7 @@ import { ViewParams } from "./ViewParams";
 import { ViewState } from "./ViewState";
 import { AppState } from "./AppState";
 import * as reltab from "reltab";
-import { ColumnListTypes } from "./components/defs";
+import { Activity, ColumnListTypes } from "./components/defs";
 import { Path, PathTree } from "aggtree";
 import * as aggtree from "aggtree";
 import { StateRef, update, mutableGet, awaitableUpdate_ } from "oneref";
@@ -20,6 +20,16 @@ export async function initAppState(
       st.set("rtc", rtc).set("initialized", true) as AppState
   );
   console.log("initAppState: st: ", st.toJS());
+}
+
+export async function setActivity(
+  activity: Activity,
+  stateRef: StateRef<AppState>
+) {
+  await awaitableUpdate_(
+    stateRef,
+    (st: AppState) => st.set("activity", activity) as AppState
+  );
 }
 
 export async function startAppLoadingTimer(
@@ -56,6 +66,7 @@ export const replaceCurrentView = async (
 
   const targetNode = await resolvePath(appState.rtc, dsPath);
   if (targetNode.isContainer) {
+    await setActivity("DataSource", stateRef);
     return;
   }
 

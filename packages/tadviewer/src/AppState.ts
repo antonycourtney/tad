@@ -3,6 +3,7 @@ import { ViewState } from "./ViewState";
 import * as reltab from "reltab";
 import { DataSourcePath, DataSourceId } from "reltab";
 import { Timer } from "./Timer";
+import { Activity } from "./components/defs";
 /**
  * Immutable representation of application state
  *
@@ -25,6 +26,7 @@ export interface AppStateProps {
   viewConfirmSourcePath: DataSourcePath | null;
 
   appLoadingTimer: Timer;
+  activity: Activity;
 }
 
 const defaultAppStateProps: AppStateProps = {
@@ -38,6 +40,7 @@ const defaultAppStateProps: AppStateProps = {
   viewConfirmDialogOpen: false,
   viewConfirmSourcePath: null,
   appLoadingTimer: new Timer(),
+  activity: "None",
 };
 
 export class AppState extends Immutable.Record(defaultAppStateProps) {
@@ -54,4 +57,5 @@ export class AppState extends Immutable.Record(defaultAppStateProps) {
   public readonly viewConfirmDialogOpen!: boolean;
   public readonly viewConfirmSourcePath!: DataSourcePath | null;
   public readonly appLoadingTimer!: Timer;
+  public readonly activity!: Activity;
 }

@@ -179,7 +179,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   appState,
   stateRef,
 }: AppPaneProps) => {
-  const [activity, setActivity] = useState<Activity>("None");
+  const { activity } = appState;
   const dataSourceExpanded = activity === "DataSource";
   const pivotPropsExpanded = activity === "Pivot";
   const [grid, setGrid] = useState<any>(null);
@@ -242,11 +242,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   mainContents = (
     <div className="container-fluid full-height main-container">
       <DndProvider backend={HTML5Backend}>
-        <ActivityBar
-          activity={activity}
-          setActivity={setActivity}
-          stateRef={stateRef}
-        />
+        <ActivityBar activity={activity} stateRef={stateRef} />
         <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
         {pivotSidebar}
         {centerPane}

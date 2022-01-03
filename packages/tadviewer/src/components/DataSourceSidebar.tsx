@@ -99,6 +99,7 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
       const appState = mutableGet(stateRef);
       const rtc = appState.rtc;
       let dirty = false;
+      let newContainers: DSTreeNodeInfo[] = [];
       try {
         const nextNodeMap = Object.assign(rootNodeMap) as RootNodeMap;
         const rootSources = await rtc.getDataSources();
@@ -114,13 +115,16 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
                 path: ["."],
               };
               log.debug(
-                "creating root node for",
+                "DataSourceSidebar: creating root node for",
                 sourceIdStr,
                 rootPath,
                 rootNode
               );
               rootTreeNode = dsNodeTreeNode(dsc, rootPath, rootNode);
               nextNodeMap[sourceIdStr] = rootTreeNode;
+              if (rootNode.isContainer) {
+                newContainers.push(rootTreeNode);
+              }
               dirty = true;
             }
             return rootTreeNode;
@@ -129,6 +133,9 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
         if (dirty) {
           setTreeState(rootNodes);
           setRootNodeMap(nextNodeMap);
+          for (const cNode of newContainers) {
+            handleNodeExpand(cNode);
+          }
         }
       } catch (err) {
         console.error("error refreshing data sources: ", err);

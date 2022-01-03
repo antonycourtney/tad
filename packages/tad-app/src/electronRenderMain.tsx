@@ -79,7 +79,6 @@ async function openFromOpenParams(
   let viewParams: ViewParams | null = null;
 
   if (openParams) {
-    actions.startAppLoadingTimer(stateRef);
     [targetDSPath, viewParams] = openParamsDSPath(openParams);
     if (targetDSPath !== null) {
       await actions.openDataSourcePath(
@@ -88,7 +87,6 @@ async function openFromOpenParams(
         viewParams ?? undefined
       );
     }
-    actions.stopAppLoadingTimer(stateRef);
   }
 }
 // TODO: figure out how to initialize based on saved views or different file / table names

@@ -319,7 +319,7 @@ the same
 [X] opening of sqlite files from open dialog
 [X] opening of duckdb files from cmd line
 [X] opening of duckdb files from open dialog
-[ ] Make File...Open follow same approach as switching source table in sidebar: prompt if changed.
+[X] Make File...Open follow same approach as switching source table in sidebar: prompt if changed.
 (Requires also adding a "New Tad Window" and "Open in New Window..." to app menus)
 [X] Only allow opening of known extensions (".csv", ".tsv", ".parquet") from reltab-fs (indicate in UI?)
 [X] Do we still need --no-headers?
@@ -328,11 +328,12 @@ as file imports
 [X] Ability to save and open Tad files
 [X] Try switching back from atl to ts-loader to avoid deprecation warnings on build
 [X] Make sure we can build all packages without errors
+[ ] Open data source sidebar after opening a directory
 [ ] Get all tests working again (sqlite)
 [ ] add a build-all.sh at top level (and maybe build-web.sh, build-app.sh, with common script for topo sort?)
 [ ] Get sqlite (and other) tests working again
 [X] Change window title when loading new data set
-[ ] refresh db tree after File...Open
+[X] refresh db tree after File...Open
 [-] change name of db for DuckDb from :memory:
 [ ] Smoke test select control for "in..." filter queries. Try one from Blueprint directly?
 [ ] Status bar in footer
