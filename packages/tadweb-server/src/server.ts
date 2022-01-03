@@ -46,10 +46,10 @@ const initSqlite = async (): Promise<DataSourceConnection> => {
 
 const covid19ConnKey: DataSourceId = {
   providerName: "bigquery",
-  resourceId: {
+  resourceId: JSON.stringify({
     projectId: "bigquery-public-data",
     datasetName: "covid19_jhu_csse",
-  },
+  }),
 };
 const connOpts: EvalQueryOptions = {
   showQueries: true,
@@ -68,7 +68,7 @@ const initSnowflake = async () => {
 
   const snowflakeConnKey: DataSourceId = {
     providerName: "snowflake",
-    resourceId: connOpts,
+    resourceId: JSON.stringify(connOpts),
   };
 
   const rtc = (await reltab.getConnection(

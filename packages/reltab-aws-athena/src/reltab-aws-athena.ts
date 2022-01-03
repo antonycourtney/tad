@@ -44,7 +44,7 @@ export class AWSAthenaConnection implements DataSourceConnection {
   constructor() {
     this.sourceId = {
       providerName: "aws-athena",
-      resourceId: {},
+      resourceId: "",
     };
     this.tableMap = {};
   }
@@ -158,8 +158,20 @@ export class AWSAthenaConnection implements DataSourceConnection {
     return ti;
   }
 
-  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
-    throw new Error("getSourceInfo not yet implemented for aws-athena");
+  async getRootNode(): Promise<DataSourceNode> {
+    throw new Error("getRootNode not yet implemented for aws-athena");
+  }
+
+  async getChildren(dsPath: DataSourcePath): Promise<DataSourceNode[]> {
+    // TODO
+    return [];
+  }
+  async getTableName(dsPath: DataSourcePath): Promise<string> {
+    const { path } = dsPath;
+    if (path.length < 1) {
+      throw new Error("getTableName: empty path");
+    }
+    return path[path.length - 1];
   }
 }
 

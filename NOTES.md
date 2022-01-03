@@ -327,7 +327,7 @@ the same
 as file imports
 [X] Ability to save and open Tad files
 [X] Try switching back from atl to ts-loader to avoid deprecation warnings on build
-[ ] Make sure we can build all packages without errors
+[ ] Make sure we can build (and run tests) on all packages without errors
 [ ] add a build-all.sh at top level (and maybe build-web.sh, build-app.sh, with common script for topo sort?)
 [ ] Get sqlite (and other) tests working again
 [ ] Change window title when loading new data set
@@ -355,9 +355,11 @@ Later:
 [ ] Command line options for specifying a sqlite or duckdb table path directly. (Maybe just any DataSourcePath)?
 
 Packaged build stuff:
+[ ] Add more to electron file extensions
 [ ] Get quickstart working again in packaged build
 [ ] Verify that opening example and link clicking works in quickstart
 [ ] Ensure we can open new window from command line
+[ ] See if we can keep a single instance of Tad and multiple windows in newer version of electron
 [ ] Verify that tad command line utility works for launching tad
 [ ] Check that all command-line arguments work as advertised
 [ ] Test all the ways that Tad might be opened: Finder context menu, dragging on to app icon, etc.

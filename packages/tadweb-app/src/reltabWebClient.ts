@@ -1,14 +1,6 @@
 import log from "loglevel";
 import * as reltab from "reltab";
-import {
-  DataSourcePath,
-  DataSourceNode,
-  DataSourceConnection,
-  DataSourceId,
-  ReltabConnection,
-  DataSourceNodeId,
-  TransportClient,
-} from "reltab";
+import { TransportClient } from "reltab";
 
 async function request(baseUrl: string, path: string, args: any): Promise<any> {
   const url = baseUrl + path;

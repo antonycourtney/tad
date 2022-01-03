@@ -8,7 +8,6 @@ import {
   EvalQueryOptions,
   DataSourceProvider,
   registerProvider,
-  DataSourceNodeId,
 } from "reltab";
 import {
   TableInfoMap,
@@ -56,7 +55,7 @@ function executeQuery(
           );
           reject(err);
         } else {
-          resolve(rows);
+          resolve(rows!);
         }
       },
     });
@@ -72,7 +71,7 @@ export class SnowflakeConnection implements DataSourceConnection {
   tableMap: TableInfoMap;
   snowConn: snowflake.Connection;
 
-  constructor(resourceId: snowflake.ConnectionOptions) {
+  constructor(resourceId: string) {
     this.sourceId = {
       providerName: "snowflake",
       resourceId,
@@ -84,7 +83,8 @@ export class SnowflakeConnection implements DataSourceConnection {
     );
     // Enable this for hard-core debugging:
     // snowflake.configure({ logLevel: "TRACE" });
-    this.snowConn = snowflake.createConnection(resourceId);
+    const connOpts: snowflake.ConnectionOptions = JSON.parse(resourceId);
+    this.snowConn = snowflake.createConnection(connOpts);
   }
 
   connect(): Promise<void> {
@@ -224,72 +224,69 @@ export class SnowflakeConnection implements DataSourceConnection {
     return ti;
   }
 
-  async getSourceInfo(path: DataSourcePath): Promise<DataSourceNode> {
-    if (path.length === 0) {
+  async getRootNode(): Promise<DataSourceNode> {
+    const rootNode: DataSourceNode = {
+      kind: "Database",
+      id: "snowflake",
+      displayName: "snowflake",
+      isContainer: true,
+    };
+    return rootNode;
+  }
+
+  async getChildren(dsPath: DataSourcePath): Promise<DataSourceNode[]> {
+    const path = dsPath.path;
+    let childNodes: DataSourceNode[];
+    if (path.length === 1) {
       const sqlQuery = `SHOW databases`;
 
       const qres = await executeQuery(this.snowConn, sqlQuery);
       const metaRows = qres as Row[];
 
-      const children: DataSourceNodeId[] = metaRows.map((row) => ({
+      childNodes = metaRows.map((row) => ({
         kind: "Database",
         id: row.name as string,
         displayName: row.name as string,
+        isContainer: true,
       }));
+    } else if (path.length === 2) {
+      const dbName = path[1];
+      const sqlQuery = `SHOW schemas in ${dbName}`;
 
-      let nodeId: DataSourceNodeId = {
-        kind: "Database",
-        id: "snowflake",
-        displayName: "snowflake",
-      };
-      let node: DataSourceNode = {
-        nodeId,
-        children,
-      };
-      return node;
+      const qres = await executeQuery(this.snowConn, sqlQuery);
+      const metaRows = qres as Row[];
+
+      childNodes = metaRows.map((row) => ({
+        kind: "Dataset",
+        id: row.name as string,
+        displayName: row.name as string,
+        isContainer: true,
+      }));
+    } else if (path.length === 3) {
+      const [_rootName, dbName, schemaName] = path;
+      const sqlQuery = `SHOW tables in ${dbName}.${schemaName}`;
+
+      const qres = await executeQuery(this.snowConn, sqlQuery);
+      const metaRows = qres as Row[];
+
+      childNodes = metaRows.map((row) => ({
+        kind: "Table",
+        id: `${dbName}.${schemaName}.${row.name}`,
+        displayName: row.name as string,
+        isContainer: false,
+      }));
     } else {
-      if (path.length === 1) {
-        const nodeId = path[0];
-        const dbName = nodeId.id;
-
-        const sqlQuery = `SHOW schemas in ${dbName}`;
-
-        const qres = await executeQuery(this.snowConn, sqlQuery);
-        const metaRows = qres as Row[];
-
-        const children: DataSourceNodeId[] = metaRows.map((row) => ({
-          kind: "Dataset",
-          id: row.name as string,
-          displayName: row.name as string,
-        }));
-        let node: DataSourceNode = {
-          nodeId,
-          children,
-        };
-        return node;
-      } else if (path.length === 2) {
-        const [dbNodeId, schemaNodeId] = path;
-        const dbName = dbNodeId.id;
-        const schemaName = schemaNodeId.id;
-
-        const sqlQuery = `SHOW tables in ${dbName}.${schemaName}`;
-
-        const qres = await executeQuery(this.snowConn, sqlQuery);
-        const metaRows = qres as Row[];
-
-        const children: DataSourceNodeId[] = metaRows.map((row) => ({
-          kind: "Table",
-          id: `${dbName}.${schemaName}.${row.name}`,
-          displayName: row.name as string,
-        }));
-        let node: DataSourceNode = {
-          nodeId: schemaNodeId,
-          children,
-        };
-        return node;
-      }
-      throw new Error("nested getSourceInfo not yet implemented");
+      throw new Error(`getChildren: Unexpected path length: ${path}`);
     }
+    return childNodes;
+  }
+  async getTableName(dsPath: DataSourcePath): Promise<string> {
+    const { path } = dsPath;
+    if (path.length < 3) {
+      throw new Error(`getTableName: non-table path: ${path.toString()}`);
+    }
+    const tpath = path.slice(1);
+    return tpath.join(".");
   }
 }
 

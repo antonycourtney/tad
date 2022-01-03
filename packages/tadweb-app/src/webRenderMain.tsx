@@ -3,14 +3,14 @@
  */
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import OneRef, { mkRef, refContainer } from "oneref";
+import OneRef, { mkRef, refContainer, StateRef } from "oneref";
 import { AppState, AppPane, AppPaneBaseProps, PivotRequester } from "tadviewer";
 import { ViewParams } from "tadviewer";
 import { initAppState } from "tadviewer";
 import * as reltab from "reltab";
 import log from "loglevel";
 import { WebTransportClient } from "./reltabWebClient";
-import { DataSourceId, RemoteReltabConnection } from "reltab";
+import { DataSourceId, DataSourcePath, RemoteReltabConnection } from "reltab";
 
 const testBaseUrl = "http://localhost:9000";
 // const TEST_FILE = "movie_metadata.csv";
@@ -28,6 +28,14 @@ const openParams = {
   srcFile: null,
 };
 */
+
+const newWindowFromDSPath = (
+  dsPath: DataSourcePath,
+  stateRef: StateRef<AppState>
+) => {
+  // TODO! Generate a URL based on dsPath and call window.open(url, "_blank")
+  console.log("TODO: newWindowFromDSPath: ", dsPath);
+};
 
 // TODO: figure out how to initialize based on saved views or different file / table names
 const init = async () => {
@@ -59,7 +67,10 @@ const init = async () => {
 
   await initAppState(rtc, stateRef);
 
-  ReactDOM.render(<App />, document.getElementById("app"));
+  ReactDOM.render(
+    <App newWindow={newWindowFromDSPath} />,
+    document.getElementById("app")
+  );
 
   pivotRequester = new PivotRequester(stateRef);
 };
