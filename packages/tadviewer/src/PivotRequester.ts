@@ -1,3 +1,4 @@
+import log from "loglevel";
 import * as reltab from "reltab";
 import * as aggtree from "aggtree";
 import { PagedDataView } from "./PagedDataView";
@@ -294,7 +295,7 @@ export class PivotRequester {
 */
 
     if (viewParams !== this.pendingViewParams) {
-      console.log(
+      log.debug(
         "onStateChange: requesting new query: ",
         viewState.toJS(),
         this.pendingViewParams?.toJS()

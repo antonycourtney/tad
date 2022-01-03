@@ -39,7 +39,8 @@
     "react-select": "^4.3.1",
     "slickgrid-es6": "^3.0.3",
     "url-loader": "^4.1.1",
-    "url-regex": "5.0.0"
+    "url-regex": "5.0.0",
+    "use-deep-compare": "^1.1.0"
   },
   "devDependencies": {
     "@blueprintjs/icons": "^3.27.0",

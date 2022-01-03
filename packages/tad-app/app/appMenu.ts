@@ -29,8 +29,8 @@ export const createMenu = () => {
     {
       label: "Open...",
       accelerator: "CmdOrCtrl+O",
-      click: (item: any, focusedWindow: any) => {
-        appWindow.openDialog();
+      click: (item: any, focusedWindow: BrowserWindow) => {
+        appWindow.openDialog(focusedWindow);
       },
     },
     separatorMenuItem,

@@ -97,7 +97,7 @@ export const replaceCurrentView = async (
   // We explicitly set rather than merge() because merge
   // will attempt to deep convert JS objects to Immutables
 
-  update(
+  await awaitableUpdate_(
     stateRef,
     (st: AppState): AppState => st.set("viewState", viewState) as AppState
   );

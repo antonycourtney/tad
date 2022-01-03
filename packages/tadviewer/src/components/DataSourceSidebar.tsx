@@ -164,7 +164,6 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
     const { dsPath, dsNode } = treeNode.nodeData!;
     if (dsNode.kind === "Table" || dsNode.kind === "File") {
       actions.openDataSourcePath(dsPath, stateRef);
-      // actions.openTable(dsNodeId.id, stateRef);
     }
     if (selectedNode != null) {
       selectedNode.isSelected = false;

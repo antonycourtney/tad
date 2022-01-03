@@ -57,6 +57,7 @@ const encodeFileOpenParams = (targetPath: string): OpenParams => {
   return openParams;
 };
 
+// No longer used -- title now set in AppPane in tadviewer
 async function openParamsTitle(openParams: OpenParams): Promise<string> {
   let titlePath: string;
   switch (openParams.openType) {
@@ -78,11 +79,11 @@ async function openParamsTitle(openParams: OpenParams): Promise<string> {
 }
 
 const create = async (openParams: OpenParams) => {
-  const title = await openParamsTitle(openParams);
+  // const title = await openParamsTitle(openParams);
   let winProps = {
     width: 1280,
     height: 980,
-    title,
+    /* title, */
     x: 0,
     y: 0,
     webPreferences: {
@@ -158,22 +159,31 @@ function isDbFile(fspath: string): DataSourceProviderName | null {
   return null;
 }
 
-export const createFromFile = async (targetPath: string) => {
+function fileOpenParams(targetPath: string): OpenParams {
   const providerName = isDbFile(targetPath);
+  let openParams: OpenParams;
   if (providerName !== null) {
     const sourceId: DataSourceId = {
       providerName,
       resourceId: targetPath,
     };
     const targetDSPath = { sourceId, path: [] };
-    await createFromDSPath(targetDSPath);
+    openParams = {
+      openType: "dspath",
+      dsPath: targetDSPath,
+    };
   } else {
-    const openParams = encodeFileOpenParams(targetPath);
-    await create(openParams);
+    openParams = encodeFileOpenParams(targetPath);
   }
+  return openParams;
+}
+
+export const createFromFile = async (targetPath: string) => {
+  const openParams = fileOpenParams(targetPath);
+  await create(openParams);
 };
 
-export const openDialog = async () => {
+export const openDialog = async (win?: BrowserWindow) => {
   const openPaths = dialog.showOpenDialogSync({
     properties: ["openFile", "openDirectory"],
     /* weirdly, showOpenDialogSync doesn't seem to respect multiple filters, but does respect a
@@ -205,7 +215,14 @@ export const openDialog = async () => {
 
   if (openPaths && openPaths.length > 0) {
     const filePath = openPaths[0];
-    await createFromFile(filePath);
+    const openParams = fileOpenParams(filePath);
+    if (win) {
+      win.webContents.send("open-file", {
+        openParams,
+      });
+    } else {
+      await createFromFile(filePath);
+    }
   }
 };
 let stateRequestId = 100;

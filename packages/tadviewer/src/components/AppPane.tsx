@@ -20,7 +20,9 @@ import * as oneref from "oneref";
 import { useState } from "react";
 import { Activity } from "./defs";
 import { mutableGet, StateRef } from "oneref";
-import { DataSourcePath } from "reltab";
+import { DataSourcePath, ReltabConnection, resolvePath } from "reltab";
+import { useDeepCompareEffect } from "use-deep-compare";
+import { Timer } from "../Timer";
 
 /**
  * top level application pane
@@ -159,6 +161,19 @@ const ViewConfirmDialog: React.FunctionComponent<ViewConfirmDialogProps> = ({
   );
 };
 
+async function setTitleFromDSPath(
+  rtc: ReltabConnection,
+  dsPath: DataSourcePath
+) {
+  const node = await resolvePath(rtc, dsPath);
+  const title = "Tad - " + node.displayName;
+  document.title = title;
+}
+
+function timerShowModal(timer: Timer): boolean {
+  return timer.running && timer.elapsed > 200;
+}
+
 export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   newWindow,
   appState,
@@ -172,7 +187,15 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
 
   // console.log("AppPane: ", appState.toJS());
 
-  const { viewState } = appState;
+  const { rtc, viewState } = appState;
+
+  let dsPath = viewState?.dsPath;
+
+  useDeepCompareEffect(() => {
+    if (rtc && dsPath) {
+      setTitleFromDSPath(rtc, dsPath);
+    }
+  }, [dsPath]);
 
   let centerPane: JSX.Element | null;
 
@@ -193,8 +216,14 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
         stateRef={stateRef}
       />
     );
+    const loadingModal =
+      timerShowModal(appState.appLoadingTimer) ||
+      timerShowModal(viewState.loadingTimer) ? (
+        <LoadingModal />
+      ) : null;
     centerPane = (
       <div className="center-app-pane">
+        {loadingModal}
         <GridPane
           onSlickGridCreated={(grid) => setGrid(grid)}
           appState={appState}
@@ -206,7 +235,9 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     );
   } else {
     pivotSidebar = null;
-    centerPane = appState.appLoadingTimer.running ? <LoadingModal /> : null;
+    centerPane = timerShowModal(appState.appLoadingTimer) ? (
+      <LoadingModal />
+    ) : null;
   }
   mainContents = (
     <div className="container-fluid full-height main-container">

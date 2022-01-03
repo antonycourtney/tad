@@ -44,11 +44,57 @@ let delay = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
+function openParamsDSPath(
+  openParams: OpenParams
+): [DataSourcePath, ViewParams | null] {
+  let targetDSPath: DataSourcePath;
+  let viewParams: ViewParams | null = null;
+  switch (openParams.openType) {
+    case "fspath":
+      const connKey: DataSourceId = {
+        providerName: "localfs",
+        resourceId: openParams.path,
+      };
+      targetDSPath = { sourceId: connKey, path: ["."] };
+      break;
+    case "dspath":
+      targetDSPath = openParams.dsPath;
+      break;
+    case "tad":
+      const parsedFileState = JSON.parse(openParams.fileContents!);
+      // This would be the right place to validate / migrate tadFileFormatVersion
+      const savedFileState = parsedFileState.contents;
+      targetDSPath = savedFileState.dsPath;
+      viewParams = ViewParams.deserialize(savedFileState.viewParams);
+      break;
+  }
+  return [targetDSPath, viewParams];
+}
+
+async function openFromOpenParams(
+  openParams: OpenParams | undefined,
+  stateRef: StateRef<AppState>
+) {
+  let targetDSPath: DataSourcePath | null = null;
+  let viewParams: ViewParams | null = null;
+
+  if (openParams) {
+    actions.startAppLoadingTimer(stateRef);
+    [targetDSPath, viewParams] = openParamsDSPath(openParams);
+    if (targetDSPath !== null) {
+      await actions.openDataSourcePath(
+        targetDSPath,
+        stateRef,
+        viewParams ?? undefined
+      );
+    }
+    actions.stopAppLoadingTimer(stateRef);
+  }
+}
 // TODO: figure out how to initialize based on saved views or different file / table names
 const init = async () => {
   const tStart = performance.now();
   log.setLevel(log.levels.DEBUG);
-  let viewParams: ViewParams | null = null;
   const appState = new AppState();
   const stateRef = mkRef(appState);
   const [App, listenerId] = refContainer<AppState, AppPaneBaseProps>(
@@ -74,41 +120,9 @@ const init = async () => {
     log.debug("Time to initial render: ", (tRender - tStart) / 1000, " sec");
     pivotRequester = new PivotRequester(stateRef);
 
-    let targetDSPath: DataSourcePath | null = null;
-
     const openParams = (window as any).openParams as OpenParams | undefined;
-    if (openParams) {
-      actions.startAppLoadingTimer(stateRef);
-      switch (openParams.openType) {
-        case "fspath":
-          const connKey: DataSourceId = {
-            providerName: "localfs",
-            resourceId: openParams.path,
-          };
-          targetDSPath = { sourceId: connKey, path: ["."] };
-          break;
-        case "dspath":
-          targetDSPath = openParams.dsPath;
-          break;
-        case "tad":
-          const parsedFileState = JSON.parse(openParams.fileContents!);
-          // This would be the right place to validate / migrate tadFileFormatVersion
-          const savedFileState = parsedFileState.contents;
-          targetDSPath = savedFileState.dsPath;
-          viewParams = ViewParams.deserialize(savedFileState.viewParams);
-          break;
-      }
-      if (targetDSPath !== null) {
-        const conn = await rtc.connect(targetDSPath.sourceId);
-        const rootNode = await conn.getRootNode();
-        await actions.openDataSourcePath(
-          targetDSPath,
-          stateRef,
-          viewParams ?? undefined
-        );
-      }
-      actions.stopAppLoadingTimer(stateRef);
-    }
+    await openFromOpenParams(openParams, stateRef);
+
     ipcRenderer.on("request-serialize-app-state", (event, req) => {
       const { requestId } = req;
       const curState = mutableGet(stateRef);
@@ -151,6 +165,10 @@ const init = async () => {
     ipcRenderer.on("export-progress", (event, req) => {
       const { percentComplete } = req;
       actions.setExportProgress(percentComplete, stateRef);
+    });
+    ipcRenderer.on("open-file", (event, req) => {
+      const { openParams } = req;
+      openFromOpenParams(openParams, stateRef);
     });
   } catch (e) {
     const err = e as any;

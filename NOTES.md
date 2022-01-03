@@ -327,10 +327,11 @@ the same
 as file imports
 [X] Ability to save and open Tad files
 [X] Try switching back from atl to ts-loader to avoid deprecation warnings on build
-[ ] Make sure we can build (and run tests) on all packages without errors
+[X] Make sure we can build all packages without errors
+[ ] Get all tests working again (sqlite)
 [ ] add a build-all.sh at top level (and maybe build-web.sh, build-app.sh, with common script for topo sort?)
 [ ] Get sqlite (and other) tests working again
-[ ] Change window title when loading new data set
+[X] Change window title when loading new data set
 [ ] refresh db tree after File...Open
 [-] change name of db for DuckDb from :memory:
 [ ] Smoke test select control for "in..." filter queries. Try one from Blueprint directly?
