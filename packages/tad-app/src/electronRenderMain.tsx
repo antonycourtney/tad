@@ -168,6 +168,7 @@ const init = async () => {
       const { openParams } = req;
       openFromOpenParams(openParams, stateRef);
     });
+    ipcRenderer.send("render-init-complete");
   } catch (e) {
     const err = e as any;
     console.error(

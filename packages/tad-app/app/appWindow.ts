@@ -30,6 +30,47 @@ let baseX = 0;
 let baseY = 0;
 const POS_OFFSET = 25; // pixel offset of new windows
 
+type InitMap = { [windowId: number]: boolean };
+const renderInitMap: InitMap = {};
+
+type InitFnQueue = (() => void)[];
+type PostInitMap = { [windowId: number]: InitFnQueue };
+const postInitMap: PostInitMap = {};
+
+function isInitialized(windowId: number): boolean {
+  const ret = renderInitMap[windowId];
+  return ret;
+}
+
+function markInitialized(windowId: number): void {
+  renderInitMap[windowId] = true;
+  const queue = postInitMap[windowId];
+  if (queue) {
+    for (const entry of queue) {
+      entry();
+    }
+    delete postInitMap[windowId];
+  }
+}
+
+export function runPostInit(win: BrowserWindow, fn: () => void) {
+  if (isInitialized(win.id)) {
+    fn();
+  } else {
+    let queue = postInitMap[win.id];
+    if (!queue) {
+      queue = [fn];
+      postInitMap[win.id] = queue;
+    } else {
+      queue.push(fn);
+    }
+  }
+}
+
+ipcMain.on("render-init-complete", (event: IpcMainEvent) => {
+  markInitialized(event.sender.id);
+});
+
 // encode open parameters to pass to render process
 // If we're opening a CSV file, we just pass the target path.
 // If we're opening a Tad workspace, we read its contents
@@ -159,7 +200,7 @@ function isDbFile(fspath: string): DataSourceProviderName | null {
   return null;
 }
 
-function fileOpenParams(targetPath: string): OpenParams {
+export function fileOpenParams(targetPath: string): OpenParams {
   const providerName = isDbFile(targetPath);
   let openParams: OpenParams;
   if (providerName !== null) {
@@ -178,9 +219,12 @@ function fileOpenParams(targetPath: string): OpenParams {
   return openParams;
 }
 
-export const createFromFile = async (targetPath: string) => {
+export const createFromFile = async (
+  targetPath: string
+): Promise<BrowserWindow> => {
   const openParams = fileOpenParams(targetPath);
-  await create(openParams);
+  const win = await create(openParams);
+  return win;
 };
 
 export const openDialog = async (win?: BrowserWindow) => {

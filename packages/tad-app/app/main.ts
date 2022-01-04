@@ -16,7 +16,7 @@ import * as setup from "./setup";
 import * as quickStart from "./quickStart";
 import * as appMenu from "./appMenu";
 import * as appWindow from "./appWindow";
-import electron, { contextBridge, ipcMain } from "electron";
+import electron, { BrowserWindow, contextBridge, ipcMain } from "electron";
 import fs from "fs";
 
 const dialog = electron.dialog;
@@ -293,10 +293,21 @@ const getTargetPath = (options: any, filePath: string): string => {
   return targetPath;
 };
 
-async function createFileWindows(options: commandLineArgs.CommandLineOptions) {
+async function openSrcFiles(options: commandLineArgs.CommandLineOptions) {
+  // TODO: we may need to re-think this for e.g., url open events
+  let win: BrowserWindow | null = null;
   for (const srcfile of options.srcfile) {
     const targetPath = getTargetPath(options, srcfile);
-    await appWindow.createFromFile(targetPath);
+    if (win == null) {
+      win = await appWindow.createFromFile(targetPath);
+    } else {
+      appWindow.runPostInit(win, () => {
+        const openParams = appWindow.fileOpenParams(targetPath);
+        win!.webContents.send("open-file", {
+          openParams,
+        });
+      });
+    }
   }
 }
 
@@ -388,7 +399,7 @@ const initApp =
 
             if (isReady) {
               log.warn("open-file: app is ready, opening in new window");
-              await createFileWindows(options);
+              await openSrcFiles(options);
             } else {
               openFilePath = targetPath ?? null;
               log.warn("open-file: set openFilePath " + targetPath);
@@ -431,7 +442,7 @@ const initApp =
             appInit(options);
 
             if (!noSrcFile) {
-              createFileWindows(options);
+              openSrcFiles(options);
             }
 
             if (showQuickStart) {
@@ -453,7 +464,7 @@ const initApp =
           });
         } else {
           if (!noSrcFile) {
-            createFileWindows(options);
+            openSrcFiles(options);
           } else {
             log.warn("initApp called with no targetPath");
             app.focus();
