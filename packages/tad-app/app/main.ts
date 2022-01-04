@@ -311,14 +311,6 @@ async function openSrcFiles(options: commandLineArgs.CommandLineOptions) {
   }
 }
 
-(global as any).openExample = () => {
-  const app = electron.app;
-  const appPath = app.getAppPath();
-  const appDir = process.defaultApp ? appPath : path.dirname(appPath);
-  const exampleFilePath = path.join(appDir, "examples", "movie_metadata.csv");
-  appWindow.createFromFile(exampleFilePath);
-};
-
 let openFilePath: string | null = null;
 
 // callback for app.makeSingleInstance:

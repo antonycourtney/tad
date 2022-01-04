@@ -39,8 +39,8 @@ $ tad somefile.csv
         </ol>
         <h3>Basic Usage</h3>
         <p>
-        You can explore the basics of Tad by opening this example CSV file (from the <a href="https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset"
-          onclick='tadOpenExternal(event,"https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a> on Kaggle)
+        You can explore the basics of Tad by opening this example CSV file (from the <a href="https://www.kaggle.com/carolzhangdc/imdb-5000-movie-dataset"
+          onclick='tadOpenExternal(event,"https://www.kaggle.com/carolzhangdc/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a> on Kaggle)
         included in the Tad distribution:
         <p>
         <button class="btn btn-primary btn-lg"
@@ -103,7 +103,6 @@ $ tad somefile.csv
           <li><a href="https://www.kaggle.com/datasets" onclick='tadOpenExternal(event,"https://www.kaggle.com/datasets")'>Kaggle Datasets</a>. The <code>movie_metadata.csv</code> file used for many Tad examples is from the <a href="https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset"
             onclick='tadOpenExternal(event,"https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a> on Kaggle.
           <li><a href="https://github.com/metmuseum/openaccess" onclick='tadOpenExternal(event,"https://github.com/metmuseum/openaccess")'>Met Museum Open Access Initiative</a>. The Metropolitan Museum of Art recently made 420,000 artworks available online for unrestricted use. The catalog file <code>MetObjects.csv</code> available at the linked github repository is a good example for testing Tad's ability to handle larger CSV files. It's a 228MB CSV file with 420,000 rows of data. It takes about 13 sec to load and display this file in Tad on my late 2013 MacBook Pro.
-          <li><a href="https://data.world/" onclick='tadOpenExternal(event,"https://data.world/")'>data.world</a> is a site for sharing and exploring data on a variety of topics.
           <li>The <a href="https://github.com/fivethirtyeight/data" onclick='tadOpenExternal(event,"https://github.com/fivethirtyeight/data")'>FiveThirtyEight github repository</a> has many CSV files providing data behind the stories and interactives on the FiveThirtyEight web site.
         </ul>
         <h3>Going Further (Developers and Data Hackers)</h3>
@@ -157,10 +156,10 @@ On Windows, you should use the Control Panel to add <code>${appDir}</code> to yo
 `
     return titledPanel(title, content)
   }
-  function init() {
+  async function init() {
     new Clipboard('.btn')
     const electron = require('electron')
-    const setupInfo = electron.remote.getGlobal('setupInfo')
+    const setupInfo = await electron.ipcRenderer.invoke('getSetupInfo');
     console.log('setup info: ', setupInfo)
     const {platform, appDir, appScriptPath, exeDir} = setupInfo
     let installCmdHtml
@@ -184,7 +183,7 @@ On Windows, you should use the Control Panel to add <code>${appDir}</code> to yo
 
     window.tadOpenExample = function () {
       event.preventDefault()
-      electron.remote.getGlobal('openExample')()
+      electron.ipcRenderer.invoke('openExample');
     }
   }
   window.onload = init

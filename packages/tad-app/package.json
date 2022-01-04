@@ -134,6 +134,7 @@
     "nodeGypRebuild": false,
     "nsis": {
       "perMachine": true
-    }
+    },
+    "productName": "Tad"
   }
 }
