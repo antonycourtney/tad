@@ -5,6 +5,7 @@ const intCT = new ColumnType("INTEGER", "integer");
 const realCT = new ColumnType("DOUBLE", "real");
 const textCT = new ColumnType("VARCHAR", "string");
 const timestampCT = new ColumnType("TIMESTAMP", "timestamp");
+const boolCT = new ColumnType("BOOL", "boolean");
 
 export class DuckDBDialectClass extends BaseSQLDialect {
   private static instance: DuckDBDialectClass;
@@ -14,7 +15,7 @@ export class DuckDBDialectClass extends BaseSQLDialect {
     integer: intCT,
     real: realCT,
     string: textCT,
-    boolean: intCT,
+    boolean: boolCT,
   };
 
   readonly columnTypes: ColumnTypeMap = {
@@ -26,6 +27,7 @@ export class DuckDBDialectClass extends BaseSQLDialect {
     TEXT: textCT,
     TIMESTAMP: timestampCT,
     VARCHAR: textCT,
+    BOOLEAN: boolCT,
   };
 
   static getInstance(): DuckDBDialectClass {

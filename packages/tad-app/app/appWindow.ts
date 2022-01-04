@@ -269,6 +269,15 @@ export const openDialog = async (win?: BrowserWindow) => {
     }
   }
 };
+
+export const newWindow = async (win: BrowserWindow) => {
+  const appState: any = await getAppState(win);
+  const dsPath = appState.dsPath;
+  if (dsPath) {
+    createFromDSPath(dsPath);
+  }
+};
+
 let stateRequestId = 100;
 let pendingStateRequests: { [key: number]: any } = {}; // handle a response from renderer process by looking up Promise resolver:
 

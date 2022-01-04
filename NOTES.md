@@ -328,7 +328,8 @@ as file imports
 [X] Ability to save and open Tad files
 [X] Try switching back from atl to ts-loader to avoid deprecation warnings on build
 [X] Make sure we can build all packages without errors
-[ ] Open data source sidebar after opening a directory
+[X] Open data source sidebar after opening a directory
+[X] New Tad Window menu option
 [ ] Get all tests working again (sqlite)
 [ ] add a build-all.sh at top level (and maybe build-web.sh, build-app.sh, with common script for topo sort?)
 [ ] Get sqlite (and other) tests working again
@@ -341,7 +342,7 @@ as file imports
 [X] Parquet file support: --parquet argument
 [X] Parquet file support: .parquet suffix
 [X] compressed, gzipped CSV file support (supported by DuckDb?)
-[ ] Get rid of BigQuery support by default -- ~/tad.conf.json
+[X] Get rid of BigQuery support by default -- ~/tad.conf.json
 [X] Ability to open directories with DuckDb import/export format
 [ ] Ability to open CSV / Parquet files directly from s3
 [ ] Reduce height of column selector to fit in standard window without scrolling
@@ -354,7 +355,8 @@ as file imports
 [-] Add option to open a file / table in a new tab or new window.
 
 Later:
-[ ] Command line options for specifying a sqlite or duckdb table path directly. (Maybe just any DataSourcePath)?
+[ ] Command line options for specifying a sqlite or duckdb _table_ path directly. (Maybe just any DataSourcePath)?
+[ ] Experimental support for other backends via ~/tad.conf.json
 
 Packaged build stuff:
 [ ] Add more to electron file extensions

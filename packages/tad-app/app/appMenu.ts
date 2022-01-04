@@ -27,6 +27,14 @@ const checkForUpdateMenuItem = () => {
 export const createMenu = () => {
   const fileSubmenu = [
     {
+      label: "New Tad Window",
+      accelerator: "CmdOrCtrl+N",
+      click: (item: any, focusedWindow: BrowserWindow) => {
+        appWindow.newWindow(focusedWindow);
+      },
+    },
+
+    {
       label: "Open...",
       accelerator: "CmdOrCtrl+O",
       click: (item: any, focusedWindow: BrowserWindow) => {

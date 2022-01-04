@@ -496,6 +496,7 @@ const main = () => {
     app.quit();
   } else {
     // first instance:
+    app.setName("Tad");
     initApp(true)(process.argv, null);
   }
 };
