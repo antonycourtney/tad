@@ -62,7 +62,7 @@
     "@types/slickgrid": "^2.1.31",
     "ajv": "^6.9.1",
     "css-loader": "^6.2.0",
-    "electron": "16.0.5",
+    "electron": "16.0.6",
     "electron-builder": "^22.14.5",
     "file-loader": "^6.2.0",
     "image-webpack-loader": "^7.0.1",

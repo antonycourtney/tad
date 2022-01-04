@@ -228,7 +228,7 @@ export const createFromFile = async (
 };
 
 export const openDialog = async (win?: BrowserWindow) => {
-  const openPaths = dialog.showOpenDialogSync({
+  const openRet = await dialog.showOpenDialog({
     properties: ["openFile", "openDirectory"],
     /* weirdly, showOpenDialogSync doesn't seem to respect multiple filters, but does respect a
      * single filter with multiple extensions...
@@ -256,7 +256,10 @@ export const openDialog = async (win?: BrowserWindow) => {
       */
     ],
   });
-
+  if (openRet.canceled) {
+    return;
+  }
+  const openPaths = openRet.filePaths;
   if (openPaths && openPaths.length > 0) {
     const filePath = openPaths[0];
     const openParams = fileOpenParams(filePath);

@@ -479,7 +479,6 @@ const main = () => {
     log.transports.file.level = false;
   }
 
-  log.warn("Tad started, argv: ", process.argv);
   const shouldQuit = false;
   //  const shouldQuit = app.makeSingleInstance(initApp(false))
   //  log.warn('After call to makeSingleInstance: ', shouldQuit)
