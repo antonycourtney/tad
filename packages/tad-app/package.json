@@ -115,6 +115,26 @@
         "ext": "tad",
         "name": "Tad Saved Workspace",
         "role": "Editor"
+      },
+      {
+        "ext": "parquet",
+        "name": "Parquet files",
+        "role": "Viewer"
+      },
+      {
+        "ext": "sqlite",
+        "name": "Sqlite files",
+        "role": "Viewer"
+      },
+      {
+        "ext": "duckdb",
+        "name": "DuckDb files",
+        "role": "Viewer"
+      },
+      {
+        "ext": "csv.gz",
+        "name": "Compressed CSV files",
+        "role": "Viewer"
       }
     ],
     "linux": {
