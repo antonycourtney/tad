@@ -1,7 +1,7 @@
 import { DataSourcePath } from "reltab";
 
 // TODO: various database files / tables
-export type OpenType = "fspath" | "tad" | "dspath";
+export type OpenType = "fspath" | "tad" | "dspath" | "empty";
 
 // fspath -- a path to a data file (CSV, TSV, parquet, etc) or directory
 export interface OpenFSPath {
@@ -20,4 +20,8 @@ export interface OpenTad {
   fileBaseName: string; // for title
 }
 
-export type OpenParams = OpenFSPath | OpenDSPath | OpenTad;
+export interface OpenEmpty {
+  openType: "empty";
+}
+
+export type OpenParams = OpenFSPath | OpenDSPath | OpenTad | OpenEmpty;

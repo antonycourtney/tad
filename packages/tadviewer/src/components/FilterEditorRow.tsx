@@ -8,6 +8,7 @@ import { StateRef } from "oneref";
 import { render } from "react-dom";
 import { useState } from "react";
 import { ViewState } from "../ViewState";
+import { defaultEvalQueryOptions } from "reltab";
 type Option = { value: string; label: string };
 type OptionsRet = Option[];
 type OptionsLoader = (input: string) => Promise<OptionsRet>;
@@ -156,6 +157,19 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
     handleUpdate(columnId, op, nextValue);
   };
 
+  const handleNumericValueChange = (
+    nextValue: number,
+    nextValueAsString: string
+  ) => {
+    console.log(
+      "*** handleNumericValueChange: nextValue: ",
+      nextValue,
+      nextValueAsString
+    );
+    setValue(nextValue);
+    handleUpdate(columnId, op, nextValue);
+  };
+
   const handleValueChange = (nextValue: any) => {
     setValue(nextValue);
     handleUpdate(columnId, op, nextValue);
@@ -216,12 +230,13 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
   if (columnId != null) {
     const columnType = schema.columnType(columnId);
     if (reltab.colIsNumeric(columnType)) {
+      const defaultValue = value == null ? "" : value;
       valInput = (
         <NumericInput
-          onValueChange={(v) => handleValueChange(v)}
+          onValueChange={handleNumericValueChange}
           placeholder="Value"
           disabled={valDisabled}
-          value={value}
+          defaultValue={defaultValue}
         />
       );
     }

@@ -82,7 +82,7 @@ operation that can end up in a SQL select column expression. Probably time for a
 ### Features to add before next release:
 
 [X] Multiple database support (at least bigquery)
-[ ] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
+[X] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
 [ ] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
 [ ] Delayed calc mode
 [ ] Datasets and table selector UI
@@ -331,23 +331,20 @@ as file imports
 [X] Open data source sidebar after opening a directory
 [X] New Tad Window menu option
 [ ] Get all tests working again (sqlite)
-[ ] add a build-all.sh at top level (and maybe build-web.sh, build-app.sh, with common script for topo sort?)
+[X] add a build-all.sh at top level (and maybe build-web.sh, build-app.sh, with common script for topo sort?)
 [ ] Get sqlite (and other) tests working again
 [X] Change window title when loading new data set
 [X] refresh db tree after File...Open
 [-] change name of db for DuckDb from :memory:
 [ ] Smoke test select control for "in..." filter queries. Try one from Blueprint directly?
-[ ] Status bar in footer
-[ ] Query console
 [X] Parquet file support: --parquet argument
 [X] Parquet file support: .parquet suffix
 [X] compressed, gzipped CSV file support (supported by DuckDb?)
 [X] Get rid of BigQuery support by default -- ~/tad.conf.json
 [X] Ability to open directories with DuckDb import/export format
-[ ] Ability to open CSV / Parquet files directly from s3
 [ ] Reduce height of column selector to fit in standard window without scrolling
 [ ] tweak column widths in column selector to avoid overflow of column type
-[ ] test of column types. MetObjects.csv seems to have a TIMESTAMP
+[X] test of column types. MetObjects.csv seems to have a TIMESTAMP
 [X] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
 [X] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
 [X] Replace resize handler / ResizeObserver with Blueprint's React supporting one
@@ -357,14 +354,16 @@ as file imports
 Later:
 [ ] Command line options for specifying a sqlite or duckdb _table_ path directly. (Maybe just any DataSourcePath)?
 [ ] Experimental support for other backends via ~/tad.conf.json
+[ ] Status bar in footer
+[ ] Query console
+[ ] Ability to open CSV / Parquet files directly from s3
 
 Packaged build stuff:
-[ ] Add more to electron file extensions
-[ ] Get quickstart working again in packaged build
-[ ] Verify that opening example and link clicking works in quickstart
-[ ] Ensure we can open new window from command line
+[X] Add more to electron file extensions (.csv.gz didn't work, add .gz and check file at runtime?)
+[X] Get quickstart working again in packaged build
+[X] Verify that opening example and link clicking works in quickstart
 [ ] See if we can keep a single instance of Tad and multiple windows in newer version of electron
-[ ] Verify that tad command line utility works for launching tad
+[X] Verify that tad command line utility works for launching tad
 [ ] Check that all command-line arguments work as advertised
 [ ] Test all the ways that Tad might be opened: Finder context menu, dragging on to app icon, etc.
 

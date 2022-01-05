@@ -98,33 +98,10 @@ const encodeFileOpenParams = (targetPath: string): OpenParams => {
   return openParams;
 };
 
-// No longer used -- title now set in AppPane in tadviewer
-async function openParamsTitle(openParams: OpenParams): Promise<string> {
-  let titlePath: string;
-  switch (openParams.openType) {
-    case "fspath":
-      titlePath = path.basename(openParams.path);
-      break;
-    case "tad":
-      titlePath = openParams.fileBaseName;
-      break;
-    case "dspath":
-      const node = await resolvePath(
-        LocalReltabConnection.getInstance(),
-        openParams.dsPath
-      );
-      titlePath = node.displayName;
-      break;
-  }
-  return "Tad - " + titlePath;
-}
-
 const create = async (openParams: OpenParams) => {
-  // const title = await openParamsTitle(openParams);
   let winProps = {
     width: 1280,
     height: 980,
-    /* title, */
     x: 0,
     y: 0,
     webPreferences: {
@@ -273,11 +250,15 @@ export const openDialog = async (win?: BrowserWindow) => {
   }
 };
 
-export const newWindow = async (win: BrowserWindow) => {
-  const appState: any = await getAppState(win);
-  const dsPath = appState.dsPath;
-  if (dsPath) {
-    createFromDSPath(dsPath);
+export const newWindow = async (win?: BrowserWindow) => {
+  if (win) {
+    const appState: any = await getAppState(win);
+    const dsPath = appState.dsPath;
+    if (dsPath) {
+      createFromDSPath(dsPath);
+    }
+  } else {
+    create({ openType: "empty" });
   }
 };
 
@@ -298,8 +279,9 @@ export const getAppState = async (win: BrowserWindow) => {
   return new Promise((resolve, reject) => {
     const requestId = stateRequestId++;
     pendingStateRequests[requestId] = resolve;
+    const windowId = win.id;
     const requestContents = {
-      windowId: win.id,
+      windowId,
       requestId,
     };
     win.webContents.send("request-serialize-app-state", requestContents);

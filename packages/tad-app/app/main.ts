@@ -228,9 +228,11 @@ const usageInfo = [
     header: "Synopsis",
     content: [
       "$ tad [{italic options}] {underline file}.csv",
-      "$ tad [{italic options}] {underline file}.tad",
-      "$ tad [{italic options}] sqlite://{underline /path/to/sqlite-file}/{underline table}",
+      "$ tad [{italic options}] {underline file}.csv.gz",
+      "$ tad [{italic options}] {underline file}.duckdb",
       "$ tad [{italic options}] {underline file}.parquet",
+      "$ tad [{italic options}] {underline file}.tad",
+      "$ tad [{italic options}] {underline file}.tsv",
       "$ tad [{italic options}] {underline directory}",
     ],
   },

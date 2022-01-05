@@ -46,8 +46,8 @@ let delay = (ms: number) => {
 
 function openParamsDSPath(
   openParams: OpenParams
-): [DataSourcePath, ViewParams | null] {
-  let targetDSPath: DataSourcePath;
+): [DataSourcePath | null, ViewParams | null] {
+  let targetDSPath: DataSourcePath | null;
   let viewParams: ViewParams | null = null;
   switch (openParams.openType) {
     case "fspath":
@@ -67,6 +67,8 @@ function openParamsDSPath(
       targetDSPath = savedFileState.dsPath;
       viewParams = ViewParams.deserialize(savedFileState.viewParams);
       break;
+    case "empty":
+      targetDSPath = null;
   }
   return [targetDSPath, viewParams];
 }
