@@ -20,7 +20,6 @@
   "devDependencies": {
     "@types/jest": "^26.0.24",
     "@types/node": "^16.4.13",
-    "babel-plugin-flow-to-typescript": "^0.6.0",
     "jest": "^27.0.6",
     "mkdirp": "^1.0.4",
     "prettier": "^2.3.2",
