@@ -19,21 +19,11 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "byline": "^5.0.0",
-    "csv-sniffer": "^0.1.1",
-    "fast-csv": "^4.3.6",
-    "gauge": "^3.0.1",
     "loglevel": "^1.7.1",
-    "through": "^2.3.8",
-    "typed-promisify": "^0.4.0",
-    "duckdb": "^0.3.1",
     "node-duckdb": "^0.0.76",
     "pretty-hrtime": "^1.0.3"
   },
   "devDependencies": {
-    "@types/pretty-hrtime": "^1.0.1",
-    "@types/through": "0.0.30",
-    "@types/byline": "^4.2.33",
     "@types/jest": "^26.0.24",
     "@types/node": "^16.4.13",
     "jest": "^27.0.6",
