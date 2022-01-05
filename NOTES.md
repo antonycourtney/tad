@@ -332,7 +332,6 @@ as file imports
 [X] New Tad Window menu option
 [ ] Get all tests working again (sqlite)
 [X] add a build-all.sh at top level (and maybe build-web.sh, build-app.sh, with common script for topo sort?)
-[ ] Get sqlite (and other) tests working again
 [X] Change window title when loading new data set
 [X] refresh db tree after File...Open
 [-] change name of db for DuckDb from :memory:
@@ -350,6 +349,10 @@ as file imports
 [X] Replace resize handler / ResizeObserver with Blueprint's React supporting one
 [-] Add multiple tab support
 [-] Add option to open a file / table in a new tab or new window.
+[X] Get New Window working even when no file open
+[ ] Upgrade dependencies as much as practical
+[ ] Test Windows build
+[ ] Test Linux build
 
 Later:
 [ ] Command line options for specifying a sqlite or duckdb _table_ path directly. (Maybe just any DataSourcePath)?
@@ -357,6 +360,7 @@ Later:
 [ ] Status bar in footer
 [ ] Query console
 [ ] Ability to open CSV / Parquet files directly from s3
+[ ] Get sqlite (and other) tests working again
 
 Packaged build stuff:
 [X] Add more to electron file extensions (.csv.gz didn't work, add .gz and check file at runtime?)
