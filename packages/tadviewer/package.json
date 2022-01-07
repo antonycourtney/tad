@@ -27,7 +27,6 @@
   "dependencies": {
     "@blueprintjs/core": "3.52.0",
     "@types/he": "^1.1.2",
-    "aggtree": "^0.10.0",
     "export-to-csv": "^0.2.1",
     "he": "^1.2.0",
     "immutable": "^4.0.0",
@@ -64,11 +63,14 @@
     "webpack": "^5.65.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.9.1",
-    "webpack-node-externals": "^3.0.0"
+    "webpack-node-externals": "^3.0.0",
+    "aggtree": "^0.10.0",
+    "reltab": "^0.10.0"
   },
   "peerDependencies": {
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "aggtree": "^0.10.0",
     "reltab": "^0.10.0"
   }
 }

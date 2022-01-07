@@ -444,3 +444,21 @@ export interface DataSourceNode {
   children: string[]; // ids to stuff into a path
 }
 ```
+
+=====
+7Jan22:
+
+Painful handling of dependencies by electron-builder and lerna:
+
+In the builds of an app, we need different drivers like reltab-duckdb, reltab-sqlite, etc. to use a single instance of
+the reltab module.
+Using just lerna's bootstrapping and linked dependencies, this works fine.
+But when we try and package everything up with electron-builder this way, we get multiple copies of reltab in each
+of the drivers. Aside from the bloat (minor), the duplicate reltab instances have their own private state, which
+was causing us not to see/find the common set of data sources, connections and other internal state.
+
+A workaround is to move "reltab" and other shared deps from "dependencies" to "peerDependencies".
+
+Unfortunately, this then prevents lerna bootstrap from linking the modules!
+
+An apparent solution is to also add the modules into the "devDependencies" section of each package.
