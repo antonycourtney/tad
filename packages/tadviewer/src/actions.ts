@@ -141,7 +141,9 @@ export const openDataSourcePath = async (
 const vpUpdate =
   (f: (vp: ViewParams) => ViewParams) =>
   (s: AppState): AppState =>
-    s.updateIn(["viewState", "viewParams"], f) as AppState;
+    s.updateIn(["viewState", "viewParams"], (vpu: unknown) =>
+      f(vpu as ViewParams)
+    ) as AppState;
 
 export const toggleShown = (
   cid: string,
@@ -325,7 +327,7 @@ export const updateViewport = (
       st.update(
         "viewState",
         (vs) =>
-          vs.set("viewportTop", top).set("viewportBottom", bottom) as ViewState
+          vs!.set("viewportTop", top).set("viewportBottom", bottom) as ViewState
       ) as AppState
   );
 };

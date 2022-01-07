@@ -20,20 +20,20 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "loglevel": "^1.7.1",
-    "snowflake-sdk": "^1.6.1"
+    "loglevel": "^1.8.0",
+    "snowflake-sdk": "^1.6.6"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.24",
+    "@types/jest": "^27.4.0",
     "@types/node": "^16.4.13",
-    "@types/snowflake-sdk": "^1.6.0",
+    "@types/snowflake-sdk": "^1.6.2",
     "aggtree": "^0.10.0",
     "console.table": "^0.10.0",
-    "jest": "^27.0.6",
+    "jest": "^27.4.6",
     "mkdirp": "^1.0.4",
-    "prettier": "^2.3.2",
-    "ts-jest": "^27.0.4",
-    "typescript": "^3.9.4"
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.2",
+    "typescript": "^4.5.4"
   },
   "peerDependencies": {
     "reltab": "^0.10.0"

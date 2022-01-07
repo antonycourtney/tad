@@ -64,8 +64,8 @@ export const postInstallCheck = () => {
       postInstall(markerPath);
       log.warn("postInstallCheck: postInstall complete");
     } catch (e) {
-      log.error("postInstallCheck: ", e.message);
-      log.error(e.stack);
+      log.error("postInstallCheck: ", (e as any).message);
+      log.error((e as any).stack);
     }
   }
 

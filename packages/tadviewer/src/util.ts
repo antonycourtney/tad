@@ -26,9 +26,11 @@ export const shallowEqual = (o1: any, o2: any): boolean => {
 
 export type StateUpdater<A> = (st: oneref.StateTransformer<A>) => void;
 
-export const pathUpdater = <A extends any>(
-  ref: oneref.StateRef<A>,
-  path: Array<string>
-): StateUpdater<A> => (uf: (a: A) => A) => {
-  oneref.update(ref, st => (st as any).updateIn(path, uf));
-};
+export const pathUpdater =
+  <A extends any, B extends any>(
+    ref: oneref.StateRef<A>,
+    path: Array<string>
+  ): StateUpdater<B> =>
+  (uf: (b: B) => B) => {
+    oneref.update(ref, (st: A) => (st as any).updateIn(path, uf) as A);
+  };

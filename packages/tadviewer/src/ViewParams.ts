@@ -101,14 +101,16 @@ const defaultViewParamsProps: ViewParamsProps = {
 
 type CellFormatter = (val?: any) => string | undefined | null;
 
-const defaultCellFormatter = (ct: ColumnType): CellFormatter => (
-  val?: any
-): string => {
-  return ct.stringRender(val);
-};
+const defaultCellFormatter =
+  (ct: ColumnType): CellFormatter =>
+  (val?: any): string => {
+    return ct.stringRender(val);
+  };
 
-export class ViewParams extends Immutable.Record(defaultViewParamsProps)
-  implements ViewParamsProps {
+export class ViewParams
+  extends Immutable.Record(defaultViewParamsProps)
+  implements ViewParamsProps
+{
   public readonly showRoot!: boolean;
   public readonly displayColumns!: Array<string>; // array of column ids to display, in order
 
@@ -124,7 +126,7 @@ export class ViewParams extends Immutable.Record(defaultViewParamsProps)
   public readonly filterExp!: reltab.FilterExp; // toggle element membership in array:
 
   toggleArrElem(propName: string, cid: string): ViewParams {
-    const arr = this.get(propName);
+    const arr = this.get(propName as keyof ViewParamsProps) as any[];
     const idx = arr.indexOf(cid);
     let nextArr;
 
@@ -137,7 +139,7 @@ export class ViewParams extends Immutable.Record(defaultViewParamsProps)
       nextArr.splice(idx, 1);
     }
 
-    return this.set(propName, nextArr) as ViewParams;
+    return this.set(propName as keyof ViewParamsProps, nextArr) as ViewParams;
   }
 
   toggleShown(cid: string): ViewParams {
@@ -191,17 +193,18 @@ export class ViewParams extends Immutable.Record(defaultViewParamsProps)
   setSortDir(cid: string, asc: boolean): ViewParams {
     const arr = this.sortKey;
     const idx = arr.findIndex((entry) => entry[0] === cid);
-    let nextArr;
+    let nextArr: [string, boolean][];
 
     if (idx === -1) {
       console.warn("viewParam.setSortDir: called for non-sort col ", cid);
+      return this;
     } else {
       // otherwise remove it:
       nextArr = arr.slice();
       nextArr[idx] = [cid, asc];
     }
 
-    return this.set("sortKey", nextArr) as ViewParams;
+    return this.set("sortKey", nextArr!) as ViewParams;
   }
 
   openPath(path: Path): ViewParams {
@@ -281,7 +284,7 @@ export class ViewParams extends Immutable.Record(defaultViewParamsProps)
       .set("defaultFormats", defaultFormatsObj)
       .set("openPaths", openPathsObj)
       .set("filterExp", filterExpObj)
-      .set("columnFormats", columnFormatsMap);
+      .set("columnFormats", columnFormatsMap as FormatsMap);
     return retVP as ViewParams;
   }
 }

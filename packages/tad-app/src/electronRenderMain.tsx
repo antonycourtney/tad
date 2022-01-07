@@ -128,7 +128,7 @@ const init = async () => {
       const curState = mutableGet(stateRef);
       const viewState = curState.viewState;
       const { dsPath } = viewState;
-      const viewParamsJS = viewState.viewParams.toJS();
+      const viewParamsJS = (viewState.viewParams as any).toJS(); // weird typing issue with immmutable
       const serState = {
         dsPath,
         viewParams: viewParamsJS,

@@ -11,7 +11,6 @@ import fs from "fs";
 import log from "electron-log";
 import * as csvexport from "./csvexport";
 import * as reltab from "reltab";
-import { formatGroupLabel } from "react-select/src/builtins";
 import {
   DataSourceId,
   DataSourcePath,

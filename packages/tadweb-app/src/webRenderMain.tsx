@@ -45,9 +45,7 @@ const init = async () => {
   let srcFile = null;
   let viewParams: ViewParams | null = null;
 
-  const appState = new AppState({
-    targetPath,
-  });
+  const appState = new AppState();
   const stateRef = mkRef(appState);
   const [App, listenerId] = refContainer<AppState, AppPaneBaseProps>(
     stateRef,

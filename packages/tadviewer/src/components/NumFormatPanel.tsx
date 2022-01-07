@@ -44,7 +44,7 @@ export const NumFormatPanel: React.FC<NumFormatPanelProps> = ({
       nextDec = decVal;
     }
 
-    const nextOpts = opts.set("decimalPlaces", nextDec) as NumFormatOptions; // explicitly check for value change
+    const nextOpts = opts.set("decimalPlaces", nextDec!) as NumFormatOptions; // explicitly check for value change
 
     if (onChange && decVal !== opts.decimalPlaces) {
       onChange(nextOpts);

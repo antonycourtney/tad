@@ -154,7 +154,7 @@ const handleInvoke = async (
     // log.info("handleInvoke: sending response: ", resStr);
     res.json(resStr);
   } catch (err) {
-    log.error("handleInvoke: ", err, err.stack);
+    log.error("handleInvoke: ", err, (err as any).stack);
   }
 };
 

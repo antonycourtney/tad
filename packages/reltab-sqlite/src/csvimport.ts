@@ -562,7 +562,7 @@ const importData = async (
     // insertStmt.finalize();
     return md;
   } catch (err) {
-    log.error(err, err.stack);
+    log.error(err, (err as any).stack);
     throw err;
   }
 };
@@ -718,7 +718,7 @@ export const fastImport = async (
     }
 */
   } catch (err) {
-    log.error("caught error during fastImport: ", err, err.stack);
+    log.error("caught error during fastImport: ", err, (err as any).stack);
     throw err;
   }
 };
