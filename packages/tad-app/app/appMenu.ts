@@ -1,12 +1,17 @@
 import * as updater from "./updater";
 import * as appWindow from "./appWindow";
 import * as quickStart from "./quickStart";
-import electron, { MenuItem, BrowserWindow } from "electron";
+import electron, {
+  MenuItem,
+  BrowserWindow,
+  KeyboardEvent,
+  MenuItemConstructorOptions,
+} from "electron";
 
 const Menu = electron.Menu;
 const isDarwin = process.platform === "darwin";
 let appMenu: electron.Menu | null = null;
-const separatorMenuItem = {
+const separatorMenuItem: MenuItemConstructorOptions = {
   type: "separator",
 };
 
@@ -25,11 +30,11 @@ const checkForUpdateMenuItem = () => {
 };
 
 export const createMenu = () => {
-  const fileSubmenu = [
+  const fileSubmenu: MenuItemConstructorOptions[] = [
     {
       label: "New Tad Window",
       accelerator: "CmdOrCtrl+N",
-      click: (item: any, focusedWindow: BrowserWindow) => {
+      click: (item: MenuItem, focusedWindow: BrowserWindow | undefined) => {
         appWindow.newWindow(focusedWindow);
       },
     },
@@ -37,7 +42,7 @@ export const createMenu = () => {
     {
       label: "Open...",
       accelerator: "CmdOrCtrl+O",
-      click: (item: any, focusedWindow: BrowserWindow) => {
+      click: (item: MenuItem, focusedWindow: BrowserWindow | undefined) => {
         appWindow.openDialog(focusedWindow);
       },
     },
@@ -47,7 +52,7 @@ export const createMenu = () => {
       accelerator: "Shift+CmdOrCtrl+S",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow,
+        focusedWindow: BrowserWindow | undefined,
         event: KeyboardEvent
       ) => {
         appWindow.saveAsDialog();
@@ -57,10 +62,12 @@ export const createMenu = () => {
       label: "Export Filtered CSV...",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow,
+        focusedWindow: BrowserWindow | undefined,
         event: KeyboardEvent
       ) => {
-        appWindow.exportFiltered(focusedWindow);
+        if (focusedWindow) {
+          appWindow.exportFiltered(focusedWindow);
+        }
       },
     },
   ];
@@ -68,38 +75,38 @@ export const createMenu = () => {
   if (!isDarwin) {
     fileSubmenu.push(separatorMenuItem);
     fileSubmenu.push({
-      type: "quit",
+      role: "quit",
     });
   }
 
-  const editSubmenu = [
+  const editSubmenu: MenuItemConstructorOptions[] = [
     {
       role: "copy",
     },
   ];
-  const debugSubmenu = [
+  const debugSubmenu: MenuItemConstructorOptions[] = [
     {
-      role: "toggledevtools",
+      role: "toggleDevTools",
     },
     {
       label: "Show Hidden Columns",
       type: "checkbox",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow,
+        focusedWindow: BrowserWindow | undefined,
         event: KeyboardEvent
       ) => {
         console.log("show hidden...: ", item);
-        focusedWindow.webContents.send("set-show-hidden-cols", item.checked);
+        focusedWindow?.webContents.send("set-show-hidden-cols", item.checked);
       },
     },
   ];
-  let helpSubmenu = [
+  let helpSubmenu: MenuItemConstructorOptions[] = [
     {
       label: "Quick Start Guide",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow,
+        focusedWindow: BrowserWindow | undefined,
         event: KeyboardEvent
       ) => {
         quickStart.showQuickStart();
@@ -109,14 +116,14 @@ export const createMenu = () => {
       label: "Send Feedback / Bug Reports",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow,
+        focusedWindow: BrowserWindow | undefined,
         event: KeyboardEvent
       ) => {
         electron.shell.openExternal("mailto:tad-feedback@tadviewer.com");
       },
     },
   ];
-  const template = [
+  const template: MenuItemConstructorOptions[] = [
     {
       label: "File",
       submenu: fileSubmenu,
