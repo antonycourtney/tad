@@ -170,9 +170,11 @@ On Windows, you should use the Control Panel to add <code>${appDir}</code> to yo
       installCmdHtml = unixSetup(installCmd)
     }
 
-    const elem = document.getElementById('cmdLineSetup')
-    elem.innerHTML = installCmdHtml
-
+    if (installCmdHtml) {
+      const elem = document.getElementById('cmdLineSetup')
+      elem.innerHTML = installCmdHtml
+    }
+    
     // install this globally so we can access in generated a tag:
     window.tadOpenExternal = function (event,url) {
       event.preventDefault()
