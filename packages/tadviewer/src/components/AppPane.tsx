@@ -23,7 +23,7 @@ import { mutableGet, StateRef } from "oneref";
 import { DataSourcePath, ReltabConnection, resolvePath } from "reltab";
 import { useDeepCompareEffect } from "use-deep-compare";
 import { Timer } from "../Timer";
-
+import { SimpleClipboard } from "./SimpleClipboard";
 /**
  * top level application pane
  */
@@ -35,6 +35,7 @@ export type NewWindowFn = (
 
 export interface AppPaneBaseProps {
   newWindow: NewWindowFn;
+  clipboard: SimpleClipboard;
 }
 
 type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
@@ -178,6 +179,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   newWindow,
   appState,
   stateRef,
+  clipboard,
 }: AppPaneProps) => {
   const { activity } = appState;
   const dataSourceExpanded = activity === "DataSource";
@@ -229,6 +231,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
           appState={appState}
           viewState={appState.viewState}
           stateRef={stateRef}
+          clipboard={clipboard}
         />
         <Footer appState={appState} stateRef={stateRef} />
       </div>

@@ -14,7 +14,7 @@ import * as reltab from "reltab";
 import log from "loglevel";
 import { ElectronTransportClient } from "./electronClient";
 import * as electron from "electron";
-import { ipcRenderer } from "electron";
+import { clipboard, ipcRenderer } from "electron";
 import {
   DataSourcePath,
   DataSourceId,
@@ -113,7 +113,7 @@ const init = async () => {
     await initAppState(rtc, stateRef);
 
     ReactDOM.render(
-      <App newWindow={newWindowFromDSPath} />,
+      <App newWindow={newWindowFromDSPath} clipboard={clipboard} />,
       document.getElementById("app")
     );
     const tRender = performance.now();
@@ -170,6 +170,11 @@ const init = async () => {
       const { openParams } = req;
       openFromOpenParams(openParams, stateRef);
     });
+
+    document.addEventListener("copy", function (e) {
+      console.log("**** renderMain: got copy event");
+    });
+
     ipcRenderer.send("render-init-complete");
   } catch (e) {
     const err = e as any;

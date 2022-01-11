@@ -8,10 +8,10 @@ import * as SlickGrid from "slickgrid-es6";
 import * as reltab from "reltab";
 import * as actions from "../actions";
 import { LoadingModal } from "./LoadingModal";
+import { SimpleClipboard } from "./SimpleClipboard";
 import { PagedDataView } from "../PagedDataView";
 import { ViewParams } from "../ViewParams";
 import * as util from "../util";
-// import { clipboard } from "electron";
 import { ExportToCsv } from "export-to-csv";
 import * as he from "he";
 import { AppState } from "../AppState";
@@ -193,6 +193,7 @@ export interface GridPaneProps {
   viewState: ViewState;
   stateRef: StateRef<AppState>;
   onSlickGridCreated: (grid: any) => void;
+  clipboard: SimpleClipboard;
 }
 
 /* Create grid from the specified set of columns */
@@ -200,7 +201,8 @@ const createGrid = (
   stateRef: StateRef<AppState>,
   viewStateRef: MutableRefObject<ViewState>,
   columns: any,
-  data: any
+  data: any,
+  clipboard: SimpleClipboard
 ) => {
   let grid = new Slick.Grid(container, data, columns, gridOptions);
 
@@ -213,9 +215,9 @@ const createGrid = (
 
   const copyManager = new CellCopyManager();
   grid.registerPlugin(copyManager);
+  console.log("*** createGrid: copy manager plugin created and registered");
 
-  copyManager.onCopyCells.subscribe(async (e: any, args: any) => {
-    const range = args.ranges[0];
+  const copySelectedRange = async (range: any) => {
     let copyData = [];
     const gridCols = grid.getColumns();
     const gridData = grid.getData();
@@ -232,12 +234,25 @@ const createGrid = (
       // const data = await csv.writeToString(copyData, { headers: false });
       const csvExporter = new ExportToCsv();
       const data = csvExporter.generateCsv(copyData, true);
+      console.log("writing text to clipboard: ", data);
+      clipboard.writeText(data);
     } catch (err) {
       console.error("error converting copied data to CSV: ", err);
       return;
     }
-    // TODO:
-    // clipboard.writeText(data);
+  };
+
+  copyManager.onCopyCells.subscribe(async (e: any, args: any) => {
+    const range = args.ranges[0];
+    copySelectedRange(range);
+  });
+
+  // gross hack, but makes copy menu item work in Electron:
+  document.addEventListener("copy", function (e) {
+    const ranges = grid.getSelectionModel().getSelectedRanges();
+    if (ranges && ranges.length != 0) {
+      copySelectedRange(ranges[0]);
+    }
   });
 
   const rangeSelector = new CellRangeSelector();
@@ -384,7 +399,8 @@ const updateGrid = (gs: GridState, viewState: ViewState) => {
 
 const createGridState = (
   stateRef: StateRef<AppState>,
-  viewStateRef: MutableRefObject<ViewState>
+  viewStateRef: MutableRefObject<ViewState>,
+  clipboard: SimpleClipboard
 ): GridState => {
   const { viewParams, dataView } = viewStateRef.current;
   const colWidthsMap = getInitialColWidthsMap(dataView!);
@@ -392,7 +408,7 @@ const createGridState = (
   const gs = { grid: null, colWidthsMap, slickColMap };
 
   const gridCols = getGridCols(gs, viewStateRef.current);
-  gs.grid = createGrid(stateRef, viewStateRef, gridCols, dataView);
+  gs.grid = createGrid(stateRef, viewStateRef, gridCols, dataView, clipboard);
   return gs;
 };
 
@@ -401,6 +417,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   viewState,
   stateRef,
   onSlickGridCreated,
+  clipboard,
 }) => {
   const [gridState, setGridState] = useState<GridState | null>(null);
   const [prevDataView, setPrevDataView] = useState<PagedDataView | null>(null);
@@ -413,7 +430,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
     let gs = gridState;
     const dataView = viewState.dataView;
     if (gs === null) {
-      gs = createGridState(stateRef, viewStateRef);
+      gs = createGridState(stateRef, viewStateRef, clipboard);
       if (onSlickGridCreated) {
         onSlickGridCreated(gs.grid);
       }

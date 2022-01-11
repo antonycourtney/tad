@@ -66,7 +66,7 @@ const init = async () => {
   await initAppState(rtc, stateRef);
 
   ReactDOM.render(
-    <App newWindow={newWindowFromDSPath} />,
+    <App newWindow={newWindowFromDSPath} clipboard={navigator.clipboard} />,
     document.getElementById("app")
   );
 
