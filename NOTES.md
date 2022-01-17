@@ -462,3 +462,8 @@ A workaround is to move "reltab" and other shared deps from "dependencies" to "p
 Unfortunately, this then prevents lerna bootstrap from linking the modules!
 
 An apparent solution is to also add the modules into the "devDependencies" section of each package.
+
+======
+Release punch-list:
+
+[ ] "Copy" from Edit menu doesn't appear to copy selected cells.

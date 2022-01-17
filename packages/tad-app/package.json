@@ -1,6 +1,7 @@
 {
   "name": "tad",
   "version": "0.10.0",
+  "homepage": "https://www.tadviewer.com",
   "description": "Tabular data viewer desktop app, built with Electron",
   "main": "dist/main.bundle.js",
   "scripts": {

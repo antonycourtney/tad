@@ -1,5 +1,8 @@
 import "source-map-support/register";
-import commandLineArgs, { CommandLineOptions } from "command-line-args";
+import commandLineArgs, {
+  CommandLineOptions,
+  ParseOptions,
+} from "command-line-args";
 import getUsage from "command-line-usage";
 import log from "electron-log";
 import * as logLevel from "loglevel";
@@ -262,7 +265,7 @@ const errorDialog = async (
   msg: string,
   fatal = false
 ): Promise<void> => {
-  console.log("*** errorDialog: ", title, msg, fatal);
+  log.log("*** errorDialog: ", title, msg, fatal);
   dialog.showErrorBox(title, msg);
 
   if (fatal) {
@@ -335,7 +338,7 @@ const initApp =
 
       if (process.defaultApp) {
         // npm / electron start -- passes '.' as first argument
-        console.log("*** defaultApp: injecting --executed-from");
+        log.log("*** defaultApp: injecting --executed-from");
         argv.unshift("--executed-from");
       } // macOS insanity:  If we're started via Open With..., we get invoked
       // with -psn_0_XXXXX argument; let's just kill it:
@@ -351,10 +354,12 @@ const initApp =
       }
 
       let options: CommandLineOptions;
+      const argOptions: ParseOptions = { argv };
+      if (!firstInstance) {
+        argOptions.partial = true;
+      }
       try {
-        options = commandLineArgs(optionDefinitions, {
-          argv,
-        });
+        options = commandLineArgs(optionDefinitions, argOptions);
       } catch (e) {
         const argErr = e as any;
         console.error("Error parsing command line arguments: ", argErr.message);
@@ -375,7 +380,7 @@ const initApp =
       if (quickExit) {
         app.quit();
       } else {
-        console.log("*** options.srcfile: ", options.srcfile);
+        log.debug("*** options.srcfile: ", options.srcfile);
         const noSrcFile =
           options.srcfile == null || options.srcfile.length == 0;
         // Set in "ready" event handler:
@@ -457,6 +462,7 @@ const initApp =
             isReady = true;
           });
         } else {
+          log.debug("*** initApp: handling second-instance event");
           if (!noSrcFile) {
             openSrcFiles(options);
           } else {
@@ -481,16 +487,31 @@ const main = () => {
     log.transports.file.level = false;
   }
 
-  const shouldQuit = false;
-  //  const shouldQuit = app.makeSingleInstance(initApp(false))
-  //  log.warn('After call to makeSingleInstance: ', shouldQuit)
-
-  if (shouldQuit) {
+  const firstInstance = app.requestSingleInstanceLock();
+  if (!firstInstance) {
     app.quit();
   } else {
     // first instance:
+    log.warn("firstInstance. argv: ", process.argv);
+
+    app.on(
+      "second-instance",
+      (event, commandLine, workingDirectory, additionalData) => {
+        /*
+        console.log(
+          "*** got secondInstance event: ",
+          commandLine,
+          workingDirectory,
+          event,
+          additionalData
+        );
+        */
+        initApp(false)(commandLine, workingDirectory);
+      }
+    );
+
     app.setName("Tad");
-    initApp(true)(process.argv, null);
+    initApp(firstInstance)(process.argv, null);
   }
 };
 
