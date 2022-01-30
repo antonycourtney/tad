@@ -99,7 +99,7 @@ export const nativeParquetImport = async (
 
   const dbConn = new Connection(db);
   const tableName = genTableName(filePath);
-  const query = `CREATE TABLE ${tableName} AS SELECT * FROM parquet_scan('${filePath}')`;
+  const query = `CREATE VIEW ${tableName} AS SELECT * FROM parquet_scan('${filePath}')`;
   try {
     const resObj = await dbConn.executeIterator(query);
     const resRows = resObj.fetchAllRows() as any[];
