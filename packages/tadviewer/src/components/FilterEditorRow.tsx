@@ -244,6 +244,41 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
       const compVal = value ? value : ""; // eslint-disable-line
       if (op === "IN" || op === "NOTIN") {
         const loader = mkColValsLoader(appState.viewState, columnId);
+
+        /* Custom styles to get react-async-select to have equal
+         * row-height to rest of predicate row.
+         * Borrowed from:
+         * https://stackoverflow.com/a/60912805
+         */
+        const selectHeight = "28px";
+        const customStyles = {
+          control: (provided: any, state: any) => ({
+            ...provided,
+            background: "#fff",
+            borderColor: "#9e9e9e",
+            minHeight: selectHeight,
+            boxShadow: state.isFocused ? null : null,
+          }),
+
+          valueContainer: (provided: any, state: any) => ({
+            ...provided,
+            minHeight: selectHeight,
+            padding: "0 6px",
+          }),
+
+          input: (provided: any, state: any) => ({
+            ...provided,
+            margin: "0px",
+          }),
+          indicatorSeparator: (state: any) => ({
+            display: "none",
+          }),
+          indicatorsContainer: (provided: any, state: any) => ({
+            ...provided,
+            height: selectHeight,
+          }),
+        };
+
         /* Adding 'key' here as proposed workaround for
          * https://github.com/JedWatson/react-select/issues/1771
          */
@@ -262,6 +297,7 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
             closeMenuOnSelect={false}
             loadOptions={loader}
             onChange={(val) => handleSelectChange(val)}
+            styles={customStyles}
           />
         );
       } else {
