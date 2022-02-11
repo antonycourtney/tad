@@ -29,6 +29,7 @@ import {
 } from "./Transport";
 import { TableInfo, TableRep } from "../TableRep";
 import { Result } from "./result";
+import { serializeError } from "serialize-error";
 
 const dbConnEvalQuery = async (
   conn: DataSourceConnection,
@@ -260,9 +261,12 @@ const exceptionHandler =
       const value = await hf(req);
       return { status: "Ok", value };
     } catch (errVal) {
-      console.error("reltab server: exceptionHandler caught error: ", errVal);
-      const serMod = await import("serialize-error");
-      return { status: "Err", errVal: serMod.serializeError(errVal) };
+      console.error(
+        "reltab server: exceptionHandler caught error: ",
+        errVal,
+        (errVal as any).stack
+      );
+      return { status: "Err", errVal: serializeError(errVal) };
     }
   };
 

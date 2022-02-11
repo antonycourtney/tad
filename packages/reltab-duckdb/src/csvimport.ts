@@ -5,7 +5,7 @@
 import * as path from "path";
 import { Connection, DuckDB } from "node-duckdb";
 import * as prettyHRTime from "pretty-hrtime";
-
+import { initS3 } from "./s3utils";
 let uniqMap: { [cid: string]: number } = {};
 
 /* add a numeric _N suffix to an identifer to make it unique */
@@ -28,11 +28,16 @@ const mapIdent = (src: string): string => {
 
 const isAlpha = (ch: string): boolean => /^[A-Z]$/i.test(ch);
 
+const MAXLEN = 16;
+
 /* generate a SQL table name from pathname */
 const genTableName = (pathname: string): string => {
   const extName = path.extname(pathname);
   const baseName = path.basename(pathname, extName);
   let baseIdent = mapIdent(baseName);
+  if (baseIdent.length >= MAXLEN) {
+    baseIdent = baseIdent.slice(0, MAXLEN);
+  }
   if (!isAlpha(baseIdent[0])) {
     baseIdent = "t_" + baseIdent;
   }
@@ -50,6 +55,7 @@ export const nativeCSVImport = async (
   const importStart = process.hrtime();
 
   const dbConn = new Connection(db);
+  await initS3(dbConn);
   const tableName = genTableName(filePath);
   const query = `CREATE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}')`;
   // console.log('nativeCSVImport: executing: ', query);
@@ -98,16 +104,16 @@ export const nativeParquetImport = async (
   const importStart = process.hrtime();
 
   const dbConn = new Connection(db);
+  await initS3(dbConn);
   const tableName = genTableName(filePath);
   const query = `CREATE VIEW ${tableName} AS SELECT * FROM parquet_scan('${filePath}')`;
+  console.log("*** parquet import: ", query);
   try {
-    const resObj = await dbConn.executeIterator(query);
-    const resRows = resObj.fetchAllRows() as any[];
-    // console.log('nativeParquetImport: result: ', resRows[0]);
-    const info = resRows[0];
-    // console.log('info.Count: \"' + info.Count + '\", type: ', typeof info.Count);
+    // Creating a view doesn't return a useful result.
+    await dbConn.executeIterator(query);
   } catch (err) {
     console.log("caught exception while importing: ", err);
+    throw err;
   } finally {
     dbConn.close();
   }

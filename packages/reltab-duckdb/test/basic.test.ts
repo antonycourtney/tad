@@ -2,7 +2,7 @@ import * as duckdb from "node-duckdb";
 import * as reltab from "reltab";
 import * as reltabDuckDB from "../src/reltab-duckdb";
 import * as tp from "typed-promisify";
-import { textSpanContainsPosition } from "typescript";
+import { textSpanContainsPosition, textSpanContainsTextSpan } from "typescript";
 import { delimiter } from "path";
 import * as log from "loglevel";
 import * as util from "./testUtils";
@@ -31,6 +31,14 @@ test("t0 - trivial query generation", () => {
 
 const importCsv = async (db: duckdb.DuckDB, path: string) => {
   await reltabDuckDB.nativeCSVImport(db, path);
+};
+
+const importParquet = async (
+  db: duckdb.DuckDB,
+  path: string
+): Promise<string> => {
+  const tableName = await reltabDuckDB.nativeParquetImport(db, path);
+  return tableName;
 };
 
 beforeAll(async (): Promise<reltabDuckDB.DuckDBContext> => {
@@ -242,9 +250,10 @@ test("null const extend", async () => {
 
 test("getSourceInfo basics", async () => {
   const rtc = testCtx;
-  const rootSourceInfo = await rtc.getSourceInfo([]);
-  // console.log("root source info: ", rootSourceInfo);
+  const rootNode = await rtc.getRootNode();
+  console.log("root node: ", rootNode);
 
+  expect(rootNode).toMatchSnapshot();
   /*  
   const covid_item = rootSourceInfo.children.find(
     (item) => item.id === "covid19_jhu_csse"
@@ -255,6 +264,78 @@ test("getSourceInfo basics", async () => {
   console.log("covid19 source info: ", covidSourceInfo);
 */
 });
+
+test("https import test", async () => {
+  const tableName = await importParquet(
+    testCtx.db,
+    "https://github.com/deepcrawl/node-duckdb/raw/master/src/tests/test-fixtures/alltypes_plain.parquet"
+  );
+
+  console.log("https import complete, tableName: ", tableName);
+
+  const q1 = reltab.tableQuery(tableName);
+  const qres = await testCtx.evalQuery(q1);
+  // console.log("basic tableQuery result: ", qres);
+
+  const q2 = q1.project([
+    "id",
+    "bool_col",
+    "int_col",
+    "string_col",
+    "timestamp_col",
+  ]);
+  const q2res = await testCtx.evalQuery(q2);
+
+  const q2sres = JSON.stringify(q2res, null, 2);
+
+  //  console.log("project query result: ", q2sres );
+  expect(q2sres).toMatchSnapshot();
+});
+
+test("s3 import test", async () => {
+  const dbc = testCtx;
+  // await dbc.runSQLQuery("PRAGMA enable_verification;");
+  /*
+  await dbc.runSQLQuery(`SET s3_region='us-east-1'`);
+  await dbc.runSQLQuery(
+    `SET s3_access_key_id='${process.env.AWS_ACCESS_KEY_ID}'`
+  );
+  await dbc.runSQLQuery(
+    `SET s3_secret_access_key='${process.env.AWS_SECRET_ACCESS_KEY}'`
+  );
+
+  const qres = await dbc.runSQLQuery(
+    "SELECT * FROM parquet_scan('s3://amazon-reviews-pds/parquet/product_category=Books/part-00000-495c48e6-96d6-4650-aa65-3c36a3516ddd.c000.snappy.parquet') LIMIT 1"
+  );
+
+  console.log("raw SQL query - result: ", qres);
+
+  const vres = await dbc.runSQLQuery(
+    "CREATE VIEW vtest AS SELECT * FROM parquet_scan('s3://amazon-reviews-pds/parquet/product_category=Books/part-00000-495c48e6-96d6-4650-aa65-3c36a3516ddd.c000.snappy.parquet')"
+  );
+  console.log("raw view create result: ", vres);
+
+  const sres = await dbc.runSQLQuery("SELECT * FROM vtest LIMIT 3");
+  console.log("raw view select result: ", sres);
+
+  const tires = await dbc.runSQLQuery("PRAGMA table_info(vtest)");
+  console.log("table info result: ", tires);
+  */
+
+  let importSucceeded = false;
+  let tableName: string = "";
+  // const s3URL = 's3://ursa-labs-taxi-data/2009/01/data.parquet';
+  const s3URL =
+    "s3://amazon-reviews-pds/parquet/product_category=Books/part-00000-495c48e6-96d6-4650-aa65-3c36a3516ddd.c000.snappy.parquet";
+  try {
+    tableName = await importParquet(testCtx.db, s3URL);
+    console.log("s3 import complete, tableName: ", tableName);
+    importSucceeded = true;
+  } catch (err) {
+    console.error("caught error during s3 import: ", err);
+  }
+  expect(importSucceeded).toBe(true);
+}, 15000);
 
 /*
  * We'd need to put back expression syntax in extend first:

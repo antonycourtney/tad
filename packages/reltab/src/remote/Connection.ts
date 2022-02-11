@@ -1,3 +1,4 @@
+import { deserializeError } from "serialize-error";
 import {
   DataSourceConnection,
   DataSourceId,
@@ -8,9 +9,7 @@ import {
 import { deserializeTableRepStr, QueryExp } from "../QueryExp";
 import { TableInfo, TableRep } from "../TableRep";
 import { Result } from "./result";
-import { getConnection } from "./server";
 import { TransportClient } from "./Transport";
-import { deserializeError } from "serialize-error";
 
 export const defaultEvalQueryOptions: EvalQueryOptions = {
   showQueries: false,
@@ -168,8 +167,7 @@ async function decodeResult<T>(res: Result<T>): Promise<T> {
       return res.value;
     case "Err":
       console.log("decodeResult: got error result: ", res);
-      const deSer = await import("serialize-error");
-      const errVal = deSer.deserializeError(res.errVal);
+      const errVal = deserializeError(res.errVal);
       throw errVal;
   }
 }

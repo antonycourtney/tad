@@ -21,11 +21,10 @@
   "dependencies": {
     "lodash": "^4.17.21",
     "loglevel": "^1.8.0",
-    "serialize-error": "^9.0.0",
+    "serialize-error": "8.1.0",
     "pretty-hrtime": "^1.0.3"
   },
   "devDependencies": {
-    "@types/serialize-error": "^4.0.1",
     "@types/lodash": "^4.14.178",
     "@types/jest": "^27.4.0",
     "@types/pretty-hrtime": "^1.0.1",

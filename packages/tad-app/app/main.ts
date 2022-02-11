@@ -278,11 +278,15 @@ const getTargetPath = (options: any, filePath: string): string => {
   let targetPath = undefined;
   let srcDir = options["executed-from"];
 
+  // TODO: should probably export and use isIPFSPath from
+  // reltab-fs
   if (
     srcDir &&
     filePath &&
     !filePath.startsWith("/") &&
-    !filePath.startsWith("sqlite://")
+    !filePath.startsWith("sqlite://") &&
+    !filePath.startsWith("s3://") &&
+    !filePath.startsWith("https://")
   ) {
     if (srcDir === ".") {
       srcDir = process.cwd();

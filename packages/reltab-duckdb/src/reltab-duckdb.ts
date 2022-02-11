@@ -21,6 +21,8 @@ import {
   DuckDBDialect,
 } from "reltab"; // eslint-disable-line
 import { SQLDialect } from "reltab/dist/dialect";
+import { initS3 } from "./s3utils";
+import { dbAll } from "./utils";
 
 export * from "./csvimport";
 
@@ -46,11 +48,12 @@ class ConnectionPool {
     this.pool = [];
   }
 
-  take(): Connection {
+  async take(): Promise<Connection> {
     if (this.pool.length > 0) {
       return this.pool.pop()!;
     } else {
       const conn = new Connection(this.db);
+      await initS3(conn);
       return conn;
     }
   }
@@ -59,13 +62,6 @@ class ConnectionPool {
     this.pool.push(conn);
   }
 }
-
-const dbAll = async (dbConn: Connection, query: string): Promise<any> => {
-  const resIter = await dbConn.executeIterator(query);
-  const resRows = resIter.fetchAllRows();
-  resIter.close();
-  return resRows;
-};
 
 export class DuckDBContext implements DataSourceConnection {
   readonly displayName: string;
@@ -85,7 +81,8 @@ export class DuckDBContext implements DataSourceConnection {
   }
 
   async runSQLQuery(query: string): Promise<any> {
-    const conn = this.connPool.take();
+    console.log("runSQLquery: ", query);
+    const conn = await this.connPool.take();
     let ret: any;
     try {
       ret = await dbAll(conn, query);
@@ -183,14 +180,15 @@ export class DuckDBContext implements DataSourceConnection {
       const ret = Number.parseInt(rows[0].rowCount);
       return ret;
     });
-  } // use table_info pragma to construct a TableInfo:
+  }
 
-  // Get table info directly from duckdb db
   dbGetTableInfo(tableName: string): Promise<TableInfo> {
     const tiQuery = `PRAGMA table_info(${tableName})`;
+    console.log("*** dbGetTableInfo: tiQuery: ", tiQuery);
     const qp = this.runSQLQuery(tiQuery);
     return qp.then((dbRows) => {
       const rows = dbRows as Row[];
+      console.log("getTableInfo: ", rows);
       log.debug("getTableInfo: ", rows);
 
       const extendCMap = (

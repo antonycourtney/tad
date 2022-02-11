@@ -54,21 +54,38 @@ function extNameEx(path: string): string {
   return ext;
 }
 
+const ipfsPathPrefixes = ["s3://", "https://"];
+const isIPFSPath = (pathname: string): boolean => {
+  for (const prefix of ipfsPathPrefixes) {
+    if (pathname.startsWith(prefix)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 // mapping from pathnames to imported table names:
 type ImportMap = { [path: string]: string };
 
 export class FSConnection implements DataSourceConnection {
   private dbc: DuckDBContext;
   private rootPath: string;
-  private rootStats: fs.Stats;
+  private isDir: boolean;
+  private isIPFS: boolean;
   private importMap: ImportMap = {};
   private readonly displayName: string;
   readonly sourceId: DataSourceId;
 
-  constructor(dbc: DuckDBContext, rootPath: string, rootStats: fs.Stats) {
+  constructor(
+    dbc: DuckDBContext,
+    rootPath: string,
+    isDir: boolean,
+    isIPFS: boolean
+  ) {
     this.dbc = dbc;
     this.rootPath = rootPath;
-    this.rootStats = rootStats;
+    this.isDir = isDir;
+    this.isIPFS = isIPFS;
     this.displayName = rootPath;
     this.sourceId = { providerName: "localfs", resourceId: rootPath };
   }
@@ -92,17 +109,18 @@ export class FSConnection implements DataSourceConnection {
 
   async getRootNode(): Promise<DataSourceNode> {
     const displayName = path.basename(this.rootPath);
-    const isDir = this.rootStats.isDirectory();
     const rootNode: DataSourceNode = {
       id: ".",
-      kind: isDir ? "Directory" : "File",
+      kind: this.isDir ? "Directory" : "File",
       displayName,
-      isContainer: isDir,
+      isContainer: this.isDir,
     };
     return rootNode;
   }
   getTargetPath(dsPath: DataSourcePath): string {
-    return path.join(this.rootPath, ...dsPath.path);
+    return this.isIPFS
+      ? this.rootPath
+      : path.join(this.rootPath, ...dsPath.path);
   }
   async getChildren(dsPath: DataSourcePath): Promise<DataSourceNode[]> {
     const targetPath = this.getTargetPath(dsPath);
@@ -170,15 +188,22 @@ export class FSConnection implements DataSourceConnection {
 async function connectFileSource(
   pathname: string
 ): Promise<DataSourceConnection> {
+  if (isIPFSPath(pathname)) {
+    const dbc = await getDuckDbConnection();
+    const conn = new FSConnection(dbc, pathname, false, true);
+    return conn;
+  }
+  // local file:
   // check if pathname exists
   if (!fs.existsSync(pathname)) {
     let msg = '"' + pathname + '": file not found.';
     throw new Error(msg);
   }
   const fstats = await fs.promises.stat(pathname);
+  const isDir = fstats.isDirectory();
 
   const dbc = await getDuckDbConnection();
-  const conn = new FSConnection(dbc, pathname, fstats);
+  const conn = new FSConnection(dbc, pathname, isDir, false);
   return conn;
 }
 

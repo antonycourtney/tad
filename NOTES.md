@@ -330,12 +330,14 @@ as file imports
 [X] Make sure we can build all packages without errors
 [X] Open data source sidebar after opening a directory
 [X] New Tad Window menu option
+[ ] Check out alltypes_plain.parquet, and figure out what's happening with date_string_col and string_col,
+which are rendering as Buffer. Probably make a test file with all DuckDb column types.
 [ ] Get all tests working again (sqlite)
 [X] add a build-all.sh at top level (and maybe build-web.sh, build-app.sh, with common script for topo sort?)
 [X] Change window title when loading new data set
 [X] refresh db tree after File...Open
 [-] change name of db for DuckDb from :memory:
-[ ] Smoke test select control for "in..." filter queries. Try one from Blueprint directly?
+[X] Smoke test select control for "in..." filter queries. Try one from Blueprint directly?
 [X] Parquet file support: --parquet argument
 [X] Parquet file support: .parquet suffix
 [X] compressed, gzipped CSV file support (supported by DuckDb?)
