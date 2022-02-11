@@ -55,9 +55,6 @@ const covid19ConnKey: DataSourceId = {
     datasetName: "covid19_jhu_csse",
   }),
 };
-const connOpts: EvalQueryOptions = {
-  showQueries: true,
-};
 
 const initBigquery = async () => {
   const rtc = await reltab.getConnection(covid19ConnKey);
@@ -342,7 +339,7 @@ const initApp =
 
       if (process.defaultApp) {
         // npm / electron start -- passes '.' as first argument
-        log.log("*** defaultApp: injecting --executed-from");
+        log.debug("*** defaultApp: injecting --executed-from");
         argv.unshift("--executed-from");
       } // macOS insanity:  If we're started via Open With..., we get invoked
       // with -psn_0_XXXXX argument; let's just kill it:

@@ -50,10 +50,12 @@ export const postInstallCheck = () => {
   const versionStr = app.getVersion().replace(/\./g, "_");
   const markerFilename = MARKER_BASENAME + versionStr + ".txt";
   const markerPath = path.join(userDataPath, markerFilename);
-  log.info("postInstallCheck: looking for install marker file ", markerPath);
+  log.debug("postInstallCheck: looking for install marker file ", markerPath);
 
   if (fs.existsSync(markerPath)) {
-    log.info("postInstalCheck: found marker file, skipping post-install setup");
+    log.debug(
+      "postInstalCheck: found marker file, skipping post-install setup"
+    );
   } else {
     log.warn(
       "postInstallCheck: install marker file not found, performing post-install step."

@@ -2,6 +2,7 @@
  * Import CSV files into DuckDb
  */
 
+import * as log from "loglevel";
 import * as path from "path";
 import { Connection, DuckDB } from "node-duckdb";
 import * as prettyHRTime from "pretty-hrtime";
@@ -74,7 +75,7 @@ export const nativeCSVImport = async (
       const resRows = resObj.fetchAllRows() as any[];
       // console.log('nativeCSVImport: result: ', resRows[0]);
       const info = resRows[0];
-      console.log(
+      log.debug(
         'nativeCSVImport: info.Count: "' + info.Count + '", type: ',
         typeof info.Count
       );
@@ -86,7 +87,7 @@ export const nativeCSVImport = async (
     dbConn.close();
   }
   const importTime = process.hrtime(importStart);
-  console.log(
+  log.info(
     "DuckDB nativeCSVImport: import completed in ",
     prettyHRTime(importTime)
   );
@@ -107,7 +108,7 @@ export const nativeParquetImport = async (
   await initS3(dbConn);
   const tableName = genTableName(filePath);
   const query = `CREATE VIEW ${tableName} AS SELECT * FROM parquet_scan('${filePath}')`;
-  console.log("*** parquet import: ", query);
+  log.debug("*** parquet import: ", query);
   try {
     // Creating a view doesn't return a useful result.
     await dbConn.executeIterator(query);
@@ -118,7 +119,7 @@ export const nativeParquetImport = async (
     dbConn.close();
   }
   const [es, ens] = process.hrtime(importStart);
-  console.log(
+  log.info(
     "DuckDB nativeParquetImport: import completed in %ds %dms",
     es,
     ens / 1e6

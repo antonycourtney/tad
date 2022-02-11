@@ -81,7 +81,6 @@ export class DuckDBContext implements DataSourceConnection {
   }
 
   async runSQLQuery(query: string): Promise<any> {
-    console.log("runSQLquery: ", query);
     const conn = await this.connPool.take();
     let ret: any;
     try {
@@ -184,11 +183,9 @@ export class DuckDBContext implements DataSourceConnection {
 
   dbGetTableInfo(tableName: string): Promise<TableInfo> {
     const tiQuery = `PRAGMA table_info(${tableName})`;
-    console.log("*** dbGetTableInfo: tiQuery: ", tiQuery);
     const qp = this.runSQLQuery(tiQuery);
     return qp.then((dbRows) => {
       const rows = dbRows as Row[];
-      console.log("getTableInfo: ", rows);
       log.debug("getTableInfo: ", rows);
 
       const extendCMap = (
