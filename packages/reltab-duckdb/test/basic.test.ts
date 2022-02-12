@@ -7,7 +7,7 @@ import { delimiter } from "path";
 import * as log from "loglevel";
 import * as util from "./testUtils";
 import * as _ from "lodash";
-import { asString } from "reltab";
+import { asString, Row, Schema, tableQuery, TableRep } from "reltab";
 
 const { col, constVal } = reltab;
 
@@ -42,7 +42,6 @@ const importParquet = async (
 };
 
 beforeAll(async (): Promise<reltabDuckDB.DuckDBContext> => {
-  log.setLevel("debug"); // use "debug" for even more verbosity
   const ctx = await reltab.getConnection({
     providerName: "duckdb",
     resourceId: ":memory:",
@@ -292,35 +291,111 @@ test("https import test", async () => {
   expect(q2sres).toMatchSnapshot();
 });
 
+test("basic DuckDb types", async () => {
+  const dbc = testCtx;
+
+  await dbc.runSQLQuery("create table basic_ttest(i integer,b boolean); ");
+  await dbc.runSQLQuery("insert into basic_ttest values (99, true);");
+  await dbc.runSQLQuery("insert into basic_ttest values (87, false);");
+
+  const q0 = tableQuery("basic_ttest");
+  const q0res = await dbc.evalQuery(q0);
+  const rowData = q0res.rowData;
+  console.log("rowData: ", rowData);
+
+  expect(rowData).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "b": true,
+        "i": 99,
+      },
+      Object {
+        "b": false,
+        "i": 87,
+      },
+    ]
+  `);
+});
+
+test("DuckDb date type", async () => {
+  const dbc = testCtx;
+
+  await dbc.runSQLQuery("create table date_ttest(d date); ");
+  await dbc.runSQLQuery("insert into date_ttest values ('1991-07-21');");
+  await dbc.runSQLQuery("insert into date_ttest values ('2022-02-11');");
+
+  const q0 = tableQuery("date_ttest");
+  const q0res = await dbc.evalQuery(q0);
+  const rowData = q0res.rowData;
+  console.log("rowData: ", rowData);
+
+  expect(rowData).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "d": "1991-07-21",
+      },
+      Object {
+        "d": "2022-02-11",
+      },
+    ]
+  `);
+});
+
+type RowFormatter = (row: Row) => string[];
+
+function mkRowFormatter(s: Schema): RowFormatter {
+  const fmtRow = (r: Row): string[] => {
+    const res = s.columns.map((cid: string) => {
+      const val = r[cid];
+      const ct = s.columnType(cid);
+      return ct.stringRender(val);
+    });
+    return res;
+  };
+  return fmtRow;
+}
+
+function getFormattedRows(qres: TableRep): string[][] {
+  const s: Schema = qres.schema;
+  const rowFormatter = mkRowFormatter(s);
+
+  return qres.rowData.map(rowFormatter);
+}
+
+test("DuckDb timestamp type", async () => {
+  const dbc = testCtx;
+
+  await dbc.runSQLQuery("create table tstamp_ttest(t timestamp); ");
+  await dbc.runSQLQuery(
+    "insert into tstamp_ttest values ('1991-07-21 11:30:00');"
+  );
+  await dbc.runSQLQuery(
+    "insert into tstamp_ttest values ('2022-02-11 14:15:45');"
+  );
+
+  const q0 = tableQuery("tstamp_ttest");
+  const q0res = await dbc.evalQuery(q0);
+  // console.log("q0res: ", q0res);
+  // const rowData = q0res.rowData;
+  // console.log("rowData: ", rowData);
+
+  const fmtRows = getFormattedRows(q0res);
+  // console.log("fmtRows: ", fmtRows);
+
+  expect(fmtRows).toMatchInlineSnapshot(`
+    Array [
+      Array [
+        "1991-07-21T11:30:00.000Z",
+      ],
+      Array [
+        "2022-02-11T14:15:45.000Z",
+      ],
+    ]
+  `);
+});
+
 test("s3 import test", async () => {
   const dbc = testCtx;
-  // await dbc.runSQLQuery("PRAGMA enable_verification;");
-  /*
-  await dbc.runSQLQuery(`SET s3_region='us-east-1'`);
-  await dbc.runSQLQuery(
-    `SET s3_access_key_id='${process.env.AWS_ACCESS_KEY_ID}'`
-  );
-  await dbc.runSQLQuery(
-    `SET s3_secret_access_key='${process.env.AWS_SECRET_ACCESS_KEY}'`
-  );
-
-  const qres = await dbc.runSQLQuery(
-    "SELECT * FROM parquet_scan('s3://amazon-reviews-pds/parquet/product_category=Books/part-00000-495c48e6-96d6-4650-aa65-3c36a3516ddd.c000.snappy.parquet') LIMIT 1"
-  );
-
-  console.log("raw SQL query - result: ", qres);
-
-  const vres = await dbc.runSQLQuery(
-    "CREATE VIEW vtest AS SELECT * FROM parquet_scan('s3://amazon-reviews-pds/parquet/product_category=Books/part-00000-495c48e6-96d6-4650-aa65-3c36a3516ddd.c000.snappy.parquet')"
-  );
-  console.log("raw view create result: ", vres);
-
-  const sres = await dbc.runSQLQuery("SELECT * FROM vtest LIMIT 3");
-  console.log("raw view select result: ", sres);
-
-  const tires = await dbc.runSQLQuery("PRAGMA table_info(vtest)");
-  console.log("table info result: ", tires);
-  */
 
   let importSucceeded = false;
   let tableName: string = "";

@@ -37,7 +37,7 @@ interface SchemaJSON {
 }
 
 export class Schema {
-  private dialect: SQLDialect;
+  dialect: SQLDialect;
   columnMetadata: ColumnMetaMap;
   columns: Array<string>;
   columnIndices: {

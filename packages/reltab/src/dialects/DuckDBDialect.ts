@@ -4,8 +4,11 @@ import { BaseSQLDialect } from "../BaseSQLDialect";
 const intCT = new ColumnType("INTEGER", "integer");
 const realCT = new ColumnType("DOUBLE", "real");
 const textCT = new ColumnType("VARCHAR", "string");
-const timestampCT = new ColumnType("TIMESTAMP", "timestamp");
 const boolCT = new ColumnType("BOOL", "boolean");
+
+const timestampCT = new ColumnType("TIMESTAMP", "timestamp", {
+  stringRender: (val: any) => (val == null ? "" : new Date(val).toISOString()),
+});
 
 export class DuckDBDialectClass extends BaseSQLDialect {
   private static instance: DuckDBDialectClass;
