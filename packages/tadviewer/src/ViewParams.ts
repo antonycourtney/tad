@@ -99,7 +99,7 @@ const defaultViewParamsProps: ViewParamsProps = {
   filterExp: new reltab.FilterExp(),
 };
 
-type CellFormatter = (val?: any) => string | undefined | null;
+export type CellFormatter = (val?: any) => string | undefined | null;
 
 const defaultCellFormatter =
   (ct: ColumnType): CellFormatter =>

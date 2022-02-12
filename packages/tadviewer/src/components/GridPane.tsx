@@ -10,7 +10,7 @@ import * as actions from "../actions";
 import { LoadingModal } from "./LoadingModal";
 import { SimpleClipboard } from "./SimpleClipboard";
 import { PagedDataView } from "../PagedDataView";
-import { ViewParams } from "../ViewParams";
+import { CellFormatter, ViewParams } from "../ViewParams";
 import * as util from "../util";
 import { ExportToCsv } from "export-to-csv";
 import * as he from "he";
@@ -24,6 +24,7 @@ const { Slick } = SlickGrid;
 const { Plugins } = SlickGrid as any;
 const { CellRangeSelector, CellSelectionModel, CellCopyManager } = Plugins;
 import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
+import { Schema } from "reltab";
 
 const container = "#epGrid"; // for now
 
@@ -75,16 +76,31 @@ const measureStringWidth = (s: string): number => 8 + 5.5 * s.length;
 const measureHeaderStringWidth = (s: string): number => 24 + 5.5 * s.length;
 
 // get column width for specific column:
-const getColWidth = (dataView: PagedDataView, cnm: string) => {
+const getColWidth = (
+  viewParams: ViewParams,
+  schema: Schema,
+  dataView: PagedDataView,
+  cnm: string
+) => {
+  let sf: (val: any) => string;
+  if (schema.columnIndex(cnm)) {
+    const cf = viewParams.getColumnFormatter(schema, cnm);
+    sf = (val: any) => cf(val) ?? val.toString();
+  } else {
+    sf = (val: any) => val.toString();
+  }
   let colWidth;
   const offset = dataView.getOffset();
   const limit = offset + dataView.getItemCount();
   for (var i = offset; i < limit; i++) {
     var row = dataView.getItem(i);
+    if (i == 0) {
+      console.log("*** row 0: ", row);
+    }
     var cellVal = row[cnm];
     var cellWidth = MINCOLWIDTH;
     if (cellVal) {
-      cellWidth = measureStringWidth(cellVal.toString());
+      cellWidth = measureStringWidth(sf(cellVal));
     }
     if (cnm === "_pivot") {
       cellWidth += calcIndent(row._depth + 2);
@@ -105,7 +121,11 @@ const getColWidth = (dataView: PagedDataView, cnm: string) => {
 
 type ColWidthMap = { [cid: string]: number };
 
-function getInitialColWidthsMap(dataView: PagedDataView): ColWidthMap {
+function getInitialColWidthsMap(
+  viewParams: ViewParams,
+  schema: Schema,
+  dataView: PagedDataView
+): ColWidthMap {
   // let's approximate the column width:
   var colWidths: ColWidthMap = {};
   var nRows = dataView.getLength();
@@ -114,7 +134,7 @@ function getInitialColWidthsMap(dataView: PagedDataView): ColWidthMap {
   }
   const initRow = dataView.getItem(0);
   for (let cnm in initRow) {
-    colWidths[cnm] = getColWidth(dataView, cnm);
+    colWidths[cnm] = getColWidth(viewParams, schema, dataView, cnm);
   }
 
   return colWidths;
@@ -331,10 +351,12 @@ interface GridState {
 
 const updateColWidth = (
   gs: GridState,
+  viewParams: ViewParams,
+  schema: Schema,
   dataView: PagedDataView,
   colId: string
 ) => {
-  const colWidth = getColWidth(dataView, colId);
+  const colWidth = getColWidth(viewParams, schema, dataView, colId);
   gs.colWidthsMap![colId] = colWidth;
   gs.slickColMap[colId].width = colWidth;
 };
@@ -347,7 +369,7 @@ const getGridCols = (gs: GridState, viewState: ViewState) => {
 
   let gridCols = displayCols.map((cid) => gs.slickColMap[cid]);
   if (isPivoted(viewState)) {
-    updateColWidth(gs, dataView!, "_pivot");
+    updateColWidth(gs, viewParams, dataView!.schema, dataView!, "_pivot");
     let pivotCol = gs.slickColMap["_pivot"];
     gridCols.unshift(pivotCol);
   }
@@ -402,8 +424,12 @@ const createGridState = (
   viewStateRef: MutableRefObject<ViewState>,
   clipboard: SimpleClipboard
 ): GridState => {
-  const { viewParams, dataView } = viewStateRef.current;
-  const colWidthsMap = getInitialColWidthsMap(dataView!);
+  const { viewParams, dataView, baseSchema } = viewStateRef.current;
+  const colWidthsMap = getInitialColWidthsMap(
+    viewParams,
+    dataView!.schema,
+    dataView!
+  );
   const slickColMap = mkSlickColMap(dataView!.schema, viewParams, colWidthsMap);
   const gs = { grid: null, colWidthsMap, slickColMap };
 
