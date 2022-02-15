@@ -172,7 +172,7 @@ async function setTitleFromDSPath(
 }
 
 function timerShowModal(timer: Timer): boolean {
-  return timer.running && timer.elapsed > 200;
+  return timer.running && timer.elapsed > 500;
 }
 
 export const AppPane: React.FunctionComponent<AppPaneProps> = ({

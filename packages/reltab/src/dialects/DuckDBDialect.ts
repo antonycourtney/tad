@@ -10,6 +10,22 @@ const timestampCT = new ColumnType("TIMESTAMP", "timestamp", {
   stringRender: (val: any) => (val == null ? "" : new Date(val).toISOString()),
 });
 
+const blobCT = new ColumnType("BLOB", "blob", {
+  stringRender: (val: any) => {
+    if (val == null) {
+      return "";
+    }
+    if (val instanceof Buffer) {
+      return val.toString();
+    }
+    if (val instanceof Uint8Array) {
+      const decoder = new TextDecoder();
+      return decoder.decode(val);
+    }
+    return JSON.stringify(val);
+  },
+});
+
 export class DuckDBDialectClass extends BaseSQLDialect {
   private static instance: DuckDBDialectClass;
   readonly dialectName: string = "duckdb";
@@ -31,6 +47,7 @@ export class DuckDBDialectClass extends BaseSQLDialect {
     TIMESTAMP: timestampCT,
     VARCHAR: textCT,
     BOOLEAN: boolCT,
+    BLOB: blobCT,
   };
 
   static getInstance(): DuckDBDialectClass {

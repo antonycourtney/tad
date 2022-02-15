@@ -237,10 +237,19 @@ export const deserializeQueryReq = (jsonStr: string): any => {
 const tableRepReviver = (key: string, val: any): any => {
   let retVal = val;
 
+  if (val == null) {
+    return null;
+  }
   if (key === "schema") {
     retVal = Schema.fromJSON(val);
   }
-
+  if (
+    typeof val === "object" &&
+    val.type === "Buffer" &&
+    val.data instanceof Array
+  ) {
+    retVal = new Uint8Array(val.data);
+  }
   return retVal;
 };
 

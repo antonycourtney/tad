@@ -6,4 +6,4 @@ export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id --profile $AWS_PR
 export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key --profile $AWS_PROFILE)
 export AWS_SESSION_TOKEN=$(aws configure get aws_session_token --profile $AWS_PROFILE)
 
-npm run test:run $1
+npm run test:run -- $@

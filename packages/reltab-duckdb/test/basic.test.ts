@@ -270,7 +270,7 @@ test("https import test", async () => {
     "https://github.com/deepcrawl/node-duckdb/raw/master/src/tests/test-fixtures/alltypes_plain.parquet"
   );
 
-  console.log("https import complete, tableName: ", tableName);
+  // console.log("https import complete, tableName: ", tableName);
 
   const q1 = reltab.tableQuery(tableName);
   const qres = await testCtx.evalQuery(q1);
@@ -289,6 +289,10 @@ test("https import test", async () => {
 
   //  console.log("project query result: ", q2sres );
   expect(q2sres).toMatchSnapshot();
+
+  const fmtRows = getFormattedRows(qres);
+  // console.log("fmtRows: ", fmtRows);
+  expect(fmtRows).toMatchSnapshot();
 });
 
 test("basic DuckDb types", async () => {

@@ -10,6 +10,7 @@ export type ColumnKind =
   | "time"
   | "datetime"
   | "timestamp"
+  | "blob"
   | "dialect"; // unknown; specific to db engine SQL dialect
 
 export const defaultAggForKind = (kind: ColumnKind): AggFn => {
@@ -45,8 +46,18 @@ type ColumnTypeOpts = {
   stringRender?: StringRenderFn;
 };
 
-const defaultValRender: StringRenderFn = (val: any) =>
-  val == null ? "" : typeof val === "string" ? val : JSON.stringify(val);
+const defaultValRender: StringRenderFn = (val: any) => {
+  if (val == null) {
+    return "";
+  }
+  if (typeof val === "string") {
+    return val;
+  }
+  if (typeof val === "bigint") {
+    return val.toString();
+  }
+  return JSON.stringify(val);
+};
 
 export class ColumnType {
   readonly sqlTypeName: string;
