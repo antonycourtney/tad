@@ -10,7 +10,7 @@
     "build:tadviewer-assets": "cp -r node_modules/tadviewer/dist/public dist/public",
     "build:html": "cp -r html/* dist",
     "build:preload": "cp app/preload.js dist",
-    "build:icon": "mkdirp buildRes && cp res/AppIcon.icns buildRes/icon.icns",
+    "build:icon": "mkdirp buildRes && cp res/AppIcon.icns buildRes/icon.icns && cp res/blue_external_drive.icns buildRes/dmgIcon.icns",
     "build-assets": "npm run build:dir && npm run build:html && npm run build:icon && npm run build:preload",
     "build-dev": "npm run build-assets && webpack --mode development",
     "build-prod": "npm run build-assets && webpack --env prod --mode production",
@@ -91,6 +91,9 @@
     ],
     "directories": {
       "buildResources": "buildRes"
+    },
+    "dmg": {
+      "icon": "dmgIcon.icns"
     },
     "extraResources": [
       "tad.sh",

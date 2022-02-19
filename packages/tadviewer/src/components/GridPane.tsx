@@ -94,9 +94,6 @@ const getColWidth = (
   const limit = offset + dataView.getItemCount();
   for (var i = offset; i < limit; i++) {
     var row = dataView.getItem(i);
-    if (i == 0) {
-      console.log("*** row 0: ", row);
-    }
     var cellVal = row[cnm];
     var cellWidth = MINCOLWIDTH;
     if (cellVal) {
@@ -235,7 +232,6 @@ const createGrid = (
 
   const copyManager = new CellCopyManager();
   grid.registerPlugin(copyManager);
-  console.log("*** createGrid: copy manager plugin created and registered");
 
   const copySelectedRange = async (range: any) => {
     let copyData = [];
@@ -289,7 +285,7 @@ const createGrid = (
   });
 
   grid.onSort.subscribe((e: any, args: any) => {
-    console.log("grid onSort: ", args);
+    // console.log("grid onSort: ", args);
     // convert back from slickGrid format: */
     const sortKey = args.sortCols.map((sc: any) => [
       sc.sortCol.field,
@@ -481,7 +477,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   };
 
   const handleWindowResize = (e: any) => {
-    console.log("handleWindowResize: ", e);
+    // console.log("handleWindowResize: ", e);
     if (gridState) {
       /*
       const $container = $(container)

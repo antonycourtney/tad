@@ -330,7 +330,7 @@ as file imports
 [X] Make sure we can build all packages without errors
 [X] Open data source sidebar after opening a directory
 [X] New Tad Window menu option
-[ ] Check out alltypes_plain.parquet, and figure out what's happening with date_string_col and string_col,
+[X] Check out alltypes_plain.parquet, and figure out what's happening with date_string_col and string_col,
 which are rendering as Buffer. Probably make a test file with all DuckDb column types.
 [ ] Get all tests working again (sqlite)
 [X] add a build-all.sh at top level (and maybe build-web.sh, build-app.sh, with common script for topo sort?)
@@ -344,7 +344,7 @@ which are rendering as Buffer. Probably make a test file with all DuckDb column 
 [X] Get rid of BigQuery support by default -- ~/tad.conf.json
 [X] Ability to open directories with DuckDb import/export format
 [ ] Reduce height of column selector to fit in standard window without scrolling
-[ ] tweak column widths in column selector to avoid overflow of column type
+[X] tweak column widths in column selector to avoid overflow of column type
 [X] test of column types. MetObjects.csv seems to have a TIMESTAMP
 [X] Critical bug: Can't enter non-integral values for floats. Try imdb_score > 8.5 in movie_metadata
 [X] Bug: Seemed to get a crash when filling in a value in filter in "Contains..." for string column (quoting issue)
@@ -361,7 +361,7 @@ Later:
 [ ] Experimental support for other backends via ~/tad.conf.json
 [ ] Status bar in footer
 [ ] Query console
-[ ] Ability to open CSV / Parquet files directly from s3
+[X] Ability to open CSV / Parquet files directly from s3
 [ ] Get sqlite (and other) tests working again
 
 Packaged build stuff:
@@ -469,3 +469,6 @@ An apparent solution is to also add the modules into the "devDependencies" secti
 Release punch-list:
 
 [ ] "Copy" from Edit menu doesn't appear to copy selected cells.
+[X] "Send To" menu in installed Tad doesn't seem to work -- try this with a dev instance of Tad open.
+[ ] Try to add support for reading v1 .tad files
+[ ] Update "Quick Start" guide

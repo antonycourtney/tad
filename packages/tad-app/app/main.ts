@@ -394,18 +394,20 @@ const initApp =
           ) => {
             log.log("handleOpen called!");
             log.warn("got open-file event for: ", filePath);
+            log.warn("handOpen: options: ", options);
             event.preventDefault();
             const targetPath = getTargetPath(options, filePath);
 
             if (isReady) {
               log.warn("open-file: app is ready, opening in new window");
-              await openSrcFiles(options);
+              await appWindow.createFromFile(targetPath);
             } else {
               openFilePath = targetPath ?? null;
               log.warn("open-file: set openFilePath " + targetPath);
             }
           };
 
+          console.log("*** registering handler for open-file event");
           app.on("open-file", handleOpen);
           app.on("open-url", (event, url) => {
             log.warn("got open-url: ", event, url);
@@ -463,7 +465,10 @@ const initApp =
             isReady = true;
           });
         } else {
-          log.debug("*** initApp: handling second-instance event");
+          log.debug(
+            "*** initApp: handling second-instance event: options: ",
+            options
+          );
           if (!noSrcFile) {
             openSrcFiles(options);
           } else {
@@ -498,7 +503,6 @@ const main = () => {
     app.on(
       "second-instance",
       (event, commandLine, workingDirectory, additionalData) => {
-        /*
         console.log(
           "*** got secondInstance event: ",
           commandLine,
@@ -506,7 +510,6 @@ const main = () => {
           event,
           additionalData
         );
-        */
         initApp(false)(commandLine, workingDirectory);
       }
     );
