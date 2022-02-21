@@ -36,10 +36,13 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
     const isPivot = viewParams.vpivots.includes(cid);
     const isSort =
       viewParams.sortKey.findIndex((entry) => entry[0] === cid) !== -1;
+    const tooltipContent = <span>{displayName}</span>;
     return (
       <tr key={cid}>
         <td className="col-colName" onClick={(e) => handleRowClick(cid)}>
-          {displayName}
+          <span className="col-colName-text" title={displayName}>
+            {displayName}
+          </span>
         </td>
         <td className="col-colType">{colTypeName}</td>
         <td className="col-check">
