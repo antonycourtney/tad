@@ -18,8 +18,8 @@ export const PivotOrderPanel: React.FC<PivotOrderPanelProps> = ({
   stateRef,
 }) => (
   <div className="ui-block">
-    <h6>
-      Pivot Columns <small className="ui-subtext">(drag to reorder)</small>
+    <h6 className="bp3-heading">
+      Pivot Columns <span className="bp3-ui-text">(drag to reorder)</span>
     </h6>
     <ColumnList
       schema={schema}

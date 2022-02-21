@@ -62,9 +62,19 @@ function openParamsDSPath(
       break;
     case "tad":
       const parsedFileState = JSON.parse(openParams.fileContents!);
-      // This would be the right place to validate / migrate tadFileFormatVersion
       const savedFileState = parsedFileState.contents;
-      targetDSPath = savedFileState.dsPath;
+      // attempt to migrate from version 1 format:
+      if (parsedFileState.tadFileFormatVersion === 1) {
+        const rawTargetPath = savedFileState.targetPath;
+        log.info("Found older tad file format, targetPath: ", rawTargetPath);
+        const connKey: DataSourceId = {
+          providerName: "localfs",
+          resourceId: rawTargetPath,
+        };
+        targetDSPath = { sourceId: connKey, path: ["."] };
+      } else {
+        targetDSPath = savedFileState.dsPath;
+      }
       viewParams = ViewParams.deserialize(savedFileState.viewParams);
       break;
     case "empty":

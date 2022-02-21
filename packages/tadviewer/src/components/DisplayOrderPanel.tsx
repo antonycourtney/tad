@@ -19,9 +19,8 @@ export const DisplayOrderPanel: React.FC<DisplayOrderPanelProps> = ({
 }) => {
   return (
     <div className="ui-block">
-      <h6>
-        Displayed Columns{" "}
-        <small className="ui-subtext">(drag to reorder)</small>
+      <h6 className="bp3-heading">
+        Displayed Columns <span className="bp3-ui-text">(drag to reorder)</span>
       </h6>
       <ColumnList
         schema={schema}

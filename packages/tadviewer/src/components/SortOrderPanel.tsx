@@ -31,20 +31,19 @@ const dirSelect = (
   );
 };
 
-const sortKeyRowFormatter = (viewParams: ViewParams, stateRef: any) => (
-  schema: Schema,
-  row: [string, boolean]
-) => {
-  const [cid, asc] = row;
-  const displayName = schema.displayName(cid);
-  const select = dirSelect(viewParams, schema, cid, asc, stateRef);
-  return [
-    <td key={cid} className="col-colName">
-      {displayName}
-    </td>,
-    <td key={"sortDir-" + cid}>{select}</td>,
-  ];
-};
+const sortKeyRowFormatter =
+  (viewParams: ViewParams, stateRef: any) =>
+  (schema: Schema, row: [string, boolean]) => {
+    const [cid, asc] = row;
+    const displayName = schema.displayName(cid);
+    const select = dirSelect(viewParams, schema, cid, asc, stateRef);
+    return [
+      <td key={cid} className="col-colName">
+        {displayName}
+      </td>,
+      <td key={"sortDir-" + cid}>{select}</td>,
+    ];
+  };
 
 export interface SortOrderPanelProps {
   schema: reltab.Schema;
@@ -59,8 +58,8 @@ export const SortOrderPanel: React.FC<SortOrderPanelProps> = ({
 }) => {
   return (
     <div className="ui-block">
-      <h6>
-        Sort Columns <small className="ui-subtext">(drag to reorder)</small>
+      <h6 className="bp3-heading">
+        Sort Columns <span className="bp3-ui-text">(drag to reorder)</span>
       </h6>
       <ColumnList
         schema={schema}

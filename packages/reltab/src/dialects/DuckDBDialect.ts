@@ -46,6 +46,7 @@ export class DuckDBDialectClass extends BaseSQLDialect {
     TEXT: textCT,
     TIMESTAMP: timestampCT,
     VARCHAR: textCT,
+    BOOL: boolCT,
     BOOLEAN: boolCT,
     BLOB: blobCT,
   };

@@ -114,7 +114,7 @@ export const FormatPanel: React.FC<FormatPanelProps> = ({
   );
   return (
     <div className="ui-block">
-      <h6>Apply To</h6>
+      <h6 className="bp3-heading">Apply To</h6>
       <div className="bp3-form-group">
         <RadioGroup
           selectedValue={formatKind}
@@ -128,7 +128,7 @@ export const FormatPanel: React.FC<FormatPanelProps> = ({
           </Radio>
         </RadioGroup>
       </div>
-      <h6>Format Properties</h6>
+      <h6 className="bp3-heading">Format Properties</h6>
       {formatPanel}
     </div>
   );

@@ -47,21 +47,20 @@ const aggSelect = (
   );
 };
 
-const aggRowFormatter = (viewParams: ViewParams, stateRef: any) => (
-  schema: Schema,
-  cid: string
-): JSX.Element[] => {
-  const displayName = schema.displayName(cid);
-  const select = aggSelect(viewParams, schema, cid, stateRef);
-  return [
-    <td key={cid} className="col-colName">
-      {displayName}
-    </td>,
-    <td key={"aggFn-" + cid} className="aggFn">
-      {select}
-    </td>,
-  ];
-};
+const aggRowFormatter =
+  (viewParams: ViewParams, stateRef: any) =>
+  (schema: Schema, cid: string): JSX.Element[] => {
+    const displayName = schema.displayName(cid);
+    const select = aggSelect(viewParams, schema, cid, stateRef);
+    return [
+      <td key={cid} className="col-colName">
+        {displayName}
+      </td>,
+      <td key={"aggFn-" + cid} className="aggFn">
+        {select}
+      </td>,
+    ];
+  };
 
 export interface AggPanelProps {
   schema: Schema;
@@ -77,7 +76,7 @@ export const AggPanel: React.FC<AggPanelProps> = ({
   const columnIds = schema.sortedColumns();
   return (
     <div className="ui-block">
-      <h6>Aggregation Functions</h6>
+      <h6 className="bp3-heading">Aggregation Functions</h6>
       <ColumnList
         schema={schema}
         columnListType={ColumnListTypes.AGG}

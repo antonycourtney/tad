@@ -468,7 +468,10 @@ An apparent solution is to also add the modules into the "devDependencies" secti
 ======
 Release punch-list:
 
-[ ] "Copy" from Edit menu doesn't appear to copy selected cells.
+[X] "Copy" from Edit menu doesn't appear to copy selected cells.
 [X] "Send To" menu in installed Tad doesn't seem to work -- try this with a dev instance of Tad open.
-[ ] Try to add support for reading v1 .tad files
+[X] Try to add support for reading v1 .tad files
 [ ] Update "Quick Start" guide
+[ ] text styling to ellipsis on long column names in column selector
+[ ] Some ability to increase text size on the grid. Global 8pt font in app.less is just too small for
+some users
