@@ -89,6 +89,7 @@
       "**/*.node",
       "**/*reltab*"
     ],
+    "afterPack": "./tools/afterPack.js",
     "directories": {
       "buildResources": "buildRes"
     },
