@@ -472,6 +472,31 @@ Release punch-list:
 [X] "Send To" menu in installed Tad doesn't seem to work -- try this with a dev instance of Tad open.
 [X] Try to add support for reading v1 .tad files
 [ ] Update "Quick Start" guide
-[ ] text styling to ellipsis on long column names in column selector
+[X] text styling to ellipsis on long column names in column selector
 [ ] Some ability to increase text size on the grid. Global 8pt font in app.less is just too small for
 some users
+[ ] When opening a directory, .tad files not included in tree view list in sidebar
+
+====
+Issues with libcrypto.3.dylib and libssl.3.dylib:
+
+Where to put dylibs when packaging:
+https://github.com/electron-userland/electron-builder/issues/5238
+http://clarkkromenaker.com/post/library-dynamic-loading-mac/
+
+$ otool -L node-duckdb-addon.node
+node-duckdb-addon.node:
+@rpath/node-duckdb-addon.node (compatibility version 0.0.0, current version 0.0.0)
+@rpath/libduckdb.dylib (compatibility version 0.0.0, current version 0.0.0)
+/usr/local/opt/openssl@3/lib/libcrypto.3.dylib (compatibility version 3.0.0, current version 3.0.0)
+/usr/local/opt/openssl@3/lib/libssl.3.dylib (compatibility version 3.0.0, current version 3.0.0)
+/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 904.4.0)
+/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1292.60.1)
+
+Looks like we'll need to do:
+$ install_name_tool -change /usr/local/opt/openssl@3/lib/libcrypto.3.dylib @rpath/libcrypto.3.dylib ./dist/mac/Tad.app/Contents/Resources/app.asar.unpacked/node_modules/node-duckdb/build/Release/node-duckdb-addon.node
+$ install_name_tool -change /usr/local/opt/openssl@3/lib/libssl.3.dylib @rpath/libssl.3.dylib ./dist/mac/Tad.app/Contents/Resources/app.asar.unpacked/node_modules/node-duckdb/build/Release/node-duckdb-addon.node
+
+=====
+Notarizing the Mac app:
+https://kilianvalkhof.com/2019/electron/notarizing-your-electron-application/

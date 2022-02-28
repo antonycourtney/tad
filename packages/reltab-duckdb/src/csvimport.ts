@@ -4,7 +4,7 @@
 
 import * as log from "loglevel";
 import * as path from "path";
-import { Connection, DuckDB } from "node-duckdb";
+import { Connection, DuckDB } from "ac-node-duckdb";
 import * as prettyHRTime from "pretty-hrtime";
 import { initS3 } from "./s3utils";
 let uniqMap: { [cid: string]: number } = {};

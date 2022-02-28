@@ -1,7 +1,7 @@
 /**
  * Support routines for using s3 URLs with DuckDb.
  */
-import { Connection, DuckDB } from "node-duckdb";
+import { Connection, DuckDB } from "ac-node-duckdb";
 import * as log from "loglevel";
 
 /**

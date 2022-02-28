@@ -1,5 +1,5 @@
 import * as tp from "typed-promisify";
-import { Connection, DuckDB, IDuckDBConfig } from "node-duckdb";
+import { Connection, DuckDB, IDuckDBConfig } from "ac-node-duckdb";
 import * as log from "loglevel";
 import {
   TableRep,

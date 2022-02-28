@@ -1,4 +1,4 @@
-import { Connection } from "node-duckdb";
+import { Connection } from "ac-node-duckdb";
 
 export const dbAll = async (
   dbConn: Connection,
