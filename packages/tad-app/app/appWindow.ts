@@ -107,7 +107,7 @@ const create = async (openParams: OpenParams) => {
       nodeIntegration: true,
       contextIsolation: false,
       preload: path.join(__dirname, "preload.js"),
-      additionalArguments: [JSON.stringify(openParams)],
+      additionalArguments: [`--tadOpenParams=${JSON.stringify(openParams)}`],
     },
   };
 
