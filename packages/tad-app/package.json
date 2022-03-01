@@ -4,6 +4,10 @@
   "homepage": "https://www.tadviewer.com",
   "description": "Tabular data viewer desktop app, built with Electron",
   "main": "dist/main.bundle.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antonycourtney/tad-pkg.git"
+  },
   "scripts": {
     "clean": "rimraf dist",
     "build:dir": "mkdirp dist",
