@@ -55,7 +55,7 @@
     "less-loader": "^10.2.0",
     "mkdirp": "^1.0.4",
     "node-sass": "^7.0.1",
-    "recursive-copy-cli": "1.0.20",
+    "recursive-copy-cli": "^1.0.20",
     "resolve-url-loader": "^4.0.0",
     "sass-loader": "^12.4.0",
     "source-map-loader": "^3.0.1",

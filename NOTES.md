@@ -476,6 +476,9 @@ Release punch-list:
 [ ] Some ability to increase text size on the grid. Global 8pt font in app.less is just too small for
 some users
 [ ] When opening a directory, .tad files not included in tree view list in sidebar
+[ ] Move tad-pkg repo to main tad repo, archive old repo contents
+[ ] tadviewer Twitter account
+[ ]
 
 ====
 Issues with libcrypto.3.dylib and libssl.3.dylib:
