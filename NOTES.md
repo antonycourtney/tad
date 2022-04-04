@@ -473,12 +473,13 @@ Release punch-list:
 [X] Try to add support for reading v1 .tad files
 [ ] Update "Quick Start" guide
 [X] text styling to ellipsis on long column names in column selector
+[ ] BUG: links opening in Electron window!
 [ ] Some ability to increase text size on the grid. Global 8pt font in app.less is just too small for
 some users
 [ ] When opening a directory, .tad files not included in tree view list in sidebar
 [ ] Move tad-pkg repo to main tad repo, archive old repo contents
+[ ] Update top level README.md
 [ ] tadviewer Twitter account
-[ ]
 
 ====
 Issues with libcrypto.3.dylib and libssl.3.dylib:

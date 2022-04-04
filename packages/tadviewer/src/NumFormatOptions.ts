@@ -1,4 +1,5 @@
 import * as Immutable from "immutable";
+import { CellFormatter, ClickHandler, FormatOptions } from "./FormatOptions";
 
 export interface NumFormatOptionsProps {
   type: string;
@@ -16,13 +17,14 @@ const defaultNumFormatOptionsProps: NumFormatOptionsProps = {
 
 export class NumFormatOptions
   extends Immutable.Record(defaultNumFormatOptionsProps)
-  implements NumFormatOptionsProps {
+  implements NumFormatOptionsProps, FormatOptions
+{
   public readonly type!: string;
   public readonly commas!: boolean;
   public readonly decimalPlaces!: number | undefined;
   public readonly exponential!: boolean;
 
-  getFormatter() {
+  getFormatter(): CellFormatter {
     const fmtOpts = {
       minimumFractionDigits: this.decimalPlaces,
       maximumFractionDigits: this.decimalPlaces,
@@ -50,5 +52,9 @@ export class NumFormatOptions
     };
 
     return ff;
+  }
+
+  getClickHandler(): ClickHandler | null {
+    return null;
   }
 }

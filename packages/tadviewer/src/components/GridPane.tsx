@@ -1,7 +1,7 @@
 // for debugging resize handler:
 // import $ from 'jquery'
 import * as React from "react";
-import _ from "lodash";
+import _, { cloneDeep } from "lodash";
 
 /* /// <reference path="slickgrid-es6.d.ts"> */
 import * as SlickGrid from "slickgrid-es6";
@@ -10,7 +10,7 @@ import * as actions from "../actions";
 import { LoadingModal } from "./LoadingModal";
 import { SimpleClipboard } from "./SimpleClipboard";
 import { PagedDataView } from "../PagedDataView";
-import { CellFormatter, ViewParams } from "../ViewParams";
+import { ViewParams } from "../ViewParams";
 import * as util from "../util";
 import { ExportToCsv } from "export-to-csv";
 import * as he from "he";
@@ -25,6 +25,8 @@ const { Plugins } = SlickGrid as any;
 const { CellRangeSelector, CellSelectionModel, CellCopyManager } = Plugins;
 import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
 import { Schema } from "reltab";
+
+export type OpenURLFn = (url: string) => void;
 
 const container = "#epGrid"; // for now
 
@@ -211,6 +213,7 @@ export interface GridPaneProps {
   stateRef: StateRef<AppState>;
   onSlickGridCreated: (grid: any) => void;
   clipboard: SimpleClipboard;
+  openURL: OpenURLFn;
 }
 
 /* Create grid from the specified set of columns */
@@ -219,7 +222,8 @@ const createGrid = (
   viewStateRef: MutableRefObject<ViewState>,
   columns: any,
   data: any,
-  clipboard: SimpleClipboard
+  clipboard: SimpleClipboard,
+  openURL: (url: string) => void
 ) => {
   let grid = new Slick.Grid(container, data, columns, gridOptions);
 
@@ -295,26 +299,38 @@ const createGrid = (
   });
 
   const onGridClick = (e: any, args: any) => {
-    log.info("onGridClick: ", e, args);
+    // log.info("onGridClick: ", e, args);
     const viewState = viewStateRef.current;
     const viewParams = viewState.viewParams;
+    const columns = grid.getColumns();
+    const col = columns[args.cell];
+    // log.info("onGridClick: column: ", col);
     var item = grid.getDataItem(args.row);
-    log.info("onGridClick: item: ", item);
-    if (item._isLeaf) {
-      return;
-    }
-    const vpivots = viewParams.vpivots;
-    const depth = item._depth;
-    let path = [];
-    for (let i = 0; i < vpivots.length && i < depth; i++) {
-      let pathItem = item["_path" + i];
-      path.push(item["_path" + i]);
-    }
-    log.info("onGridClick: path: ", path);
-    if (item._isOpen) {
-      actions.closePath(path, stateRef);
+    // log.info("onGridClick: item: ", item);
+
+    if (col.id === "_pivot") {
+      if (item._isLeaf) {
+        return;
+      }
+      const vpivots = viewParams.vpivots;
+      const depth = item._depth;
+      let path = [];
+      for (let i = 0; i < vpivots.length && i < depth; i++) {
+        let pathItem = item["_path" + i];
+        path.push(item["_path" + i]);
+      }
+      // log.info("onGridClick: path: ", path);
+      if (item._isOpen) {
+        actions.closePath(path, stateRef);
+      } else {
+        actions.openPath(path, stateRef);
+      }
     } else {
-      actions.openPath(path, stateRef);
+      const dataView: PagedDataView = grid.getData();
+      if (dataView.schema.columnIndex(col.id)) {
+        const ch = viewParams.getClickHandler(dataView.schema, col.id);
+        ch({ openURL }, args.row, args.cell, item[col.id]);
+      }
     }
   };
 
@@ -418,7 +434,8 @@ const updateGrid = (gs: GridState, viewState: ViewState) => {
 const createGridState = (
   stateRef: StateRef<AppState>,
   viewStateRef: MutableRefObject<ViewState>,
-  clipboard: SimpleClipboard
+  clipboard: SimpleClipboard,
+  openURL: (url: string) => void
 ): GridState => {
   const { viewParams, dataView, baseSchema } = viewStateRef.current;
   const colWidthsMap = getInitialColWidthsMap(
@@ -430,7 +447,14 @@ const createGridState = (
   const gs = { grid: null, colWidthsMap, slickColMap };
 
   const gridCols = getGridCols(gs, viewStateRef.current);
-  gs.grid = createGrid(stateRef, viewStateRef, gridCols, dataView, clipboard);
+  gs.grid = createGrid(
+    stateRef,
+    viewStateRef,
+    gridCols,
+    dataView,
+    clipboard,
+    openURL
+  );
   return gs;
 };
 
@@ -440,6 +464,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   stateRef,
   onSlickGridCreated,
   clipboard,
+  openURL,
 }) => {
   const [gridState, setGridState] = useState<GridState | null>(null);
   const [prevDataView, setPrevDataView] = useState<PagedDataView | null>(null);
@@ -452,7 +477,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
     let gs = gridState;
     const dataView = viewState.dataView;
     if (gs === null) {
-      gs = createGridState(stateRef, viewStateRef, clipboard);
+      gs = createGridState(stateRef, viewStateRef, clipboard, openURL);
       if (onSlickGridCreated) {
         onSlickGridCreated(gs.grid);
       }

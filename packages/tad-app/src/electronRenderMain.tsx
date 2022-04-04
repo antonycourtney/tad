@@ -14,7 +14,7 @@ import * as reltab from "reltab";
 import log from "loglevel";
 import { ElectronTransportClient } from "./electronClient";
 import * as electron from "electron";
-import { clipboard, ipcRenderer } from "electron";
+import { clipboard, ipcRenderer, shell } from "electron";
 import {
   DataSourcePath,
   DataSourceId,
@@ -122,8 +122,16 @@ const init = async () => {
 
     await initAppState(rtc, stateRef);
 
+    const openURL = (url: string) => {
+      shell.openExternal(url);
+    };
+
     ReactDOM.render(
-      <App newWindow={newWindowFromDSPath} clipboard={clipboard} />,
+      <App
+        newWindow={newWindowFromDSPath}
+        clipboard={clipboard}
+        openURL={openURL}
+      />,
       document.getElementById("app")
     );
     const tRender = performance.now();

@@ -26,24 +26,24 @@
 
         <br><br>
         <dl class="row">
-        <dt class="col-sm-1"><code>.csv</code></dt>
-        <dd class="col-sm-11">The ubiquitous <a href="https://en.wikipedia.org/wiki/Comma-separated_values" onclick='tadOpenExternal(event,"https://en.wikipedia.org/wiki/Comma-separated_values")'>Comma Separated Values</a> file format</li></dd>
-        <dt class="col-sm-1"><code>.parquet</code></dt>
-        <dd class="col-sm-11"><a href="https://parquet.apache.org/" onclick='tadOpenExternal(event,"https://parquet.apache.org/")'>Apache Parquet</a>, an efficient binary columnar storage format for tabular data, especially useful for large datasets</dd>
-        <dt class="col-sm-1"><code>.duckdb</code></dt>
-        <dd class="col-sm-11"><a href="https://duckdb.org/" onclick='tadOpenExternal(event,"https://duckdb.org/")'>DuckDb</a> database file</dd>
-        <dt class="col-sm-1"><code>.sqlite</code></dt>
-        <dd class="col-sm-11"><a href="https://www.sqlite.org/index.html" onclick='tadOpenExternal(event,"https://www.sqlite.org/index.html")''>SQLite</a> database file</dd>
+        <dt class="col-sm-2"><code>.csv</code></dt>
+        <dd class="col-sm-10">The ubiquitous <a href="https://en.wikipedia.org/wiki/Comma-separated_values" onclick='tadOpenExternal(event,"https://en.wikipedia.org/wiki/Comma-separated_values")'>Comma Separated Values</a> file format</li></dd>
+        <dt class="col-sm-2"><code>.parquet</code></dt>
+        <dd class="col-sm-10"><a href="https://parquet.apache.org/" onclick='tadOpenExternal(event,"https://parquet.apache.org/")'>Apache Parquet</a>, an efficient binary columnar storage format for tabular data, especially useful for large datasets</dd>
+        <dt class="col-sm-2"><code>.duckdb</code></dt>
+        <dd class="col-sm-10"><a href="https://duckdb.org/" onclick='tadOpenExternal(event,"https://duckdb.org/")'>DuckDb</a> database file</dd>
+        <dt class="col-sm-2"><code>.sqlite</code></dt>
+        <dd class="col-sm-10"><a href="https://www.sqlite.org/index.html" onclick='tadOpenExternal(event,"https://www.sqlite.org/index.html")''>SQLite</a> database file</dd>
         </dl>
 
         <P>
           The primary feature that Tad provides for exploring and analyzing files is a <a href="https://en.wikipedia.org/wiki/Pivot_table"
           onclick='tadOpenExternal(event,"https://en.wikipedia.org/wiki/Pivot_table")'>pivot table</a>.
-          A Tad pivot table transforms the underlying table data into a hiearchical <i>tree table</i> by
-          grouping together rows that have the same value for some columns (the selected pivot columns):
-          <br>
-          Multiple pivot columns result in a nested hierarchical structure, with each level of the hierarchy corresponding to one pivot column. Values of cells for non-pivoted columns at higher levels of the
-          pivot table are determined by applying an <emph>aggregate function</emph> to all leaf rows underneath that row.  
+          A Tad pivot table transforms a flat table of data into a hierarchical <i>tree table</i> by
+          grouping together rows that have the same value for some selected columns (the pivot columns),
+          and calculating aggregate values (like sum, min or max) for the other columns in each group.
+          Tad also supports other features for exploring data, including multi-column sorts and an compound
+          filter expressions.
         </P>
 
         <h3>Launching Tad</h3>
@@ -61,7 +61,8 @@
 <pre>
 $ tad somefile.csv
 </pre>
-          to launch Tad to explore <code>somefile.csv</code>. You can also open <code>.tad</code> files (previously saved Tad view configurations) via the command line.
+          to launch Tad to explore <code>somefile.csv</code>. You can also open <code>.tad</code> files (previously saved Tad view configurations) and all the
+          other supported file types (".parquet", ".duckdb", and ".sqlite") via the command line.
         </ol>
         <h3>Basic Usage</h3>
         <p>

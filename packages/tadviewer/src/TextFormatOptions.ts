@@ -1,6 +1,12 @@
 import * as Immutable from "immutable";
 import * as he from "he";
 import urlRegex from "url-regex";
+import {
+  CellFormatter,
+  ClickHandler,
+  ClickHandlerAppContext,
+  FormatOptions,
+} from "./FormatOptions";
 
 /*
  * TODO: move to tad-app
@@ -12,6 +18,10 @@ window.tadOpenExternal = (url: string) => {
 };
 */
 
+(window as any).tadLinkNOP = (url: string) => {
+  return false;
+};
+
 export interface TextFormatOptionsProps {
   type: string;
   urlsAsHyperlinks: boolean;
@@ -19,24 +29,26 @@ export interface TextFormatOptionsProps {
 
 const defaultTextFormatOptionsProps: TextFormatOptionsProps = {
   type: "TextFormatOptions",
-  urlsAsHyperlinks: true
+  urlsAsHyperlinks: true,
 };
 
 const isValidURL = (s: string): boolean =>
   urlRegex({
-    exact: true
+    exact: true,
   }).test(s);
 
 export class TextFormatOptions
   extends Immutable.Record(defaultTextFormatOptionsProps)
-  implements TextFormatOptionsProps {
+  implements TextFormatOptionsProps, FormatOptions
+{
   public readonly type!: string;
   public readonly urlsAsHyperlinks!: boolean;
 
-  getFormatter() {
+  getFormatter(): CellFormatter {
     const ff = (val?: string | null): string | undefined | null => {
       if (this.urlsAsHyperlinks && val && isValidURL(val)) {
-        const ret = `<a href="${val}" onclick='tadOpenExternal("${val}"); return false;'>${val}</a>`;
+        // Just return false from onclick handler to prevent default link handling
+        const ret = `<a href="${val}" onclick='return false;'>${val}</a>`;
         return ret;
       }
 
@@ -44,5 +56,19 @@ export class TextFormatOptions
     };
 
     return ff;
+  }
+
+  getClickHandler(): ClickHandler {
+    const ch = (
+      appContext: ClickHandlerAppContext,
+      row: number,
+      column: number,
+      val: any
+    ) => {
+      if (this.urlsAsHyperlinks && val && isValidURL(val)) {
+        appContext.openURL(val);
+      }
+    };
+    return ch;
   }
 }

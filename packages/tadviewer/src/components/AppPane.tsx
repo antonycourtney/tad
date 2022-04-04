@@ -11,7 +11,7 @@ import {
   Classes,
   ProgressBar,
 } from "@blueprintjs/core";
-import { GridPane } from "./GridPane";
+import { GridPane, OpenURLFn } from "./GridPane";
 import { Footer } from "./Footer";
 import { LoadingModal } from "./LoadingModal";
 import * as actions from "../actions";
@@ -35,6 +35,7 @@ export type NewWindowFn = (
 
 export interface AppPaneBaseProps {
   newWindow: NewWindowFn;
+  openURL: OpenURLFn;
   clipboard: SimpleClipboard;
 }
 
@@ -180,6 +181,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   appState,
   stateRef,
   clipboard,
+  openURL,
 }: AppPaneProps) => {
   const { activity } = appState;
   const dataSourceExpanded = activity === "DataSource";
@@ -232,6 +234,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
           viewState={appState.viewState}
           stateRef={stateRef}
           clipboard={clipboard}
+          openURL={openURL}
         />
         <Footer appState={appState} stateRef={stateRef} />
       </div>

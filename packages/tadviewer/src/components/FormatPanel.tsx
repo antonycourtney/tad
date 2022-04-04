@@ -4,13 +4,14 @@ import { NumFormatPanel } from "./NumFormatPanel";
 import { RadioGroup, Radio } from "@blueprintjs/core";
 import * as actions from "../actions";
 import * as reltab from "reltab";
-import { ViewParams, FormatOptions } from "../ViewParams";
+import { ViewParams } from "../ViewParams";
 import { StateRef } from "oneref";
 import { AppState } from "../AppState";
 import { useState } from "react";
 import { NumFormatOptions } from "../NumFormatOptions";
 import { TextFormatOptions } from "../TextFormatOptions";
 import { ColumnType, ColumnKind } from "reltab";
+import { FormatOptions } from "../FormatOptions";
 
 export interface FormatPanelProps {
   schema: reltab.Schema;

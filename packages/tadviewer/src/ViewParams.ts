@@ -6,6 +6,12 @@ import * as reltab from "reltab"; // eslint-disable-line
 
 import { TextFormatOptions } from "./TextFormatOptions";
 import { NumFormatOptions } from "./NumFormatOptions";
+import {
+  CellFormatter,
+  ClickHandler,
+  ClickHandlerAppContext,
+  FormatOptions,
+} from "./FormatOptions";
 
 /**
  * Immutable representation of user-configurable view parameters
@@ -16,7 +22,6 @@ type AggMap = {
   [cid: string]: reltab.AggFn;
 };
 
-export type FormatOptions = TextFormatOptions | NumFormatOptions;
 type FormatsMap = Immutable.Map<string, FormatOptions>; // deserialize a formatter by examining its type member:
 
 const deserializeFormatOptions = (
@@ -99,13 +104,18 @@ const defaultViewParamsProps: ViewParamsProps = {
   filterExp: new reltab.FilterExp(),
 };
 
-export type CellFormatter = (val?: any) => string | undefined | null;
-
 const defaultCellFormatter =
   (ct: ColumnType): CellFormatter =>
   (val?: any): string => {
     return ct.stringRender(val);
   };
+
+const defaultClickHandler = (
+  appContext: ClickHandlerAppContext,
+  row: number,
+  column: number,
+  val: any
+) => {};
 
 export class ViewParams
   extends Immutable.Record(defaultViewParamsProps)
@@ -250,6 +260,11 @@ export class ViewParams
     const ff: CellFormatter =
       cf != null ? cf.getFormatter() : defaultCellFormatter(ct);
     return ff;
+  }
+
+  getClickHandler(schema: reltab.Schema, cid: string): ClickHandler {
+    const cf = this.getColumnFormat(schema, cid);
+    return cf.getClickHandler() ?? defaultClickHandler;
   }
 
   setColumnFormat(cid: string, opts: any): ViewParams {
