@@ -11,9 +11,9 @@ export const defaultDialect = SQLiteDialect;
 
 export const getDefaultDialect = (): SQLDialect => {
   return SQLiteDialectClass.getInstance();
-}
+};
 
-export type Scalar = number | string | boolean | null;
+export type Scalar = bigint | number | string | boolean | null;
 
 interface ConstVal {
   expType: "ConstVal";

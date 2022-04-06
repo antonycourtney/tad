@@ -12,7 +12,7 @@ import { SQLDialect } from "./dialect";
 import { ColumnType, colIsString } from "./ColumnType";
 import { Schema, ColumnMetadata } from "./Schema";
 import _ = require("lodash");
-import { TableInfoMap, TableRep } from "./TableRep";
+import { Row, TableInfoMap, TableRep } from "./TableRep";
 import { ppSQLQuery } from "./pp";
 import {
   SQLQueryAST,
@@ -234,6 +234,27 @@ export const deserializeQueryReq = (jsonStr: string): any => {
   return rq;
 };
 
+export const decodeRow = (schema: Schema, row: Row): Row => {
+  const outRow: Row = {};
+  for (const cid in row) {
+    const colType = schema.columnType(cid);
+    let colVal = row[cid];
+    if (colType.kind === "integer" && typeof colVal === "string") {
+      colVal = BigInt(colVal);
+    }
+    outRow[cid] = colVal;
+  }
+  return outRow;
+};
+
+export const decodeTableData = (schema: Schema, rowData: Row[]): TableRep => {
+  let outRows: Row[] = [];
+  for (const row of rowData) {
+    outRows.push(decodeRow(schema, row));
+  }
+  return new TableRep(schema, outRows);
+};
+
 const tableRepReviver = (key: string, val: any): any => {
   let retVal = val;
 
@@ -243,12 +264,13 @@ const tableRepReviver = (key: string, val: any): any => {
   if (key === "schema") {
     retVal = Schema.fromJSON(val);
   }
-  if (
-    typeof val === "object" &&
-    val.type === "Buffer" &&
-    val.data instanceof Array
-  ) {
-    retVal = new Uint8Array(val.data);
+  if (typeof val === "object") {
+    if (val.type === "Buffer" && val.data instanceof Array) {
+      retVal = new Uint8Array(val.data);
+    }
+    if (val.hasOwnProperty("schema") && val.hasOwnProperty("rowData")) {
+      retVal = decodeTableData(val.schema, val.rowData);
+    }
   }
   return retVal;
 };
