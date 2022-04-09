@@ -89,13 +89,8 @@ $ tad somefile.csv
         Multiple pivot columns result in a nested hierarchical structure, with each level of the hierarchy corresponding to one pivot column. Values of cells for non-pivoted columns at higher levels of the pivot table are determined by applying an <emph>aggregate function</emph> to all leaf rows underneath that row.
 -->
         <P>
-        Tad scans your data file during the import process makes a conservative guess at the type of each column.
-        For now the only supported types are <code>text</code>, <code>integer</code> and <code>real</code>, and there is no facility for manually overriding the inferred types.
-        <P>
         The name and type of each column are shown in the main <strong>Column Selector</strong> above.
-        The additional controls in the column selector enable you to quickly build a
-        <a href="https://en.wikipedia.org/wiki/Pivot_table"
-          onclick='tadOpenExternal(event,"https://en.wikipedia.org/wiki/Pivot_table")'>pivot table</a>
+        The additional controls in the column selector enable you to quickly build a pivot table
         to explore your data set:
         <ul>
           <li>Use the checkboxes under <strong>Pivot</strong> in the main column selector to choose columns for the pivot hierarchy.
@@ -105,7 +100,7 @@ $ tad somefile.csv
         Additional controls for setting the order of columns, pivots and the sort key, and controlling aggregation and formatting rules are available under <strong>Additional Properties</strong> at the bottom of the side bar.
         <h4>Filtering</h4>
         <P>
-        Tad provides rudimentary facilities for constructing a <emph>filter</emph> to select a subset of data. A filter consists of a collection of simple predicates that compare a value in that row (identified by column name) with a constant.
+        Tad provides facilities for constructing a <emph>filter</emph> to select a subset of data. A filter consists of a collection of predicates that compare a value in that row (identified by column name) with a constant.
         <P>
         Activate the filter pane by clicking the <strong>Filter</strong> link at the bottom of the window:
         <P>

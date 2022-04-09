@@ -72,7 +72,7 @@ Look at bigquery ops with sorted aggtree.
 can be re-used in strange ways.
 [ ] Deal gracefully with network errors
 [ ] Electron app: port various event handlers from renderMain to web app
-[ ] Electron app: Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app in web app
+[X] Electron app: Deal with 'tadopenexternal' (TextFormatOptions.ts) to open external links from electron app in web app
 [X] \*\*\* !! Migrate reltab AST to use typescript tagged unions (kill tableArgs / valArgs)
 [ ] Need to account for constant expressions (numbers and string literals) vs column references coming from an extend
 operation that can end up in a SQL select column expression. Probably time for a tagged union!
@@ -471,15 +471,19 @@ Release punch-list:
 [X] "Copy" from Edit menu doesn't appear to copy selected cells.
 [X] "Send To" menu in installed Tad doesn't seem to work -- try this with a dev instance of Tad open.
 [X] Try to add support for reading v1 .tad files
-[ ] Update "Quick Start" guide
 [X] text styling to ellipsis on long column names in column selector
-[ ] BUG: links opening in Electron window!
-[ ] Some ability to increase text size on the grid. Global 8pt font in app.less is just too small for
-some users
-[ ] When opening a directory, .tad files not included in tree view list in sidebar
-[ ] Move tad-pkg repo to main tad repo, archive old repo contents
+[X] BUG: links opening in Electron window -- need to pass in `tadOpenExternal` to TadViewer
+[X] BUG: As soon as we set a pivot, numeric column formatting disappears
+(also: verify fixed when loading a tad file)
+[X] add tadOpenExternal to tadweb-app
 [ ] Update top level README.md
-[ ] tadviewer Twitter account
+[ ] Update "Quick Start" guide
+[ ] tadviewer.com site to tad-pkg
+[ ] audit old tad repo, move anything important to tad-pkg
+[ ] archive everything under tad-pkg
+[ ] Move tad-pkg repo to main tad repo
+[ ] Announcement Post (somewhere to put it on website?)
+[X] tadviewer Twitter account
 
 ====
 Issues with libcrypto.3.dylib and libssl.3.dylib:
@@ -504,3 +508,11 @@ $ install_name_tool -change /usr/local/opt/openssl@3/lib/libssl.3.dylib @rpath/l
 =====
 Notarizing the Mac app:
 https://kilianvalkhof.com/2019/electron/notarizing-your-electron-application/
+
+Later:
+
+[ ] Some ability to increase text size on the grid. Global 8pt font in app.less is just too small for
+some users
+[ ] When opening a directory, .tad files not included in tree view list in sidebar
+(Same with ".duckdb" and ".sqlite" files -- refactor code path so that File...Open goes through
+actions.openDataSourcePath)

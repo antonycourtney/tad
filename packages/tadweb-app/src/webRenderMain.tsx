@@ -65,8 +65,16 @@ const init = async () => {
 
   await initAppState(rtc, stateRef);
 
+  const openURL = (url: string) => {
+    window.open(url, "_blank");
+  };
+
   ReactDOM.render(
-    <App newWindow={newWindowFromDSPath} clipboard={navigator.clipboard} />,
+    <App
+      newWindow={newWindowFromDSPath}
+      clipboard={navigator.clipboard}
+      openURL={openURL}
+    />,
     document.getElementById("app")
   );
 
