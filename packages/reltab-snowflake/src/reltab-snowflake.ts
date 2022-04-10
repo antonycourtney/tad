@@ -66,6 +66,18 @@ function typeBaseName(origType: string): string {
   return origType.split("(", 1)[0];
 }
 
+async function getSchemaObjects(
+  conn: snowflake.Connection,
+  dbName: string,
+  schemaName: string,
+  objectType: string
+): Promise<Row[]> {
+  const sqlQuery = `SHOW ${objectType} in ${dbName}.${schemaName}`;
+  const qres = await executeQuery(conn, sqlQuery);
+  const metaRows = qres as Row[];
+  return metaRows;
+}
+
 export class SnowflakeConnection implements DataSourceConnection {
   readonly sourceId: DataSourceId;
   tableMap: TableInfoMap;
@@ -112,6 +124,17 @@ export class SnowflakeConnection implements DataSourceConnection {
     return "Snowflake";
   }
 
+  // ensure every table mentioned in query is registered:
+  async ensureTables(query: QueryExp): Promise<void> {
+    const tblNames = query.getTables();
+    const namesArr = Array.from(tblNames);
+    for (let tblName of namesArr) {
+      if (this.tableMap[tblName] === undefined) {
+        await this.getTableInfo(tblName);
+      }
+    }
+  }
+
   async evalQuery(
     query: QueryExp,
     offset?: number,
@@ -119,6 +142,7 @@ export class SnowflakeConnection implements DataSourceConnection {
     options?: EvalQueryOptions
   ): Promise<TableRep> {
     let t0 = process.hrtime();
+    await this.ensureTables(query);
     const schema = query.getSchema(SnowflakeDialect, this.tableMap);
     const sqlQuery = query.toSql(
       SnowflakeDialect,
@@ -160,6 +184,7 @@ export class SnowflakeConnection implements DataSourceConnection {
 
   async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
     let t0 = process.hrtime();
+    await this.ensureTables(query);
     const countSql = query.toCountSql(SnowflakeDialect, this.tableMap);
     let t1 = process.hrtime(t0);
     const [t1s, t1ns] = t1;
@@ -186,9 +211,12 @@ export class SnowflakeConnection implements DataSourceConnection {
     throw new Error("importCsv not yet implemented for Snowflake");
   }
 
-  private async dbGetTableInfo(tableName: string): Promise<TableInfo> {
-    const sqlQuery = `DESCRIBE TABLE ${tableName}`;
-
+  private async dbGetTableInfo(
+    databaseName: string,
+    schemaName: string,
+    tableName: string
+  ): Promise<TableInfo> {
+    const sqlQuery = `DESCRIBE TABLE ${databaseName}.${schemaName}.${tableName}`;
     const qres = await executeQuery(this.snowConn, sqlQuery);
     const metaRows = qres as Row[];
 
@@ -216,7 +244,8 @@ export class SnowflakeConnection implements DataSourceConnection {
   async getTableInfo(tableName: string): Promise<TableInfo> {
     let ti = this.tableMap[tableName];
     if (!ti) {
-      ti = await this.dbGetTableInfo(tableName);
+      const [database, schema, baseTableName] = tableName.split(".");
+      ti = await this.dbGetTableInfo(database, schema, baseTableName);
       if (ti) {
         this.tableMap[tableName] = ti;
       }
@@ -264,14 +293,24 @@ export class SnowflakeConnection implements DataSourceConnection {
       }));
     } else if (path.length === 3) {
       const [_rootName, dbName, schemaName] = path;
-      const sqlQuery = `SHOW tables in ${dbName}.${schemaName}`;
 
-      const qres = await executeQuery(this.snowConn, sqlQuery);
-      const metaRows = qres as Row[];
+      const tableRows = await getSchemaObjects(
+        this.snowConn,
+        dbName,
+        schemaName,
+        "tables"
+      );
+      const viewRows = await getSchemaObjects(
+        this.snowConn,
+        dbName,
+        schemaName,
+        "views"
+      );
+      const objRows = tableRows.concat(viewRows);
 
-      childNodes = metaRows.map((row) => ({
+      childNodes = objRows.map((row) => ({
         kind: "Table",
-        id: `${dbName}.${schemaName}.${row.name}`,
+        id: `${row.name}`,
         displayName: row.name as string,
         isContainer: false,
       }));

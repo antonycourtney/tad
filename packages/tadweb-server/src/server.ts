@@ -161,7 +161,7 @@ const handleInvoke = async (
 async function main() {
   log.setLevel(log.levels.INFO);
 
-  await initBigquery();
+  // await initBigquery();
   // await initSnowflake();
 
   /*

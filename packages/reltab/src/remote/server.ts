@@ -232,7 +232,7 @@ const handleGetDataSources = async (): Promise<GetDataSourcesResult> => {
   const hrstart = process.hrtime();
   const dataSourceIds = await getDataSources();
   const elapsed = process.hrtime(hrstart);
-  log.info("getDataSources: evaluated in  ", prettyHRTime(elapsed));
+  // log.info("getDataSources: evaluated in  ", prettyHRTime(elapsed));
   const resObj = {
     dataSourceIds,
   };
