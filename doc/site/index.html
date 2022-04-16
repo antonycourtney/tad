@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+<!-- Adding og:url resulted in an unspecified error report from Facebook's
+     scraper, and caused it to lose the og:image, so commenting out... -->    
+<!--    <meta property="og:url" content="http://www.tadviewer.com/index.html" /> -->
+    <meta property="og:title" content="Tad" />
+    <meta property="og:description" content="Tad is a fast, free, cross-platform desktop application for viewing and analyzing tabular data files." />
+    <meta property="og:image" content="http://www.tadviewer.com/images/tad-site-screenshot.png" />
+    <title>Tad - A Desktop Viewer App for Tabular Data</title>
+<!--
+    Mailchimp CSS - not used
+    <link href="//cdn-images.mailchimp.com/embedcode/classic-10_7.css" rel="stylesheet" type="text/css">
+    <style type="text/css">
+      #mc_embed_signup{
+        background:#fff;
+        clear:left;
+        font:14px Helvetica,Arial,sans-serif;
+      }
+-->
+    </style>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,900" rel="stylesheet">
+  	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <header>
+    	<div class="container">
+    		<nav class="navbar navbar-default">
+			  <div class="container-fluid">
+				<!-- Brand and toggle get grouped for better mobile display -->
+				<div class="navbar-header">
+				  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				  </button>
+				  <a class="navbar-brand" href="#">Tad</a>
+				</div>
+
+				<!-- Collect the nav links, forms, and other content for toggling -->
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				  <ul class="nav navbar-nav navbar-right">
+					<li><a href="#news">News</a></li>
+					<li><a href="#contact">Contact</a></li>
+				  </ul>
+				</div><!-- /.navbar-collapse -->
+			  </div><!-- /.container-fluid -->
+			</nav>
+   			<h1 class="ornament">A better way to view &amp; analyze data</h1>
+   			<div class="screenshot-holder text-center">
+   				<img src="images/tad-site-screenshot.png" alt="screenshot">
+   			</div>
+   			<p>Tad is a free (MIT Licensed) desktop application for viewing and analyzing tabular data.</p>
+   			<a href="#news" class="btn btn-default">Get Started</a>
+    	</div>
+    </header>
+    <a href="https://github.com/antonycourtney/tad" class="github-corner"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:##151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+  <main>
+  	<div class="features-section">
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-4">
+					<div class="specs-holder">
+						<img src="images/csv-icon@2x.png" alt="csv">
+						<p>A fast viewer for <strong>CSV</strong> and <strong>Parquet</strong> files and
+              <strong>SQLite</strong> and 
+              <strong>DuckDb</strong> databases that supports large files. 
+            </p>
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<div class="specs-holder">
+						<img src="images/pivot-icon@2x.png" alt="pivot">
+						<p>It's a <strong>Pivot Table</strong> for analyzing and exploring data.
+            Internally, Tad uses DuckDb for fast, accurate processing.
+            </p>
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<div class="specs-holder">
+						<img src="images/puzzle-icon@2x.png" alt="puzzle">
+						<p>Designed to <strong>fit in to the workflow</strong> of data engineers and data scientists.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+  <div id="news" class="section news-section">
+    <div class="container">
+    <h3>News</h3>
+    <p class="lead">Tad 0.9.0 - Nov. 25, 2018</p>
+    <P>
+    A packaged installer for Tad is available for macOS, Linux and Windows.
+    <P>
+    Tad is still new and under development so there is a reasonable chance you'll encounter bugs, UI annoyances, and corner cases while using Tad. Please report them via <strong>Help...Send Feedback</strong>.
+    <P>
+    If you're comfortable with that caveat, pick your platform and install:
+    <P class="download">
+      <a id="download-latest-release" class="btn btn-default"
+        href="https://github.com/antonycourtney/tad/releases/download/v0.9.0/tad-0.9.0.dmg">
+        <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+        Download for Mac
+      </a>
+      <a id="download-latest-release" class="btn btn-default"
+        href="https://github.com/antonycourtney/tad/releases/download/v0.9.0/tad_0.9.0_amd64.deb"
+        >
+        <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+        Download for Linux
+      </a>
+      <a id="download-latest-release" class="btn btn-default"
+        href="https://github.com/antonycourtney/tad/releases/download/v0.9.0/Tad.Setup.0.9.0.exe">
+        <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+        Download for Windows
+      </a>
+    </P>
+    <P>
+    The above releases, along with a few additional formats (such as .rpm for RPM-based Linux Systems) are available at the <a href="https://github.com/antonycourtney/tad/releases/latest">Tad Releases Page</a> on github.
+    </div>
+  </div>
+  <div id="contact" class="section contact-section">
+    <div class="container">
+    <h3>Contact</h3>
+    <P>
+    To send feedback or report bugs, please email <a href="mailto:tad-feedback@tadviewer.com">tad-feedback@tadviewer.com</a>.
+    <P>
+    To learn about new releases of Tad, please sign up for the Tad Users mailing list.
+    <P>
+    This is a low bandwidth list purely for Tad-related announcements; no spam. Your email will never be used for third party advertising and will not be sold, shared or disclosed to anyone.</p>
+    <P>
+      <!-- Begin MailChimp Signup Form -->
+
+      <div id="mc_embed_signup">
+      <form class="subscribe form-inline" action="https://antonycourtney.us11.list-manage.com/subscribe/post?u=4a062893d094fd95772ee9877&amp;id=4b00ee874b" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+          <div id="mc_embed_signup_scroll">
+            <div class="mc-field-group">
+            	<label for="mce-EMAIL">Email Address </label>
+            	<input type="email" class="form-control" value="" name="EMAIL" class="required email" id="mce-EMAIL">
+              <input type="submit" class="btn btn-sm" value="Subscribe" name="subscribe" id="mc-embedded-subscribe">
+            </div>
+            	<div id="mce-responses">
+            		<div class="response" id="mce-error-response" style="display:none"></div>
+            		<div class="response" id="mce-success-response" style="display:none"></div>
+            	</div>
+                <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+                <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_4a062893d094fd95772ee9877_4b00ee874b" tabindex="-1" value=""></div>
+          </div>
+      </form>
+      </div>
+      <script type='text/javascript' src='//s3.amazonaws.com/downloads.mailchimp.com/js/mc-validate.js'></script><script type='text/javascript'>(function($) {window.fnames = new Array(); window.ftypes = new Array();fnames[0]='EMAIL';ftypes[0]='email';fnames[1]='FNAME';ftypes[1]='text';fnames[2]='LNAME';ftypes[2]='text';}(jQuery));var $mcj = jQuery.noConflict(true);</script>
+      <!--End mc_embed_signup-->
+    </div>
+  </div>
+  <div id="relnotes" class="section relnotes-section">
+    <div class="container">
+    <h3>Release Notes</h3>
+    <div class="release-section">
+      <h4>Tad 0.9.0 - Nov. 25, 2018</h4>
+      <P>
+      <h5>New Features</h5>
+      <ul>
+        <li>Export Filtered CSV - Export result of applying filters on original data set 
+      </ul>
+      <h5>Bug Fixes</h5>
+      <ul>
+        <li>Fix issue that prevented opening empty / null nodes in pivot tree
+        <li>Correctly escape embedded HTML directives in CSV headers or data cells
+        <li>Upgrade numerous internal dependencies (Electron, React, Blueprint, ...)
+      </ul>
+    </div>
+
+    <div class="release-section">
+      <h4>Tad 0.8.5 - June 28, 2017</h4>
+      <P>
+      <h5>New Features</h5>
+      <ul>
+        <li>European CSV support - support for <code>;</code> instead of <code>,</code> as field separator.
+        <li>IN and NOT IN operators, with interactive search and auto-complete UI.
+        <li>A <code>--no-headers</code> option for opening CSV files with no header row.
+        <li>Scientific Notation as format option for real number column type.
+      </ul>
+      <h5>Bug Fixes</h5>
+      <ul>
+        <li>Add missing negated operators (not equal, does not contain, etc.) to filter editor.
+        <li>Fix issue with Copy operation picking up incorrect cell ranges.
+        <li>Fix issue in file format when saving / loading per-column format info.
+      </ul>
+    </div>
+
+    <div class="release-section">
+      <h4>Tad 0.8.4 - May 29, 2017</h4>
+      <P>
+      <h5>New Features</h5>
+      <ul>
+        <li>Rudimentary filters - simple list of predicates combined with AND or OR
+        <li>Simple rectangular range selection and copy to clipboard
+        <li>Footer showing row count information: Total Rows, Filtered Rows, Current View
+        <li>Cross-Platform: First release for macOS, Linux and Windows
+        <li>Sample CSV file included with distribution, linked in Quick Start Guide.
+      </ul>
+      <h5>Bug Fixes</h5>
+      <ul>
+        <li>Pivoting on columns containing backslashes now works.
+        <li>Improve error reporting of SQLITE errors when creating table during import.
+        <li>Allow filenames that are all digits.
+        <li>Correct handling of duplicate column identifiers that differ in upper/lower case.
+        <li>Replace auto-create of symbolic link in <code>/usr/local/bin</code>with self-serve instructions in quick start guide.
+      </ul>
+    </div>
+    <div class="release-section">
+      <h4>Tad 0.8.3 - April 17, 2017</h4>
+      <P>
+      <h5>New Features</h5>
+      <ul>
+        <li>Tad can now be used to explore saved sqlite3 database files. For example, to explore table <code>expenses</code> in sqlite db file <code>/data/accounts.sqlite</code>:
+<br>
+<pre>
+$ tad sqlite:///data/accounts.sqlite/expenses
+</pre>
+      (Note that there are 3 slashes following <code>sqlite:</code>)
+      </ul>
+    </div>
+    <div class="release-section">
+      <h4>Tad 0.8.2 - April 12, 2017</h4>
+      <P>
+      <h5>Bug Fixes</h5>
+      <ul>
+        <li>Fix critical bug in pivoting by non-text columns
+      </ul>
+    </div>
+    <div class="release-section">
+      <h4>Tad 0.8.1 - April 9, 2017</h4>
+      <P>
+      <h5>New Features</h5>
+      <ul>
+        <li>Add support for Tab Separated Value (.tsv) files
+      </ul>
+      <h5>Bug Fixes</h5>
+      <ul>
+        <li>Fix numerous issues with scrollbars and resizing of main window
+        <li>Better support for long column names / many columns
+      </ul>
+    </div>
+    <div class="release-section">
+      <h4>Tad 0.8.0 - April 5, 2017</h4>
+      <P>(Initial Public Release)</P>
+    <div>
+  </div>
+
+  </main>
+    <!-- jQuery first, then Bootstrap JS. -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96857028-1', 'auto');
+  ga('send', 'pageview');
+</script>
+  </body>
+</html>
