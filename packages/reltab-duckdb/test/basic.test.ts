@@ -1,4 +1,4 @@
-import * as duckdb from "node-duckdb";
+import * as duckdb from "ac-node-duckdb";
 import * as reltab from "reltab";
 import * as reltabDuckDB from "../src/reltab-duckdb";
 import * as tp from "typed-promisify";
