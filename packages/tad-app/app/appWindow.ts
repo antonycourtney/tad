@@ -239,7 +239,7 @@ export const openDialog = async (win?: BrowserWindow) => {
   if (openPaths && openPaths.length > 0) {
     const filePath = openPaths[0];
     const openParams = fileOpenParams(filePath);
-    if (win) {
+    if (win && isInitialized(win.id)) {
       win.webContents.send("open-file", {
         openParams,
       });
@@ -250,7 +250,7 @@ export const openDialog = async (win?: BrowserWindow) => {
 };
 
 export const newWindow = async (win?: BrowserWindow) => {
-  if (win) {
+  if (win && isInitialized(win.id)) {
     const appState: any = await getAppState(win);
     const dsPath = appState.dsPath;
     if (dsPath) {

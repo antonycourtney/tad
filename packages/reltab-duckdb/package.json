@@ -21,7 +21,7 @@
   "license": "MIT",
   "dependencies": {
     "loglevel": "^1.8.0",
-    "ac-node-duckdb": "^0.0.80",
+    "ac-node-duckdb": "^0.0.82",
     "pretty-hrtime": "^1.0.3"
   },
   "devDependencies": {

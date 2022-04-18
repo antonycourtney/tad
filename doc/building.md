@@ -82,3 +82,13 @@ Similar to above, but with three windows open:
 
 With those running continuously, you should be able to just hit reload in your browser on `localhost:9000` to pick up any code changes. You'll still have to run `npm run build` if you make changes in any of the other library packages (`reltab`,
 `reltab-duckdb`, `aggtree`, etc.).
+
+# Additional Info
+
+## Useful paths:
+
+Log information (from [electron-log](https://www.npmjs.com/package/electron-log)):
+
+- on Linux: ~/.config/Tad/main.log
+- on OS X: ~/Library/Logs/Tad/main.log
+- on Windows: %USERPROFILE%\AppData\Roaming\Tad\main.log
