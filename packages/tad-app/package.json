@@ -67,7 +67,7 @@
     "@types/slickgrid": "^2.1.31",
     "ajv": "^6.9.1",
     "css-loader": "^6.5.1",
-    "electron": "17.0.0",
+    "electron": "18.0.3",
     "electron-builder": "^23.0.2",
     "electron-notarize": "^1.1.1",
     "file-loader": "^6.2.0",
