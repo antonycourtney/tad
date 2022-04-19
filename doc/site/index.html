@@ -101,27 +101,27 @@
   <div id="news" class="section news-section">
     <div class="container">
     <h3>News</h3>
-    <p class="lead">Tad 0.9.0 - Nov. 25, 2018</p>
+    <p class="lead">Tad 0.10.0 - Apr. 19, 2022</p>
     <P>
     A packaged installer for Tad is available for macOS, Linux and Windows.
     <P>
-    Tad is still new and under development so there is a reasonable chance you'll encounter bugs, UI annoyances, and corner cases while using Tad. Please report them via <strong>Help...Send Feedback</strong>.
+    Tad is a perpetual work-in-progress hobby project, so you are likely to encounter bugs, UI annoyances, and corner cases. Please report them via <strong>Help...Send Feedback</strong>.
     <P>
     If you're comfortable with that caveat, pick your platform and install:
     <P class="download">
       <a id="download-latest-release" class="btn btn-default"
-        href="https://github.com/antonycourtney/tad/releases/download/v0.9.0/tad-0.9.0.dmg">
+        href="https://github.com/antonycourtney/tad/releases/download/v0.10.0/tad-0.10.0.dmg">
         <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
         Download for Mac
       </a>
       <a id="download-latest-release" class="btn btn-default"
-        href="https://github.com/antonycourtney/tad/releases/download/v0.9.0/tad_0.9.0_amd64.deb"
+        href="https://github.com/antonycourtney/tad/releases/download/v0.10.0/tad_0.10.0_amd64.deb"
         >
         <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
         Download for Linux
       </a>
       <a id="download-latest-release" class="btn btn-default"
-        href="https://github.com/antonycourtney/tad/releases/download/v0.9.0/Tad.Setup.0.9.0.exe">
+        href="https://github.com/antonycourtney/tad/releases/download/v0.10.0/Tad.Setup.0.10.0.exe">
         <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
         Download for Windows
       </a>
@@ -167,6 +167,27 @@
     <div class="container">
     <h3>Release Notes</h3>
     <div class="release-section">
+      <h4>Tad 0.10.0 - Apr. 19, 2022</h4>
+      <P>
+      <h5>New Features</h5>
+      <ul>
+        <li>Tad now uses <a href="https://duckdb.org/">DuckDb</a> instead of SQLite, enabling much better load times and interactive performance, especially for large data files.
+        <li>Added direct support for Parquet and compressed CSV files.
+        <li>Added a new <i>Data Sources</i> sidebar showing available tables, data files and folders, and allowing fast switching between them.
+        <li>Tad can open DuckDb and SQLite Database files: <pre>$ tad myDatabase.duckdb</pre> or <pre>$ tad myDatabase.sqlite</pre></li>
+        <li>Ability to open filesystem directories directly for quick browsing and exploration of collections of tabular data files.
+      </ul>
+      <h5>Internal Changes</h5>
+      This release is a major restructuring and rewrite of the Tad internals:
+      <ul>
+        <li>Implementation now structured as a <a href="https://lerna.js.org/">Lerna</a> monorepo, split into 12 sub-modules.
+        <li>Implementation ported to TypeScript and UI code updated to React Hooks
+        <li>Main pivot table React component (tadviewer) built as an independent module, enabling embedding in other applications</li>
+        <li>Experimental proof-of-concept packaging of Tad as a web app and a reference web server, illustrating how Tad could be deployed on the web.</li>
+        <li>Experimental proof-of-concept support for other database backends (Snowflake, BigQuery, AWS Athena)
+        </ul>
+    </div>
+    <div>
       <h4>Tad 0.9.0 - Nov. 25, 2018</h4>
       <P>
       <h5>New Features</h5>
