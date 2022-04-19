@@ -1,0 +1,7 @@
+{
+    "extends": "standard",
+    "parser": "babel-eslint",
+    "plugins": [
+        "standard", "flowtype", "react"
+    ]
+}

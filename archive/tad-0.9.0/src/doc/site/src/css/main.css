@@ -1,0 +1,125 @@
+body{
+	font-family: 'Lato', sans-serif;
+	color: #35556f;
+}
+header{
+	background-image: -moz-linear-gradient( 80deg, rgb(10,110,191) 0%, rgb(29,139,224) 100%);
+	background-image: -webkit-linear-gradient( 80deg, rgb(10,110,191) 0%, rgb(29,139,224) 100%);
+	background-image: -ms-linear-gradient( 80deg, rgb(10,110,191) 0%, rgb(29,139,224) 100%);
+	color: #FFF;
+	text-align: center;
+	padding-bottom: 72px;
+}
+header .navbar-nav > li > a{
+	padding-top: 22px;
+}
+.navbar-brand img{
+	max-width: 70px;
+}
+h1{
+	font-size: 50px;
+	color: #FFF;
+	font-weight: 100;
+	margin-top:100px;
+}
+h1.ornament{
+	background-image: url(../images/ornament.png);
+	background-repeat: no-repeat;
+	background-position: bottom center;
+	padding-bottom: 51px;
+}
+.screenshot-holder{
+	margin-top: 48px;
+	margin-bottom:44px;
+}
+.screenshot-holder img{
+	max-width: 100%;
+	box-shadow: 0px 10px 25px 4px rgba(18, 49, 74, 0.25);
+}
+.btn-default{
+	color: #0072ce;
+	font-size: 22px;
+	margin-top:10px;
+	border-radius: 16px;
+	font-weight: 700;
+	min-width: 217px;
+}
+.navbar-brand{
+	padding-top: 22px;
+	font-weight: 600;
+	font-size: 40px;
+}
+.features-section {
+	text-align: center;
+	font-size: 17px;
+	padding-bottom: 60px;
+}
+.features-section p strong{
+	color:#0072ce;
+}
+.features-section .specs-holder img{
+	max-width: 55px;
+}
+.features-section .specs-holder{
+	margin-top:60px;
+	padding: 0 70px;
+}
+.features-section .specs-holder p{
+	margin-top:28px;
+	line-height: 28px;
+}
+.release-section {
+	margin-top: 32px;
+}
+.download {
+	text-align: center;
+}
+footer{
+	text-align: center;
+}
+footer p{
+	font-size: 14px;
+}
+footer .container{
+	border-top:1px solid #cce3f5;
+	padding: 25px 15px;
+}
+.section .container {
+	border-top:1px solid #cce3f5;
+	padding-bottom: 25px;
+}
+footer p a{
+	font-weight: bold;
+	color:#35556f;
+}
+@media (max-width:1199px){
+	.features-section .specs-holder{
+		padding: 0 20px;
+	}
+}
+@media (max-width:991px){
+	body{
+		font-size: 14px;
+	}
+	h1{
+		font-size: 35px;
+	}
+	p{
+		font-size:14px;
+	}
+
+}
+@media (max-width:767px){
+	.navbar-header{
+		min-height: 60px;
+	}
+	.navbar-default .navbar-toggle{
+		background: #FFF;
+	}
+	.navbar-default .navbar-toggle .icon-bar{
+		background: #1d8be0;
+	}
+	header .navbar-nav > li > a{
+		font-size: 18px;
+	}
+}

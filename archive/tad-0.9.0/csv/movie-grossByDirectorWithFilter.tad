@@ -1,0 +1,93 @@
+{
+  "tadFileFormatVersion": 1,
+  "contents": {
+    "targetPath": "/Users/antony/data/movie_metadata.csv",
+    "viewParams": {
+      "aggMap": {},
+      "columnFormats": {},
+      "defaultFormats": {
+        "boolean": {
+          "commas": true,
+          "decimalPlaces": 0
+        },
+        "integer": {
+          "commas": true,
+          "decimalPlaces": 0
+        },
+        "real": {
+          "commas": true,
+          "decimalPlaces": 2
+        },
+        "text": {
+          "urlsAsHyperlinks": true
+        }
+      },
+      "displayColumns": [
+        "gross",
+        "movie_imdb_link",
+        "budget"
+      ],
+      "filterExp": {
+        "expType": "FilterExp",
+        "op": "AND",
+        "opArgs": [
+          {
+            "arg": {
+              "colName": "gross",
+              "expType": "ColRef"
+            },
+            "expType": "UnaryRelExp",
+            "op": "NOTNULL"
+          },
+          {
+            "arg": {
+              "colName": "budget",
+              "expType": "ColRef"
+            },
+            "expType": "UnaryRelExp",
+            "op": "NOTNULL"
+          },
+          {
+            "expType": "BinRelExp",
+            "lhs": {
+              "colName": "budget",
+              "expType": "ColRef"
+            },
+            "op": "GE",
+            "rhs": {
+              "expType": "ConstVal",
+              "val": 10000000
+            }
+          }
+        ]
+      },
+      "openPaths": {
+        "_rep": {
+          "\"Ireland\"": {
+            "\"Joel Schumacher\"": {},
+            "\"Neil Jordan\"": {},
+            "\"Steven Soderbergh\"": {}
+          },
+          "\"Sweden\"": {},
+          "\"USA\"": {
+            "\"Steven Spielberg\"": {},
+            "\"Tim Burton\"": {}
+          }
+        }
+      },
+      "pivotLeafColumn": "movie_title",
+      "showHiddenCols": false,
+      "showRoot": true,
+      "sortKey": [
+        [
+          "gross",
+          false
+        ]
+      ],
+      "vpivots": [
+        "country",
+        "director_name"
+      ]
+    }
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "name": "tad",
+  "productName": "Tad",
+  "description": "Tabular data viewer",
+  "version": "0.9.0",
+  "author": "Antony Courtney <antony@antonycourtney.com> (http://www.antonycourtney.com)",
+  "repository": "https://github.com/antonycourtney/tad",
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0",
+    "@babel/runtime": "^7.1.2",
+    "@blueprintjs/core": "^3.7.0",
+    "bootstrap": "^4.1.3",
+    "byline": "^5.0.0",
+    "clipboard": "^2.0.1",
+    "command-line-args": "^5.0.2",
+    "command-line-usage": "^5.0.5",
+    "console.table": "^0.10.0",
+    "csv-sniffer": "^0.1.1",
+    "d3-array": "^1.2.4",
+    "d3-fetch": "1.1.2",
+    "electron-log": "^2.2.17",
+    "electron-updater": "^3.1.2",
+    "es6-promise": "^4.2.5",
+    "eslint-plugin-react": "^7.11.1",
+    "fast-csv": "^2.4.1",
+    "gauge": "^2.7.4",
+    "he": "^1.2.0",
+    "immutable": "^3.8.2",
+    "isomorphic-fetch": "^2.2.1",
+    "jquery": "^3.3.1",
+    "jsesc": "^2.5.1",
+    "lodash": "^4.17.11",
+    "mkdirp": "^0.5.1",
+    "oneref": "0.3.2",
+    "react": "^16.5.2",
+    "react-addons-css-transition-group": "^15.6.2",
+    "react-dnd": "^5.0.0",
+    "react-dnd-html5-backend": "^5.0.1",
+    "react-dom": "^16.5.2",
+    "react-select": "^2.1.0",
+    "react-window-size-listener": "^1.2.1",
+    "slickgrid-es6": "2.1.1",
+    "sqlite": "3.0.0",
+    "sqlite-parser": "^1.0.1",
+    "sqlite3": "git+https://github.com/antonycourtney/node-sqlite3.git",
+    "through": "^2.3.8",
+    "url-regex": "git+https://github.com/antonycourtney/url-regex.git"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "@babel/node": "^7.0.0",
+    "@babel/plugin-proposal-class-properties": "^7.1.0",
+    "@babel/plugin-transform-flow-strip-types": "^7.0.0",
+    "@babel/plugin-transform-runtime": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/preset-flow": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/preset-stage-3": "^7.0.0",
+    "@blueprintjs/icons": "^3.2.0",
+    "ajv": "^6.5.4",
+    "babel-eslint": "^10.0.1",
+    "babel-loader": "^8.0.4",
+    "blue-tape": "^1.0.0",
+    "cpx": "^1.5.0",
+    "css-loader": "^1.0.0",
+    "difflet": "^1.0.1",
+    "electron": "3.0.5",
+    "electron-builder": "^20.28.4",
+    "electron-packager": "^12.2.0",
+    "electron-rebuild": "^1.8.2",
+    "eslint": "^5.7.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-flowtype": "^3.0.0",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "file-loader": "^2.0.0",
+    "flow-bin": "^0.83.0",
+    "image-webpack-loader": "^4.4.0",
+    "jquery": "^3.3.1",
+    "json-loader": "^0.5.7",
+    "leaked-handles": "^5.2.0",
+    "less": "^3.8.1",
+    "less-loader": "^4.1.0",
+    "node-gyp": "^3.8.0",
+    "source-map-loader": "^0.2.4",
+    "standard": "^12.0.1",
+    "style-loader": "^0.23.1",
+    "tap-difflet": "^0.7.1",
+    "tap-spec": "^5.0.0",
+    "tap-summary": "^4.0.0",
+    "tape": "^4.9.1",
+    "uglify-js": "^3.4.9",
+    "webpack": "^4.22.0",
+    "webpack-cli": "^3.1.2"
+  },
+  "main": "./build/main.bundle.js",
+  "scripts": {
+    "build:html": "mkdirp build && cp -r html/* build ",
+    "build:icon": "mkdirp buildRes && cp res/AppIcon.icns buildRes/icon.icns",
+    "build-assets": "npm run build:html && npm run build:icon",
+    "build-dev": "npm run build-assets && webpack --mode development",
+    "build-prod": "npm run build-assets && webpack --mode production",
+    "build-site": "mkdirp docs && cp -r src/doc/site/src/* docs",
+    "clean": "rm -rf build/*",
+    "csvimport": "electron build/csvimport.bundle.js",
+    "dist": "build",
+    "publish": "./tools/publish.sh",
+    "electron-rebuild": "electron-rebuild -l -p -f -w sqlite3",
+    "lint": "eslint .",
+    "pack": "build --dir",
+    "runQuery": "babel-node --presets es2015,react ./test/runQuery.js",
+    "start": "electron .",
+    "test": "flow && npm run unit-test",
+    "format-test": "standard src/*.js src/js/*.js src/js/**/*.js test/*.js",
+    "electron-version": "ELECTRON_RUN_AS_NODE=true && electron --version",
+    "unit-test": "ELECTRON_RUN_AS_NODE=true && electron build/allTests.bundle.js",
+    "test-resnap": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && ELECTRON_RUN_AS_NODE=true && electron -- -u build/allTests.bundle.js",
+    "test-babel": "flow && standard src/*.js src/js/*.js src/js/**/*.js test/*.js && babel-node --presets es2015,react ./test/runAllTests.js",
+    "test-node": "node build/allTests.bundle.js",
+    "test-node-prof": "node --prof build/allTests.bundle.js",
+    "test-prof": "babel-node --prof --presets es2015,react ./test/runAllTests.js",
+    "webpack:watch": "webpack --mode development --watch"
+  },
+  "standard": {
+    "ignore": [
+      "webpack.config.js"
+    ],
+    "parser": "babel-eslint",
+    "plugins": [
+      "flowtype"
+    ]
+  },
+  "build": {
+    "appId": "com.antonycourtney.tad",
+    "directories": {
+      "buildResources": "buildRes"
+    },
+    "extraResources": [
+      "tad.sh",
+      "examples"
+    ],
+    "files": [
+      "build",
+      "node_modules"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "csv",
+        "name": "Comma Separated Values",
+        "role": "Viewer"
+      },
+      {
+        "ext": "tsv",
+        "name": "Tab Separated Values",
+        "role": "Viewer"
+      },
+      {
+        "ext": "tad",
+        "name": "Tad Saved Workspace",
+        "role": "Editor"
+      }
+    ],
+    "linux": {
+      "target": [
+        "deb",
+        "rpm",
+        "tar.bz2"
+      ]
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "zip",
+        "dmg"
+      ]
+    },
+    "nodeGypRebuild": false,
+    "nsis": {
+      "perMachine": true
+    }
+  },
+  "license": "MIT"
+}
