@@ -1,4 +1,5 @@
 build
+buildRes
 dist
 Tad-darwin-x64
 release
@@ -6,3 +7,6 @@ node_modules
 *.map
 .DS_Store
 npm-debug.log
+.vscode
+lerna-debug.log
+package-lock.json

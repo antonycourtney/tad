@@ -1,0 +1,40 @@
+{
+  "name": "reltab-duckdb",
+  "version": "0.10.0",
+  "description": "sqlite driver for reltab",
+  "main": "dist/reltab-duckdb.js",
+  "types": "dist/reltab-duckdb.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "clean": "rimraf dist",
+    "build": "tsc -p tsconfig-build.json",
+    "test": "AWS_PROFILE=dev ./scripts/run-tests-locally.sh",
+    "test:run": "jest --config jest.config.json --no-cache"
+  },
+  "keywords": [
+    "relational",
+    "sql",
+    "database",
+    "sqlite"
+  ],
+  "author": "Antony Courtney <antony@antonycourtney.com>",
+  "license": "MIT",
+  "dependencies": {
+    "loglevel": "^1.8.0",
+    "ac-node-duckdb": "^0.0.82",
+    "pretty-hrtime": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.4.0",
+    "@types/node": "^16.4.13",
+    "jest": "^27.4.6",
+    "mkdirp": "^1.0.4",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.2",
+    "typescript": "^4.5.4",
+    "reltab": "^0.10.0"
+  },
+  "peerDependencies": {
+    "reltab": "^0.10.0"
+  }
+}

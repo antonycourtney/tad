@@ -1,0 +1,56 @@
+{
+  "name": "tadweb-server",
+  "version": "0.10.0",
+  "description": "ExpressJS based web server for Tad",
+  "main": "dist/server.js",
+  "scripts": {
+    "prepublish": "npm test",
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "start": "npm run build && node dist/server.js",
+    "testClient": "node dist/testClient.js",
+    "test": ""
+  },
+  "keywords": [
+    "relational",
+    "sql",
+    "database",
+    "sqlite",
+    "Express",
+    "TypeScript",
+    "web",
+    "webserver",
+    "tad"
+  ],
+  "author": "Antony Courtney <antony@antonycourtney.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/command-line-args": "^5.2.0",
+    "body-parser": "^1.19.1",
+    "command-line-args": "^5.2.0",
+    "express": "^4.17.2",
+    "express-validator": "^6.14.0",
+    "loglevel": "^1.8.0",
+    "node-fetch": "^3.1.0",
+    "reltab": "^0.10.0",
+    "reltab-aws-athena": "^0.10.0",
+    "reltab-bigquery": "^0.10.0",
+    "reltab-snowflake": "^0.10.0",
+    "reltab-duckdb": "^0.10.0",
+    "tadweb-app": "^0.10.0",
+    "typed-promisify": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/jest": "^27.4.0",
+    "@types/node": "^16.4.13",
+    "@types/node-fetch": "^3.0.2",
+    "jest": "^27.4.6",
+    "mkdirp": "^1.0.4",
+    "nodemon": "^2.0.15",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.2",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  }
+}

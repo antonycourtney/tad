@@ -1,0 +1,84 @@
+.sidebar {
+  background-color: #efefef;
+  display: inherit;
+  flex: 0 0 auto;
+  height: 100%;
+  transition-duration: 0.3s;
+  overflow: none;
+}
+
+.sidebar-collapsed {
+  width: 0px;
+  min-width: 0px;
+}
+
+.sidebar-expanded {
+  width: 328px;
+  min-width: 328px;
+}
+
+.sidebar-content {
+  visibility: hidden;
+  height: 100%;
+  width: 328px;
+  min-width: 328px;
+  overflow-y: auto;
+}
+
+.sidebar-content-inner {
+  margin-left: 8px;
+  margin-top: 8px;
+  margin-right: 16px;
+  width: 300px;
+}
+
+.sidebar-placeholder {
+  /*  
+  position: absolute;
+  left: 0;
+  top: 0;
+*/
+  margin-left: 8px;
+  margin-top: 8px;
+}
+
+.addl-col-props {
+  margin-top: 40px;
+}
+
+.sidebar-expanded > .sidebar-placeholder {
+  visibility: hidden;
+}
+
+.sidebar-expanded > .sidebar-content {
+  visibility: visible;
+}
+
+.show-root-label {
+  margin-left: 5px;
+}
+
+.root-check-group {
+  margin-left: 8px;
+}
+
+.format-col-select {
+  max-width: 140px;
+}
+
+.format-subpanel {
+  margin-top: 8px;
+}
+
+.format-decimals {
+  max-width: 80px;
+}
+
+.format-decimals .pt-input-group {
+  width: 40px;
+  max-width: 80px;
+}
+
+.num-format-panel input {
+  width: 40px;
+}

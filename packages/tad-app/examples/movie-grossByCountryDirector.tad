@@ -1,0 +1,51 @@
+{
+  "tadFileFormatVersion": 1,
+  "contents": {
+    "targetPath": "/Users/antony/data/movie_metadata.csv",
+    "viewParams": {
+      "aggMap": {},
+      "columnFormats": {},
+      "defaultFormats": {
+        "boolean": {
+          "commas": true,
+          "decimalPlaces": 0
+        },
+        "integer": {
+          "commas": true,
+          "decimalPlaces": 0
+        },
+        "real": {
+          "commas": true,
+          "decimalPlaces": 2
+        },
+        "text": {
+          "urlsAsHyperlinks": true
+        }
+      },
+      "displayColumns": [
+        "gross",
+        "movie_imdb_link"
+      ],
+      "openPaths": {
+        "_rep": {
+          "\"USA\"": {
+            "\"Steven Spielberg\"": {},
+            "\"Tim Burton\"": {}
+          }
+        }
+      },
+      "pivotLeafColumn": "movie_title",
+      "showRoot": true,
+      "sortKey": [
+        [
+          "gross",
+          false
+        ]
+      ],
+      "vpivots": [
+        "country",
+        "director_name"
+      ]
+    }
+  }
+}

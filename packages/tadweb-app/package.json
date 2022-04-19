@@ -1,0 +1,55 @@
+{
+  "name": "tadweb-app",
+  "version": "0.10.0",
+  "description": "Tabular data viewer web app",
+  "main": "dist/tadweb.bundle.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build:dir": "mkdirp dist",
+    "build:html": "cp -r html/* dist",
+    "build-assets": "npm run build:dir && npm run build:html",
+    "build-dev": "npm run build-assets && webpack --mode development",
+    "build-prod": "npm run build-assets && webpack --env prod --mode production",
+    "build": "npm run build-prod",
+    "prepublish": "npm run build",
+    "test": "",
+    "tsc": "tsc",
+    "watch": "webpack --mode development --watch",
+    "watch-prod": "webpack --env prod --mode production --watch"
+  },
+  "keywords": [
+    "relational",
+    "sql",
+    "database"
+  ],
+  "author": "Antony Courtney <antony@antonycourtney.com>",
+  "license": "MIT",
+  "dependencies": {
+    "loglevel": "^1.8.0",
+    "oneref": "^0.8.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "reltab": "^0.10.0",
+    "tadviewer": "^0.10.0"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.38",
+    "@types/react-dom": "^17.0.11",
+    "ajv": "^6.9.1",
+    "css-loader": "^6.5.1",
+    "file-loader": "^6.2.0",
+    "image-webpack-loader": "^8.0.1",
+    "less": "^3.13.1",
+    "less-loader": "^10.2.0",
+    "mkdirp": "^1.0.4",
+    "node-sass": "^7.0.1",
+    "resolve-url-loader": "^4.0.0",
+    "sass-loader": "^12.4.0",
+    "source-map-loader": "^3.0.1",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.2.6",
+    "webpack": "^5.65.0",
+    "webpack-bundle-analyzer": "^4.5.0",
+    "webpack-cli": "^4.9.1"
+  }
+}

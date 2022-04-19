@@ -1,0 +1,1850 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`basic extend composed with project 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Job Family": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "_depth": 0,
+    },
+    Object {
+      "Job Family": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "_depth": 0,
+    },
+    Object {
+      "Job Family": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "_depth": 0,
+    },
+    Object {
+      "Job Family": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "_depth": 0,
+    },
+    Object {
+      "Job Family": "Safety",
+      "Name": "Hardy, Leonard",
+      "TCOE": 211941,
+      "Title": "Chief Safety Officer",
+      "_depth": 0,
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Job Family": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Name",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Title",
+      },
+      "_depth": Object {
+        "columnType": "INTEGER",
+        "displayName": "_depth",
+      },
+    },
+    "columns": Array [
+      "Name",
+      "Title",
+      "Job Family",
+      "TCOE",
+      "_depth",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
+exports[`basic extend with const col 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 312461,
+      "Job Family": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+      "_depth": 0,
+    },
+    Object {
+      "Base": 298700,
+      "Job Family": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+      "_depth": 0,
+    },
+    Object {
+      "Base": 212647,
+      "Job Family": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+      "_depth": 0,
+    },
+    Object {
+      "Base": 206914,
+      "Job Family": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+      "_depth": 0,
+    },
+    Object {
+      "Base": 152125,
+      "Job Family": "Safety",
+      "Name": "Hardy, Leonard",
+      "TCOE": 211941,
+      "Title": "Chief Safety Officer",
+      "Union": "Non-Represented",
+      "_depth": 0,
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Base": Object {
+        "columnType": "INTEGER",
+        "displayName": "Base",
+      },
+      "Job Family": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Name",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Title",
+      },
+      "Union": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Union",
+      },
+      "_depth": Object {
+        "columnType": "INTEGER",
+        "displayName": "_depth",
+      },
+    },
+    "columns": Array [
+      "Name",
+      "Title",
+      "Base",
+      "TCOE",
+      "Job Family",
+      "Union",
+      "_depth",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
+exports[`basic filter 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 312461,
+      "Job Family": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 298700,
+      "Job Family": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 212647,
+      "Job Family": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 206914,
+      "Job Family": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Base": Object {
+        "columnType": "INTEGER",
+        "displayName": "Base",
+      },
+      "Job Family": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Name",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Title",
+      },
+      "Union": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Union",
+      },
+    },
+    "columns": Array [
+      "Name",
+      "Title",
+      "Base",
+      "TCOE",
+      "Job Family",
+      "Union",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
+exports[`basic groupBy 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Job Family": "Executive Management",
+      "TCOE": 819582n,
+      "Title": "General Manager",
+    },
+    Object {
+      "Job Family": "Legal & Paralegal",
+      "TCOE": 321543n,
+      "Title": "General Counsel",
+    },
+    Object {
+      "Job Family": "Executive Management",
+      "TCOE": 288160n,
+      "Title": "Assistant General Manager Operations",
+    },
+    Object {
+      "Job Family": "Finance & Accounting",
+      "TCOE": 287139n,
+      "Title": "Controller-Treasurer",
+    },
+    Object {
+      "Job Family": "Executive Management",
+      "TCOE": 281548n,
+      "Title": "Deputy General Manager",
+    },
+    Object {
+      "Job Family": "Transportation Operations",
+      "TCOE": 238211n,
+      "Title": "Chief Transportation Officer",
+    },
+    Object {
+      "Job Family": "Legal & Paralegal",
+      "TCOE": 445028n,
+      "Title": "Senior Attorney",
+    },
+    Object {
+      "Job Family": "Engineering & Systems Engineering",
+      "TCOE": 209709n,
+      "Title": "Group Manager, Capital Projects",
+    },
+    Object {
+      "Job Family": "Engineering & Systems Engineering",
+      "TCOE": 212535n,
+      "Title": "Group Manager Systems Capital Prog",
+    },
+    Object {
+      "Job Family": "Safety",
+      "TCOE": 211941n,
+      "Title": "Chief Safety Officer",
+    },
+    Object {
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "TCOE": 128332n,
+      "Title": "Wayside Inspector",
+    },
+    Object {
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "TCOE": 124962n,
+      "Title": "Structures Inspector",
+    },
+    Object {
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "TCOE": 123432n,
+      "Title": "Vehicle Inspector",
+    },
+    Object {
+      "Job Family": "Police",
+      "TCOE": 127660n,
+      "Title": "Revenue Protection Guard",
+    },
+    Object {
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "TCOE": 104260n,
+      "Title": "Transit Vehicle Mechanic",
+    },
+    Object {
+      "Job Family": "Transportation Operations",
+      "TCOE": 118799n,
+      "Title": "Train Operator",
+    },
+    Object {
+      "Job Family": "Public Affairs & Marketing",
+      "TCOE": 181955n,
+      "Title": "Department Manager Gov't & Comm Rel",
+    },
+    Object {
+      "Job Family": "Transportation Operations",
+      "TCOE": 352988n,
+      "Title": "Station Agent",
+    },
+    Object {
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "TCOE": 113775n,
+      "Title": "Electrician",
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Base": Object {
+        "columnType": "INTEGER",
+        "displayName": "Base",
+      },
+      "Job Family": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Name",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Title",
+      },
+      "Union": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Union",
+      },
+    },
+    "columns": Array [
+      "Job Family",
+      "Title",
+      "TCOE",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
+exports[`basic project operator 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 312461,
+      "Job Family": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 298700,
+      "Job Family": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 238269,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Burrows, Matthew",
+      "TCOE": 321543,
+      "Title": "General Counsel",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 212647,
+      "Job Family": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 208744,
+      "Job Family": "Finance & Accounting",
+      "Name": "Schroeder, Scott",
+      "TCOE": 287139,
+      "Title": "Controller-Treasurer",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 206914,
+      "Job Family": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 170383,
+      "Job Family": "Transportation Operations",
+      "Name": "Crespo, Rodolfo",
+      "TCOE": 238211,
+      "Title": "Chief Transportation Officer",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 165470,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Lee, Thomas",
+      "TCOE": 224345,
+      "Title": "Senior Attorney",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 160289,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Nuetzel, Victoria",
+      "TCOE": 220683,
+      "Title": "Senior Attorney",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 157300,
+      "Job Family": "Engineering & Systems Engineering",
+      "Name": "Ruffa, Frank",
+      "TCOE": 209709,
+      "Title": "Group Manager, Capital Projects",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 152434,
+      "Job Family": "Engineering & Systems Engineering",
+      "Name": "Dupont, Jean-Luc",
+      "TCOE": 212535,
+      "Title": "Group Manager Systems Capital Prog",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 152125,
+      "Job Family": "Safety",
+      "Name": "Hardy, Leonard",
+      "TCOE": 211941,
+      "Title": "Chief Safety Officer",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Hui, Sam",
+      "TCOE": 128332,
+      "Title": "Wayside Inspector",
+      "Union": "SEIU",
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Reinhardt, Michael",
+      "TCOE": 124962,
+      "Title": "Structures Inspector",
+      "Union": "SEIU",
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Estrada, Phillip",
+      "TCOE": 123432,
+      "Title": "Vehicle Inspector",
+      "Union": "SEIU",
+    },
+    Object {
+      "Base": 75701,
+      "Job Family": "Police",
+      "Name": "Ornellas, Robert",
+      "TCOE": 127660,
+      "Title": "Revenue Protection Guard",
+      "Union": "BPOA",
+    },
+    Object {
+      "Base": 74068,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Smith, Daniel",
+      "TCOE": 104260,
+      "Title": "Transit Vehicle Mechanic",
+      "Union": "SEIU",
+    },
+    Object {
+      "Base": 61184,
+      "Job Family": "Transportation Operations",
+      "Name": "Smith, Westley",
+      "TCOE": 118799,
+      "Title": "Train Operator",
+      "Union": "ATU",
+    },
+    Object {
+      "Base": 130035,
+      "Job Family": "Public Affairs & Marketing",
+      "Name": "Hamill, Kerry",
+      "TCOE": 181955,
+      "Title": "Department Manager Gov't & Comm Rel",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 60790,
+      "Job Family": "Transportation Operations",
+      "Name": "Serrianni, Cheryl",
+      "TCOE": 132030,
+      "Title": "Station Agent",
+      "Union": "ATU",
+    },
+    Object {
+      "Base": 60781,
+      "Job Family": "Transportation Operations",
+      "Name": "Nagel, Kevin",
+      "TCOE": 105854,
+      "Title": "Station Agent",
+      "Union": "ATU",
+    },
+    Object {
+      "Base": 60771,
+      "Job Family": "Transportation Operations",
+      "Name": "Riggs, Joshua",
+      "TCOE": 115104,
+      "Title": "Station Agent",
+      "Union": "ATU",
+    },
+    Object {
+      "Base": 59817,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Knight, Joshua",
+      "TCOE": 113775,
+      "Title": "Electrician",
+      "Union": "SEIU",
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Base": Object {
+        "columnType": "INTEGER",
+        "displayName": "Base",
+      },
+      "Job Family": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Name",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Title",
+      },
+      "Union": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Union",
+      },
+    },
+    "columns": Array [
+      "Job Family",
+      "Title",
+      "Union",
+      "Name",
+      "Base",
+      "TCOE",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
+exports[`basic sort 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 312461,
+      "Job Family": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 206914,
+      "Job Family": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 298700,
+      "Job Family": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 152125,
+      "Job Family": "Safety",
+      "Name": "Hardy, Leonard",
+      "TCOE": 211941,
+      "Title": "Chief Safety Officer",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 212647,
+      "Job Family": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Base": Object {
+        "columnType": "INTEGER",
+        "displayName": "Base",
+      },
+      "Job Family": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Name",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Title",
+      },
+      "Union": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Union",
+      },
+    },
+    "columns": Array [
+      "Name",
+      "Title",
+      "Base",
+      "TCOE",
+      "Job Family",
+      "Union",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
+exports[`chained extend 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 312461,
+      "Job Family": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 298700,
+      "Job Family": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 238269,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Burrows, Matthew",
+      "TCOE": 321543,
+      "Title": "General Counsel",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 212647,
+      "Job Family": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 208744,
+      "Job Family": "Finance & Accounting",
+      "Name": "Schroeder, Scott",
+      "TCOE": 287139,
+      "Title": "Controller-Treasurer",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 206914,
+      "Job Family": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 170383,
+      "Job Family": "Transportation Operations",
+      "Name": "Crespo, Rodolfo",
+      "TCOE": 238211,
+      "Title": "Chief Transportation Officer",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 165470,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Lee, Thomas",
+      "TCOE": 224345,
+      "Title": "Senior Attorney",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 160289,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Nuetzel, Victoria",
+      "TCOE": 220683,
+      "Title": "Senior Attorney",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 157300,
+      "Job Family": "Engineering & Systems Engineering",
+      "Name": "Ruffa, Frank",
+      "TCOE": 209709,
+      "Title": "Group Manager, Capital Projects",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 152434,
+      "Job Family": "Engineering & Systems Engineering",
+      "Name": "Dupont, Jean-Luc",
+      "TCOE": 212535,
+      "Title": "Group Manager Systems Capital Prog",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 152125,
+      "Job Family": "Safety",
+      "Name": "Hardy, Leonard",
+      "TCOE": 211941,
+      "Title": "Chief Safety Officer",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Hui, Sam",
+      "TCOE": 128332,
+      "Title": "Wayside Inspector",
+      "Union": "SEIU",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Reinhardt, Michael",
+      "TCOE": 124962,
+      "Title": "Structures Inspector",
+      "Union": "SEIU",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Estrada, Phillip",
+      "TCOE": 123432,
+      "Title": "Vehicle Inspector",
+      "Union": "SEIU",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 75701,
+      "Job Family": "Police",
+      "Name": "Ornellas, Robert",
+      "TCOE": 127660,
+      "Title": "Revenue Protection Guard",
+      "Union": "BPOA",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 74068,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Smith, Daniel",
+      "TCOE": 104260,
+      "Title": "Transit Vehicle Mechanic",
+      "Union": "SEIU",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 61184,
+      "Job Family": "Transportation Operations",
+      "Name": "Smith, Westley",
+      "TCOE": 118799,
+      "Title": "Train Operator",
+      "Union": "ATU",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 130035,
+      "Job Family": "Public Affairs & Marketing",
+      "Name": "Hamill, Kerry",
+      "TCOE": 181955,
+      "Title": "Department Manager Gov't & Comm Rel",
+      "Union": "Non-Represented",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 60790,
+      "Job Family": "Transportation Operations",
+      "Name": "Serrianni, Cheryl",
+      "TCOE": 132030,
+      "Title": "Station Agent",
+      "Union": "ATU",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 60781,
+      "Job Family": "Transportation Operations",
+      "Name": "Nagel, Kevin",
+      "TCOE": 105854,
+      "Title": "Station Agent",
+      "Union": "ATU",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 60771,
+      "Job Family": "Transportation Operations",
+      "Name": "Riggs, Joshua",
+      "TCOE": 115104,
+      "Title": "Station Agent",
+      "Union": "ATU",
+      "_depth": 0,
+      "_pivot": null,
+    },
+    Object {
+      "Base": 59817,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Knight, Joshua",
+      "TCOE": 113775,
+      "Title": "Electrician",
+      "Union": "SEIU",
+      "_depth": 0,
+      "_pivot": null,
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Base": Object {
+        "columnType": "INTEGER",
+        "displayName": "Base",
+      },
+      "Job Family": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Name",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Title",
+      },
+      "Union": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Union",
+      },
+      "_depth": Object {
+        "columnType": "INTEGER",
+        "displayName": "_depth",
+      },
+      "_pivot": Object {
+        "columnType": "VARCHAR",
+        "displayName": "_pivot",
+      },
+    },
+    "columns": Array [
+      "Name",
+      "Title",
+      "Base",
+      "TCOE",
+      "Job Family",
+      "Union",
+      "_pivot",
+      "_depth",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
+exports[`compound key sort 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 298700,
+      "Job Family": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 312461,
+      "Job Family": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 212647,
+      "Job Family": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 206914,
+      "Job Family": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 152125,
+      "Job Family": "Safety",
+      "Name": "Hardy, Leonard",
+      "TCOE": 211941,
+      "Title": "Chief Safety Officer",
+      "Union": "Non-Represented",
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Base": Object {
+        "columnType": "INTEGER",
+        "displayName": "Base",
+      },
+      "Job Family": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Name",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Title",
+      },
+      "Union": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Union",
+      },
+    },
+    "columns": Array [
+      "Name",
+      "Title",
+      "Base",
+      "TCOE",
+      "Job Family",
+      "Union",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
+exports[`getSourceInfo basics 1`] = `
+Object {
+  "displayName": ":memory:",
+  "id": ":memory:",
+  "isContainer": true,
+  "kind": "Database",
+}
+`;
+
+exports[`https import test 1`] = `
+"{
+  \\"schema\\": {
+    \\"dialect\\": \\"duckdb\\",
+    \\"columns\\": [
+      \\"id\\",
+      \\"bool_col\\",
+      \\"int_col\\",
+      \\"string_col\\",
+      \\"timestamp_col\\"
+    ],
+    \\"columnMetadata\\": {
+      \\"id\\": {
+        \\"displayName\\": \\"id\\",
+        \\"columnType\\": \\"INTEGER\\"
+      },
+      \\"bool_col\\": {
+        \\"displayName\\": \\"bool_col\\",
+        \\"columnType\\": \\"BOOLEAN\\"
+      },
+      \\"int_col\\": {
+        \\"displayName\\": \\"int_col\\",
+        \\"columnType\\": \\"INTEGER\\"
+      },
+      \\"string_col\\": {
+        \\"displayName\\": \\"string_col\\",
+        \\"columnType\\": \\"BLOB\\"
+      },
+      \\"timestamp_col\\": {
+        \\"displayName\\": \\"timestamp_col\\",
+        \\"columnType\\": \\"TIMESTAMP\\"
+      }
+    }
+  },
+  \\"rowData\\": [
+    {
+      \\"id\\": 4,
+      \\"bool_col\\": true,
+      \\"int_col\\": 0,
+      \\"string_col\\": {
+        \\"type\\": \\"Buffer\\",
+        \\"data\\": [
+          48
+        ]
+      },
+      \\"timestamp_col\\": 1235865600000
+    },
+    {
+      \\"id\\": 5,
+      \\"bool_col\\": false,
+      \\"int_col\\": 1,
+      \\"string_col\\": {
+        \\"type\\": \\"Buffer\\",
+        \\"data\\": [
+          49
+        ]
+      },
+      \\"timestamp_col\\": 1235865660000
+    },
+    {
+      \\"id\\": 6,
+      \\"bool_col\\": true,
+      \\"int_col\\": 0,
+      \\"string_col\\": {
+        \\"type\\": \\"Buffer\\",
+        \\"data\\": [
+          48
+        ]
+      },
+      \\"timestamp_col\\": 1238544000000
+    },
+    {
+      \\"id\\": 7,
+      \\"bool_col\\": false,
+      \\"int_col\\": 1,
+      \\"string_col\\": {
+        \\"type\\": \\"Buffer\\",
+        \\"data\\": [
+          49
+        ]
+      },
+      \\"timestamp_col\\": 1238544060000
+    },
+    {
+      \\"id\\": 2,
+      \\"bool_col\\": true,
+      \\"int_col\\": 0,
+      \\"string_col\\": {
+        \\"type\\": \\"Buffer\\",
+        \\"data\\": [
+          48
+        ]
+      },
+      \\"timestamp_col\\": 1233446400000
+    },
+    {
+      \\"id\\": 3,
+      \\"bool_col\\": false,
+      \\"int_col\\": 1,
+      \\"string_col\\": {
+        \\"type\\": \\"Buffer\\",
+        \\"data\\": [
+          49
+        ]
+      },
+      \\"timestamp_col\\": 1233446460000
+    },
+    {
+      \\"id\\": 0,
+      \\"bool_col\\": true,
+      \\"int_col\\": 0,
+      \\"string_col\\": {
+        \\"type\\": \\"Buffer\\",
+        \\"data\\": [
+          48
+        ]
+      },
+      \\"timestamp_col\\": 1230768000000
+    },
+    {
+      \\"id\\": 1,
+      \\"bool_col\\": false,
+      \\"int_col\\": 1,
+      \\"string_col\\": {
+        \\"type\\": \\"Buffer\\",
+        \\"data\\": [
+          49
+        ]
+      },
+      \\"timestamp_col\\": 1230768060000
+    }
+  ]
+}"
+`;
+
+exports[`https import test 2`] = `
+Array [
+  Array [
+    "4",
+    "true",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "03/01/09",
+    "0",
+    "2009-03-01T00:00:00.000Z",
+  ],
+  Array [
+    "5",
+    "false",
+    "1",
+    "1",
+    "1",
+    "10",
+    "1.100000023841858",
+    "10.1",
+    "03/01/09",
+    "1",
+    "2009-03-01T00:01:00.000Z",
+  ],
+  Array [
+    "6",
+    "true",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "04/01/09",
+    "0",
+    "2009-04-01T00:00:00.000Z",
+  ],
+  Array [
+    "7",
+    "false",
+    "1",
+    "1",
+    "1",
+    "10",
+    "1.100000023841858",
+    "10.1",
+    "04/01/09",
+    "1",
+    "2009-04-01T00:01:00.000Z",
+  ],
+  Array [
+    "2",
+    "true",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "02/01/09",
+    "0",
+    "2009-02-01T00:00:00.000Z",
+  ],
+  Array [
+    "3",
+    "false",
+    "1",
+    "1",
+    "1",
+    "10",
+    "1.100000023841858",
+    "10.1",
+    "02/01/09",
+    "1",
+    "2009-02-01T00:01:00.000Z",
+  ],
+  Array [
+    "0",
+    "true",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "01/01/09",
+    "0",
+    "2009-01-01T00:00:00.000Z",
+  ],
+  Array [
+    "1",
+    "false",
+    "1",
+    "1",
+    "1",
+    "10",
+    "1.100000023841858",
+    "10.1",
+    "01/01/09",
+    "1",
+    "2009-01-01T00:01:00.000Z",
+  ],
+]
+`;
+
+exports[`null const extend 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 312461,
+      "Job Family": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 298700,
+      "Job Family": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 238269,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Burrows, Matthew",
+      "TCOE": 321543,
+      "Title": "General Counsel",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 212647,
+      "Job Family": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 208744,
+      "Job Family": "Finance & Accounting",
+      "Name": "Schroeder, Scott",
+      "TCOE": 287139,
+      "Title": "Controller-Treasurer",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 206914,
+      "Job Family": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 170383,
+      "Job Family": "Transportation Operations",
+      "Name": "Crespo, Rodolfo",
+      "TCOE": 238211,
+      "Title": "Chief Transportation Officer",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 165470,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Lee, Thomas",
+      "TCOE": 224345,
+      "Title": "Senior Attorney",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 160289,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Nuetzel, Victoria",
+      "TCOE": 220683,
+      "Title": "Senior Attorney",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 157300,
+      "Job Family": "Engineering & Systems Engineering",
+      "Name": "Ruffa, Frank",
+      "TCOE": 209709,
+      "Title": "Group Manager, Capital Projects",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 152434,
+      "Job Family": "Engineering & Systems Engineering",
+      "Name": "Dupont, Jean-Luc",
+      "TCOE": 212535,
+      "Title": "Group Manager Systems Capital Prog",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 152125,
+      "Job Family": "Safety",
+      "Name": "Hardy, Leonard",
+      "TCOE": 211941,
+      "Title": "Chief Safety Officer",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Hui, Sam",
+      "TCOE": 128332,
+      "Title": "Wayside Inspector",
+      "Union": "SEIU",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Reinhardt, Michael",
+      "TCOE": 124962,
+      "Title": "Structures Inspector",
+      "Union": "SEIU",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Estrada, Phillip",
+      "TCOE": 123432,
+      "Title": "Vehicle Inspector",
+      "Union": "SEIU",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 75701,
+      "Job Family": "Police",
+      "Name": "Ornellas, Robert",
+      "TCOE": 127660,
+      "Title": "Revenue Protection Guard",
+      "Union": "BPOA",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 74068,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Smith, Daniel",
+      "TCOE": 104260,
+      "Title": "Transit Vehicle Mechanic",
+      "Union": "SEIU",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 61184,
+      "Job Family": "Transportation Operations",
+      "Name": "Smith, Westley",
+      "TCOE": 118799,
+      "Title": "Train Operator",
+      "Union": "ATU",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 130035,
+      "Job Family": "Public Affairs & Marketing",
+      "Name": "Hamill, Kerry",
+      "TCOE": 181955,
+      "Title": "Department Manager Gov't & Comm Rel",
+      "Union": "Non-Represented",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 60790,
+      "Job Family": "Transportation Operations",
+      "Name": "Serrianni, Cheryl",
+      "TCOE": 132030,
+      "Title": "Station Agent",
+      "Union": "ATU",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 60781,
+      "Job Family": "Transportation Operations",
+      "Name": "Nagel, Kevin",
+      "TCOE": 105854,
+      "Title": "Station Agent",
+      "Union": "ATU",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 60771,
+      "Job Family": "Transportation Operations",
+      "Name": "Riggs, Joshua",
+      "TCOE": 115104,
+      "Title": "Station Agent",
+      "Union": "ATU",
+      "_pivot": null,
+    },
+    Object {
+      "Base": 59817,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Knight, Joshua",
+      "TCOE": 113775,
+      "Title": "Electrician",
+      "Union": "SEIU",
+      "_pivot": null,
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Base": Object {
+        "columnType": "INTEGER",
+        "displayName": "Base",
+      },
+      "Job Family": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Name",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Title",
+      },
+      "Union": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Union",
+      },
+      "_pivot": Object {
+        "columnType": "VARCHAR",
+        "displayName": "_pivot",
+      },
+    },
+    "columns": Array [
+      "Name",
+      "Title",
+      "Base",
+      "TCOE",
+      "Job Family",
+      "Union",
+      "_pivot",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
+exports[`t1 - basic sqlite tableQuery 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "email": "john@doe.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "phoneNumber": 123456789n,
+    },
+    Object {
+      "email": "jane@doe.com",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "phoneNumber": 9876543210n,
+    },
+    Object {
+      "email": "james.bond@mi6.co.uk",
+      "firstName": "James",
+      "lastName": "Bond",
+      "phoneNumber": 612345678n,
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "email": Object {
+        "columnType": "VARCHAR",
+        "displayName": "email",
+      },
+      "firstName": Object {
+        "columnType": "VARCHAR",
+        "displayName": "firstName",
+      },
+      "lastName": Object {
+        "columnType": "VARCHAR",
+        "displayName": "lastName",
+      },
+      "phoneNumber": Object {
+        "columnType": "BIGINT",
+        "displayName": "phoneNumber",
+      },
+    },
+    "columns": Array [
+      "firstName",
+      "lastName",
+      "email",
+      "phoneNumber",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
+exports[`t2 - basic bart table query 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "Base": 312461,
+      "Job Family": "Executive Management",
+      "Name": "Crunican, Grace",
+      "TCOE": 399921,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 298700,
+      "Job Family": "Executive Management",
+      "Name": "Dugger, Dorothy",
+      "TCOE": 419661,
+      "Title": "General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 238269,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Burrows, Matthew",
+      "TCOE": 321543,
+      "Title": "General Counsel",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 212647,
+      "Job Family": "Executive Management",
+      "Name": "Oversier, Paul",
+      "TCOE": 288160,
+      "Title": "Assistant General Manager Operations",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 208744,
+      "Job Family": "Finance & Accounting",
+      "Name": "Schroeder, Scott",
+      "TCOE": 287139,
+      "Title": "Controller-Treasurer",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 206914,
+      "Job Family": "Executive Management",
+      "Name": "DeVaughn, Marcia",
+      "TCOE": 281548,
+      "Title": "Deputy General Manager",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 170383,
+      "Job Family": "Transportation Operations",
+      "Name": "Crespo, Rodolfo",
+      "TCOE": 238211,
+      "Title": "Chief Transportation Officer",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 165470,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Lee, Thomas",
+      "TCOE": 224345,
+      "Title": "Senior Attorney",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 160289,
+      "Job Family": "Legal & Paralegal",
+      "Name": "Nuetzel, Victoria",
+      "TCOE": 220683,
+      "Title": "Senior Attorney",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 157300,
+      "Job Family": "Engineering & Systems Engineering",
+      "Name": "Ruffa, Frank",
+      "TCOE": 209709,
+      "Title": "Group Manager, Capital Projects",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 152434,
+      "Job Family": "Engineering & Systems Engineering",
+      "Name": "Dupont, Jean-Luc",
+      "TCOE": 212535,
+      "Title": "Group Manager Systems Capital Prog",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 152125,
+      "Job Family": "Safety",
+      "Name": "Hardy, Leonard",
+      "TCOE": 211941,
+      "Title": "Chief Safety Officer",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Hui, Sam",
+      "TCOE": 128332,
+      "Title": "Wayside Inspector",
+      "Union": "SEIU",
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Reinhardt, Michael",
+      "TCOE": 124962,
+      "Title": "Structures Inspector",
+      "Union": "SEIU",
+    },
+    Object {
+      "Base": 77446,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Estrada, Phillip",
+      "TCOE": 123432,
+      "Title": "Vehicle Inspector",
+      "Union": "SEIU",
+    },
+    Object {
+      "Base": 75701,
+      "Job Family": "Police",
+      "Name": "Ornellas, Robert",
+      "TCOE": 127660,
+      "Title": "Revenue Protection Guard",
+      "Union": "BPOA",
+    },
+    Object {
+      "Base": 74068,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Smith, Daniel",
+      "TCOE": 104260,
+      "Title": "Transit Vehicle Mechanic",
+      "Union": "SEIU",
+    },
+    Object {
+      "Base": 61184,
+      "Job Family": "Transportation Operations",
+      "Name": "Smith, Westley",
+      "TCOE": 118799,
+      "Title": "Train Operator",
+      "Union": "ATU",
+    },
+    Object {
+      "Base": 130035,
+      "Job Family": "Public Affairs & Marketing",
+      "Name": "Hamill, Kerry",
+      "TCOE": 181955,
+      "Title": "Department Manager Gov't & Comm Rel",
+      "Union": "Non-Represented",
+    },
+    Object {
+      "Base": 60790,
+      "Job Family": "Transportation Operations",
+      "Name": "Serrianni, Cheryl",
+      "TCOE": 132030,
+      "Title": "Station Agent",
+      "Union": "ATU",
+    },
+    Object {
+      "Base": 60781,
+      "Job Family": "Transportation Operations",
+      "Name": "Nagel, Kevin",
+      "TCOE": 105854,
+      "Title": "Station Agent",
+      "Union": "ATU",
+    },
+    Object {
+      "Base": 60771,
+      "Job Family": "Transportation Operations",
+      "Name": "Riggs, Joshua",
+      "TCOE": 115104,
+      "Title": "Station Agent",
+      "Union": "ATU",
+    },
+    Object {
+      "Base": 59817,
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "Name": "Knight, Joshua",
+      "TCOE": 113775,
+      "Title": "Electrician",
+      "Union": "SEIU",
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "Base": Object {
+        "columnType": "INTEGER",
+        "displayName": "Base",
+      },
+      "Job Family": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Job Family",
+      },
+      "Name": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Name",
+      },
+      "TCOE": Object {
+        "columnType": "INTEGER",
+        "displayName": "TCOE",
+      },
+      "Title": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Title",
+      },
+      "Union": Object {
+        "columnType": "VARCHAR",
+        "displayName": "Union",
+      },
+    },
+    "columns": Array [
+      "Name",
+      "Title",
+      "Base",
+      "TCOE",
+      "Job Family",
+      "Union",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;

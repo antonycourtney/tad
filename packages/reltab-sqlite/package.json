@@ -1,0 +1,47 @@
+{
+  "name": "reltab-sqlite",
+  "version": "0.10.0",
+  "description": "sqlite driver for reltab",
+  "main": "dist/reltab-sqlite.js",
+  "types": "dist/reltab-sqlite.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "clean": "rimraf dist",
+    "build": "tsc -p tsconfig-build.json",
+    "test": "jest --config jest.config.json --no-cache"
+  },
+  "keywords": [
+    "relational",
+    "sql",
+    "database",
+    "sqlite"
+  ],
+  "author": "Antony Courtney <antony@antonycourtney.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/sqlite3": "^3.1.8",
+    "@types/through": "0.0.30",
+    "byline": "^5.0.0",
+    "csv-sniffer": "^0.1.1",
+    "fast-csv": "^4.3.6",
+    "gauge": "^4.0.0",
+    "loglevel": "^1.8.0",
+    "sqlite3": "^5.0.2",
+    "through": "^2.3.8",
+    "typed-promisify": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/byline": "^4.2.33",
+    "@types/jest": "^27.4.0",
+    "@types/node": "^16.4.13",
+    "jest": "^27.4.6",
+    "mkdirp": "^1.0.4",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.2",
+    "typescript": "^4.5.4",
+    "reltab": "^0.10.0"
+  },
+  "peerDependencies": {
+    "reltab": "^0.10.0"
+  }
+}

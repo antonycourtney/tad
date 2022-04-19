@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Tad Quick Start</title>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      .code {
+        font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="container">
+        <h1>Quick Start</h1>
+        <p class="lead">Welcome to Tad!</p>
+        <p>If you are reading this message, you have successfully installed the Tad desktop app!<p>
+        <h3>What Tad Is</h3>
+        The Tad desktop app lets you quickly explore tabular data files in several common file formats, including:
+        <br><br>
+        <dl class="row">
+        <dt class="col-sm-2"><code>.csv</code></dt>
+        <dd class="col-sm-10">The ubiquitous <a href="https://en.wikipedia.org/wiki/Comma-separated_values" onclick='tadOpenExternal(event,"https://en.wikipedia.org/wiki/Comma-separated_values")'>Comma Separated Values</a> file format</li></dd>
+        <dt class="col-sm-2"><code>.parquet</code></dt>
+        <dd class="col-sm-10"><a href="https://parquet.apache.org/" onclick='tadOpenExternal(event,"https://parquet.apache.org/")'>Apache Parquet</a>, an efficient binary columnar storage format for tabular data, especially useful for large datasets</dd>
+        <dt class="col-sm-2"><code>.duckdb</code></dt>
+        <dd class="col-sm-10"><a href="https://duckdb.org/" onclick='tadOpenExternal(event,"https://duckdb.org/")'>DuckDb</a> database files</dd>
+        <dt class="col-sm-2"><code>.sqlite</code></dt>
+        <dd class="col-sm-10"><a href="https://www.sqlite.org/index.html" onclick='tadOpenExternal(event,"https://www.sqlite.org/index.html")''>SQLite</a> database files</dd>
+        </dl>
+
+        <P>
+          The primary feature that Tad provides for exploring and analyzing files is a <a href="https://en.wikipedia.org/wiki/Pivot_table"
+          onclick='tadOpenExternal(event,"https://en.wikipedia.org/wiki/Pivot_table")'>pivot table</a>.
+          A Tad pivot table transforms a flat table of data into a hierarchical <i>tree table</i> by
+          grouping together rows that have the same value for some selected columns (the pivot columns),
+          and calculating aggregate values (like sum, min or max) for the other columns in each group.
+          Tad also supports multi-column sorts and compound filters on column values.
+        </P>
+        <h3>Launching Tad</h3>
+        <p>There are three ways to launch Tad:
+        <ol>
+          <li>Application Icon
+          <p>You can double click on the Tad application icon to open Tad.  Use <strong>File...Open</strong> and the standard file open dialog to open a tabular data file in any
+          of the supported file formats.
+          <li>Context Menu or Drag and Drop</li>
+          <p>The installation process registers Tad as a viewer for the supported file format extensions. On any <code>.csv</code> or <code>.parquet</code>file in the Finder (macOS) or Explorer (Windows), use <strong>Open With...</strong> and select <strong>Tad</strong> to open the file in Tad.
+          <li>From the Command Line
+          <div id="cmdLineSetup">
+          </div>
+          <P>
+          Once Tad is installed and available on your PATH, simply type:
+<pre>
+$ tad somefile.csv
+</pre>
+          to launch Tad to explore the file. You can also open <code>.tad</code> files (previously saved Tad view configurations) and all the
+          other supported file types via the command line.
+        </ol>
+        <h3>Basic Usage</h3>
+        <p>
+        You can explore the basics of Tad by opening this example CSV file (from the <a href="https://www.kaggle.com/carolzhangdc/imdb-5000-movie-dataset"
+          onclick='tadOpenExternal(event,"https://www.kaggle.com/carolzhangdc/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a> on Kaggle)
+        included in the Tad distribution:
+        <p>
+        <button class="btn btn-primary btn-lg"
+          onclick='tadOpenExample()'>
+        Open movie_metadata.csv
+        </button>
+        <p>
+        When you open a file in Tad, Tad automatically imports the data into an internal in-memory DuckDb database and
+        displays the tabular data in a grid. 
+        You can see the Tad pivot table controls by clicking the pivot icon
+        on the left of the Tad window:
+        <P>
+        <img src="images/tad-quickstart-1.png"></img>
+        <P>
+        This will open the sidebar:
+        <P>
+        <img src="images/tad-quickstart-2.png"></img>
+<!--        <P>
+        The primary feature that Tad provides for exploring and analyzing files is a <emph>pivot table</emph>.
+        Briefly, a pivot table is a transformation of a table into a hiearchical <emph>tree table</emph> by grouping all rows in the source table that have the same value for some columns (the pivot columns).
+        Multiple pivot columns result in a nested hierarchical structure, with each level of the hierarchy corresponding to one pivot column. Values of cells for non-pivoted columns at higher levels of the pivot table are determined by applying an <emph>aggregate function</emph> to all leaf rows underneath that row.
+-->
+        <P>
+        The name and type of each column are shown in the main <strong>Column Selector</strong> above.
+        The additional controls in the column selector enable you to quickly build a pivot table
+        to explore your data set:
+        <ul>
+          <li>Use the checkboxes under <strong>Pivot</strong> in the main column selector to choose columns for the pivot hierarchy.
+          <li>Use the checkboxes under <strong>Show</strong> in the main column selector to determine what columns are shown / hidden.
+          <li>Set the sort columns using either the checkboxes under <strong>Sort</strong> the main column selector or by clicking on column headers in the main grid.
+          </ul>
+        Additional controls for setting the order of columns, pivots and the sort key, and controlling aggregation and formatting rules are available under <strong>Additional Properties</strong> at the bottom of the side bar.
+        <h4>Filtering</h4>
+        <P>
+        Tad provides facilities for constructing a <emph>filter</emph> to select a subset of data. A filter consists of a collection of predicates that compare a value in that row (identified by column name) with a constant.
+        <P>
+        Activate the filter pane by clicking the <strong>Filter</strong> link at the bottom of the window:
+        <P>
+        <img src="images/tad-quickstart-filter-1.png"></img>
+        <P>
+        When opened, a (populated) filter dialog looks like this:
+        <P>
+        <img src="images/tad-quickstart-filter-2.png"></img>
+        <P>
+        Construct the filter by selecting the logical operator (AND or OR) <strong>(1)</strong> and editing individual predicate rows <strong>(2)</strong>.
+        Add more rows by pressing the <strong>+</strong> button <strong>(3)</strong>, and delete predicates by clicking the <strong>x</strong> button <strong>(4)</strong> next to that predicate.
+        <P>
+        Discard, test or commit your changes using the three buttons in the lower right of the pane:
+        <P>
+        <img src="images/tad-quickstart-filter-3.png"></img>
+        <P>
+        <h4>Combining Operations</h4>
+        The different operations in Tad can be combined to enable you to explore the underlying data set.
+        For example, here is a breakdown of top grossing movies by country and director:
+        <P>
+        <img src="images/tad-quickstart-3.png"></img>
+        <P>
+        This view was produced with the following actions, which you can try for yourself: 
+        <ul>
+        <li><b>Pivot</b> by <code>country</code> and <code>director</code> by clicking the checkboxes under <b>Pivot</b> (in
+          that order).  ()
+        <li>On the <b>Pivot Tree Leaf Level</b> drop-down (at the bottom of the column selector), select <code>movie title</code>
+        <li><b>Sort</b> by <code>gross</code>. Under <b>Additional Properties</b> > <b>Sort</b>, select <i>desc</i> for descending order for this column.
+        <li>Using the <b>Fiter</b> link under the grid, set the filter to <code>gross</code> <i>is not null</i></li>
+        <li>Under <b>Additional Properties</b> > <b>Order</b>, drag <code>gross</code> to the top of the list so it will be the
+        first column displayed after the pivot tree.
+        </ul>
+        Other useful features:
+        <ul>
+        <li>If you want to change the order of the pivots, use <b>Additional Properties</b> > <b>Pivot</b> 
+          and drag column names in the list of pivoted columns to adjust the order.
+        </li>
+        <li>
+          <b>Additional Properties</b> > <b>Aggregations</b> can be used to set the aggregation function (<code>sum</code>, <code>avg</code>, <code>min</code>, <code>max</code>, etc.)
+          of each column, used to calculate values for non-leaf cells at higher levels of the pivot tree. The default aggregation is chosen based on the column type (<code>uniq</code> for string columns, <code>sum</code> for numerics).
+          You can also disable aggregations for a column by selecting <code>null</code> as the aggregation function. 
+        </li>
+        <li><b>Additional Properties</b> > <b>Format</b> can be used to set formatting properties (number of decimal places, etc) of each column.  You can set defaults for each column type, 
+          or fomatting properties of a specific column.</li>
+        </ul>
+        <h4>Data Sources</h4>
+        Clicking the "databases" icon on the left of the Tad window will open the <i>Data Sources</i> sidebar. This will show
+        a hierarchical tree browser of data sources you have open. 
+        If you open a directory or folder, you will see a tree view of the folder hierarchy and tabular data
+        files supported formats, like this:
+        <P>
+        <img src="images/tad-data-sources.png"></img>
+        <P>
+        You can quickly switch between different tables or tabular data files by clicking on the individual tables or files
+        in the data sources tree.
+        If you open a <code>.duckdb</code> or <code>.sqlite</code> file, the file will appear as a top level node
+        in the data sources tree, with children for the tables contained in the file.
+<!--
+        <h3>Data Sources</h3>
+        <p>
+        If you work in data science, chances are you have no shortage of CSV files of your own to explore.
+        In addition to the <a href='#' onclick='tadOpenExample()'>movie_metadata.csv</a> sample file included with Tad, a few of my favorite data sources on the Internet are:
+        <ul>
+          <li><a href="https://www.kaggle.com/datasets" onclick='tadOpenExternal(event,"https://www.kaggle.com/datasets")'>Kaggle Datasets</a>. The <code>movie_metadata.csv</code> file used for many Tad examples is from the <a href="https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset"
+            onclick='tadOpenExternal(event,"https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset")'>IMDB 5000 Movie Dataset</a> on Kaggle.
+          <li><a href="https://github.com/metmuseum/openaccess" onclick='tadOpenExternal(event,"https://github.com/metmuseum/openaccess")'>Met Museum Open Access Initiative</a>. The Metropolitan Museum of Art recently made 420,000 artworks available online for unrestricted use. The catalog file <code>MetObjects.csv</code> available at the linked github repository is a good example for testing Tad's ability to handle larger CSV files. It's a 228MB CSV file with 420,000 rows of data. It takes about 13 sec to load and display this file in Tad on my late 2013 MacBook Pro.
+          <li>The <a href="https://github.com/fivethirtyeight/data" onclick='tadOpenExternal(event,"https://github.com/fivethirtyeight/data")'>FiveThirtyEight github repository</a> has many CSV files providing data behind the stories and interactives on the FiveThirtyEight web site.
+        </ul>
+-->
+        <h3>Going Further (Developers and Data Hackers)</h3>
+        <P>
+        If for some reason you want to see the gnarly details of the SQL queries that Tad is constructing and executing, you can use the <code>-f</code> option on the command line to keep Tad in the foreground and <code>--show-queries</code> to get Tad to print the generated SQL queries like so:
+<pre>
+$ tad -f --show-queries somefile.csv
+</pre>
+        Not for the faint-hearted.
+        <P>
+        <h3>And Finally...</h3>
+        <P>
+        Have fun! I hope you find Tad a useful utility for viewing and analyzing data. <a href="mailto:tad-feedback@tadviewer.com" onclick='tadOpenExternal(event,"mailto:tad-feedback@tadviewer.com")'>  Feedback welcome</a>.
+        <P>
+      </div>
+    </main>
+<script src="js/clipboard.min.js"></script>
+<script>
+  function titledPanel(title,content) {
+    return `
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">${title}</h4>
+  </div>
+  <div class="panel-body">
+  ${content}
+  </div>
+</div>`
+  }
+  function unixSetup(installCmd) {
+    const title = 'macOS'
+    const content=`
+    <P>To launch tad from the command line, you need to ensure the Tad launcher shell script is on your <code>PATH</code>. If you have administrative rights on your machine, run the following command to create a symbolic link to <code>tad.sh</code> in <code>/usr/local/bin</code>:
+  <br>
+  <br>
+  <div class="input-group">
+     <input type="text" id="install-cmd" class="form-control code" value="${installCmd}"></input>
+     <span class="input-group-btn">
+       <button class="btn btn-default" type="button" data-clipboard-target="#install-cmd">
+        <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>Copy
+       </button>
+     </span>
+  </div><!-- /input-group -->
+`
+    return titledPanel(title, content)
+  }
+  function winSetup(appDir) {
+    const title='Windows'
+    const content=`
+On Windows, you should use the Control Panel to add <code>${appDir}</code> to your <code>PATH</code> environment variable.
+`
+    return titledPanel(title, content)
+  }
+  async function init() {
+    new Clipboard('.btn')
+    const electron = require('electron')
+    const setupInfo = await electron.ipcRenderer.invoke('getSetupInfo');
+    console.log('setup info: ', setupInfo)
+    const {platform, appDir, appScriptPath, exeDir} = setupInfo
+    let installCmdHtml
+    if (platform === 'win32') {
+      installCmdHtml = winSetup(exeDir)
+    } else if (platform === 'darwin') {
+      const installCmd = `sudo ln -s ${appScriptPath} /usr/local/bin/tad`
+      installCmdHtml = unixSetup(installCmd)
+    }
+
+    if (installCmdHtml) {
+      const elem = document.getElementById('cmdLineSetup')
+      elem.innerHTML = installCmdHtml
+    }
+    
+    // install this globally so we can access in generated a tag:
+    window.tadOpenExternal = function (event,url) {
+      event.preventDefault()
+      console.log('tadOpenExternal: ', url)
+      electron.shell.openExternal(url)
+      return false
+    }
+
+    window.tadOpenExample = function () {
+      event.preventDefault()
+      electron.ipcRenderer.invoke('openExample');
+    }
+  }
+  window.onload = init
+
+</script>
+</body>
+</html>

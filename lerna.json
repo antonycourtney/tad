@@ -1,0 +1,9 @@
+{
+  "packages": ["packages/*"],
+  "version": "0.9.1",
+  "command": {
+    "run": {
+      "ignore": ["reltab-sqlite", "tad-app"]
+    }
+  }
+}
