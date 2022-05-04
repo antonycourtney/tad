@@ -264,10 +264,12 @@ export class BigQueryConnection implements DataSourceConnection {
 
   async getTableName(dsPath: DataSourcePath): Promise<string> {
     const { path } = dsPath;
-    if (path.length < 2) {
+    if (path.length < 3) {
       throw new Error(`getTableName: non-table path: ${path.toString()}`);
     }
-    return path.join(".");
+    const [_, datasetName, baseTableName] = path;
+    const projectId = this.projectId;
+    return `${projectId}.${datasetName}.${baseTableName}`;
   }
 }
 
