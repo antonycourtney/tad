@@ -39,4 +39,16 @@ jobs:
         displayName: "Build all packages"
       - script: "( cd packages/tad-app && npm run dist )"
         displayName: "Build packaged tad-app with electron-builder"
-        env: { APPLEID: $(APPLEID), APPLEPASS: $(APPLEIDPASS) }
+        env: { APPLEID: $(APPLEID), APPLEIDPASS: $(APPLEIDPASS) }
+      - task: CopyFiles@2
+        inputs:
+          contents: "packages/tad-app/dist/Tad*.zip"
+          targetFolder: $(Build.ArtifactStagingDirectory)
+      - task: CopyFiles@2
+        inputs:
+          contents: "packages/tad-app/dist/Tad*.dmg"
+          targetFolder: $(Build.ArtifactStagingDirectory)
+      - task: PublishBuildArtifacts@1
+        inputs:
+          pathToPublish: $(Build.ArtifactStagingDirectory)
+          artifactName: MacOS12BuildOutputs
