@@ -35,3 +35,6 @@ jobs:
         displayName: "Run lerna bootstrapping"
       - script: "./tools/build-all.sh"
         displayName: "Build all packages"
+      - script: "( cd packages/tad-app && npm run dist )"
+        displayName: "Build packaged tad-app with electron-builder"
+        env: { APPLEID: $(APPLEID), APPLEPASS: $(APPLEIDPASS) }
