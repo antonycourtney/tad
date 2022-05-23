@@ -29,6 +29,8 @@ jobs:
         inputs:
           versionSpec: 16.x
         displayName: "Use node.js 16"
+      - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl@3
+        displayName: "Install openssl from homebrew"
       - script: npm install
         displayName: "Install top-level npm dependencies"
       - script: npm run bootstrap
