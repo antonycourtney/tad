@@ -20,7 +20,7 @@ jobs:
       - script: cat /etc/os-release
         displayName: "Get os release info"
 
-  - job: macOS-12
+  - job: macOS_12
     timeoutInMinutes: 15
     pool:
       vmImage: macOS-12
