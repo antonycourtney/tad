@@ -20,23 +20,18 @@ jobs:
       - script: cat /etc/os-release
         displayName: "Get os release info"
 
-
-  - job: macOS-11
+  - job: macOS-12
     timeoutInMinutes: 15
     pool:
-      vmImage: macOS-11
+      vmImage: macOS-12
     steps:
       - task: NodeTool@0
-        displayName: "Use Node 16"
         inputs:
           versionSpec: 16.x
-        displayName: 'Install node.js 16'
+        displayName: "Use node.js 16"
       - script: npm install
         displayName: "Install top-level npm dependencies"
       - script: npm run bootstrap
         displayName: "Run lerna bootstrapping"
       - script: "./tools/build-all.sh"
         displayName: "Build all packages"
-
-
-
