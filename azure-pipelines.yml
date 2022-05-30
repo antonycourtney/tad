@@ -29,6 +29,11 @@ jobs:
         inputs:
           versionSpec: 16.x
         displayName: "Use node.js 16"
+      - task: DownloadSecureFile@1
+        name: devCertificate
+        displayName: "Download Apple Dev Certificate"
+        inputs:
+          secureFile: "apple-dev-certificate.p12"
       - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl@3
         displayName: "Install openssl from homebrew"
       - script: npm install
@@ -39,7 +44,13 @@ jobs:
         displayName: "Build all packages"
       - script: "( cd packages/tad-app && npm run dist )"
         displayName: "Build packaged tad-app with electron-builder"
-        env: { APPLEID: $(APPLEID), APPLEIDPASS: $(APPLEIDPASS) }
+        env:
+          {
+            APPLEID: $(APPLEID),
+            APPLEIDPASS: $(APPLEIDPASS),
+            CSC_LINK: $(caCertificate.secureFilePath),
+            CSC_KEY_PASSWORD: $(APPLEIDPASS),
+          }
       - task: CopyFiles@2
         inputs:
           contents: "packages/tad-app/dist/Tad*.zip"
