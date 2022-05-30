@@ -9,7 +9,7 @@ name: $(Build.Reason)_$(Build.SourceBranch)_$(Rev:r)
 
 jobs:
   - job: Linux
-    timeoutInMinutes: 15
+    timeoutInMinutes: 25
     pool:
       vmImage: ubuntu-latest
     steps:
