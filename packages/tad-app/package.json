@@ -22,7 +22,7 @@
     "watch": "webpack --mode development --watch",
     "watch-prod": "webpack --env prod --mode production --watch",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder",
+    "dist": "electron-builder --publish=never",
     "prepublish": "npm run build",
     "publish": "./tools/publish.sh",
     "electron-builder-postinstall": "electron-builder install-app-deps",
