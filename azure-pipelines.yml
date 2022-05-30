@@ -21,7 +21,7 @@ jobs:
         displayName: "Get os release info"
 
   - job: macOS_12
-    timeoutInMinutes: 15
+    timeoutInMinutes: 25
     pool:
       vmImage: macOS-12
     steps:
