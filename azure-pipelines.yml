@@ -48,7 +48,7 @@ jobs:
           {
             APPLEID: $(APPLEID),
             APPLEIDPASS: $(APPLEIDPASS),
-            CSC_LINK: $(caCertificate.secureFilePath),
+            CSC_LINK: $(devCertificate.secureFilePath),
             CSC_KEY_PASSWORD: $(APPLEIDPASS),
           }
       - task: CopyFiles@2
