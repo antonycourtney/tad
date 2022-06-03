@@ -20,10 +20,10 @@ jobs:
       - script: cat /etc/os-release
         displayName: "Get os release info"
 
-  - job: macOS_12
+  - job: macOS_latest
     timeoutInMinutes: 25
     pool:
-      vmImage: macOS-12
+      vmImage: macOS-latest
     steps:
       - task: NodeTool@0
         inputs:
