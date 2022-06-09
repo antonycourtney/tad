@@ -17,6 +17,12 @@ jobs:
         inputs:
           versionSpec: 16.x
         displayName: "Use node.js 16"
+      - script: curl.exe -o openssl-1.1.1o.zip https://mirror.firedaemon.com/OpenSSL/openssl-1.1.1o.zip
+        displayName: "download OpenSSL"
+      - script: mkdir .\openssl-1.1.1o
+        displayName: "make openssl dir"
+      - script: tar -xf openssl-1.1.1o.zip -C .\openssl-1.1.1o --strip-components=1
+        displayName: "extract openssl"
       - script: npm install
         displayName: "Install top-level npm dependencies"
       - script: npm run bootstrap
@@ -26,6 +32,10 @@ jobs:
       - script: npm run dist
         workingDirectory: packages/tad-app
         displayName: "Build packaged tad-app with electron-builder"
+        env:
+          {
+            OPENSSL_ROOT_DIR: $(System.DefaultWorkingDirectory)/openssl-1.1.1o/x64,
+          }
       - task: CopyFiles@2
         inputs:
           contents: "packages/tad-app/dist/Tad*"

@@ -1,9 +1,9 @@
 const path = require("path");
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
-const copy = require('recursive-copy');
+const copy = require("recursive-copy");
 
-const WIN_SSL_DIR = '../../../openssl-1.1';
+//const WIN_SSL_DIR = '../../../openssl-1.1';
 
 async function afterPack(context) {
   if (context.packager.platform.name === "mac") {
@@ -20,11 +20,20 @@ async function afterPack(context) {
     console.error(stderr);
   }
   if (context.packager.platform.name === "windows") {
+    const WIN_SSL_DIR = process.env.OPENSSL_ROOT_DIR;
+    console.log("On Windows, packaging OPENSSL dlls from ", WIN_SSL_DIR);
     const { appOutDir } = context;
-    const duckDbTargetDir = path.join(appOutDir, 'resources/app.asar.unpacked/node_modules/ac-node-duckdb/build/Release');
-    const sslBinDir = path.join(WIN_SSL_DIR, 'x64/bin');
+    const duckDbTargetDir = path.join(
+      appOutDir,
+      "resources/app.asar.unpacked/node_modules/ac-node-duckdb/build/Release"
+    );
+    const sslBinDir = path.join(WIN_SSL_DIR, "bin");
     const results = await copy(sslBinDir, duckDbTargetDir);
-    console.info('afterPack: Copied ' + results.length + ' files from SSL bin dir to target');
+    console.info(
+      "afterPack: Copied " +
+        results.length +
+        " files from SSL bin dir to target"
+    );
   }
 }
 
