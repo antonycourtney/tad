@@ -38,7 +38,8 @@ jobs:
           }
       - task: CopyFiles@2
         inputs:
-          contents: "packages/tad-app/dist/Tad*"
+          sourceFolder: "packages/tad-app/dist"
+          contents: "*"
           targetFolder: $(Build.ArtifactStagingDirectory)
       - task: PublishBuildArtifacts@1
         inputs:
