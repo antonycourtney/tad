@@ -23,16 +23,17 @@ jobs:
         displayName: "Run lerna bootstrapping"
       - script: node tools/buildAll.js
         displayName: "Build all packages"
-      - script: "cd packages/tad-app ; npm run dist"
+      - script: npm run dist
+        workingDirectory: packages/tad-app
         displayName: "Build packaged tad-app with electron-builder"
       - task: CopyFiles@2
         inputs:
-          contents: "packages/tad-app/dist/tad*"
+          contents: "packages/tad-app/dist/Tad*"
           targetFolder: $(Build.ArtifactStagingDirectory)
       - task: PublishBuildArtifacts@1
         inputs:
           pathToPublish: $(Build.ArtifactStagingDirectory)
-          artifactName: LinuxBuildOutputs
+          artifactName: WindowsBuildOutputs
 
   - job: Linux
     timeoutInMinutes: 25
