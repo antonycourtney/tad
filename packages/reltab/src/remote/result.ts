@@ -3,9 +3,9 @@ export interface OkResult<T> {
   value: T;
 }
 
-export interface ErrResult<T> {
+export interface ErrResult {
   status: "Err";
-  errVal: T;
+  errVal: Error;
 }
 
-export type Result<T> = OkResult<T> | ErrResult<T>;
+export type Result<T> = OkResult<T> | ErrResult;

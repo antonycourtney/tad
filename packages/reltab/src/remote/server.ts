@@ -29,7 +29,7 @@ import {
 } from "./Transport";
 import { TableInfo, TableRep } from "../TableRep";
 import { Result } from "./result";
-import { serializeError } from "serialize-error";
+import { serializeError } from "./errorUtils";
 
 const dbConnEvalQuery = async (
   conn: DataSourceConnection,
@@ -266,7 +266,7 @@ const exceptionHandler =
         errVal,
         (errVal as any).stack
       );
-      return { status: "Err", errVal: serializeError(errVal) };
+      return { status: "Err", errVal: serializeError(errVal as Error) };
     }
   };
 

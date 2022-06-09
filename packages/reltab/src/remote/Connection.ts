@@ -1,4 +1,3 @@
-import { deserializeError } from "serialize-error";
 import {
   DataSourceConnection,
   DataSourceId,
@@ -8,6 +7,7 @@ import {
 } from "../DataSource";
 import { deserializeTableRepStr, QueryExp } from "../QueryExp";
 import { TableInfo, TableRep } from "../TableRep";
+import { deserializeError } from "./errorUtils";
 import { Result } from "./result";
 import { TransportClient } from "./Transport";
 
