@@ -1,6 +1,6 @@
 {
   "name": "tadweb-server",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "ExpressJS based web server for Tad",
   "main": "dist/server.js",
   "scripts": {
@@ -32,12 +32,12 @@
     "express-validator": "^6.14.0",
     "loglevel": "^1.8.0",
     "node-fetch": "^3.1.0",
-    "reltab": "^0.10.0",
-    "reltab-aws-athena": "^0.10.0",
-    "reltab-bigquery": "^0.10.0",
-    "reltab-snowflake": "^0.10.0",
-    "reltab-duckdb": "^0.10.0",
-    "tadweb-app": "^0.10.0",
+    "reltab": "^0.10.1",
+    "reltab-aws-athena": "^0.10.1",
+    "reltab-bigquery": "^0.10.1",
+    "reltab-duckdb": "^0.10.1",
+    "reltab-snowflake": "^0.10.1",
+    "tadweb-app": "^0.10.1",
     "typed-promisify": "^0.4.0"
   },
   "devDependencies": {

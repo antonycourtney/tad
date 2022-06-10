@@ -1,6 +1,6 @@
 {
   "name": "tadviewer",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Tabular data viewer library",
   "main": "dist/tadviewer.js",
   "types": "dist/tadviewer.d.ts",
@@ -47,6 +47,7 @@
     "@types/react-dom": "^17.0.11",
     "@types/react-select": "^5.0.0",
     "@types/slickgrid": "^2.1.31",
+    "aggtree": "^0.10.1",
     "ajv": "^6.9.1",
     "css-loader": "^6.5.1",
     "file-loader": "^6.2.0",
@@ -56,6 +57,7 @@
     "mkdirp": "^1.0.4",
     "node-sass": "^7.0.1",
     "recursive-copy-cli": "^1.0.20",
+    "reltab": "^0.10.1",
     "resolve-url-loader": "^4.0.0",
     "sass-loader": "^12.4.0",
     "source-map-loader": "^3.0.1",
@@ -64,14 +66,12 @@
     "webpack": "^5.65.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.9.1",
-    "webpack-node-externals": "^3.0.0",
-    "aggtree": "^0.10.0",
-    "reltab": "^0.10.0"
+    "webpack-node-externals": "^3.0.0"
   },
   "peerDependencies": {
+    "aggtree": "^0.10.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "aggtree": "^0.10.0",
     "reltab": "^0.10.0"
   }
 }

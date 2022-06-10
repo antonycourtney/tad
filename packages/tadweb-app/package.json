@@ -1,6 +1,6 @@
 {
   "name": "tadweb-app",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Tabular data viewer web app",
   "main": "dist/tadweb.bundle.js",
   "scripts": {
@@ -29,8 +29,8 @@
     "oneref": "^0.8.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "reltab": "^0.10.0",
-    "tadviewer": "^0.10.0"
+    "reltab": "^0.10.1",
+    "tadviewer": "^0.10.1"
   },
   "devDependencies": {
     "@types/react": "^17.0.38",

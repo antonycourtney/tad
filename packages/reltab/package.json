@@ -1,6 +1,6 @@
 {
   "name": "reltab",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Backend-independent library for queries on relational tables",
   "main": "dist/reltab.js",
   "types": "dist/reltab.d.ts",
@@ -24,8 +24,8 @@
     "pretty-hrtime": "^1.0.3"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.178",
     "@types/jest": "^27.4.0",
+    "@types/lodash": "^4.14.178",
     "@types/pretty-hrtime": "^1.0.1",
     "jest": "^27.4.6",
     "mkdirp": "^1.0.4",

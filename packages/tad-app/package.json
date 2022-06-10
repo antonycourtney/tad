@@ -1,6 +1,6 @@
 {
   "name": "tad",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "homepage": "https://www.tadviewer.com",
   "description": "Tabular data viewer desktop app, built with Electron",
   "main": "dist/main.bundle.js",
@@ -36,18 +36,12 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "aggtree": "^0.10.0",
-    "console.table": "^0.10.0",
-    "reltab": "^0.10.0",
-    "reltab-bigquery": "^0.10.0",
-    "reltab-sqlite": "^0.10.0",
-    "reltab-duckdb": "^0.10.0",
-    "reltab-fs": "^0.10.0",
-    "tadviewer": "^0.10.0",
+    "aggtree": "^0.10.1",
     "babel-cli": "^6.26.0",
     "babel-plugin-flow-to-typescript": "^0.6.0",
     "command-line-args": "^5.2.0",
     "command-line-usage": "^6.1.1",
+    "console.table": "^0.10.0",
     "electron-log": "^4.4.4",
     "electron-updater": "^4.6.1",
     "fast-csv": "^4.3.6",
@@ -55,7 +49,13 @@
     "oneref": "^0.8.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "source-map-support": "^0.5.21"
+    "reltab": "^0.10.1",
+    "reltab-bigquery": "^0.10.1",
+    "reltab-duckdb": "^0.10.1",
+    "reltab-fs": "^0.10.1",
+    "reltab-sqlite": "^0.10.1",
+    "source-map-support": "^0.5.21",
+    "tadviewer": "^0.10.1"
   },
   "devDependencies": {
     "@blueprintjs/icons": "^3.31.0",
@@ -67,6 +67,7 @@
     "@types/slickgrid": "^2.1.31",
     "ajv": "^6.9.1",
     "css-loader": "^6.5.1",
+    "duplicate-package-checker-webpack-plugin": "^3.0.0",
     "electron": "18.0.3",
     "electron-builder": "^23.0.2",
     "electron-notarize": "^1.1.1",
@@ -86,8 +87,7 @@
     "webpack": "^5.65.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.9.1",
-    "webpack-node-externals": "^3.0.0",
-    "duplicate-package-checker-webpack-plugin": "^3.0.0"
+    "webpack-node-externals": "^3.0.0"
   },
   "build": {
     "appId": "com.antonycourtney.tad",
