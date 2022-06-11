@@ -65,7 +65,7 @@
     "cpx": "^1.5.0",
     "css-loader": "^1.0.0",
     "difflet": "^1.0.1",
-    "electron": "3.0.5",
+    "electron": "13.6.6",
     "electron-builder": "^20.28.4",
     "electron-packager": "^12.2.0",
     "electron-rebuild": "^1.8.2",
