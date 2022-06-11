@@ -29,12 +29,13 @@ jobs:
         displayName: "Run lerna bootstrapping"
       - script: node tools/buildAll.js
         displayName: "Build all packages"
-      - script: npm run dist
+      - script: npm run publish
         workingDirectory: packages/tad-app
         displayName: "Build packaged tad-app with electron-builder"
         env:
           {
             OPENSSL_ROOT_DIR: $(System.DefaultWorkingDirectory)/openssl-1.1.1o/x64,
+            GITHUB_TOKEN: $(GITHUB_TOKEN)
           }
       - task: CopyFiles@2
         inputs:
@@ -61,8 +62,9 @@ jobs:
         displayName: "Run lerna bootstrapping"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
-      - script: "( cd packages/tad-app && npm run dist )"
-        displayName: "Build packaged tad-app with electron-builder"
+      - script: "( cd packages/tad-app && npm run publish )"
+        displayName: "Build packaged tad-app with electron-builder",
+        env: { GITHUB_TOKEN: $(GITHUB_TOKEN) }
       - task: CopyFiles@2
         inputs:
           contents: "packages/tad-app/dist/tad*"
@@ -94,7 +96,7 @@ jobs:
         displayName: "Run lerna bootstrapping"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
-      - script: "( cd packages/tad-app && npm run dist )"
+      - script: "( cd packages/tad-app && npm run publish )"
         displayName: "Build packaged tad-app with electron-builder"
         env:
           {
@@ -102,6 +104,7 @@ jobs:
             APPLEIDPASS: $(APPLEIDPASS),
             CSC_LINK: $(devCertificate.secureFilePath),
             CSC_KEY_PASSWORD: $(APPLEIDPASS),
+            GITHUB_TOKEN: $(GITHUB_TOKEN)
           }
       - task: CopyFiles@2
         inputs:

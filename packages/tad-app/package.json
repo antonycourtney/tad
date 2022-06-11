@@ -6,7 +6,7 @@
   "main": "dist/main.bundle.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/antonycourtney/tad-pkg.git"
+    "url": "https://github.com/antonycourtney/tad.git"
   },
   "scripts": {
     "clean": "rimraf dist",
@@ -24,7 +24,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder --publish=never",
     "prepublish": "npm run build",
-    "publish": "./tools/publish.sh",
+    "publish": "electron-builder --publish onTagOrDraft",
     "electron-builder-postinstall": "electron-builder install-app-deps",
     "start": "electron ."
   },
@@ -69,7 +69,7 @@
     "css-loader": "^6.5.1",
     "duplicate-package-checker-webpack-plugin": "^3.0.0",
     "electron": "18.0.3",
-    "electron-builder": "^23.0.2",
+    "electron-builder": "^23.1.0",
     "electron-notarize": "^1.1.1",
     "file-loader": "^6.2.0",
     "image-webpack-loader": "^8.0.1",

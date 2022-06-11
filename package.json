@@ -1,6 +1,6 @@
 {
-  "name": "tad-pkg",
-  "version": "0.10.0",
+  "name": "tad",
+  "version": "0.10.1",
   "description": "Lerna monorepo for Tabular data viewer libraries and apps",
   "devDependencies": {
     "@types/jest": "^27.4.0",
