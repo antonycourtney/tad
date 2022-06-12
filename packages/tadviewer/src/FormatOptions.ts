@@ -14,4 +14,5 @@ export type ClickHandler = (
 export interface FormatOptions {
   getFormatter(): CellFormatter;
   getClickHandler(): ClickHandler | null;
+  getClassName(): string | null;
 }

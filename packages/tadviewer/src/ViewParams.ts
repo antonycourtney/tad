@@ -262,6 +262,11 @@ export class ViewParams
     return ff;
   }
 
+  getColumnClassName(schema: reltab.Schema, cid: string): string | null {
+    const cf = this.getColumnFormat(schema, cid);
+    return cf?.getClassName();
+  }
+
   getClickHandler(schema: reltab.Schema, cid: string): ClickHandler {
     const cf = this.getColumnFormat(schema, cid);
     return cf.getClickHandler() ?? defaultClickHandler;

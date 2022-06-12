@@ -54,6 +54,10 @@ export class NumFormatOptions
     return ff;
   }
 
+  getClassName(): string | null {
+    return "data-cell-numeric";
+  }
+
   getClickHandler(): ClickHandler | null {
     return null;
   }

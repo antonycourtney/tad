@@ -189,6 +189,10 @@ const mkSlickColMap = (
       ci.toolTip = he.encode(displayName);
       ci.sortable = true;
       const ff = viewParams.getColumnFormatter(schema, colId);
+      const cellClass = viewParams.getColumnClassName(schema, colId);
+      if (cellClass != null) {
+        ci.cssClass = cellClass;
+      }
       ci.formatter = (
         row: any,
         cell: any,

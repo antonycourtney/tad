@@ -58,6 +58,10 @@ export class TextFormatOptions
     return ff;
   }
 
+  getClassName(): string | null {
+    return null;
+  }
+
   getClickHandler(): ClickHandler {
     const ch = (
       appContext: ClickHandlerAppContext,
