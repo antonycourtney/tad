@@ -80,9 +80,9 @@ export const createMenu = () => {
   }
 
   const editSubmenu: MenuItemConstructorOptions[] = [
-    {
-      role: "copy",
-    },
+    { label: "Cut", accelerator: "CmdOrCtrl+X", role: "cut" },
+    { label: "Copy", accelerator: "CmdOrCtrl+C", role: "copy" },
+    { label: "Paste", accelerator: "CmdOrCtrl+V", role: "paste" },
   ];
   const debugSubmenu: MenuItemConstructorOptions[] = [
     {
