@@ -170,7 +170,7 @@
     },
     "nodeGypRebuild": false,
     "nsis": {
-      "perMachine": true
+      "oneClick": false
     },
     "productName": "Tad"
   }
