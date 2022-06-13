@@ -437,7 +437,7 @@ const initApp =
           // This method will be called when Electron has finished
           // initialization and is ready to create browser windows.
           // Some APIs can only be used after this event occurs.
-          app.on("ready", () => {
+          app.on("ready", async () => {
             // const startMsg = `pid ${process.pid}: Tad started, version: ${app.getVersion()}`
             // log.log(startMsg)
             // dialog.showMessageBox({ message: startMsg })
@@ -458,7 +458,8 @@ const initApp =
             } else {
               if (noSrcFile && !awaitingOpenEvent) {
                 app.focus();
-                appWindow.openDialog();
+                const win = await appWindow.newWindow();
+                appWindow.openDialog("openFile", win);
               }
             }
 

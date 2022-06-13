@@ -40,12 +40,20 @@ export const createMenu = () => {
     },
 
     {
-      label: "Open...",
+      label: "Open File...",
       accelerator: "CmdOrCtrl+O",
       click: (item: MenuItem, focusedWindow: BrowserWindow | undefined) => {
-        appWindow.openDialog(focusedWindow);
+        appWindow.openDialog("openFile", focusedWindow);
       },
     },
+    {
+      label: "Open Directory...",
+      accelerator: "CmdOrCtrl+O",
+      click: (item: MenuItem, focusedWindow: BrowserWindow | undefined) => {
+        appWindow.openDialog("openDirectory", focusedWindow);
+      },
+    },
+
     separatorMenuItem,
     {
       label: "Save As...",

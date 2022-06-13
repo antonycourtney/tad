@@ -97,7 +97,7 @@ const encodeFileOpenParams = (targetPath: string): OpenParams => {
   return openParams;
 };
 
-const create = async (openParams: OpenParams) => {
+const create = async (openParams: OpenParams): Promise<BrowserWindow> => {
   let winProps = {
     width: 1280,
     height: 980,
@@ -151,12 +151,14 @@ const create = async (openParams: OpenParams) => {
   return win;
 };
 
-export const createFromDSPath = async (dsPath: DataSourcePath) => {
+export const createFromDSPath = async (
+  dsPath: DataSourcePath
+): Promise<BrowserWindow> => {
   const openParams: OpenParams = {
     openType: "dspath",
     dsPath,
   };
-  await create(openParams);
+  return create(openParams);
 };
 
 /**
@@ -203,9 +205,12 @@ export const createFromFile = async (
   return win;
 };
 
-export const openDialog = async (win?: BrowserWindow) => {
+export const openDialog = async (
+  dialogType: "openFile" | "openDirectory",
+  win?: BrowserWindow
+) => {
   const openRet = await dialog.showOpenDialog({
-    properties: ["openFile", "openDirectory"],
+    properties: [dialogType],
     /* weirdly, showOpenDialogSync doesn't seem to respect multiple filters, but does respect a
      * single filter with multiple extensions...
      */
@@ -249,16 +254,17 @@ export const openDialog = async (win?: BrowserWindow) => {
   }
 };
 
-export const newWindow = async (win?: BrowserWindow) => {
+export const newWindow = async (
+  win?: BrowserWindow
+): Promise<BrowserWindow> => {
   if (win && isInitialized(win.id)) {
     const appState: any = await getAppState(win);
     const dsPath = appState.dsPath;
     if (dsPath) {
-      createFromDSPath(dsPath);
+      return createFromDSPath(dsPath);
     }
-  } else {
-    create({ openType: "empty" });
   }
+  return create({ openType: "empty" });
 };
 
 let stateRequestId = 100;
