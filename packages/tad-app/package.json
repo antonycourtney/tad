@@ -97,6 +97,7 @@
     ],
     "afterPack": "./tools/afterPack.js",
     "afterSign": "./tools/notarize.js",
+    "buildVersion": "0.10.1",
     "directories": {
       "buildResources": "buildRes"
     },
