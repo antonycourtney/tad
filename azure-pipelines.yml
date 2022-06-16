@@ -64,7 +64,13 @@ jobs:
         displayName: "Build all packages"
       - script: "( cd packages/tad-app && npm run publish )"
         displayName: "Build packaged tad-app with electron-builder"
-        env: { GITHUB_TOKEN: $(GITHUB_TOKEN) }
+        env:
+          {
+            BUILDNUMBER: " ",
+            BUILD_BUILDNUMBER: " ",
+            CI_PIPELINE_IID: " ",
+            GITHUB_TOKEN: $(GITHUB_TOKEN),
+          }
       - task: CopyFiles@2
         inputs:
           contents: "packages/tad-app/dist/tad*"
