@@ -1,4 +1,5 @@
 import * as reltab from "reltab";
+import { Row, Schema, TableRep } from "reltab";
 
 export const columnSum = (
   tableData: reltab.TableRep,
@@ -46,3 +47,24 @@ export const logTable = (
 
   ctf(rowData);
 };
+
+type RowFormatter = (row: Row) => string[];
+
+function mkRowFormatter(s: Schema): RowFormatter {
+  const fmtRow = (r: Row): string[] => {
+    const res = s.columns.map((cid: string) => {
+      const val = r[cid];
+      const ct = s.columnType(cid);
+      return ct.stringRender(val);
+    });
+    return res;
+  };
+  return fmtRow;
+}
+
+export function getFormattedRows(qres: TableRep): string[][] {
+  const s: Schema = qres.schema;
+  const rowFormatter = mkRowFormatter(s);
+
+  return qres.rowData.map(rowFormatter);
+}
