@@ -13,6 +13,7 @@ import {
   ConcatQueryRep,
   ExtendQueryRep,
   JoinQueryRep,
+  SqlQueryRep,
 } from "./QueryRep";
 import { Schema, ColumnMetadata } from "./Schema";
 import { ColumnExtendExp } from "./defs";
@@ -20,12 +21,28 @@ import { TableInfoMap } from "./TableRep";
 import { ColumnType } from "./ColumnType";
 import _ = require("lodash");
 
+const sqlGetSchema = (
+  dialect: SQLDialect,
+  tableMap: TableInfoMap,
+  query: SqlQueryRep
+): Schema => {
+  const key = JSON.stringify(query);
+  const ti = tableMap[key];
+  if (!ti) {
+    throw new Error(
+      'sqlGetSchema: sql query "' + query.sqlQuery + '" not found in tableMap'
+    );
+  }
+  return ti.schema;
+};
+
 const tableGetSchema = (
   dialect: SQLDialect,
   tableMap: TableInfoMap,
   query: TableQueryRep
 ): Schema => {
-  const ti = tableMap[query.tableName];
+  const key = JSON.stringify(query);
+  const ti = tableMap[key];
   if (!ti) {
     throw new Error(
       'tableGetSchema: table "' + query.tableName + '" not found in tableMap'
@@ -261,6 +278,8 @@ export const queryGetSchema = (
   query: QueryRep
 ): Schema => {
   switch (query.operator) {
+    case "sql":
+      return sqlGetSchema(dialect, tableMap, query);
     case "table":
       return tableGetSchema(dialect, tableMap, query);
     case "project":

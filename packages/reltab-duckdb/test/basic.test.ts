@@ -54,6 +54,12 @@ test("t1 - basic sqlite tableQuery", async () => {
   expect(qres).toMatchSnapshot();
 });
 
+test("q1 - basic sqlQuery", async () => {
+  const q1 = reltab.sqlQuery("select 42 as num");
+  const qres = await testCtx.evalQuery(q1);
+  expect(qres).toMatchSnapshot();
+});
+
 const bartTableQuery = reltab.tableQuery("barttest");
 
 test("t2 - basic bart table query", async () => {

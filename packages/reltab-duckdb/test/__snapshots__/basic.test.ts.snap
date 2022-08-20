@@ -1325,6 +1325,28 @@ TableRep {
 }
 `;
 
+exports[`q1 - basic sqlQuery 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "num": 42,
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "num": Object {
+        "columnType": "INTEGER",
+        "displayName": "num",
+      },
+    },
+    "columns": Array [
+      "num",
+    ],
+    "dialect": "duckdb",
+  },
+}
+`;
+
 exports[`t1 - basic sqlite tableQuery 1`] = `
 TableRep {
   "rowData": Array [

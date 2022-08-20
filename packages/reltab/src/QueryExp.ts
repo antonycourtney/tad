@@ -1,54 +1,49 @@
+import { colIsString, ColumnType } from "./ColumnType";
 import {
-  Scalar,
-  sqlEscapeString,
-  ColumnExtendExp,
-  col,
-  constVal,
-  defaultDialect,
   asString,
+  col,
+  ColumnExtendExp,
+  constVal,
+  sqlEscapeString,
 } from "./defs";
-import { FilterExp, BinRelExp, UnaryRelExp, SubExp } from "./FilterExp";
 import { SQLDialect } from "./dialect";
-import { ColumnType, colIsString } from "./ColumnType";
-import { Schema, ColumnMetadata } from "./Schema";
-import _ = require("lodash");
-import { Row, TableInfoMap, TableRep } from "./TableRep";
+import { BinRelExp, FilterExp, SubExp, UnaryRelExp } from "./FilterExp";
+import { queryGetSchema } from "./getSchema";
+import { ppOut, StringBuffer } from "./internals";
 import { ppSQLQuery } from "./pp";
 import {
-  SQLQueryAST,
-  mkColSelItem,
-  SQLSelectAST,
-  SQLSelectListItem,
-  getColId,
-  SQLValExp,
-  SQLFromQuery,
-  SQLFromJoin,
-  mkAggExp,
-  mkSubSelectList,
-} from "./SQLQuery";
-import { AggFn } from "./AggFn";
-import { StringBuffer, ppOut } from "./internals";
-import {
-  QueryRep,
   AggColSpec,
-  ColumnMapInfo,
   ColumnExtendOptions,
-  JoinType,
-  TableQueryRep,
-  ProjectQueryRep,
-  GroupByQueryRep,
-  MapColumnsQueryRep,
-  MapColumnsByIndexQueryRep,
+  ColumnMapInfo,
   ConcatQueryRep,
   ExtendQueryRep,
-  JoinQueryRep,
   FilterQueryRep,
+  GroupByQueryRep,
+  JoinQueryRep,
+  JoinType,
+  MapColumnsByIndexQueryRep,
+  MapColumnsQueryRep,
+  ProjectQueryRep,
+  QueryLeafDep,
+  QueryRep,
   SortQueryRep,
+  SqlQueryRep,
+  TableQueryRep,
 } from "./QueryRep";
-import { queryGetSchema } from "./getSchema";
-import { pagedQueryToSql, unpagedQueryToSql } from "./toSql";
+import { Schema } from "./Schema";
+import {
+  mkAggExp,
+  SQLFromQuery,
+  SQLQueryAST,
+  SQLSelectAST,
+  SQLSelectListItem,
+} from "./SQLQuery";
+import { Row, TableInfoMap, TableRep } from "./TableRep";
+import { unpagedQueryToSql } from "./toSql";
+import _ = require("lodash");
 
 type QueryOp =
+  | "sql"
   | "table"
   | "project"
   | "filter"
@@ -78,6 +73,8 @@ export const sqlLiteralVal = (ct: ColumnType, jsVal: any): string => {
 
   return ret;
 };
+
+export type QueryLeafDepsMap = Map<string, QueryLeafDep>;
 
 // A QueryExp is the builder interface we export from reltab.
 // The only things clients of the interface can do with a QueryExp are chain it
@@ -183,8 +180,8 @@ export class QueryExp {
     return queryGetSchema(dialect, tableMap, this._rep);
   }
 
-  getTables(): Set<string> {
-    return queryGetTables(this._rep);
+  getLeafDeps(): QueryLeafDepsMap {
+    return queryGetLeafDeps(this._rep);
   }
 
   // render this query as a JavaScript expression:
@@ -327,6 +324,20 @@ const queryToCountSql = (
 // Create base of a query expression chain by starting with "table":
 export const tableQuery = (tableName: string): QueryExp => {
   return new QueryExp({ operator: "table", tableName });
+};
+
+// Create base of a query expression chain by starting with a sql query:
+export const sqlQuery = (sqlQuery: string): QueryExp => {
+  return new QueryExp({ operator: "sql", sqlQuery });
+};
+
+const sqlQueryToJSAux = (
+  dst: StringBuffer,
+  depth: number,
+  query: SqlQueryRep
+): number => {
+  ppOut(dst, depth, `sqlQuery("${query.sqlQuery}")`);
+  return depth + 1;
 };
 
 const tableQueryToJSAux = (
@@ -546,6 +557,8 @@ const queryToJSAux = (
   query: QueryRep
 ): number => {
   switch (query.operator) {
+    case "sql":
+      return sqlQueryToJSAux(dst, depth, query);
     case "table":
       return tableQueryToJSAux(dst, depth, query);
     case "project":
@@ -572,10 +585,20 @@ const queryToJSAux = (
   }
 };
 
-const queryGetTablesAux = (acc: Set<string>, query: QueryRep) => {
+/*
+ * To get leaf dependencies, we'll accumulate leaf dependencies into a
+ * map from the JSON encoding of the QueryLeafDep to the QueryLeafDep.
+ * To form a set of QueryLeafDep, we'll just build a Set of the values
+ * of this map.
+ */
+const queryGetLeafDepsAux = (acc: QueryLeafDepsMap, query: QueryRep) => {
   switch (query.operator) {
+    case "sql":
     case "table":
-      acc.add(query.tableName);
+      const key = JSON.stringify(query);
+      if (!acc.has(key)) {
+        acc.set(key, query);
+      }
       break;
     case "project":
     case "groupBy":
@@ -584,15 +607,15 @@ const queryGetTablesAux = (acc: Set<string>, query: QueryRep) => {
     case "mapColumnsByIndex":
     case "sort":
     case "extend":
-      queryGetTablesAux(acc, query.from);
+      queryGetLeafDepsAux(acc, query.from);
       break;
     case "concat":
-      queryGetTablesAux(acc, query.from);
-      queryGetTablesAux(acc, query.target);
+      queryGetLeafDepsAux(acc, query.from);
+      queryGetLeafDepsAux(acc, query.target);
       break;
     case "join":
-      queryGetTablesAux(acc, query.lhs);
-      queryGetTablesAux(acc, query.rhs);
+      queryGetLeafDepsAux(acc, query.lhs);
+      queryGetLeafDepsAux(acc, query.rhs);
       break;
     default:
       const invalidQuery: never = query;
@@ -602,8 +625,10 @@ const queryGetTablesAux = (acc: Set<string>, query: QueryRep) => {
   }
 };
 
-const queryGetTables = (query: QueryRep): Set<string> => {
-  const ret = new Set<string>();
-  queryGetTablesAux(ret, query);
-  return ret;
+const queryGetLeafDeps = (query: QueryRep): QueryLeafDepsMap => {
+  const deps: QueryLeafDepsMap = new Map<string, QueryLeafDep>();
+  queryGetLeafDepsAux(deps, query);
+  return deps;
+  // const ret = new Set(deps.values());
+  // return ret;
 };

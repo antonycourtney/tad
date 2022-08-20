@@ -13,6 +13,7 @@ import {
   SortQueryRep,
   ExtendQueryRep,
   JoinQueryRep,
+  SqlQueryRep,
 } from "./QueryRep";
 import {
   SQLQueryAST,
@@ -33,12 +34,43 @@ import { TableInfoMap } from "./TableRep";
 import { ColumnType, colIsString } from "./ColumnType";
 import { queryGetSchema, getOrInferColumnType } from "./getSchema";
 
+const sqlQueryToSql = (
+  dialect: SQLDialect,
+  tableMap: TableInfoMap,
+  query: SqlQueryRep
+): SQLQueryAST => {
+  const key = JSON.stringify(query);
+  const entry = tableMap[key];
+  if (entry === undefined) {
+    throw new Error(`Could not find schema for base query ( ${query} )`);
+  }
+  const schema = entry.schema;
+  const { sqlQuery } = query;
+
+  const selectCols = schema.columns;
+  const sel = {
+    selectCols: selectCols.map((cid) =>
+      mkColSelItem(cid, schema.columnType(cid))
+    ),
+    from: `( ${sqlQuery} )`,
+    groupBy: [],
+    orderBy: [],
+  };
+  return {
+    selectStmts: [sel],
+  };
+};
+
 const tableQueryToSql = (
   dialect: SQLDialect,
   tableMap: TableInfoMap,
-  { tableName }: TableQueryRep
+  query: TableQueryRep
 ): SQLQueryAST => {
-  const schema = tableMap[tableName].schema;
+  const key = JSON.stringify(query);
+  const entry = tableMap[key];
+  const schema = entry.schema;
+
+  const { tableName } = query;
 
   const selectCols = schema.columns;
   const sel = {
@@ -465,6 +497,9 @@ export const unpagedQueryToSql = (
 ): SQLQueryAST => {
   let ret: SQLQueryAST;
   switch (query.operator) {
+    case "sql":
+      ret = sqlQueryToSql(dialect, tableMap, query);
+      break;
     case "table":
       ret = tableQueryToSql(dialect, tableMap, query);
       break;

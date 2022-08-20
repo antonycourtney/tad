@@ -2,7 +2,7 @@ import { Schema } from "./Schema";
 import { Scalar } from "./defs";
 
 export type TableInfo = {
-  tableName: string;
+  // tableName: string;
   schema: Schema;
 };
 export type TableInfoMap = {

@@ -22,6 +22,11 @@ export type ColumnExtendOptions = {
   type?: ColumnType;
 };
 
+export interface SqlQueryRep {
+  operator: "sql";
+  sqlQuery: string;
+}
+
 export interface TableQueryRep {
   operator: "table";
   tableName: string;
@@ -80,6 +85,7 @@ export interface JoinQueryRep {
 }
 
 export type QueryRep =
+  | SqlQueryRep
   | TableQueryRep
   | ProjectQueryRep
   | GroupByQueryRep
@@ -90,3 +96,6 @@ export type QueryRep =
   | SortQueryRep
   | ExtendQueryRep
   | JoinQueryRep;
+
+// A "leaf dependency" is either a SqlQuery or a table name
+export type QueryLeafDep = SqlQueryRep | TableQueryRep;
