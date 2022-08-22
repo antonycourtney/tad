@@ -5,7 +5,7 @@ import {
   TableRep,
   QueryExp,
   Schema,
-  TableInfoMap,
+  LeafSchemaMap,
   TableInfo,
   Row,
   ColumnMetaMap,
@@ -44,7 +44,7 @@ export class SqliteContext implements DataSourceConnection {
   readonly sourceId: DataSourceId;
   dbfile: string;
   db: sqlite3.Database;
-  private tableMap: TableInfoMap;
+  private tableMap: LeafSchemaMap;
 
   constructor(dbfile: string, db: any) {
     this.dbfile = dbfile;

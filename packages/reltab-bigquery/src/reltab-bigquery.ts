@@ -8,7 +8,7 @@ import {
   DataSourceProvider,
   defaultEvalQueryOptions,
   registerProvider,
-  TableInfoMap,
+  LeafSchemaMap,
   TableInfo,
   Row,
   ColumnMetaMap,
@@ -54,7 +54,7 @@ export class BigQueryConnection implements DataSourceConnection {
   bigquery: BigQuery;
   bigquery_meta: BigQuery;
   dataset: Dataset;
-  tableMap: TableInfoMap;
+  tableMap: LeafSchemaMap;
 
   constructor(connectionInfo: BigQueryConnectionInfo) {
     const { projectId, datasetName } = connectionInfo;

@@ -38,7 +38,7 @@ import {
   SQLSelectAST,
   SQLSelectListItem,
 } from "./SQLQuery";
-import { Row, TableInfoMap, TableRep } from "./TableRep";
+import { Row, LeafSchemaMap, TableRep } from "./TableRep";
 import { unpagedQueryToSql } from "./toSql";
 import _ = require("lodash");
 
@@ -164,7 +164,7 @@ export class QueryExp {
 
   toSql(
     dialect: SQLDialect,
-    tableMap: TableInfoMap,
+    tableMap: LeafSchemaMap,
     offset?: number,
     limit?: number
   ): string {
@@ -172,11 +172,11 @@ export class QueryExp {
     return ppSQLQuery(dialect, sql);
   }
 
-  toCountSql(dialect: SQLDialect, tableMap: TableInfoMap): string {
+  toCountSql(dialect: SQLDialect, tableMap: LeafSchemaMap): string {
     return ppSQLQuery(dialect, queryToCountSql(dialect, tableMap, this._rep));
   }
 
-  getSchema(dialect: SQLDialect, tableMap: TableInfoMap): Schema {
+  getSchema(dialect: SQLDialect, tableMap: LeafSchemaMap): Schema {
     return queryGetSchema(dialect, tableMap, this._rep);
   }
 
@@ -285,7 +285,7 @@ export const deserializeTableRepJson = (json: any): TableRep => {
   return tableRep;
 };
 
-type GenSQLFunc = (tableMap: TableInfoMap, q: QueryExp) => SQLQueryAST;
+type GenSQLFunc = (tableMap: LeafSchemaMap, q: QueryExp) => SQLQueryAST;
 type GenSQLMap = {
   [operator: string]: GenSQLFunc;
 };
@@ -293,7 +293,7 @@ type GenSQLMap = {
 // Generate a count(*) as rowCount wrapper around a query:
 const queryToCountSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: QueryRep
 ): SQLQueryAST => {
   const sqsql = unpagedQueryToSql(dialect, tableMap, query);

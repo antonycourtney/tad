@@ -10,7 +10,7 @@ import {
   registerProvider,
 } from "reltab";
 import {
-  TableInfoMap,
+  LeafSchemaMap,
   TableInfo,
   Row,
   ColumnMetaMap,
@@ -39,7 +39,7 @@ const isAlpha = (ch: string): boolean => /^[A-Z]$/i.test(ch);
 
 export class AWSAthenaConnection implements DataSourceConnection {
   readonly sourceId: DataSourceId;
-  tableMap: TableInfoMap;
+  tableMap: LeafSchemaMap;
 
   constructor() {
     this.sourceId = {

@@ -11,7 +11,7 @@ import {
   SQLSelectAST,
 } from "../SQLQuery";
 import { pagedQueryToSql, unpagedQueryToSql } from "../toSql";
-import { TableInfoMap } from "../TableRep";
+import { LeafSchemaMap } from "../TableRep";
 import { FilterExp, and } from "../FilterExp";
 import { col, constVal } from "../defs";
 
@@ -47,7 +47,7 @@ class PrestoDialectClass extends BaseSQLDialect {
   }
 
   queryToSql(
-    tableMap: TableInfoMap,
+    tableMap: LeafSchemaMap,
     query: QueryRep,
     offset?: number,
     limit?: number
@@ -71,7 +71,7 @@ class PrestoDialectClass extends BaseSQLDialect {
 
 const rowNumberPagedQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: QueryRep,
   offset: number,
   limit: number

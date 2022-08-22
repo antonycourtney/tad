@@ -5,7 +5,7 @@ import {
   TableRep,
   QueryExp,
   Schema,
-  TableInfoMap,
+  LeafSchemaMap,
   TableInfo,
   Row,
   ColumnMetaMap,

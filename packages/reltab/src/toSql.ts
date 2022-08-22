@@ -30,13 +30,13 @@ import { ppSQLQuery } from "./pp";
 import { defaultDialect, col, ColumnExtendExp } from "./defs";
 import _ = require("lodash");
 import { AggFn } from "./AggFn";
-import { TableInfoMap } from "./TableRep";
+import { LeafSchemaMap } from "./TableRep";
 import { ColumnType, colIsString } from "./ColumnType";
 import { queryGetSchema, getOrInferColumnType } from "./getSchema";
 
 const sqlQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: SqlQueryRep
 ): SQLQueryAST => {
   const key = JSON.stringify(query);
@@ -63,7 +63,7 @@ const sqlQueryToSql = (
 
 const tableQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: TableQueryRep
 ): SQLQueryAST => {
   const key = JSON.stringify(query);
@@ -103,7 +103,7 @@ const selectColsMap = (
 
 const projectQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { cols, from }: ProjectQueryRep
 ): SQLQueryAST => {
   const sqsql = unpagedQueryToSql(dialect, tableMap, from);
@@ -143,7 +143,7 @@ export const defaultAggFn = (ct: ColumnType): AggFn => ct.defaultAggFn;
 
 const groupByQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { cols, aggs, from }: GroupByQueryRep
 ): SQLQueryAST => {
   const inSchema = queryGetSchema(dialect, tableMap, from);
@@ -227,7 +227,7 @@ const groupByQueryToSql = (
 
 const filterQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { fexp, from }: FilterQueryRep
 ): SQLQueryAST => {
   const sqsql = unpagedQueryToSql(dialect, tableMap, from);
@@ -275,7 +275,7 @@ type MapColumnsGenQueryRep<T extends Object> = { cmap: any; from: QueryRep };
 function mapColumnsQueryToSql<T extends Object>(
   dialect: SQLDialect,
   byIndex: boolean,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { cmap, from }: MapColumnsGenQueryRep<T>
 ): SQLQueryAST {
   const sqsql = unpagedQueryToSql(dialect, tableMap, from); // apply renaming to invididual select expression:
@@ -314,7 +314,7 @@ function mapColumnsQueryToSql<T extends Object>(
 
 const concatQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { target, from }: ConcatQueryRep
 ): SQLQueryAST => {
   const sqSqls = [
@@ -329,7 +329,7 @@ const concatQueryToSql = (
 
 const sortQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { keys, from }: SortQueryRep
 ): SQLQueryAST => {
   const sqsql = unpagedQueryToSql(dialect, tableMap, from);
@@ -384,7 +384,7 @@ const isConstExtendExp = (colExp: ColumnExtendExp): boolean => {
 
 const extendQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { colId, opts, colExp, from }: ExtendQueryRep
 ): SQLQueryAST => {
   const inSchema = queryGetSchema(dialect, tableMap, from);
@@ -438,7 +438,7 @@ const extendQueryToSql = (
 
 const joinQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: JoinQueryRep
 ): SQLQueryAST => {
   const { lhs, rhs, on: onArg, joinType } = query;
@@ -492,7 +492,7 @@ const joinQueryToSql = (
 
 export const unpagedQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: QueryRep
 ): SQLQueryAST => {
   let ret: SQLQueryAST;
@@ -541,7 +541,7 @@ export const unpagedQueryToSql = (
 
 export const pagedQueryToSql = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: QueryRep,
   offset?: number,
   limit?: number

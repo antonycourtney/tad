@@ -6,7 +6,7 @@ import { SQLDialect } from "./dialect";
 import { QueryExp } from "./QueryExp";
 import { defaultEvalQueryOptions } from "./remote/Connection";
 import { Schema } from "./Schema";
-import { Row, TableInfo, TableInfoMap, TableRep } from "./TableRep";
+import { Row, TableInfo, LeafSchemaMap, TableRep } from "./TableRep";
 import * as log from "loglevel";
 import { QueryLeafDep, TableQueryRep } from "./QueryRep";
 
@@ -107,7 +107,7 @@ export class DbDataSource implements DataSourceConnection {
   readonly sourceId: DataSourceId;
 
   readonly db: DbDriver;
-  private tableMap: TableInfoMap;
+  private tableMap: LeafSchemaMap;
 
   constructor(db: DbDriver) {
     this.db = db;

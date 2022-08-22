@@ -3,7 +3,7 @@ import { QueryRep } from "./QueryRep";
 import { SQLQueryAST } from "./SQLQuery";
 import { pagedQueryToSql } from "./toSql";
 import { ColumnType, CoreColumnTypes, ColumnTypeMap } from "./ColumnType";
-import { TableInfoMap } from "./TableRep";
+import { LeafSchemaMap } from "./TableRep";
 
 export abstract class BaseSQLDialect implements SQLDialect {
   abstract readonly dialectName: string;
@@ -18,7 +18,7 @@ export abstract class BaseSQLDialect implements SQLDialect {
   }
 
   queryToSql(
-    tableMap: TableInfoMap,
+    tableMap: LeafSchemaMap,
     query: QueryRep,
     offset?: number,
     limit?: number

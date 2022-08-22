@@ -17,13 +17,13 @@ import {
 } from "./QueryRep";
 import { Schema, ColumnMetadata } from "./Schema";
 import { ColumnExtendExp } from "./defs";
-import { TableInfoMap } from "./TableRep";
+import { LeafSchemaMap } from "./TableRep";
 import { ColumnType } from "./ColumnType";
 import _ = require("lodash");
 
 const sqlGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: SqlQueryRep
 ): Schema => {
   const key = JSON.stringify(query);
@@ -38,7 +38,7 @@ const sqlGetSchema = (
 
 const tableGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: TableQueryRep
 ): Schema => {
   const key = JSON.stringify(query);
@@ -53,7 +53,7 @@ const tableGetSchema = (
 
 const projectGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: ProjectQueryRep
 ): Schema => {
   const inSchema = queryGetSchema(dialect, tableMap, query.from);
@@ -63,7 +63,7 @@ const projectGetSchema = (
 
 const groupByGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: GroupByQueryRep
 ): Schema => {
   const { cols, aggs } = query;
@@ -77,7 +77,7 @@ const groupByGetSchema = (
 
 const filterGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { from }: { from: QueryRep }
 ): Schema => {
   const inSchema = queryGetSchema(dialect, tableMap, from);
@@ -86,7 +86,7 @@ const filterGetSchema = (
 
 const mapColumnsGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: MapColumnsQueryRep
 ): Schema => {
   const { cmap, from } = query;
@@ -131,7 +131,7 @@ const mapColumnsGetSchema = (
 
 const mapColumnsByIndexGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { cmap, from }: MapColumnsByIndexQueryRep
 ): Schema => {
   // TODO: try to unify with mapColumns; probably have mapColumns do the
@@ -175,7 +175,7 @@ const mapColumnsByIndexGetSchema = (
 
 const concatGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { from }: ConcatQueryRep
 ): Schema => {
   const inSchema = queryGetSchema(dialect, tableMap, from);
@@ -233,7 +233,7 @@ export const getOrInferColumnType = (
 
 const extendGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { colId, colExp, opts, from }: ExtendQueryRep
 ): Schema => {
   const inSchema = queryGetSchema(dialect, tableMap, from);
@@ -247,7 +247,7 @@ const extendGetSchema = (
 
 const joinGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   { rhs, on, joinType, lhs }: JoinQueryRep
 ): Schema => {
   if (joinType !== "LeftOuter") {
@@ -274,7 +274,7 @@ const joinGetSchema = (
 
 export const queryGetSchema = (
   dialect: SQLDialect,
-  tableMap: TableInfoMap,
+  tableMap: LeafSchemaMap,
   query: QueryRep
 ): Schema => {
   switch (query.operator) {

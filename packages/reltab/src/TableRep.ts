@@ -5,8 +5,12 @@ export type TableInfo = {
   // tableName: string;
   schema: Schema;
 };
-export type TableInfoMap = {
-  [tableName: string]: TableInfo;
+
+/**
+ * LeafSchemaMap maps a canonical key for a QueryLeafDep to its Schema
+ */
+export type LeafSchemaMap = {
+  [leafKey: string]: TableInfo;
 };
 
 export type Row = {

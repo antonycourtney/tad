@@ -1194,49 +1194,51 @@ const filterQueryToSql = async (
  * Note: this implements both mapColumns and mapColumsByIndex
  */
 
-const mapColumnsQueryToSql = (byIndex: boolean) => async (
-  tableMap: TableInfoProvider,
-  query: QueryExp
-): Promise<SQLQueryAST> => {
-  const cMap = query.valArgs[0];
-  const sqsql = await queryToSql(tableMap, query.tableArgs[0]); // apply renaming to invididual select expression:
+const mapColumnsQueryToSql =
+  (byIndex: boolean) =>
+  async (
+    tableMap: TableInfoProvider,
+    query: QueryExp
+  ): Promise<SQLQueryAST> => {
+    const cMap = query.valArgs[0];
+    const sqsql = await queryToSql(tableMap, query.tableArgs[0]); // apply renaming to invididual select expression:
 
-  const applyColRename = (
-    cexp: SQLSelectColExp,
-    index: number
-  ): SQLSelectColExp => {
-    const inCid = typeof cexp === "string" ? cexp : cexp.as;
-    const mapKey = byIndex ? index.toString() : inCid;
-    const outCid = cMap.hasOwnProperty(mapKey) ? cMap[mapKey].id : inCid;
+    const applyColRename = (
+      cexp: SQLSelectColExp,
+      index: number
+    ): SQLSelectColExp => {
+      const inCid = typeof cexp === "string" ? cexp : cexp.as;
+      const mapKey = byIndex ? index.toString() : inCid;
+      const outCid = cMap.hasOwnProperty(mapKey) ? cMap[mapKey].id : inCid;
 
-    if (typeof cexp === "string") {
+      if (typeof cexp === "string") {
+        return {
+          colExp: quoteCol(cexp),
+          as: outCid,
+        };
+      } // Otherwise it's a SQLSelectAsExp -- apply rename to 'as' part:
+
       return {
-        colExp: quoteCol(cexp),
+        colExp: cexp.colExp,
         as: outCid,
       };
-    } // Otherwise it's a SQLSelectAsExp -- apply rename to 'as' part:
+    }; // rewrite an individual select statement by applying rename mapping:
 
-    return {
-      colExp: cexp.colExp,
-      as: outCid,
+    const rewriteSel = (sel: SQLSelectAST): SQLSelectAST => {
+      const selectCols = sel.selectCols.map(applyColRename);
+      return _.defaults(
+        {
+          selectCols,
+        },
+        sel
+      );
     };
-  }; // rewrite an individual select statement by applying rename mapping:
 
-  const rewriteSel = (sel: SQLSelectAST): SQLSelectAST => {
-    const selectCols = sel.selectCols.map(applyColRename);
-    return _.defaults(
-      {
-        selectCols,
-      },
-      sel
-    );
+    const ret = {
+      selectStmts: sqsql.selectStmts.map(rewriteSel),
+    };
+    return ret;
   };
-
-  const ret = {
-    selectStmts: sqsql.selectStmts.map(rewriteSel),
-  };
-  return ret;
-};
 
 const concatQueryToSql = async (
   tableMap: TableInfoProvider,
@@ -1603,7 +1605,7 @@ export type TableInfo = {
   tableName: string;
   schema: Schema;
 };
-export type TableInfoMap = {
+export type LeafSchemaMap = {
   [tableName: string]: TableInfo;
 };
 export interface TableInfoProvider {

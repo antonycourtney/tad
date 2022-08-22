@@ -10,7 +10,7 @@ import {
   registerProvider,
 } from "reltab";
 import {
-  TableInfoMap,
+  LeafSchemaMap,
   TableInfo,
   Row,
   ColumnMetaMap,
@@ -80,7 +80,7 @@ async function getSchemaObjects(
 
 export class SnowflakeConnection implements DataSourceConnection {
   readonly sourceId: DataSourceId;
-  tableMap: TableInfoMap;
+  tableMap: LeafSchemaMap;
   snowConn: snowflake.Connection;
 
   constructor(resourceId: string) {
