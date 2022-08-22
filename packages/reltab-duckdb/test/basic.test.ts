@@ -7,14 +7,22 @@ import { delimiter } from "path";
 import * as log from "loglevel";
 import * as util from "./testUtils";
 import * as _ from "lodash";
-import { asString, Row, Schema, tableQuery, TableRep } from "reltab";
+import {
+  asString,
+  DataSourceConnection,
+  DbDataSource,
+  Row,
+  Schema,
+  tableQuery,
+  TableRep,
+} from "reltab";
 import { getFormattedRows } from "./testUtils";
 
 const { col, constVal } = reltab;
 
 const coreTypes = reltab.SQLiteDialect.coreColumnTypes;
 
-let testCtx: reltabDuckDB.DuckDBContext;
+let testCtx: DataSourceConnection;
 
 const q1 = reltab.tableQuery("barttest");
 
@@ -34,16 +42,19 @@ const importCsv = async (db: duckdb.DuckDB, path: string) => {
   await reltabDuckDB.nativeCSVImport(db, path);
 };
 
-beforeAll(async (): Promise<reltabDuckDB.DuckDBContext> => {
+beforeAll(async (): Promise<DataSourceConnection> => {
   const ctx = await reltab.getConnection({
     providerName: "duckdb",
     resourceId: ":memory:",
   });
 
-  testCtx = ctx as reltabDuckDB.DuckDBContext;
+  testCtx = ctx;
 
-  await importCsv(testCtx.db, "test/support/sample.csv");
-  await importCsv(testCtx.db, "test/support/barttest.csv");
+  const dbds = ctx as DbDataSource;
+  const duckDbDriver = dbds.db as reltabDuckDB.DuckDBDriver;
+
+  await importCsv(duckDbDriver.db, "test/support/sample.csv");
+  await importCsv(duckDbDriver.db, "test/support/barttest.csv");
 
   return testCtx;
 });
@@ -266,9 +277,12 @@ test("getSourceInfo basics", async () => {
 test("basic DuckDb types", async () => {
   const dbc = testCtx;
 
-  await dbc.runSQLQuery("create table basic_ttest(i integer,b boolean); ");
-  await dbc.runSQLQuery("insert into basic_ttest values (99, true);");
-  await dbc.runSQLQuery("insert into basic_ttest values (87, false);");
+  const dbds = dbc as DbDataSource;
+  const driver = dbds.db as reltabDuckDB.DuckDBDriver;
+
+  await driver.runSqlQuery("create table basic_ttest(i integer,b boolean); ");
+  await driver.runSqlQuery("insert into basic_ttest values (99, true);");
+  await driver.runSqlQuery("insert into basic_ttest values (87, false);");
 
   const q0 = tableQuery("basic_ttest");
   const q0res = await dbc.evalQuery(q0);
@@ -292,9 +306,12 @@ test("basic DuckDb types", async () => {
 test("DuckDb date type", async () => {
   const dbc = testCtx;
 
-  await dbc.runSQLQuery("create table date_ttest(d date); ");
-  await dbc.runSQLQuery("insert into date_ttest values ('1991-07-21');");
-  await dbc.runSQLQuery("insert into date_ttest values ('2022-02-11');");
+  const dbds = dbc as DbDataSource;
+  const driver = dbds.db as reltabDuckDB.DuckDBDriver;
+
+  await driver.runSqlQuery("create table date_ttest(d date); ");
+  await driver.runSqlQuery("insert into date_ttest values ('1991-07-21');");
+  await driver.runSqlQuery("insert into date_ttest values ('2022-02-11');");
 
   const q0 = tableQuery("date_ttest");
   const q0res = await dbc.evalQuery(q0);
@@ -315,12 +332,14 @@ test("DuckDb date type", async () => {
 
 test("DuckDb timestamp type", async () => {
   const dbc = testCtx;
+  const dbds = dbc as DbDataSource;
+  const driver = dbds.db as reltabDuckDB.DuckDBDriver;
 
-  await dbc.runSQLQuery("create table tstamp_ttest(t timestamp); ");
-  await dbc.runSQLQuery(
+  await driver.runSqlQuery("create table tstamp_ttest(t timestamp); ");
+  await driver.runSqlQuery(
     "insert into tstamp_ttest values ('1991-07-21 11:30:00');"
   );
-  await dbc.runSQLQuery(
+  await driver.runSqlQuery(
     "insert into tstamp_ttest values ('2022-02-11 14:15:45');"
   );
 

@@ -7,18 +7,26 @@ import { delimiter } from "path";
 import * as log from "loglevel";
 import * as util from "./testUtils";
 import * as _ from "lodash";
-import { asString, Row, Schema, tableQuery, TableRep } from "reltab";
+import {
+  asString,
+  DataSourceConnection,
+  DbDataSource,
+  Row,
+  Schema,
+  tableQuery,
+  TableRep,
+} from "reltab";
 import { getFormattedRows } from "./testUtils";
 
-let testCtx: reltabDuckDB.DuckDBContext;
+let testCtx: DataSourceConnection;
 
-beforeAll(async (): Promise<reltabDuckDB.DuckDBContext> => {
+beforeAll(async (): Promise<DataSourceConnection> => {
   const ctx = await reltab.getConnection({
     providerName: "duckdb",
     resourceId: ":memory:",
   });
 
-  testCtx = ctx as reltabDuckDB.DuckDBContext;
+  testCtx = ctx as DataSourceConnection;
 
   return testCtx;
 });
@@ -32,8 +40,11 @@ const importParquet = async (
 };
 
 test("https import test", async () => {
+  const dbds = testCtx as DbDataSource;
+  const driver = dbds.db as reltabDuckDB.DuckDBDriver;
+
   const tableName = await importParquet(
-    testCtx.db,
+    driver.db,
     "https://github.com/deepcrawl/node-duckdb/raw/master/src/tests/test-fixtures/alltypes_plain.parquet"
   );
 
@@ -64,6 +75,8 @@ test("https import test", async () => {
 
 test("s3 import test", async () => {
   const dbc = testCtx;
+  const dbds = testCtx as DbDataSource;
+  const driver = dbds.db as reltabDuckDB.DuckDBDriver;
 
   let importSucceeded = false;
   let tableName: string = "";
@@ -71,7 +84,7 @@ test("s3 import test", async () => {
   const s3URL =
     "s3://amazon-reviews-pds/parquet/product_category=Books/part-00000-495c48e6-96d6-4650-aa65-3c36a3516ddd.c000.snappy.parquet";
   try {
-    tableName = await importParquet(testCtx.db, s3URL);
+    tableName = await importParquet(driver.db, s3URL);
     console.log("s3 import complete, tableName: ", tableName);
     importSucceeded = true;
   } catch (err) {

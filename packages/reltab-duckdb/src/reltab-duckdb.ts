@@ -19,6 +19,8 @@ import {
   registerProvider,
   defaultEvalQueryOptions,
   DuckDBDialect,
+  DbDriver,
+  DbDataSource,
 } from "reltab"; // eslint-disable-line
 import { SQLDialect } from "reltab/dist/dialect";
 import { initS3 } from "./s3utils";
@@ -68,13 +70,13 @@ class ConnectionPool {
   }
 }
 
-export class DuckDBContext implements DataSourceConnection {
+export class DuckDBDriver implements DbDriver {
   readonly displayName: string;
   readonly sourceId: DataSourceId;
+  readonly dialect: SQLDialect = DuckDBDialect;
   dbfile: string;
   db: DuckDB;
   connPool: ConnectionPool;
-  private tableMap: TableInfoMap;
 
   constructor(dbfile: string, db: DuckDB, dbConn: Connection) {
     this.dbfile = dbfile;
@@ -82,10 +84,9 @@ export class DuckDBContext implements DataSourceConnection {
     this.sourceId = { providerName: "duckdb", resourceId: dbfile };
     this.db = db;
     this.connPool = new ConnectionPool(db);
-    this.tableMap = {};
   }
 
-  async runSQLQuery(query: string): Promise<any> {
+  async runSqlQuery(query: string): Promise<Row[]> {
     const conn = await this.connPool.take();
     let ret: any;
     try {
@@ -100,95 +101,9 @@ export class DuckDBContext implements DataSourceConnection {
     return this.displayName;
   }
 
-  // ensure every table (or base query) mentioned in query is registered:
-  async ensureLeafDeps(query: QueryExp): Promise<void> {
-    const leafDepsMap = query.getLeafDeps();
-    for (const [leafKey, leafQuery] of leafDepsMap.entries()) {
-      if (this.tableMap[leafKey] === undefined) {
-        await this.getLeafDepInfo(leafKey, leafQuery);
-      }
-    }
-  }
-
-  async getSchema(query: QueryExp): Promise<Schema> {
-    await this.ensureLeafDeps(query);
-    const schema = query.getSchema(DuckDBDialect, this.tableMap);
-    return schema;
-  }
-
-  async evalQuery(
-    query: QueryExp,
-    offset?: number,
-    limit?: number,
-    options?: EvalQueryOptions
-  ): Promise<TableRep> {
-    let t0 = process.hrtime();
-    await this.ensureLeafDeps(query);
-    const schema = query.getSchema(DuckDBDialect, this.tableMap);
-    const sqlQuery = query.toSql(DuckDBDialect, this.tableMap, offset, limit);
-    let t1 = process.hrtime(t0);
-    const [t1s, t1ns] = t1;
-
-    const trueOptions = options ? options : defaultEvalQueryOptions;
-
-    if (trueOptions.showQueries) {
-      // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.info("DuckDBContext.evalQuery: evaluating:\n" + sqlQuery);
-    }
-
-    const t2 = process.hrtime();
-    const dbRows = await this.runSQLQuery(sqlQuery);
-    const rows = dbRows as Row[];
-    const t3 = process.hrtime(t2);
-    const [t3s, t3ns] = t3;
-    const t4pre = process.hrtime();
-    const ret = new TableRep(schema, rows);
-    const t4 = process.hrtime(t4pre);
-    const [t4s, t4ns] = t4;
-
-    /*
-    if (this.showQueries) {
-      log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
-      log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
-    }
-    */
-
-    return ret;
-  }
-
-  async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
-    let t0 = process.hrtime();
-    await this.ensureLeafDeps(query);
-    const countSql = query.toCountSql(DuckDBDialect, this.tableMap);
-    let t1 = process.hrtime(t0);
-    const [t1s, t1ns] = t1;
-
-    const trueOptions = options ? options : defaultEvalQueryOptions;
-
-    if (trueOptions.showQueries) {
-      // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("DuckDBContext.rowCount: evaluating: \n" + countSql);
-    }
-
-    const t2 = process.hrtime();
-    const qp = this.runSQLQuery(countSql);
-    return qp.then((rows) => {
-      const t3 = process.hrtime(t2);
-      const [t3s, t3ns] = t3;
-      /*
-      if (this.showQueries) {
-        log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
-      }
-      */
-      const ret = Number.parseInt(rows[0].rowCount);
-      return ret;
-    });
-  }
-
-  async dbGetTableInfo(tableName: string): Promise<TableInfo> {
+  async getTableSchema(tableName: string): Promise<Schema> {
     const tiQuery = `PRAGMA table_info(${tableName})`;
-    const dbRows = await this.runSQLQuery(tiQuery);
-    const rows = dbRows as Row[];
+    const rows = await this.runSqlQuery(tiQuery);
     log.debug("getTableInfo: ", rows);
 
     const extendCMap = (
@@ -215,50 +130,20 @@ export class DuckDBContext implements DataSourceConnection {
     const cmMap = rows.reduce(extendCMap, {});
     const columnIds = rows.map((r) => r.name);
     const schema = new Schema(DuckDBDialect, columnIds as string[], cmMap);
-    return {
-      schema,
-    };
+    return schema;
   }
 
-  async dbGetSqlQueryInfo(sqlQuery: string): Promise<TableInfo> {
+  async getSqlQuerySchema(sqlQuery: string): Promise<Schema> {
     const tmpViewName = genViewName();
     const mkViewQuery = `create temporary view ${tmpViewName} as ${sqlQuery}`;
-    const queryRes = await this.runSQLQuery(mkViewQuery);
+    const queryRes = await this.runSqlQuery(mkViewQuery);
     // Now that we've created the temporary view, we can extract the schema the same
     // way we would for a table:
-    return this.dbGetTableInfo(tmpViewName);
-  }
-
-  async getLeafDepInfo(
-    leafKey: string,
-    leafQuery: QueryLeafDep
-  ): Promise<TableInfo> {
-    let ti = this.tableMap[leafKey];
-    if (!ti) {
-      switch (leafQuery.operator) {
-        case "table":
-          ti = await this.dbGetTableInfo(leafQuery.tableName);
-          break;
-        case "sql":
-          ti = await this.dbGetSqlQueryInfo(leafQuery.sqlQuery);
-          break;
-        default:
-          const invalidQuery: never = leafQuery;
-          throw new Error(
-            "getLeafDepInfo: Unknown operator for leaf query: " + leafQuery
-          );
-      }
-      if (ti) {
-        this.tableMap[leafKey] = ti;
-      }
-    }
-    return ti;
-  }
-
-  async getTableInfo(tableName: string): Promise<TableInfo> {
-    const leafDep: TableQueryRep = { operator: "table", tableName };
-    const leafKey = JSON.stringify(leafDep);
-    return this.getLeafDepInfo(leafKey, leafDep);
+    const schema = await this.getTableSchema(tmpViewName);
+    // clean up after ourselves, since view was only needed to extract schema:
+    const dropViewQuery = `drop view ${tmpViewName}`;
+    const dropQueryRes = await this.runSqlQuery(dropViewQuery);
+    return schema;
   }
 
   async getRootNode(): Promise<DataSourceNode> {
@@ -274,8 +159,8 @@ export class DuckDBContext implements DataSourceConnection {
     const { path } = dsPath;
     let node: DataSourceNode;
     const tiQuery = `PRAGMA show_tables;`;
-    const dbRows = await this.runSQLQuery(tiQuery);
-    const tableNames: string[] = dbRows.map((row: any) => row.name);
+    const dbRows = await this.runSqlQuery(tiQuery);
+    const tableNames: string[] = dbRows.map((row: Row) => row.name as string);
     const childNodes: DataSourceNode[] = tableNames.map((tableName) => ({
       id: tableName,
       kind: "Table",
@@ -304,8 +189,9 @@ const duckdbDataSourceProvider: DataSourceProvider = {
     }
     const db = new DuckDB(dbOpts);
     const dbConn = new Connection(db);
-    const ctx = new DuckDBContext(dbfile, db, dbConn);
-    return ctx;
+    const driver = new DuckDBDriver(dbfile, db, dbConn);
+    const dsConn = new DbDataSource(driver);
+    return dsConn;
   },
 };
 

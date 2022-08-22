@@ -2,8 +2,13 @@
  * Hierarchical organization of data sources.
  */
 
+import { SQLDialect } from "./dialect";
 import { QueryExp } from "./QueryExp";
-import { TableInfo, TableRep } from "./TableRep";
+import { defaultEvalQueryOptions } from "./remote/Connection";
+import { Schema } from "./Schema";
+import { Row, TableInfo, TableInfoMap, TableRep } from "./TableRep";
+import * as log from "loglevel";
+import { QueryLeafDep, TableQueryRep } from "./QueryRep";
 
 export type DataSourceKind =
   | "DataSource"
@@ -45,6 +50,30 @@ export interface EvalQueryOptions {
 }
 
 /**
+ * A driver for a particular database, capable of
+ * executing SQL queries, obtaining schema info
+ * for tables and queries, and enumerating
+ * data catalog information
+ */
+export interface DbDriver {
+  readonly sourceId: DataSourceId;
+  readonly dialect: SQLDialect;
+
+  runSqlQuery(sqlQuery: string): Promise<Row[]>;
+  getTableSchema(tableName: string): Promise<Schema>;
+  getSqlQuerySchema(sqlQuery: string): Promise<Schema>;
+
+  getRootNode(): Promise<DataSourceNode>;
+  getChildren(path: DataSourcePath): Promise<DataSourceNode[]>;
+
+  // Get a table name that can be used in queries:
+  getTableName(path: DataSourcePath): Promise<string>;
+
+  // display name for this connection
+  getDisplayName(): Promise<string>;
+}
+
+/**
  * A local or remote connection to a data source.
  */
 export interface DataSourceConnection {
@@ -68,6 +97,156 @@ export interface DataSourceConnection {
 
   // display name for this connection
   getDisplayName(): Promise<string>;
+}
+
+/**
+ * The standard implementation of DataSourceConnection interface,
+ * backed by an underlying DbDriver.
+ */
+export class DbDataSource implements DataSourceConnection {
+  readonly sourceId: DataSourceId;
+
+  readonly db: DbDriver;
+  private tableMap: TableInfoMap;
+
+  constructor(db: DbDriver) {
+    this.db = db;
+    this.sourceId = db.sourceId;
+    this.tableMap = {};
+  }
+
+  async evalQuery(
+    query: QueryExp,
+    offset?: number,
+    limit?: number,
+    options?: EvalQueryOptions
+  ): Promise<TableRep> {
+    let t0 = process.hrtime();
+    await this.ensureLeafDeps(query);
+    const schema = query.getSchema(this.db.dialect, this.tableMap);
+    const sqlQuery = query.toSql(this.db.dialect, this.tableMap, offset, limit);
+    let t1 = process.hrtime(t0);
+    const [t1s, t1ns] = t1;
+
+    const trueOptions = options ? options : defaultEvalQueryOptions;
+
+    if (trueOptions.showQueries) {
+      // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
+      log.info("DuckDBContext.evalQuery: evaluating:\n" + sqlQuery);
+    }
+
+    const t2 = process.hrtime();
+    const rows = await this.db.runSqlQuery(sqlQuery);
+    const t3 = process.hrtime(t2);
+    const [t3s, t3ns] = t3;
+    const t4pre = process.hrtime();
+    const ret = new TableRep(schema, rows);
+    const t4 = process.hrtime(t4pre);
+    const [t4s, t4ns] = t4;
+
+    /*
+    if (this.showQueries) {
+      log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
+      log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
+    }
+    */
+
+    return ret;
+  }
+
+  async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
+    let t0 = process.hrtime();
+    await this.ensureLeafDeps(query);
+    const countSql = query.toCountSql(this.db.dialect, this.tableMap);
+    let t1 = process.hrtime(t0);
+    const [t1s, t1ns] = t1;
+
+    const trueOptions = options ? options : defaultEvalQueryOptions;
+
+    if (trueOptions.showQueries) {
+      // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
+      log.debug("DuckDBContext.rowCount: evaluating: \n" + countSql);
+    }
+
+    const t2 = process.hrtime();
+    const rows = await this.db.runSqlQuery(countSql);
+    const t3 = process.hrtime(t2);
+    const [t3s, t3ns] = t3;
+    /*
+    if (this.showQueries) {
+      log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
+    }
+    */
+    let rowCount = rows[0].rowCount as number;
+    if (typeof rowCount === "bigint") {
+      const rcVal = rowCount as bigint;
+      rowCount = Number.parseInt(rcVal.toString());
+    }
+    return rowCount;
+  }
+
+  // ensure every table (or base query) mentioned in query is registered:
+  async ensureLeafDeps(query: QueryExp): Promise<void> {
+    const leafDepsMap = query.getLeafDeps();
+    for (const [leafKey, leafQuery] of leafDepsMap.entries()) {
+      if (this.tableMap[leafKey] === undefined) {
+        await this.getLeafDepInfo(leafKey, leafQuery);
+      }
+    }
+  }
+
+  async getLeafDepInfo(
+    leafKey: string,
+    leafQuery: QueryLeafDep
+  ): Promise<TableInfo> {
+    let ti = this.tableMap[leafKey];
+    if (!ti) {
+      let schema: Schema;
+      switch (leafQuery.operator) {
+        case "table":
+          schema = await this.db.getTableSchema(leafQuery.tableName);
+          break;
+        case "sql":
+          schema = await this.db.getSqlQuerySchema(leafQuery.sqlQuery);
+          break;
+        default:
+          const invalidQuery: never = leafQuery;
+          throw new Error(
+            "getLeafDepInfo: Unknown operator for leaf query: " + leafQuery
+          );
+      }
+      ti = { schema };
+
+      if (ti) {
+        this.tableMap[leafKey] = ti;
+      }
+    }
+    return ti;
+  }
+
+  getTableInfo(tableName: string): Promise<TableInfo> {
+    const leafDep: TableQueryRep = { operator: "table", tableName };
+    const leafKey = JSON.stringify(leafDep);
+    return this.getLeafDepInfo(leafKey, leafDep);
+  }
+
+  getRootNode(): Promise<DataSourceNode> {
+    return this.db.getRootNode();
+  }
+
+  getChildren(path: DataSourcePath): Promise<DataSourceNode[]> {
+    return this.db.getChildren(path);
+  }
+
+  // Get a table name that can be used in queries:
+  getTableName(path: DataSourcePath): Promise<string> {
+    return this.db.getTableName(path);
+  }
+
+  // display name for this connection
+  getDisplayName(): Promise<string> {
+    return this.db.getDisplayName();
+  }
 }
 
 export interface DataSourceProvider {
