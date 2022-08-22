@@ -43,7 +43,7 @@ beforeAll(async () => {
   );
   console.log("done importing barttest");
 
-  const ti = await testCtx.getTableInfo(
+  const ti = await testCtx.getTableSchema(
     "bigquery-test-project-276102.test_dataset.barttest"
   );
   console.log("barttest tableInfo: ", JSON.stringify(ti, undefined, 2));
@@ -62,7 +62,7 @@ test("public covid19 dataset - basic covid-table query", async () => {
     covid19ConnKey
   )) as BigQueryConnection;
 
-  const ti = await rtc.getTableInfo(
+  const ti = await rtc.getTableSchema(
     "bigquery-public-data.covid19_jhu_csse.summary"
   );
   console.log("tableInfo: ", JSON.stringify(ti, undefined, 2));
@@ -333,7 +333,7 @@ test("public covid19 dataset - aggtree basics", async () => {
     covid19ConnKey
   )) as BigQueryConnection;
 
-  const ti = await rtc.getTableInfo(
+  const ti = await rtc.getTableSchema(
     "bigquery-public-data.covid19_jhu_csse.summary"
   );
   console.log("tableInfo: ", JSON.stringify(ti, undefined, 2));
@@ -389,7 +389,7 @@ test("covid19 -- open pivot tree to leaf level", async () => {
 
   const q1 = reltab.tableQuery("bigquery-public-data.covid19_jhu_csse.summary");
 
-  const ti = await rtc.getTableInfo(
+  const ti = await rtc.getTableSchema(
     "bigquery-public-data.covid19_jhu_csse.summary"
   );
   console.log("tableInfo: ", JSON.stringify(ti, undefined, 2));

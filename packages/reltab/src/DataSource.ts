@@ -6,7 +6,7 @@ import { SQLDialect } from "./dialect";
 import { QueryExp } from "./QueryExp";
 import { defaultEvalQueryOptions } from "./remote/Connection";
 import { Schema } from "./Schema";
-import { Row, TableInfo, LeafSchemaMap, TableRep } from "./TableRep";
+import { Row, LeafSchemaMap, TableRep } from "./TableRep";
 import * as log from "loglevel";
 import { QueryLeafDep, TableQueryRep } from "./QueryRep";
 
@@ -87,7 +87,7 @@ export interface DataSourceConnection {
   ): Promise<TableRep>;
   rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number>;
 
-  getTableInfo(tableName: string): Promise<TableInfo>;
+  getTableSchema(tableName: string): Promise<Schema>;
 
   getRootNode(): Promise<DataSourceNode>;
   getChildren(path: DataSourcePath): Promise<DataSourceNode[]>;
@@ -190,18 +190,17 @@ export class DbDataSource implements DataSourceConnection {
     const leafDepsMap = query.getLeafDeps();
     for (const [leafKey, leafQuery] of leafDepsMap.entries()) {
       if (this.tableMap[leafKey] === undefined) {
-        await this.getLeafDepInfo(leafKey, leafQuery);
+        await this.getLeafDepSchema(leafKey, leafQuery);
       }
     }
   }
 
-  async getLeafDepInfo(
+  async getLeafDepSchema(
     leafKey: string,
     leafQuery: QueryLeafDep
-  ): Promise<TableInfo> {
-    let ti = this.tableMap[leafKey];
-    if (!ti) {
-      let schema: Schema;
+  ): Promise<Schema> {
+    let schema: Schema | undefined = this.tableMap[leafKey];
+    if (!schema) {
       switch (leafQuery.operator) {
         case "table":
           schema = await this.db.getTableSchema(leafQuery.tableName);
@@ -215,19 +214,17 @@ export class DbDataSource implements DataSourceConnection {
             "getLeafDepInfo: Unknown operator for leaf query: " + leafQuery
           );
       }
-      ti = { schema };
-
-      if (ti) {
-        this.tableMap[leafKey] = ti;
+      if (schema) {
+        this.tableMap[leafKey] = schema;
       }
     }
-    return ti;
+    return schema;
   }
 
-  getTableInfo(tableName: string): Promise<TableInfo> {
+  getTableSchema(tableName: string): Promise<Schema> {
     const leafDep: TableQueryRep = { operator: "table", tableName };
     const leafKey = JSON.stringify(leafDep);
-    return this.getLeafDepInfo(leafKey, leafDep);
+    return this.getLeafDepSchema(leafKey, leafDep);
   }
 
   getRootNode(): Promise<DataSourceNode> {

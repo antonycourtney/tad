@@ -20,7 +20,7 @@ beforeAll(async () => {
   log.setLevel(log.levels.DEBUG);
 
   testCtx = (await reltab.getConnection(awsConnKey)) as AWSAthenaConnection;
-  const ti = await testCtx.getTableInfo("imdb_top_rated");
+  const ti = await testCtx.getTableSchema("imdb_top_rated");
   console.log("movie_metadata table info: ", ti);
 });
 
@@ -459,7 +459,7 @@ test("public covid19 dataset - aggtree basics", async () => {
     { showQueries: true }
   );
 
-  const ti = await rtc.getTableInfo(
+  const ti = await rtc.getTableSchema(
     "bigquery-public-data.covid19_jhu_csse.summary"
   );
   console.log("tableInfo: ", JSON.stringify(ti, undefined, 2));
@@ -517,7 +517,7 @@ test("covid19 -- open pivot tree to leaf level", async () => {
 
   const q1 = reltab.tableQuery("bigquery-public-data.covid19_jhu_csse.summary");
 
-  const ti = await rtc.getTableInfo(
+  const ti = await rtc.getTableSchema(
     "bigquery-public-data.covid19_jhu_csse.summary"
   );
   console.log("tableInfo: ", JSON.stringify(ti, undefined, 2));

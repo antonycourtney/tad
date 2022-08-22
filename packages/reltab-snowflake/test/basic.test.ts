@@ -29,7 +29,7 @@ beforeAll(async () => {
     snowflakeConnKey
   )) as SnowflakeConnection;
   log.debug("got testConn: ", testConn);
-  const ti = await testConn.getTableInfo("TRIPS");
+  const ti = await testConn.getTableSchema("TRIPS");
   log.debug("trips table info: ", ti);
 });
 

@@ -1,16 +1,11 @@
 import { Schema } from "./Schema";
 import { Scalar } from "./defs";
 
-export type TableInfo = {
-  // tableName: string;
-  schema: Schema;
-};
-
 /**
  * LeafSchemaMap maps a canonical key for a QueryLeafDep to its Schema
  */
 export type LeafSchemaMap = {
-  [leafKey: string]: TableInfo;
+  [leafKey: string]: Schema;
 };
 
 export type Row = {

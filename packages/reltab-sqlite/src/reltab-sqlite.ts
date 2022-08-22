@@ -64,7 +64,7 @@ export class SqliteContext implements DataSourceConnection {
     const namesArr = Array.from(tblNames);
     for (let tblName of namesArr) {
       if (this.tableMap[tblName] === undefined) {
-        await this.getTableInfo(tblName);
+        await this.getTableSchema(tblName);
       }
     }
   }
@@ -159,7 +159,7 @@ export class SqliteContext implements DataSourceConnection {
     const qp = dbAll(this.db, tiQuery);
     return qp.then((dbRows) => {
       const rows = dbRows as Row[];
-      // log.debug("getTableInfo: ", rows);
+      // log.debug("getTableSchema: ", rows);
 
       const extendCMap = (
         cmm: ColumnMetaMap,
@@ -192,7 +192,7 @@ export class SqliteContext implements DataSourceConnection {
     });
   }
 
-  async getTableInfo(tableName: string): Promise<TableInfo> {
+  async getTableSchema(tableName: string): Promise<TableInfo> {
     let ti = this.tableMap[tableName];
     if (!ti) {
       ti = await this.dbGetTableInfo(tableName);

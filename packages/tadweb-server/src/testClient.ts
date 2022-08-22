@@ -33,7 +33,7 @@ async function testGetRowCount(tableName: string) {
 async function testGetTableInfo(tableName: string) {
   const args = { tableName };
   log.info("testGetTableInfo: ", args);
-  const response = await request("/tadweb/getTableInfo", args);
+  const response = await request("/tadweb/getTableSchema", args);
   log.info("testGetTableInfo: got result: ", JSON.stringify(response, null, 2));
 }
 

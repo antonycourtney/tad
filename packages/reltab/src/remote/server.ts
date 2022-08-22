@@ -9,7 +9,7 @@ import {
   EngineReq,
   DbConnEvalQueryRequest,
   DbConnRowCountRequest,
-  DbConnGetTableInfoRequest,
+  DbConnGetTableSchemaRequest,
   DbConnGetChildrenRequest,
   DbConnGetTableNameRequest,
   ReltabConnection,
@@ -27,9 +27,10 @@ import {
   TransportClient,
   TransportServer,
 } from "./Transport";
-import { TableInfo, TableRep } from "../TableRep";
+import { TableRep } from "../TableRep";
 import { Result } from "./result";
 import { serializeError } from "./errorUtils";
+import { Schema } from "../Schema";
 
 const dbConnEvalQuery = async (
   conn: DataSourceConnection,
@@ -97,16 +98,16 @@ const dbConnGetTableName = async (
   return tableName;
 };
 
-const dbConnGetTableInfo = async (
+const dbConnGetTableSchema = async (
   conn: DataSourceConnection,
-  req: DbConnGetTableInfoRequest
-): Promise<TableInfo> => {
+  req: DbConnGetTableSchemaRequest
+): Promise<Schema> => {
   const hrstart = process.hrtime();
   const { tableName } = req;
-  const tableInfo = await conn.getTableInfo(tableName);
+  const schema = await conn.getTableSchema(tableName);
   const elapsed = process.hrtime(hrstart);
-  log.info("dbGetTableInfo: evaluated query in", prettyHRTime(elapsed));
-  return tableInfo;
+  log.info("dbGetTableSchema: evaluated query in", prettyHRTime(elapsed));
+  return schema;
 };
 
 // an EngineReqHandler wraps a req in an EngineReq that carries an
@@ -132,7 +133,7 @@ const handleDbConnRowCount = mkEngineReqHandler(dbConnRowCount);
 const handleDbConnGetRootNode = mkEngineReqHandler(dbConnGetRootNode);
 const handleDbConnGetChildren = mkEngineReqHandler(dbConnGetChildren);
 const handleDbConnGetTableName = mkEngineReqHandler(dbConnGetTableName);
-const handleDbConnGetTableInfo = mkEngineReqHandler(dbConnGetTableInfo);
+const handleDbConnGetTableSchema = mkEngineReqHandler(dbConnGetTableSchema);
 
 let providerRegistry: { [providerName: string]: DataSourceProvider } = {};
 
@@ -308,8 +309,8 @@ export const serverInit = (ts: TransportServer) => {
     simpleJSONHandler(exceptionHandler(handleDbConnGetTableName))
   );
   ts.registerInvokeHandler(
-    "DataSourceConnection.getTableInfo",
-    simpleJSONHandler(exceptionHandler(handleDbConnGetTableInfo))
+    "DataSourceConnection.getTableSchema",
+    simpleJSONHandler(exceptionHandler(handleDbConnGetTableSchema))
   );
 };
 

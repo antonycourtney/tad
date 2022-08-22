@@ -103,8 +103,8 @@ export class FSConnection implements DataSourceConnection {
     return this.dbc.rowCount(query, options);
   }
 
-  getTableInfo(tableName: string): Promise<TableInfo> {
-    return this.dbc.getTableInfo(tableName);
+  getTableSchema(tableName: string): Promise<TableInfo> {
+    return this.dbc.getTableSchema(tableName);
   }
 
   async getRootNode(): Promise<DataSourceNode> {

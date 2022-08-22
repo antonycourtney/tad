@@ -40,11 +40,10 @@ const sqlQueryToSql = (
   query: SqlQueryRep
 ): SQLQueryAST => {
   const key = JSON.stringify(query);
-  const entry = tableMap[key];
-  if (entry === undefined) {
+  const schema = tableMap[key];
+  if (schema === undefined) {
     throw new Error(`Could not find schema for base query ( ${query} )`);
   }
-  const schema = entry.schema;
   const { sqlQuery } = query;
 
   const selectCols = schema.columns;
@@ -67,9 +66,7 @@ const tableQueryToSql = (
   query: TableQueryRep
 ): SQLQueryAST => {
   const key = JSON.stringify(query);
-  const entry = tableMap[key];
-  const schema = entry.schema;
-
+  const schema = tableMap[key];
   const { tableName } = query;
 
   const selectCols = schema.columns;

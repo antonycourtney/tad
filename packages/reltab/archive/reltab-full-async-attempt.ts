@@ -639,7 +639,7 @@ const tableGetSchema = async (
   tableMap: TableInfoProvider,
   query: QueryExp
 ): Promise<Schema> => {
-  const ti = await tableMap.getTableInfo(query.valArgs[0]);
+  const ti = await tableMap.getTableSchema(query.valArgs[0]);
   return ti.schema;
 };
 
@@ -996,7 +996,7 @@ const tableQueryToSql = async (
   tq: QueryExp
 ): Promise<SQLQueryAST> => {
   const tableName = tq.valArgs[0];
-  const schema = (await tableMap.getTableInfo(tableName)).schema;
+  const schema = (await tableMap.getTableSchema(tableName)).schema;
 
   const selectCols: Array<any> = schema.columns;
   const sel = {
@@ -1609,7 +1609,7 @@ export type LeafSchemaMap = {
   [tableName: string]: TableInfo;
 };
 export interface TableInfoProvider {
-  getTableInfo(tableName: string): Promise<TableInfo>;
+  getTableSchema(tableName: string): Promise<TableInfo>;
 }
 
 export class TableRep {
@@ -1643,5 +1643,5 @@ export interface Connection {
     limit?: number
   ): Promise<TableRep>;
   rowCount(query: QueryExp): Promise<number>;
-  getTableInfo(tableName: string): Promise<TableInfo>;
+  getTableSchema(tableName: string): Promise<TableInfo>;
 }

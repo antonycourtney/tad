@@ -6,7 +6,8 @@ import {
   EvalQueryOptions,
 } from "../DataSource";
 import { deserializeTableRepStr, QueryExp } from "../QueryExp";
-import { TableInfo, TableRep } from "../TableRep";
+import { Schema } from "../Schema";
+import { TableRep } from "../TableRep";
 import { deserializeError } from "./errorUtils";
 import { Result } from "./result";
 import { TransportClient } from "./Transport";
@@ -27,7 +28,7 @@ export interface DbConnRowCountRequest {
   options: EvalQueryOptions;
 }
 
-export interface DbConnGetTableInfoRequest {
+export interface DbConnGetTableSchemaRequest {
   tableName: string;
 }
 
@@ -104,12 +105,12 @@ class RemoteDataSourceConnection implements DataSourceConnection {
     );
   }
 
-  async getTableInfo(tableName: string): Promise<TableInfo> {
-    const req: DbConnGetTableInfoRequest = { tableName };
+  async getTableSchema(tableName: string): Promise<Schema> {
+    const req: DbConnGetTableSchemaRequest = { tableName };
     return invokeDbFunction(
       this.tconn,
       this.sourceId,
-      "getTableInfo",
+      "getTableSchema",
       req
     ).then(decodeResult);
   }

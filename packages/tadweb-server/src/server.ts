@@ -187,22 +187,22 @@ async function main() {
     { showQueries: true }
   );
 
-  const ti = await dbc.getTableInfo(
+  const ti = await dbc.getTableSchema(
     "bigquery-public-data.covid19_jhu_csse.summary"
   );
-  const ti2 = await dbc.getTableInfo(
+  const ti2 = await dbc.getTableSchema(
     "bigquery-public-data.github_repos.commits"
   );
   console.log("tableInfo: ", ti2);
 
-  const ti3 = await dbc.getTableInfo(
+  const ti3 = await dbc.getTableSchema(
     "bigquery-public-data.iowa_liquor_sales.sales"
   );
   console.log("tableInfo: ", ti3);
 */
   /* const dbc = new AWSAthenaConnection({ showQueries: true });
 
-  // const ti = await dbc.getTableInfo("movie_metadata");
+  // const ti = await dbc.getTableSchema("movie_metadata");
   console.log("tableInfo: ", ti);
 */
 

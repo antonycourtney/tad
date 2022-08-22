@@ -27,13 +27,13 @@ const sqlGetSchema = (
   query: SqlQueryRep
 ): Schema => {
   const key = JSON.stringify(query);
-  const ti = tableMap[key];
-  if (!ti) {
+  const schema = tableMap[key];
+  if (!schema) {
     throw new Error(
       'sqlGetSchema: sql query "' + query.sqlQuery + '" not found in tableMap'
     );
   }
-  return ti.schema;
+  return schema;
 };
 
 const tableGetSchema = (
@@ -42,13 +42,13 @@ const tableGetSchema = (
   query: TableQueryRep
 ): Schema => {
   const key = JSON.stringify(query);
-  const ti = tableMap[key];
-  if (!ti) {
+  const schema = tableMap[key];
+  if (!schema) {
     throw new Error(
       'tableGetSchema: table "' + query.tableName + '" not found in tableMap'
     );
   }
-  return ti.schema;
+  return schema;
 };
 
 const projectGetSchema = (

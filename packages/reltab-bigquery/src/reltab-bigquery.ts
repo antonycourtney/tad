@@ -83,7 +83,7 @@ export class BigQueryConnection implements DataSourceConnection {
     const namesArr = Array.from(tblNames);
     for (let tblName of namesArr) {
       if (this.tableMap[tblName] === undefined) {
-        await this.getTableInfo(tblName);
+        await this.getTableSchema(tblName);
       }
     }
   }
@@ -201,7 +201,7 @@ export class BigQueryConnection implements DataSourceConnection {
     };
   }
 
-  async getTableInfo(tableName: string): Promise<TableInfo> {
+  async getTableSchema(tableName: string): Promise<TableInfo> {
     let ti = this.tableMap[tableName];
     if (!ti) {
       const [projectId, datasetName, baseTableName] = tableName.split(".");

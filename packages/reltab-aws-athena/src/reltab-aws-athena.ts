@@ -147,7 +147,7 @@ export class AWSAthenaConnection implements DataSourceConnection {
     };
   }
 
-  async getTableInfo(tableName: string): Promise<TableInfo> {
+  async getTableSchema(tableName: string): Promise<TableInfo> {
     let ti = this.tableMap[tableName];
     if (!ti) {
       ti = await this.dbGetTableInfo(tableName);

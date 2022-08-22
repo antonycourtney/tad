@@ -6,7 +6,6 @@ import {
   QueryExp,
   Schema,
   LeafSchemaMap,
-  TableInfo,
   Row,
   ColumnMetaMap,
   DataSourceConnection,
@@ -104,7 +103,7 @@ export class DuckDBDriver implements DbDriver {
   async getTableSchema(tableName: string): Promise<Schema> {
     const tiQuery = `PRAGMA table_info(${tableName})`;
     const rows = await this.runSqlQuery(tiQuery);
-    log.debug("getTableInfo: ", rows);
+    log.debug("getTableSchema: ", rows);
 
     const extendCMap = (
       cmm: ColumnMetaMap,
