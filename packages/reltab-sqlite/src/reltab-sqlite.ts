@@ -6,7 +6,6 @@ import {
   QueryExp,
   Schema,
   LeafSchemaMap,
-  TableInfo,
   Row,
   ColumnMetaMap,
   DataSourceConnection,
@@ -19,6 +18,8 @@ import {
   DataSourceProvider,
   registerProvider,
   defaultEvalQueryOptions,
+  DbDriver,
+  DbDataSource,
 } from "reltab"; // eslint-disable-line
 import { SQLDialect } from "reltab/dist/dialect";
 
@@ -34,14 +35,19 @@ const typeLookup = (tnm: string): ColumnType => {
   return ret;
 };
 
+let viewCounter = 0;
+
+const genViewName = (): string => `tad_tmpView_${viewCounter++}`;
+
 const dbAll = tp.promisify(
   (db: sqlite3.Database, query: string, cb: (err: any, res: any) => void) =>
     db.all(query, cb)
 );
 
-export class SqliteContext implements DataSourceConnection {
+export class SqliteDriver implements DbDriver {
   readonly displayName: string;
   readonly sourceId: DataSourceId;
+  readonly dialect: SQLDialect = SQLiteDialect;
   dbfile: string;
   db: sqlite3.Database;
   private tableMap: LeafSchemaMap;
@@ -58,149 +64,56 @@ export class SqliteContext implements DataSourceConnection {
     return this.displayName;
   }
 
-  // ensure every table mentioned in query is registered:
-  async ensureTables(query: QueryExp): Promise<void> {
-    const tblNames = query.getTables();
-    const namesArr = Array.from(tblNames);
-    for (let tblName of namesArr) {
-      if (this.tableMap[tblName] === undefined) {
-        await this.getTableSchema(tblName);
-      }
-    }
+  async runSqlQuery(sqlQuery: string): Promise<Row[]> {
+    const dbRows = await dbAll(this.db, sqlQuery);
+    const rows = dbRows as Row[];
+    return rows;
   }
 
-  async getSchema(query: QueryExp): Promise<Schema> {
-    await this.ensureTables(query);
-    const schema = query.getSchema(SQLiteDialect, this.tableMap);
+  // Get table info directly from sqlite db
+  async getTableSchema(tableName: string): Promise<Schema> {
+    const tiQuery = `PRAGMA table_info(${tableName})`;
+    const dbRows = await this.runSqlQuery(tiQuery);
+    // log.debug("getTableSchema: ", rows);
+
+    const extendCMap = (
+      cmm: ColumnMetaMap,
+      row: any,
+      idx: number
+    ): ColumnMetaMap => {
+      const cnm = row.name;
+      const cType = row.type.toLocaleUpperCase();
+
+      if (cType == null) {
+        log.error(
+          'mkTableInfo: No column type for "' + cnm + '", index: ' + idx
+        );
+      }
+      const cmd = {
+        displayName: cnm,
+        columnType: cType,
+      };
+      cmm[cnm] = cmd;
+      return cmm;
+    };
+
+    const cmMap = dbRows.reduce(extendCMap, {});
+    const columnIds = dbRows.map((r) => r.name);
+    const schema = new Schema(SQLiteDialect, columnIds as string[], cmMap);
     return schema;
   }
 
-  async toSql(
-    query: QueryExp,
-    offset?: number,
-    limit?: number
-  ): Promise<string> {
-    const schema = await this.getSchema(query);
-    const sqlQuery = query.toSql(SQLiteDialect, this.tableMap, offset, limit);
-    return sqlQuery;
-  }
-
-  async evalQuery(
-    query: QueryExp,
-    offset?: number,
-    limit?: number,
-    options?: EvalQueryOptions
-  ): Promise<TableRep> {
-    let t0 = process.hrtime();
-    const schema = await this.getSchema(query);
-    const sqlQuery = await this.toSql(query, offset, limit);
-    let t1 = process.hrtime(t0);
-    const [t1s, t1ns] = t1;
-
-    const trueOptions = options ? options : defaultEvalQueryOptions;
-
-    if (trueOptions.showQueries) {
-      // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.info("SqliteContext.evalQuery: evaluating:\n" + sqlQuery);
-    }
-
-    const t2 = process.hrtime();
-    const dbRows = await dbAll(this.db, sqlQuery);
-    const rows = dbRows as Row[];
-    const t3 = process.hrtime(t2);
-    const [t3s, t3ns] = t3;
-    const t4pre = process.hrtime();
-    const ret = new TableRep(schema, rows);
-    const t4 = process.hrtime(t4pre);
-    const [t4s, t4ns] = t4;
-
-    /*
-    if (this.showQueries) {
-      log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
-      log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
-    }
-    */
-
-    return ret;
-  }
-
-  async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
-    let t0 = process.hrtime();
-    await this.ensureTables(query);
-    const countSql = query.toCountSql(SQLiteDialect, this.tableMap);
-    let t1 = process.hrtime(t0);
-    const [t1s, t1ns] = t1;
-
-    const trueOptions = options ? options : defaultEvalQueryOptions;
-
-    if (trueOptions.showQueries) {
-      // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("SqliteContext.rowCount: evaluating: \n" + countSql);
-    }
-
-    const t2 = process.hrtime();
-    const qp = dbAll(this.db, countSql);
-    return qp.then((rows) => {
-      const t3 = process.hrtime(t2);
-      const [t3s, t3ns] = t3;
-      /*
-      if (this.showQueries) {
-        log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
-      }
-      */
-      const ret = Number.parseInt(rows[0].rowCount);
-      return ret;
-    });
-  } // use table_info pragma to construct a TableInfo:
-
-  // Get table info directly from sqlite db
-  dbGetTableInfo(tableName: string): Promise<TableInfo> {
-    const tiQuery = `PRAGMA table_info(${tableName})`;
-    const qp = dbAll(this.db, tiQuery);
-    return qp.then((dbRows) => {
-      const rows = dbRows as Row[];
-      // log.debug("getTableSchema: ", rows);
-
-      const extendCMap = (
-        cmm: ColumnMetaMap,
-        row: any,
-        idx: number
-      ): ColumnMetaMap => {
-        const cnm = row.name;
-        const cType = row.type.toLocaleUpperCase();
-
-        if (cType == null) {
-          log.error(
-            'mkTableInfo: No column type for "' + cnm + '", index: ' + idx
-          );
-        }
-        const cmd = {
-          displayName: cnm,
-          columnType: cType,
-        };
-        cmm[cnm] = cmd;
-        return cmm;
-      };
-
-      const cmMap = rows.reduce(extendCMap, {});
-      const columnIds = rows.map((r) => r.name);
-      const schema = new Schema(SQLiteDialect, columnIds as string[], cmMap);
-      return {
-        tableName,
-        schema,
-      };
-    });
-  }
-
-  async getTableSchema(tableName: string): Promise<TableInfo> {
-    let ti = this.tableMap[tableName];
-    if (!ti) {
-      ti = await this.dbGetTableInfo(tableName);
-      if (ti) {
-        this.tableMap[tableName] = ti;
-      }
-    }
-    return ti;
+  async getSqlQuerySchema(sqlQuery: string): Promise<Schema> {
+    const tmpViewName = genViewName();
+    const mkViewQuery = `create temporary view ${tmpViewName} as ${sqlQuery}`;
+    const queryRes = await this.runSqlQuery(mkViewQuery);
+    // Now that we've created the temporary view, we can extract the schema the same
+    // way we would for a table:
+    const schema = await this.getTableSchema(tmpViewName);
+    // clean up after ourselves, since view was only needed to extract schema:
+    const dropViewQuery = `drop view ${tmpViewName}`;
+    const dropQueryRes = await this.runSqlQuery(dropViewQuery);
+    return schema;
   }
 
   async getRootNode(): Promise<DataSourceNode> {
@@ -252,8 +165,9 @@ const sqliteDataSourceProvider: DataSourceProvider = {
   connect: async (resourceId: any): Promise<DataSourceConnection> => {
     const dbfile = resourceId as string;
     const db = await open(dbfile, sqlite3.OPEN_READWRITE);
-    const ctx = new SqliteContext(dbfile, db);
-    return ctx;
+    const driver = new SqliteDriver(dbfile, db);
+    const dsConn = new DbDataSource(driver);
+    return dsConn;
   },
 };
 

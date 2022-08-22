@@ -2,7 +2,7 @@
  * Import CSV files into sqlite
  */
 
-import { ColumnType, ColumnMetaMap, Schema, TableInfo } from "reltab";
+import { ColumnType, ColumnMetaMap, Schema } from "reltab";
 import { SQLiteDialect } from "reltab";
 import * as csv from "@fast-csv/parse";
 import * as _ from "lodash";
@@ -78,7 +78,7 @@ function assertDefined<A>(x: A | undefined | null): A {
   return x;
 }
 
-export const mkTableInfo = (md: FileMetadata): TableInfo => {
+export const mkTableSchema = (md: FileMetadata): Schema => {
   const extendCMap = (
     cmm: ColumnMetaMap,
     cnm: string,
@@ -99,7 +99,7 @@ export const mkTableInfo = (md: FileMetadata): TableInfo => {
   };
   const cmMap = md.columnIds.reduce(extendCMap, {});
   const schema = new Schema(SQLiteDialect, md.columnIds, cmMap);
-  return { tableName: md.tableName, schema };
+  return schema;
 };
 
 /**

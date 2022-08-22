@@ -7,13 +7,13 @@ import { delimiter } from "path";
 import * as log from "loglevel";
 import * as util from "./testUtils";
 import * as _ from "lodash";
-import { asString } from "reltab";
+import { asString, DataSourceConnection, DbDataSource } from "reltab";
 
 const { col, constVal } = reltab;
 
 const coreTypes = reltab.SQLiteDialect.coreColumnTypes;
 
-let testCtx: reltabSqlite.SqliteContext;
+let testCtx: DataSourceConnection;
 
 const q1 = reltab.tableQuery("barttest");
 
@@ -33,16 +33,19 @@ const importCsv = async (db: sqlite3.Database, path: string) => {
   const md = await reltabSqlite.fastImport(db, path);
 };
 
-beforeAll(async (): Promise<reltabSqlite.SqliteContext> => {
+beforeAll(async (): Promise<DataSourceConnection> => {
   log.setLevel("info"); // use "debug" for even more verbosity
   const ctx = await reltab.getConnection({
     providerName: "sqlite",
     resourceId: ":memory:",
   });
 
-  testCtx = ctx as reltabSqlite.SqliteContext;
+  testCtx = ctx as DataSourceConnection;
 
-  const db = testCtx.db;
+  const dbds = testCtx as DbDataSource;
+  const driver = dbds.db as reltabSqlite.SqliteDriver;
+
+  const db = driver.db;
 
   await importCsv(db, "test/support/sample.csv");
   await importCsv(db, "test/support/barttest.csv");
@@ -244,10 +247,22 @@ test("null const extend", async () => {
   expect(res).toMatchSnapshot();
 });
 
+test("q1 - basic sqlQuery", async () => {
+  const q1 = reltab.sqlQuery("select 42 as num");
+  const qres = await testCtx.evalQuery(q1);
+  expect(qres).toMatchSnapshot();
+});
+
 test("getSourceInfo basics", async () => {
   const rtc = testCtx;
-  const rootSourceInfo = await rtc.getSourceInfo([]);
-  // console.log("root source info: ", rootSourceInfo);
+
+  const dbds = testCtx as DbDataSource;
+  const driver = dbds.db as reltabSqlite.SqliteDriver;
+
+  const rootNode = await rtc.getRootNode();
+  // console.log("root node: ", rootNode);
+
+  expect(rootNode).toMatchSnapshot();
 
   /*  
   const covid_item = rootSourceInfo.children.find(

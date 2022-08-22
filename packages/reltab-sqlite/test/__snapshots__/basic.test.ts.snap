@@ -1060,6 +1060,15 @@ TableRep {
 }
 `;
 
+exports[`getSourceInfo basics 1`] = `
+Object {
+  "displayName": ":memory:",
+  "id": "",
+  "isContainer": true,
+  "kind": "Database",
+}
+`;
+
 exports[`null const extend 1`] = `
 TableRep {
   "rowData": Array [
@@ -1310,6 +1319,28 @@ TableRep {
       "JobFamily",
       "Union",
       "_pivot",
+    ],
+    "dialect": "sqlite",
+  },
+}
+`;
+
+exports[`q1 - basic sqlQuery 1`] = `
+TableRep {
+  "rowData": Array [
+    Object {
+      "num": 42,
+    },
+  ],
+  "schema": Object {
+    "columnMetadata": Object {
+      "num": Object {
+        "columnType": "",
+        "displayName": "num",
+      },
+    },
+    "columns": Array [
+      "num",
     ],
     "dialect": "sqlite",
   },
