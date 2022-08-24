@@ -1,6 +1,6 @@
 import * as reltab from "reltab";
 import {
-  SnowflakeConnection,
+  SnowflakeDriver,
   getAuthConnectionOptions,
 } from "../src/reltab-snowflake";
 import "../src/reltab-snowflake";
@@ -8,10 +8,10 @@ import * as util from "./testUtils";
 import * as log from "loglevel";
 import * as aggtree from "aggtree";
 import { PathTree } from "aggtree";
-import { DataSourceId } from "reltab";
+import { DataSourceConnection, DataSourceId } from "reltab";
 import * as snowflake from "snowflake-sdk";
 
-let testConn: SnowflakeConnection;
+let testConn: DataSourceConnection;
 
 let connOpts = getAuthConnectionOptions();
 connOpts.database = "CITIBIKE";
@@ -19,15 +19,13 @@ connOpts.schema = "PUBLIC";
 
 const snowflakeConnKey: DataSourceId = {
   providerName: "snowflake",
-  resourceId: connOpts,
+  resourceId: JSON.stringify(connOpts),
 };
 
 beforeAll(async () => {
   // log.setLevel(log.levels.DEBUG);
 
-  testConn = (await reltab.getConnection(
-    snowflakeConnKey
-  )) as SnowflakeConnection;
+  testConn = await reltab.getConnection(snowflakeConnKey);
   log.debug("got testConn: ", testConn);
   const ti = await testConn.getTableSchema("TRIPS");
   log.debug("trips table info: ", ti);

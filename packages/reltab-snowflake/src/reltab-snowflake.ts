@@ -8,10 +8,11 @@ import {
   EvalQueryOptions,
   DataSourceProvider,
   registerProvider,
+  DbDriver,
+  DbDataSource,
 } from "reltab";
 import {
   LeafSchemaMap,
-  TableInfo,
   Row,
   ColumnMetaMap,
   DataSourceId,
@@ -22,6 +23,7 @@ import {
 
 import * as snowflake from "snowflake-sdk";
 import * as path from "path";
+import { SQLDialect } from "reltab/dist/dialect";
 
 function safeGetEnv(varName: string): string {
   const val = process.env[varName];
@@ -78,8 +80,9 @@ async function getSchemaObjects(
   return metaRows;
 }
 
-export class SnowflakeConnection implements DataSourceConnection {
+export class SnowflakeDriver implements DbDriver {
   readonly sourceId: DataSourceId;
+  readonly dialect: SQLDialect = SnowflakeDialect;
   tableMap: LeafSchemaMap;
   snowConn: snowflake.Connection;
 
@@ -124,98 +127,19 @@ export class SnowflakeConnection implements DataSourceConnection {
     return "Snowflake";
   }
 
-  // ensure every table mentioned in query is registered:
-  async ensureTables(query: QueryExp): Promise<void> {
-    const tblNames = query.getTables();
-    const namesArr = Array.from(tblNames);
-    for (let tblName of namesArr) {
-      if (this.tableMap[tblName] === undefined) {
-        await this.getTableSchema(tblName);
-      }
-    }
-  }
-
-  async evalQuery(
-    query: QueryExp,
-    offset?: number,
-    limit?: number,
-    options?: EvalQueryOptions
-  ): Promise<TableRep> {
-    let t0 = process.hrtime();
-    await this.ensureTables(query);
-    const schema = query.getSchema(SnowflakeDialect, this.tableMap);
-    const sqlQuery = query.toSql(
-      SnowflakeDialect,
-      this.tableMap,
-      offset,
-      limit
-    );
-    let t1 = process.hrtime(t0);
-    const [t1s, t1ns] = t1;
-
-    const trueOptions = options ? options : defaultEvalQueryOptions;
-
-    if (trueOptions.showQueries) {
-      log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("SqliteContext.evalQuery: evaluating:");
-      const jsQuery = query.toJS();
-      log.info(jsQuery, "\n");
-      log.info(sqlQuery, "\n");
-    }
-
-    const t2 = process.hrtime();
+  async runSqlQuery(sqlQuery: string): Promise<Row[]> {
     const qres = await executeQuery(this.snowConn, sqlQuery);
     log.trace("evalQuery: query results: ", JSON.stringify(qres, null, 2));
     const rows = qres as Row[];
-    const t3 = process.hrtime(t2);
-    const [t3s, t3ns] = t3;
-    const t4pre = process.hrtime();
-    const ret = new TableRep(schema, rows);
-    const t4 = process.hrtime(t4pre);
-    const [t4s, t4ns] = t4;
-
-    if (trueOptions.showQueries) {
-      log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
-      log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
-    }
-
-    return ret;
-  }
-
-  async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
-    let t0 = process.hrtime();
-    await this.ensureTables(query);
-    const countSql = query.toCountSql(SnowflakeDialect, this.tableMap);
-    let t1 = process.hrtime(t0);
-    const [t1s, t1ns] = t1;
-
-    const trueOptions = options ? options : defaultEvalQueryOptions;
-
-    if (trueOptions.showQueries) {
-      log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("SqliteContext.evalQuery: evaluating:");
-      log.info(countSql);
-    }
-
-    const t2 = process.hrtime();
-    const qres = await executeQuery(this.snowConn, countSql);
-    const dbRows = qres as Row[];
-    const t3 = process.hrtime(t2);
-    const [t3s, t3ns] = t3;
-    log.debug("time to run query: %ds %dms", t3s, t3ns / 1e6);
-    const ret = dbRows[0].rowCount as number;
-    return ret;
+    return rows;
   }
 
   async importCsv(): Promise<void> {
     throw new Error("importCsv not yet implemented for Snowflake");
   }
 
-  private async dbGetTableInfo(
-    databaseName: string,
-    schemaName: string,
-    tableName: string
-  ): Promise<TableInfo> {
+  async getTableSchema(fullTableName: string): Promise<Schema> {
+    const [databaseName, schemaName, tableName] = fullTableName.split(".");
     const sqlQuery = `DESCRIBE TABLE ${databaseName}.${schemaName}.${tableName}`;
     const qres = await executeQuery(this.snowConn, sqlQuery);
     const metaRows = qres as Row[];
@@ -235,22 +159,13 @@ export class SnowflakeConnection implements DataSourceConnection {
     const columnIds = metaRows.map((item: any) => item.name);
     const cmMap = metaRows.reduce(extendCMap, {});
     const schema = new Schema(SnowflakeDialect, columnIds, cmMap);
-    return {
-      tableName,
-      schema,
-    };
+    return schema;
   }
 
-  async getTableSchema(tableName: string): Promise<TableInfo> {
-    let ti = this.tableMap[tableName];
-    if (!ti) {
-      const [database, schema, baseTableName] = tableName.split(".");
-      ti = await this.dbGetTableInfo(database, schema, baseTableName);
-      if (ti) {
-        this.tableMap[tableName] = ti;
-      }
-    }
-    return ti;
+  async getSqlQuerySchema(sqlQuery: string): Promise<Schema> {
+    throw new Error(
+      "SnowflakeDriver.getSqlQuerySchema: base sql queries not supported"
+    );
   }
 
   async getRootNode(): Promise<DataSourceNode> {
@@ -332,9 +247,10 @@ export class SnowflakeConnection implements DataSourceConnection {
 const snowflakeDataSourceProvider: DataSourceProvider = {
   providerName: "snowflake",
   connect: async (resourceId: any): Promise<DataSourceConnection> => {
-    const conn = new SnowflakeConnection(resourceId);
-    await conn.connect();
-    return conn;
+    const driver = new SnowflakeDriver(resourceId);
+    await driver.connect();
+    const dsConn = new DbDataSource(driver);
+    return dsConn;
   },
 };
 
