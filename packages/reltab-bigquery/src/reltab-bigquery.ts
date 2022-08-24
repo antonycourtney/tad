@@ -17,10 +17,10 @@ import {
   DataSourcePath,
   DbDriver,
   DbDataSource,
+  SQLDialect,
 } from "reltab";
 import { BigQuery, Dataset } from "@google-cloud/bigquery";
 import path = require("path");
-import { SQLDialect } from "reltab/dist/dialect";
 
 const LOCATION = "US";
 

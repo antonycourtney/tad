@@ -1,27 +1,23 @@
-import * as tp from "typed-promisify";
-import * as sqlite3 from "sqlite3";
 import * as log from "loglevel";
 import {
-  TableRep,
-  QueryExp,
-  Schema,
-  LeafSchemaMap,
-  Row,
   ColumnMetaMap,
-  DataSourceConnection,
-  SQLiteDialect,
   ColumnType,
-  DataSourcePath,
-  DataSourceNode,
+  DataSourceConnection,
   DataSourceId,
-  EvalQueryOptions,
+  DataSourceNode,
+  DataSourcePath,
   DataSourceProvider,
-  registerProvider,
-  defaultEvalQueryOptions,
-  DbDriver,
   DbDataSource,
+  DbDriver,
+  LeafSchemaMap,
+  registerProvider,
+  Row,
+  Schema,
+  SQLDialect,
+  SQLiteDialect,
 } from "reltab"; // eslint-disable-line
-import { SQLDialect } from "reltab/dist/dialect";
+import * as sqlite3 from "sqlite3";
+import * as tp from "typed-promisify";
 
 export * from "./csvimport";
 

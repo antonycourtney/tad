@@ -14,8 +14,8 @@ import {
   registerProvider,
   Row,
   Schema,
+  SQLDialect,
 } from "reltab"; // eslint-disable-line
-import { SQLDialect } from "reltab/dist/dialect";
 import { initS3 } from "./s3utils";
 import { dbAll } from "./utils";
 

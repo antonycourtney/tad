@@ -1,29 +1,22 @@
 import * as log from "loglevel";
 import {
-  TableRep,
-  QueryExp,
-  Schema,
-  DataSourceConnection,
-  defaultEvalQueryOptions,
-  EvalQueryOptions,
-  DataSourceProvider,
-  registerProvider,
-  DbDriver,
-  DbDataSource,
-} from "reltab";
-import {
-  LeafSchemaMap,
-  Row,
   ColumnMetaMap,
+  DataSourceConnection,
   DataSourceId,
-  SnowflakeDialect,
   DataSourceNode,
   DataSourcePath,
+  DataSourceProvider,
+  DbDataSource,
+  DbDriver,
+  LeafSchemaMap,
+  registerProvider,
+  Row,
+  Schema,
+  SnowflakeDialect,
+  SQLDialect,
 } from "reltab";
 
 import * as snowflake from "snowflake-sdk";
-import * as path from "path";
-import { SQLDialect } from "reltab/dist/dialect";
 
 function safeGetEnv(varName: string): string {
   const val = process.env[varName];

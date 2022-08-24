@@ -1,21 +1,23 @@
+import * as fs from "fs";
 import * as log from "loglevel";
-import { DuckDBContext } from "reltab-duckdb";
-import * as reltabDuckDB from "reltab-duckdb";
+import * as path from "path";
 import {
   DataSourceConnection,
   DataSourceId,
   DataSourceNode,
   DataSourcePath,
   DataSourceProvider,
-  EvalQueryOptions,
+  DbDataSource,
+  DbDriver,
+  DuckDBDialect,
   getConnection,
-  QueryExp,
   registerProvider,
-  TableInfo,
-  TableRep,
+  Row,
+  Schema,
+  SQLDialect,
 } from "reltab";
-import * as fs from "fs";
-import * as path from "path";
+import * as reltabDuckDB from "reltab-duckdb";
+import { DuckDBDriver } from "reltab-duckdb";
 
 export const dataFileExtensions = ["csv", "tsv", "parquet", "csv.gz", "tsv.gz"];
 
@@ -25,21 +27,24 @@ interface ImportedFileInfo {
   path: string;
 }
 
-let _duckDbConn: Promise<DuckDBContext> | null;
-async function getDuckDbConnection(): Promise<DuckDBContext> {
-  if (!_duckDbConn) {
+let _duckDBDriver: DuckDBDriver | null;
+async function getDuckDBDriver(): Promise<DuckDBDriver> {
+  if (!_duckDBDriver) {
     let connKey: DataSourceId;
 
     connKey = {
       providerName: "duckdb",
       resourceId: ":memory:",
     };
-    _duckDbConn = getConnection(connKey, {
+    const dsConn = await getConnection(connKey, {
       hidden: true,
       forExport: true,
-    }) as Promise<DuckDBContext>;
+    });
+    const dbds = dsConn as DbDataSource;
+    const driver = dbds.db as reltabDuckDB.DuckDBDriver;
+    _duckDBDriver = driver;
   }
-  return _duckDbConn;
+  return _duckDBDriver;
 }
 
 // our own impl of path.extName that uses the first '.'
@@ -67,17 +72,18 @@ const isIPFSPath = (pathname: string): boolean => {
 // mapping from pathnames to imported table names:
 type ImportMap = { [path: string]: string };
 
-export class FSConnection implements DataSourceConnection {
-  private dbc: DuckDBContext;
+export class FSDriver implements DbDriver {
+  private dbc: DuckDBDriver;
   private rootPath: string;
   private isDir: boolean;
   private isIPFS: boolean;
   private importMap: ImportMap = {};
   private readonly displayName: string;
   readonly sourceId: DataSourceId;
+  readonly dialect: SQLDialect = DuckDBDialect;
 
   constructor(
-    dbc: DuckDBContext,
+    dbc: DuckDBDriver,
     rootPath: string,
     isDir: boolean,
     isIPFS: boolean
@@ -90,21 +96,15 @@ export class FSConnection implements DataSourceConnection {
     this.sourceId = { providerName: "localfs", resourceId: rootPath };
   }
 
-  evalQuery(
-    query: QueryExp,
-    offset?: number,
-    limit?: number,
-    options?: EvalQueryOptions
-  ): Promise<TableRep> {
-    return this.dbc.evalQuery(query, offset, limit, options);
+  async runSqlQuery(query: string): Promise<Row[]> {
+    return this.dbc.runSqlQuery(query);
   }
 
-  rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
-    return this.dbc.rowCount(query, options);
-  }
-
-  getTableSchema(tableName: string): Promise<TableInfo> {
+  getTableSchema(tableName: string): Promise<Schema> {
     return this.dbc.getTableSchema(tableName);
+  }
+  getSqlQuerySchema(sqlQuery: string): Promise<Schema> {
+    return this.dbc.getSqlQuerySchema(sqlQuery);
   }
 
   async getRootNode(): Promise<DataSourceNode> {
@@ -189,9 +189,10 @@ async function connectFileSource(
   pathname: string
 ): Promise<DataSourceConnection> {
   if (isIPFSPath(pathname)) {
-    const dbc = await getDuckDbConnection();
-    const conn = new FSConnection(dbc, pathname, false, true);
-    return conn;
+    const dbc = await getDuckDBDriver();
+    const driver = new FSDriver(dbc, pathname, false, true);
+    const dsConn = new DbDataSource(driver);
+    return dsConn;
   }
   // local file:
   // check if pathname exists
@@ -202,9 +203,10 @@ async function connectFileSource(
   const fstats = await fs.promises.stat(pathname);
   const isDir = fstats.isDirectory();
 
-  const dbc = await getDuckDbConnection();
-  const conn = new FSConnection(dbc, pathname, isDir, false);
-  return conn;
+  const dbc = await getDuckDBDriver();
+  const driver = new FSDriver(dbc, pathname, isDir, false);
+  const dsConn = new DbDataSource(driver);
+  return dsConn;
 }
 
 const localfsDataSourceProvider: DataSourceProvider = {

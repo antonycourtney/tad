@@ -1,4 +1,5 @@
 export * from "./dialectRegistry";
+export * from "./dialect";
 export * from "./remote/Connection";
 export { getConnection } from "./remote/server";
 export * from "./defs";
