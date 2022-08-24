@@ -34,8 +34,8 @@ import {
   TransportServer,
   serverInit,
   DataSourcePath,
+  DbDataSource,
 } from "reltab";
-import { BigQueryConnection } from "reltab-bigquery";
 
 require("console.table"); // Can insert delay in promise chain by:
 // delay(amount).then(() => ...)
@@ -145,8 +145,10 @@ const importCSVSqlite = async (targetPath: string): Promise<string> => {
   //   const noHeaderRow = options["no-headers"] || false;
   const noHeaderRow = false;
 
-  const rtc = (global as any).appRtc as reltabSqlite.SqliteContext;
-  const tableName = await reltabSqlite.fastImport(rtc.db, pathname, {
+  const dbds = (global as any).appRtc as DbDataSource;
+  const driver = dbds.db as reltabSqlite.SqliteDriver;
+
+  const tableName = await reltabSqlite.fastImport(driver.db, pathname, {
     noHeaderRow,
   });
   return tableName;

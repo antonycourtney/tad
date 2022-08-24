@@ -221,6 +221,12 @@ export class DbDataSource implements DataSourceConnection {
     return schema;
   }
 
+  async getSchema(query: QueryExp): Promise<Schema> {
+    await this.ensureLeafDeps(query);
+    const schema = query.getSchema(this.db.dialect, this.tableMap);
+    return schema;
+  }
+
   getTableSchema(tableName: string): Promise<Schema> {
     const leafDep: TableQueryRep = { operator: "table", tableName };
     const leafKey = JSON.stringify(leafDep);

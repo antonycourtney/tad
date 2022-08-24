@@ -5,13 +5,10 @@ import { AddressInfo } from "net";
 import * as path from "path";
 // import * as reltabSqlite from "reltab-sqlite";
 // import { SqliteContext } from "reltab-sqlite";
-import { BigQueryConnection } from "reltab-bigquery";
+import { BigQueryDriver } from "reltab-bigquery";
 import "reltab-bigquery";
 // import { AWSAthenaConnection } from "reltab-aws-athena";
-import {
-  getAuthConnectionOptions,
-  SnowflakeConnection,
-} from "reltab-snowflake";
+import { getAuthConnectionOptions, SnowflakeDriver } from "reltab-snowflake";
 import "reltab-snowflake";
 import * as reltab from "reltab";
 import { monitorEventLoopDelay } from "perf_hooks";
@@ -19,13 +16,14 @@ import { read } from "fs";
 import {
   DataSourceConnection,
   DataSourceId,
+  DbDataSource,
   EncodedRequestHandler,
   EvalQueryOptions,
   getConnection,
   serverInit,
   TransportServer,
 } from "reltab";
-import { DuckDBContext } from "reltab-duckdb";
+import { DuckDBDriver } from "reltab-duckdb";
 import * as reltabDuckDB from "reltab-duckdb";
 
 const SRV_DIR = "./public/csv";
@@ -56,9 +54,7 @@ const connOpts: EvalQueryOptions = {
 };
 
 const initBigquery = async () => {
-  const rtc = (await reltab.getConnection(
-    covid19ConnKey
-  )) as BigQueryConnection;
+  const rtc = await reltab.getConnection(covid19ConnKey);
 };
 
 const initSnowflake = async () => {
@@ -71,9 +67,7 @@ const initSnowflake = async () => {
     resourceId: JSON.stringify(connOpts),
   };
 
-  const rtc = (await reltab.getConnection(
-    snowflakeConnKey
-  )) as SnowflakeConnection;
+  const rtc = await reltab.getConnection(snowflakeConnKey);
 };
 
 /*
@@ -102,11 +96,12 @@ const duckDBImportFile = async (
   dbc: DataSourceConnection,
   fileName: string
 ): Promise<void> => {
-  const ctx = dbc as DuckDBContext;
+  const dbds = dbc as DbDataSource;
+  const driver = dbds.db as reltabDuckDB.DuckDBDriver;
   const filePath = path.join(SRV_DIR, fileName);
   log.info("handleImportFile: importing: " + filePath);
 
-  await reltabDuckDB.nativeCSVImport(ctx.db, filePath);
+  await reltabDuckDB.nativeCSVImport(driver.db, filePath);
 };
 
 const viewerUrl = "/tadweb-app/index.html";

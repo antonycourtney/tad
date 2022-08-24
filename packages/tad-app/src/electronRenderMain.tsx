@@ -15,12 +15,7 @@ import log from "loglevel";
 import { ElectronTransportClient } from "./electronClient";
 import * as electron from "electron";
 import { clipboard, ipcRenderer, shell } from "electron";
-import {
-  DataSourcePath,
-  DataSourceId,
-  RemoteReltabConnection,
-  TableInfo,
-} from "reltab";
+import { DataSourcePath, DataSourceId, RemoteReltabConnection } from "reltab";
 import { OpenParams } from "./openParams";
 
 const initMainProcess = () => ipcRenderer.invoke("initMain");

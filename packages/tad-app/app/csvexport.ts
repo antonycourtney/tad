@@ -4,6 +4,7 @@ import * as csv from "fast-csv";
 import * as fs from "fs";
 import * as reltabDuckDB from "reltab-duckdb";
 import { BrowserWindow } from "electron";
+import { DbDataSource } from "reltab";
 
 // maximum number of items outstanding before pause and commit:
 // Some studies of sqlite found this number about optimal
@@ -25,7 +26,7 @@ export const exportAs = async (
   });
   const writableStream = fs.createWriteStream(saveFilename);
   csvStream.pipe(writableStream);
-  const appRtc = reltab.getExportConnection() as reltabDuckDB.DuckDBContext;
+  const appRtc = reltab.getExportConnection() as DbDataSource;
   if (appRtc == null) {
     console.error("exportCSV: no DataSource available for export");
     return;
