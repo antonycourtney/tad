@@ -1,15 +1,15 @@
 import * as reltab from "reltab";
-import { BigQueryConnection } from "../src/reltab-bigquery";
+import { BigQueryDriver } from "../src/reltab-bigquery";
 import "../src/reltab-bigquery";
 import * as util from "./testUtils";
 import * as log from "loglevel";
 import * as aggtree from "aggtree";
 import { PathTree } from "aggtree";
-import { DataSourceId } from "reltab";
+import { DataSourceConnection, DataSourceId, DbDataSource } from "reltab";
 
 const PROJECT_ID = "";
 
-let testCtx: BigQueryConnection;
+let testCtx: DataSourceConnection;
 
 const btSchema = {
   fields: [
@@ -25,19 +25,22 @@ const btSchema = {
 beforeAll(async () => {
   log.setLevel(log.levels.DEBUG);
 
-  testCtx = (await reltab.getConnection({
+  testCtx = await reltab.getConnection({
     providerName: "bigquery",
-    resourceId: {
+    resourceId: JSON.stringify({
       projectId: "bigquery-test-project-276102",
       datasetName: "test_dataset",
-    },
-  })) as BigQueryConnection;
+    }),
+  });
   const metadata = {
     schema: btSchema,
     skipLeadingRows: 1,
     writeDisposition: "WRITE_TRUNCATE",
   };
-  await testCtx.importCsv(
+  const dbds = testCtx as DbDataSource;
+  const driver = dbds.db as BigQueryDriver;
+
+  await driver.importCsv(
     "../reltab-sqlite/test/support/barttest.csv",
     metadata
   );
@@ -51,16 +54,14 @@ beforeAll(async () => {
 
 const covid19ConnKey: DataSourceId = {
   providerName: "bigquery",
-  resourceId: {
+  resourceId: JSON.stringify({
     projectId: "bigquery-public-data",
     datasetName: "covid19_jhu_csse",
-  },
+  }),
 };
 
 test("public covid19 dataset - basic covid-table query", async () => {
-  const rtc = (await reltab.getConnection(
-    covid19ConnKey
-  )) as BigQueryConnection;
+  const rtc = await reltab.getConnection(covid19ConnKey);
 
   const ti = await rtc.getTableSchema(
     "bigquery-public-data.covid19_jhu_csse.summary"
@@ -329,9 +330,7 @@ test("async aggTree sortedTreeQuery test", async () => {
 });
 
 test("public covid19 dataset - aggtree basics", async () => {
-  const rtc = (await reltab.getConnection(
-    covid19ConnKey
-  )) as BigQueryConnection;
+  const rtc = await reltab.getConnection(covid19ConnKey);
 
   const ti = await rtc.getTableSchema(
     "bigquery-public-data.covid19_jhu_csse.summary"
@@ -383,9 +382,7 @@ test("public covid19 dataset - aggtree basics", async () => {
 });
 
 test("covid19 -- open pivot tree to leaf level", async () => {
-  const rtc = (await reltab.getConnection(
-    covid19ConnKey
-  )) as BigQueryConnection;
+  const rtc = await reltab.getConnection(covid19ConnKey);
 
   const q1 = reltab.tableQuery("bigquery-public-data.covid19_jhu_csse.summary");
 
@@ -421,18 +418,19 @@ test("covid19 -- open pivot tree to leaf level", async () => {
 });
 
 test("getSourceInfo basics", async () => {
-  const rtc = (await reltab.getConnection(
-    covid19ConnKey
-  )) as BigQueryConnection;
+  const rtc = await reltab.getConnection(covid19ConnKey);
 
-  const rootSourceInfo = await rtc.getSourceInfo([]);
+  const rootNode = await rtc.getRootNode();
   // console.log("root source info: ", rootSourceInfo);
+  expect(rootNode).toMatchSnapshot();
 
-  const covid_item = rootSourceInfo.children.find(
-    (item) => item.id === "covid19_jhu_csse"
-  );
+  const children = await rtc.getChildren({
+    sourceId: covid19ConnKey,
+    path: [rootNode.id],
+  });
 
-  console.log("calling getSourceInfo on item ", covid_item);
-  const covidSourceInfo = await rtc.getSourceInfo([covid_item!]);
-  console.log("covid19 source info: ", covidSourceInfo);
+  const covid_item = children.find((item) => item.id === "covid19_jhu_csse");
+
+  console.log("got item: ", covid_item);
+  expect(covid_item).toMatchSnapshot();
 });

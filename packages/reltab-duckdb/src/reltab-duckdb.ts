@@ -1,30 +1,23 @@
-import * as tp from "typed-promisify";
 import { Connection, DuckDB, IDuckDBConfig } from "ac-node-duckdb";
 import * as log from "loglevel";
 import {
-  TableRep,
-  QueryExp,
-  Schema,
-  LeafSchemaMap,
-  Row,
   ColumnMetaMap,
-  DataSourceConnection,
   ColumnType,
-  DataSourcePath,
-  DataSourceNode,
+  DataSourceConnection,
   DataSourceId,
-  EvalQueryOptions,
+  DataSourceNode,
+  DataSourcePath,
   DataSourceProvider,
-  registerProvider,
-  defaultEvalQueryOptions,
-  DuckDBDialect,
-  DbDriver,
   DbDataSource,
+  DbDriver,
+  DuckDBDialect,
+  registerProvider,
+  Row,
+  Schema,
 } from "reltab"; // eslint-disable-line
 import { SQLDialect } from "reltab/dist/dialect";
 import { initS3 } from "./s3utils";
 import { dbAll } from "./utils";
-import { QueryLeafDep, TableQueryRep } from "reltab/dist/QueryRep";
 
 export * from "./csvimport";
 

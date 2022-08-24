@@ -12741,6 +12741,34 @@ TableRep {
 }
 `;
 
+exports[`getSourceInfo basics 1`] = `
+Object {
+  "displayName": "bigquery-public-data",
+  "id": "bigquery-public-data",
+  "isContainer": true,
+  "kind": "Database",
+}
+`;
+
+exports[`getSourceInfo basics 2`] = `
+Object {
+  "description": "Overview:
+This is the data repository for the 2019 Novel Coronavirus Visual Dashboard  operated by the Johns Hopkins University Center for Systems Science and Engineering (JHU CSSE). This database was created in response to the Coronavirus public health emergency to track reported cases in real-time. The data include the location and number of confirmed COVID-19 cases, deaths and recoveries for all affected countries, aggregated at the appropriate province or state. It was developed to enable researchers, public health authorities and the general public to track the outbreak as it unfolds. Additional information is available in the blog post, Mapping 2019-nCoV (https://systems.jhu.edu/research/public-health/ncov/), and included data sources are listed here: https://github.com/CSSEGISandData/COVID-19
+
+Dataset source: JHU CSSE
+
+Update frequency: Daily
+
+Terms of use: The contents of the dataset are provided to the public strictly for educational and academic purposes only. This data is from third party sources that may not be accurate, consistent and/or up-to-date. These datasets are provided “as is” without any warranties or representations of any kind. You are responsible for determining the suitability of this data for your purposes. See the JHU CSSE GitHub page for more details: https://github.com/CSSEGISandData/COVID-19
+
+See the GCP Marketplace listing for more details, a full list of US boundary datasets, and sample queries: https://console.cloud.google.com/marketplace/details/johnshopkins/covid19_jhu_global_cases",
+  "displayName": "covid19_jhu_csse",
+  "id": "covid19_jhu_csse",
+  "isContainer": true,
+  "kind": "Dataset",
+}
+`;
+
 exports[`initial aggtree Test 1`] = `
 TableRep {
   "rowData": Array [

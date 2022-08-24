@@ -9,16 +9,18 @@ import {
   defaultEvalQueryOptions,
   registerProvider,
   LeafSchemaMap,
-  TableInfo,
   Row,
   ColumnMetaMap,
   DataSourceConnection,
   BigQueryDialect,
   DataSourceNode,
   DataSourcePath,
+  DbDriver,
+  DbDataSource,
 } from "reltab";
 import { BigQuery, Dataset } from "@google-cloud/bigquery";
 import path = require("path");
+import { SQLDialect } from "reltab/dist/dialect";
 
 const LOCATION = "US";
 
@@ -46,9 +48,10 @@ interface BigQueryConnectionInfo {
   datasetName: string;
 }
 
-export class BigQueryConnection implements DataSourceConnection {
+export class BigQueryDriver implements DbDriver {
   readonly displayName: string;
   readonly sourceId: DataSourceId;
+  readonly dialect: SQLDialect = BigQueryDialect;
   projectId: string;
   datasetName: string;
   bigquery: BigQuery;
@@ -77,85 +80,13 @@ export class BigQueryConnection implements DataSourceConnection {
     return this.displayName;
   }
 
-  // ensure every table mentioned in query is registered:
-  async ensureTables(query: QueryExp): Promise<void> {
-    const tblNames = query.getTables();
-    const namesArr = Array.from(tblNames);
-    for (let tblName of namesArr) {
-      if (this.tableMap[tblName] === undefined) {
-        await this.getTableSchema(tblName);
-      }
-    }
-  }
-
-  async evalQuery(
-    query: QueryExp,
-    offset?: number,
-    limit?: number,
-    options?: EvalQueryOptions
-  ): Promise<TableRep> {
-    let t0 = process.hrtime();
-    await this.ensureTables(query);
-    const schema = query.getSchema(BigQueryDialect, this.tableMap);
-    const sqlQuery = query.toSql(BigQueryDialect, this.tableMap, offset, limit);
-    let t1 = process.hrtime(t0);
-    const [t1s, t1ns] = t1;
-
-    const trueOptions = options ? options : defaultEvalQueryOptions;
-
-    if (trueOptions.showQueries) {
-      log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("SqliteContext.evalQuery: evaluating:");
-      log.info(sqlQuery);
-    }
-
-    const t2 = process.hrtime();
+  async runSqlQuery(sqlQuery: string): Promise<Row[]> {
     const [dbRows] = await this.bigquery.query({
       query: sqlQuery,
       location: LOCATION,
     });
     const rows = dbRows as Row[];
-    const t3 = process.hrtime(t2);
-    const [t3s, t3ns] = t3;
-    const t4pre = process.hrtime();
-    const ret = new TableRep(schema, rows);
-    const t4 = process.hrtime(t4pre);
-    const [t4s, t4ns] = t4;
-
-    if (trueOptions.showQueries) {
-      log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
-      log.info("time to mk table rep: %ds %dms", t4s, t4ns / 1e6);
-    }
-
-    return ret;
-  }
-
-  async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
-    let t0 = process.hrtime();
-    await this.ensureTables(query);
-
-    const countSql = query.toCountSql(BigQueryDialect, this.tableMap);
-    let t1 = process.hrtime(t0);
-    const [t1s, t1ns] = t1;
-
-    const trueOptions = options ? options : defaultEvalQueryOptions;
-
-    if (trueOptions.showQueries) {
-      log.debug("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("SqliteContext.evalQuery: evaluating:");
-      log.info(countSql);
-    }
-
-    const t2 = process.hrtime();
-    const [dbRows] = await this.bigquery.query({
-      query: countSql,
-      location: LOCATION,
-    });
-    const t3 = process.hrtime(t2);
-    const [t3s, t3ns] = t3;
-    log.debug("time to run query: %ds %dms", t3s, t3ns / 1e6);
-    const ret = Number.parseInt(dbRows[0].rowCount);
-    return ret;
+    return rows;
   }
 
   async importCsv(pathname: string, metadata: any): Promise<void> {
@@ -167,11 +98,8 @@ export class BigQueryConnection implements DataSourceConnection {
     );
   }
 
-  private async dbGetTableInfo(
-    projectId: string,
-    datasetName: string,
-    baseTableName: string
-  ): Promise<TableInfo> {
+  async getTableSchema(tableName: string): Promise<Schema> {
+    const [projectId, datasetName, baseTableName] = tableName.split(".");
     const sqlQuery = `SELECT column_name, data_type FROM \`${projectId}.${datasetName}\`.INFORMATION_SCHEMA.COLUMNS WHERE table_name="${baseTableName}"`;
 
     const [dbRows] = await this.bigquery.query({
@@ -195,22 +123,15 @@ export class BigQueryConnection implements DataSourceConnection {
     const columnIds = rows.map((row) => row.column_name as string);
     const cmMap = rows.reduce(extendCMap, {});
     const schema = new Schema(BigQueryDialect, columnIds, cmMap);
-    return {
-      tableName: projectId + "." + datasetName + "." + baseTableName,
-      schema,
-    };
+    return schema;
   }
 
-  async getTableSchema(tableName: string): Promise<TableInfo> {
-    let ti = this.tableMap[tableName];
-    if (!ti) {
-      const [projectId, datasetName, baseTableName] = tableName.split(".");
-      ti = await this.dbGetTableInfo(projectId, datasetName, baseTableName);
-      if (ti) {
-        this.tableMap[tableName] = ti;
-      }
-    }
-    return ti;
+  async getSqlQuerySchema(sqlQuery: string): Promise<Schema> {
+    // TODO: Implement using one of these techniques:
+    // https://stackoverflow.com/questions/35416212/bigquery-get-schema-for-query-without-actually-running-it
+    throw new Error(
+      "BigQueryDriver.getSqlQuerySchema: base sql queries not supported"
+    );
   }
 
   async getRootNode(): Promise<DataSourceNode> {
@@ -277,8 +198,9 @@ const bigqueryDataSourceProvider: DataSourceProvider = {
   providerName: "bigquery",
   connect: async (resourceId: string): Promise<DataSourceConnection> => {
     const connInfo = JSON.parse(resourceId);
-    const conn = new BigQueryConnection(connInfo);
-    return conn;
+    const driver = new BigQueryDriver(connInfo);
+    const dsConn = new DbDataSource(driver);
+    return dsConn;
   },
 };
 
