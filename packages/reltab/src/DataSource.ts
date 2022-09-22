@@ -25,7 +25,8 @@ export type DataSourceProviderName =
   | "duckdb"
   | "sqlite"
   | "snowflake"
-  | "localfs";
+  | "localfs"
+  | "motherduck";
 
 export interface DataSourceId {
   providerName: DataSourceProviderName;
@@ -121,12 +122,9 @@ export class DbDataSource implements DataSourceConnection {
     limit?: number,
     options?: EvalQueryOptions
   ): Promise<TableRep> {
-    let t0 = process.hrtime();
     await this.ensureLeafDeps(query);
     const schema = query.getSchema(this.db.dialect, this.tableMap);
     const sqlQuery = query.toSql(this.db.dialect, this.tableMap, offset, limit);
-    let t1 = process.hrtime(t0);
-    const [t1s, t1ns] = t1;
 
     const trueOptions = options ? options : defaultEvalQueryOptions;
 
@@ -135,14 +133,8 @@ export class DbDataSource implements DataSourceConnection {
       log.info("DuckDBContext.evalQuery: evaluating:\n" + sqlQuery);
     }
 
-    const t2 = process.hrtime();
     const rows = await this.db.runSqlQuery(sqlQuery);
-    const t3 = process.hrtime(t2);
-    const [t3s, t3ns] = t3;
-    const t4pre = process.hrtime();
     const ret = new TableRep(schema, rows);
-    const t4 = process.hrtime(t4pre);
-    const [t4s, t4ns] = t4;
 
     /*
     if (this.showQueries) {
@@ -155,11 +147,8 @@ export class DbDataSource implements DataSourceConnection {
   }
 
   async rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number> {
-    let t0 = process.hrtime();
     await this.ensureLeafDeps(query);
     const countSql = query.toCountSql(this.db.dialect, this.tableMap);
-    let t1 = process.hrtime(t0);
-    const [t1s, t1ns] = t1;
 
     const trueOptions = options ? options : defaultEvalQueryOptions;
 
@@ -168,15 +157,7 @@ export class DbDataSource implements DataSourceConnection {
       log.debug("DuckDBContext.rowCount: evaluating: \n" + countSql);
     }
 
-    const t2 = process.hrtime();
     const rows = await this.db.runSqlQuery(countSql);
-    const t3 = process.hrtime(t2);
-    const [t3s, t3ns] = t3;
-    /*
-    if (this.showQueries) {
-      log.info("time to run query: %ds %dms", t3s, t3ns / 1e6);
-    }
-    */
     let rowCount = rows[0].rowCount as number;
     if (typeof rowCount === "bigint") {
       const rcVal = rowCount as bigint;

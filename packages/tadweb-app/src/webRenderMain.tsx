@@ -4,7 +4,13 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import OneRef, { mkRef, refContainer, StateRef } from "oneref";
-import { AppState, AppPane, AppPaneBaseProps, PivotRequester } from "tadviewer";
+import {
+  AppState,
+  AppPane,
+  AppPaneBaseProps,
+  PivotRequester,
+  tadReact,
+} from "tadviewer";
 import { ViewParams } from "tadviewer";
 import { initAppState } from "tadviewer";
 import * as reltab from "reltab";
@@ -68,6 +74,10 @@ const init = async () => {
   const openURL = (url: string) => {
     window.open(url, "_blank");
   };
+
+  console.log("*** react module consistency check: ", React === tadReact);
+  console.log("React: ", React);
+  console.log("tadReact: ", tadReact);
 
   ReactDOM.render(
     <App

@@ -26,7 +26,7 @@ export const TextFormatPanel: React.FC<TextFormatPanelProps> = ({
   return (
     <div className="format-subpanel">
       <Checkbox
-        className="bp3-condensed"
+        className="bp4-condensed"
         checked={opts.urlsAsHyperlinks}
         onChange={(event) => handleRenderHyperlinksChange(event)}
         label="Render URLs as Hyperlinks"

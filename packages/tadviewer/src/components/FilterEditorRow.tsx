@@ -189,7 +189,7 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
   ));
   const selectVal = columnId == null ? "" : columnId;
   const colSelect = (
-    <div className="bp3-select filter-row-col-select">
+    <div className="bp4-select filter-row-col-select">
       <select value={selectVal} onChange={(event) => handleColumnSelect(event)}>
         <option value="">Column...</option>
         {colOpts}
@@ -212,7 +212,7 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
   }
   const opVal = op === null ? "" : op;
   const opSelect = (
-    <div className="bp3-select filter-row-op-select">
+    <div className="bp4-select filter-row-op-select">
       <select
         value={opVal}
         disabled={opDisabled}
@@ -303,7 +303,7 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
       } else {
         valInput = (
           <input
-            className="bp3-input filter-editor-value"
+            className="bp4-input filter-editor-value"
             type="text"
             placeholder="Value"
             disabled={valDisabled}
@@ -325,7 +325,7 @@ export const FilterEditorRow: React.FunctionComponent<FilterEditorRowProps> = ({
         {valInput}
       </div>
       <Button
-        className="bp3-minimal"
+        className="bp4-minimal"
         icon="delete"
         onClick={(e: any) => handleDeleteRow()}
       />

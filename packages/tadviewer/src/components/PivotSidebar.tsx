@@ -78,10 +78,10 @@ export const PivotSidebar: React.FC<PivotSidebarProps> = ({
   return (
     <Sidebar expanded={expanded}>
       <div className="ui-block">
-        <h5 className="bp3-heading">General</h5>
+        <h5 className="bp4-heading">General</h5>
         <div className="root-check-group">
           <Checkbox
-            className="bp3-condensed"
+            className="bp4-condensed"
             checked={viewParams.showRoot}
             onChange={() => actions.toggleShowRoot(stateRef)}
             label="Show Global Aggregations as Top Row"
@@ -89,7 +89,7 @@ export const PivotSidebar: React.FC<PivotSidebarProps> = ({
         </div>
       </div>
       <div className="ui-block">
-        <h5 className="bp3-heading">Columns</h5>
+        <h5 className="bp4-heading">Columns</h5>
         <ColumnSelector
           schema={schema}
           viewParams={viewParams}
@@ -105,7 +105,7 @@ export const PivotSidebar: React.FC<PivotSidebarProps> = ({
         />
       </div>
       <div className="ui-block addl-col-props">
-        <h5 className="bp3-heading">Additional Properties</h5>
+        <h5 className="bp4-heading">Additional Properties</h5>
         <Tabs animate={false} id="ColumnPropTabs">
           <Tab id="shownColumnsTab" title="Order" panel={displayPanel} />
           <Tab id="pivotColumnsTab" title="Pivot" panel={pivotPanel} />

@@ -110,7 +110,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
   return (
     <div className="column-selector">
       <div className="column-selector-header">
-        <table className="table table-condensed bp3-interactive column-selector-table">
+        <table className="table table-condensed bp4-interactive column-selector-table">
           <thead>
             <tr>
               <th className="column-selector-th col-colName">Column</th>
