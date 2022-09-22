@@ -20,7 +20,7 @@ export type Path = Array<string | null>;
  */
 
 type NodeMap = {
-  [elem: string]: NodeMap | {};
+  [elem: string]: NodeMap;
 }; // internal rep, not exported
 
 const mkPathObj = (path: Path, idx: number = 0): NodeMap => {
