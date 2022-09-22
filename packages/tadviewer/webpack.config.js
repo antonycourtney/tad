@@ -93,7 +93,6 @@ function development() {
   Object.assign(dev.optimization, {
     minimize: false,
   });
-  console.log("*** webpack development(): externals: ", dev.externals);
   return dev;
 }
 
