@@ -110,7 +110,7 @@ jobs:
             APPLEIDPASS: $(APPLEIDPASS),
             CSC_LINK: $(devCertificate.secureFilePath),
             CSC_KEY_PASSWORD: $(APPLEIDPASS),
-            GITHUB_TOKEN: $(GITHUB_TOKEN),
+            GH_TOKEN: $(GITHUB_TOKEN),
           }
       - task: CopyFiles@2
         inputs:
