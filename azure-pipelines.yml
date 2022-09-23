@@ -21,7 +21,7 @@ jobs:
         displayName: "download OpenSSL"
       - script: mkdir .\openssl-1.1.1o
         displayName: "make openssl dir"
-      - script: tar -xf openssl-1.1.1o.zip -C .\openssl-1.1.1o --strip-components=1
+      - script: tar -xzf openssl-1.1.1o.zip -C .\openssl-1.1.1o --strip-components=1
         displayName: "extract openssl"
       - script: npm install
         displayName: "Install top-level npm dependencies"
