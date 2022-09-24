@@ -39,7 +39,7 @@ const aggSelect = (
 
   const aggOptions = aggFns(schema.columnType(cid)).map(mkOption);
   return (
-    <div className="bp3-select bp3-minimal">
+    <div className="bp4-select bp4-minimal">
       <select value={colAggFn} onChange={handleChange}>
         {aggOptions}
       </select>
@@ -76,7 +76,7 @@ export const AggPanel: React.FC<AggPanelProps> = ({
   const columnIds = schema.sortedColumns();
   return (
     <div className="ui-block">
-      <h6 className="bp3-heading">Aggregation Functions</h6>
+      <h6 className="bp4-heading">Aggregation Functions</h6>
       <ColumnList
         schema={schema}
         columnListType={ColumnListTypes.AGG}

@@ -8,18 +8,15 @@ export interface DelayedCalcFooterProps {
   onDone: () => void;
 }
 
-export const DelayedCalcFooter: React.FunctionComponent<DelayedCalcFooterProps> = ({
-  dirty,
-  onCancel,
-  onApply,
-  onDone,
-}) => {
+export const DelayedCalcFooter: React.FunctionComponent<
+  DelayedCalcFooterProps
+> = ({ dirty, onCancel, onApply, onDone }) => {
   return (
     <div className="delayed-calc-footer">
       <Button text="Cancel" onClick={(e: any) => onCancel()} />
       <Button disabled={!dirty} text="Apply" onClick={(e: any) => onApply()} />
       <Button
-        className="bp3-intent-primary"
+        className="bp4-intent-primary"
         onClick={(e: any) => onDone()}
         text="Done"
       />

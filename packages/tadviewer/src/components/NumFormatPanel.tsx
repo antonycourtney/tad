@@ -74,23 +74,23 @@ export const NumFormatPanel: React.FC<NumFormatPanelProps> = ({
   return (
     <div className="format-subpanel num-format-panel">
       <Checkbox
-        className="bp3-condensed"
+        className="bp4-condensed"
         checked={opts.commas}
         disabled={opts.exponential}
         onChange={(event) => handleCommasChange(event)}
         label="Use (,) as 1000s Separator"
       />
-      <label className="bp3-label bp3-inline">
+      <label className="bp4-label bp4-inline">
         Decimal Places
         <input
-          className="bp3-input"
+          className="bp4-input"
           type="text"
           value={decimalsText}
           onChange={(event) => handleDecimalsChange(event)}
         />
       </label>
       <Checkbox
-        className="bp3-condensed"
+        className="bp4-condensed"
         checked={opts.exponential}
         onChange={(event) => handleExponentialChange(event)}
         label="Use Scientific (exponential) Notation"

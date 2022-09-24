@@ -1,4 +1,5 @@
 import * as React from "react";
+import { default as ReactDefault } from "react";
 import { ActivityBar } from "./ActivityBar";
 import { PivotSidebar } from "./PivotSidebar";
 import { DataSourceSidebar } from "./DataSourceSidebar";
@@ -96,7 +97,7 @@ const ExportDialog: React.FunctionComponent<ExportDialogProps> = ({
       isOpen={appState.exportDialogOpen}
     >
       <div className={Classes.DIALOG_BODY}>
-        <p className="bp3-text-large">
+        <p className="bp4-text-large">
           Exporting {filterCountStr} rows to {appState.exportFilename}
         </p>
         <ProgressBar stripes={false} value={appState.exportPercent} />
@@ -134,7 +135,7 @@ const ViewConfirmDialog: React.FunctionComponent<ViewConfirmDialogProps> = ({
       isOpen={appState.viewConfirmDialogOpen}
     >
       <div className={Classes.DIALOG_BODY}>
-        <p className="bp3-text-large">
+        <p className="bp4-text-large">
           You have unsaved changes to the current view. <br />
           Do you want to:
         </p>
@@ -263,3 +264,6 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   );
   return mainContents;
 };
+
+// Useful for checking for duplicate React versions
+export const tadReact = ReactDefault;

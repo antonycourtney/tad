@@ -22,7 +22,7 @@ const dirSelect = (
 
   const selectVal = asc ? "asc" : "desc";
   return (
-    <div className="bp3-select bp3-minimal">
+    <div className="bp4-select bp4-minimal">
       <select value={selectVal} onChange={handleChange}>
         <option value="asc">asc</option>
         <option value="desc">desc</option>
@@ -58,8 +58,8 @@ export const SortOrderPanel: React.FC<SortOrderPanelProps> = ({
 }) => {
   return (
     <div className="ui-block">
-      <h6 className="bp3-heading">
-        Sort Columns <span className="bp3-ui-text">(drag to reorder)</span>
+      <h6 className="bp4-heading">
+        Sort Columns <span className="bp4-ui-text">(drag to reorder)</span>
       </h6>
       <ColumnList
         schema={schema}

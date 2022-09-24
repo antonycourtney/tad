@@ -96,7 +96,7 @@ export const FilterEditor: React.FunctionComponent<FilterEditorProps> = ({
     <div className="filter-editor">
       <div className="filter-editor-filter-pane">
         <div className="filter-editor-select-row">
-          <div className="bp3-select bp3-minimal">
+          <div className="bp4-select bp4-minimal">
             <select
               onChange={(e) => handleOpChange(e.target.value as reltab.BoolOp)}
             >
@@ -111,7 +111,7 @@ export const FilterEditor: React.FunctionComponent<FilterEditorProps> = ({
             <div className="filter-editor-row">
               <div className="filter-edit-add-row">
                 <Button
-                  className="bp3-minimal"
+                  className="bp4-minimal"
                   icon="add"
                   onClick={(e: any) => handleAddRow()}
                 />
