@@ -17,11 +17,11 @@ jobs:
         inputs:
           versionSpec: 16.x
         displayName: "Use node.js 16"
-      - script: curl.exe -o openssl-1.0.2u.zip https://indy.fulgan.com/SSL/openssl-1.0.2u-x64_86-win64.zip
+      - script: curl.exe -o openssl-1.1.1q.zip https://mirror.firedaemon.com/OpenSSL/openssl-1.1.1q.zip
         displayName: "download OpenSSL"
-      - script: mkdir .\openssl-1.0.2u
+      - script: mkdir .\openssl-1.1.1q
         displayName: "make openssl dir"
-      - script: tar -xzf openssl-1.0.2u.zip -C .\openssl-1.0.2u --strip-components=1
+      - script: tar -xzf openssl-1.1.1q.zip -C .\openssl-1.1.1q --strip-components=1
         displayName: "extract openssl"
       - script: npm install
         displayName: "Install top-level npm dependencies"
@@ -34,7 +34,7 @@ jobs:
         displayName: "Build packaged tad-app with electron-builder"
         env:
           {
-            OPENSSL_ROOT_DIR: $(System.DefaultWorkingDirectory)/openssl-1.0.2u/x64,
+            OPENSSL_ROOT_DIR: $(System.DefaultWorkingDirectory)/openssl-1.1.1q/x64,
             GITHUB_TOKEN: $(GITHUB_TOKEN),
           }
       - task: CopyFiles@2
