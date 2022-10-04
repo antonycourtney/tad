@@ -12,6 +12,7 @@ import {
 import { initAppState } from "../actions";
 import { AppState } from "../AppState";
 import { PivotRequester } from "../PivotRequester";
+import { actions } from "../tadviewer";
 import { AppPaneBaseProps, AppPane, tadReact } from "./AppPane";
 
 interface TadViewerPaneInnerProps {
@@ -83,6 +84,8 @@ export function TadViewerPane({
       console.log("*** created pivotRequester");
       setPivotRequester(preq);
       console.log("*** App component created and pivotrequester initialized");
+      await actions.setQueryView(stateRef, dsConn, baseSqlQuery);
+      console.log("**** set app view to base query");
     }
     initTadAppState();
   }, []);

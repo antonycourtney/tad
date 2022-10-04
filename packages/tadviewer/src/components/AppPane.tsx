@@ -25,6 +25,7 @@ import { DataSourcePath, ReltabConnection, resolvePath } from "reltab";
 import { useDeepCompareEffect } from "use-deep-compare";
 import { Timer } from "../Timer";
 import { SimpleClipboard } from "./SimpleClipboard";
+import { createDragDropManager } from "dnd-core";
 /**
  * top level application pane
  */
@@ -177,6 +178,8 @@ function timerShowModal(timer: Timer): boolean {
   return timer.running && timer.elapsed > 500;
 }
 
+const dndManager = createDragDropManager(HTML5Backend);
+
 export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   newWindow,
   appState,
@@ -247,8 +250,8 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     ) : null;
   }
   mainContents = (
-    <div className="container-fluid full-height main-container">
-      <DndProvider backend={HTML5Backend}>
+    <div className="container-fluid full-height main-container tad-app-pane">
+      <DndProvider manager={dndManager}>
         <ActivityBar activity={activity} stateRef={stateRef} />
         <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
         {pivotSidebar}

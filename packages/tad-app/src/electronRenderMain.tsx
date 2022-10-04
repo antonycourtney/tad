@@ -17,6 +17,7 @@ import * as electron from "electron";
 import { clipboard, ipcRenderer, shell } from "electron";
 import { DataSourcePath, DataSourceId, RemoteReltabConnection } from "reltab";
 import { OpenParams } from "./openParams";
+import "./app.css";
 
 const initMainProcess = () => ipcRenderer.invoke("initMain");
 const remoteErrorDialog = (title: string, msg: string, fatal = false) => {

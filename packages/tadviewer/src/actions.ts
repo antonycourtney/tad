@@ -7,7 +7,12 @@ import { Path, PathTree } from "aggtree";
 import * as aggtree from "aggtree";
 import { StateRef, update, mutableGet, awaitableUpdate_ } from "oneref";
 import log from "loglevel";
-import { DataSourcePath, DataSourceId, resolvePath } from "reltab";
+import {
+  DataSourcePath,
+  DataSourceId,
+  resolvePath,
+  DataSourceConnection,
+} from "reltab";
 import * as util from "./util";
 
 export async function initAppState(
@@ -56,6 +61,46 @@ export async function stopAppLoadingTimer(
       st.set("appLoadingTimer", st.appLoadingTimer.stop()) as AppState
   );
 }
+
+// replace current view in AppState with a query on the specified
+// dataSource
+export const setQueryView = async (
+  stateRef: StateRef<AppState>,
+  dsc: DataSourceConnection,
+  sqlQuery: string
+): Promise<void> => {
+  const appState = mutableGet(stateRef);
+
+  // console.log("replaceCurrentView: queryTableName: ", dsPath, queryTableName);
+
+  const baseQuery = reltab.sqlQuery(sqlQuery);
+  const baseSchema = await aggtree.getBaseSchema(dsc, baseQuery);
+
+  // start off with all columns displayed:
+  const displayColumns = baseSchema.columns.slice();
+
+  const openPaths = new PathTree();
+  const initialViewParams = new ViewParams({
+    displayColumns,
+    openPaths,
+  });
+
+  const viewState = new ViewState({
+    dbc: dsc,
+    baseSchema,
+    baseQuery,
+    viewParams: initialViewParams,
+    initialViewParams,
+  });
+
+  // We explicitly set rather than merge() because merge
+  // will attempt to deep convert JS objects to Immutables
+
+  await awaitableUpdate_(
+    stateRef,
+    (st: AppState): AppState => st.set("viewState", viewState) as AppState
+  );
+};
 
 export const replaceCurrentView = async (
   dsPath: DataSourcePath,
