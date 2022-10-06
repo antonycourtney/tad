@@ -1,9 +1,10 @@
 /**
  * A Tad Viewer pane for embedding a tad view of a SQL query on a data source
  */
+import log from "loglevel";
 import { mkRef, refContainer, StateRef } from "oneref";
 import * as React from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   DataSourceConnection,
   DataSourcePath,
@@ -38,12 +39,12 @@ function TadViewerPaneInner({ stateRef, baseQuery }: TadViewerPaneInnerProps) {
     window.open(url, "_blank");
   };
 
-  console.log("*** in TadViewerPaneInner");
   return (
     <AppComponent
       newWindow={newWindowFromDSPath}
       clipboard={navigator.clipboard}
       openURL={openURL}
+      showDataSources={false}
     />
   );
 }
@@ -70,22 +71,25 @@ export function TadViewerPane({
 
   React.useEffect(() => {
     async function initTadAppState() {
-      console.log("*** initTadAppState()");
+      // log.setLevel("debug");
+      log.debug("*** initTadAppState()");
       const rtc = LocalReltabConnection.getInstance();
-      console.log("*** TadViewerPane: got local reltab connection: ", rtc);
+      log.debug("*** TadViewerPane: got local reltab connection: ", rtc);
 
-      const appState = new AppState();
-      const stateRef = mkRef(appState);
-      setAppStateRef(stateRef);
-      console.log("*** initializing app state:");
-      await initAppState(rtc, stateRef);
-      console.log("*** initialized Tad App state");
-      const preq = new PivotRequester(stateRef);
-      console.log("*** created pivotRequester");
-      setPivotRequester(preq);
-      console.log("*** App component created and pivotrequester initialized");
-      await actions.setQueryView(stateRef, dsConn, baseSqlQuery);
-      console.log("**** set app view to base query");
+      if (!appStateRef) {
+        const appState = new AppState();
+        const stateRef = mkRef(appState);
+        setAppStateRef(stateRef);
+        log.debug("*** initializing app state:");
+        await initAppState(rtc, stateRef);
+        log.debug("*** initialized Tad App state");
+        const preq = new PivotRequester(stateRef);
+        log.debug("*** created pivotRequester");
+        setPivotRequester(preq);
+        log.debug("*** App component created and pivotrequester initialized");
+        await actions.setQueryView(stateRef, dsConn, baseSqlQuery);
+        log.debug("**** set app view to base query");
+      }
     }
     initTadAppState();
   }, []);

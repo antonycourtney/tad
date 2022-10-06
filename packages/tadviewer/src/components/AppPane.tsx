@@ -38,6 +38,7 @@ export type NewWindowFn = (
 export interface AppPaneBaseProps {
   newWindow: NewWindowFn;
   openURL: OpenURLFn;
+  showDataSources?: boolean;
   clipboard: SimpleClipboard;
 }
 
@@ -185,6 +186,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   appState,
   stateRef,
   clipboard,
+  showDataSources: rawShowDataSources,
   openURL,
 }: AppPaneProps) => {
   const { activity } = appState;
@@ -192,6 +194,8 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   const pivotPropsExpanded = activity === "Pivot";
   const [grid, setGrid] = useState<any>(null);
   let mainContents: JSX.Element | null = null;
+  const showDataSources =
+    rawShowDataSources === undefined ? true : rawShowDataSources;
 
   // console.log("AppPane: ", appState.toJS());
 
@@ -252,7 +256,11 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   mainContents = (
     <div className="container-fluid full-height main-container tad-app-pane">
       <DndProvider manager={dndManager}>
-        <ActivityBar activity={activity} stateRef={stateRef} />
+        <ActivityBar
+          activity={activity}
+          showDataSources={showDataSources}
+          stateRef={stateRef}
+        />
         <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
         {pivotSidebar}
         {centerPane}

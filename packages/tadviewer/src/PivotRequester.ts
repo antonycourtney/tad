@@ -14,6 +14,7 @@ import * as paging from "./paging";
 import * as util from "./util";
 import { ViewState } from "./ViewState";
 import { Timer, TimerUpdater } from "./Timer";
+import _ from "lodash";
 
 // const remoteErrorDialog = require("electron").remote.getGlobal("errorDialog");
 /**
@@ -52,8 +53,8 @@ const mkDataView = (
     var rowMap: RowMap = tableData.rowData[i] as RowMap;
     var depth: number = rowMap._depth;
     var path = getPath(rowMap, depth);
-    rowMap._isOpen = viewParams.openPaths.isOpen(path); // console.log('mkDataView: row: ', i, ', depth: ', depth, ' path: ', path, ', isOpen: ', rowMap._isOpen)
-
+    rowMap._isOpen = viewParams.openPaths.isOpen(path);
+    // console.log('mkDataView: row: ', i, ', depth: ', depth, ' path: ', path, ', isOpen: ', rowMap._isOpen)
     rowMap._isLeaf = depth > nPivots;
     rowMap._id = i;
     parentIdStack[depth] = i;
@@ -177,8 +178,6 @@ const requestQueryView = async (
   return ret;
 };
 
-const queryOptions: reltab.EvalQueryOptions = { showQueries: true };
-
 const requestDataView = async (
   rt: DataSourceConnection,
   viewParams: ViewParams,
@@ -186,13 +185,7 @@ const requestDataView = async (
   offset: number,
   limit: number
 ): Promise<PagedDataView> => {
-  // console.log("requestDataView: ", { query: queryView.query });
-  const tableData = await rt.evalQuery(
-    queryView.query,
-    offset,
-    limit,
-    queryOptions
-  );
+  const tableData = await rt.evalQuery(queryView.query, offset, limit);
   const dataView = mkDataView(
     viewParams,
     queryView.rowCount,
@@ -208,6 +201,21 @@ const vsUpdate =
     s.update("viewState", (vs: ViewState | null) =>
       vs == null ? null : f(vs)
     ) as AppState;
+
+/* for debugging: */
+function getObjectDiff(obj1: any, obj2: any) {
+  const diff = Object.keys(obj1).reduce((result, key) => {
+    if (!obj2.hasOwnProperty(key)) {
+      result.push(key);
+    } else if (_.isEqual(obj1[key], obj2[key])) {
+      const resultKeyIndex = result.indexOf(key);
+      result.splice(resultKeyIndex, 1);
+    }
+    return result;
+  }, Object.keys(obj2));
+
+  return diff;
+}
 
 /**
  * A PivotRequester listens for changes on the appState and viewport and
@@ -288,25 +296,30 @@ export class PivotRequester {
     const appState: AppState = mutableGet(stateRef);
     const viewState = appState.viewState;
 
-    // console.log("PivotRequester.onStateChange: ", appState.toJS());
     if (viewState === null) {
       return;
     }
 
     const viewParams = viewState.viewParams;
-    /*
-    console.log(
-      "PivotRequester.onStateChange: viewParams: ",
-      viewParams.toJS()
-    );
-*/
 
     if (viewParams !== this.pendingViewParams) {
       log.debug(
-        "onStateChange: requesting new query: ",
+        "*** onStateChange: requesting new query: ",
         viewState.toJS(),
         this.pendingViewParams?.toJS()
       );
+      /*
+      const viewStateJS = viewState.toJS();
+      const pendingJS = this.pendingViewParams?.toJS();
+      if (viewStateJS && pendingJS) {
+        const diffs = getObjectDiff(
+          viewState.toJS(),
+          this.pendingViewParams?.toJS()
+        );
+        console.log("*** state change diffs: ", diffs);
+      }
+      */
+
       // Might be nice to cancel any pending request here...
       // failing that we could calculate additional pages we need
       // if viewParams are same and only page range differs.
@@ -339,6 +352,9 @@ export class PivotRequester {
                 .set("viewportBottom", viewportBottom)
                 .set("queryView", queryView) as ViewState;
             })
+          );
+          log.debug(
+            "*** onStateChange: sending request to satisfy view state update"
           );
           return this.sendDataRequest(stateRef, queryView);
         })
@@ -382,7 +398,13 @@ export class PivotRequester {
         // No change in view parameters, but check for viewport out of range of
         // pendingOffset, pendingLimit:
         const qv: QueryView = this.currentQueryView as any; // Flow misses null check above!
-
+        log.debug(
+          "*** onStateChange: sending request because paging parameters out of viewport: ",
+          this.pendingOffset,
+          this.pendingLimit,
+          viewState.viewportTop,
+          viewState.viewportBottom
+        );
         this.sendDataRequest(stateRef, qv);
       }
     }

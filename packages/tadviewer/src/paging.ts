@@ -51,4 +51,4 @@ export const contains = (
   limit: number,
   top: number,
   bottom: number
-): boolean => top >= offset && bottom < offset + limit;
+): boolean => (top >= offset && bottom < offset + limit) || bottom - top === 0;
