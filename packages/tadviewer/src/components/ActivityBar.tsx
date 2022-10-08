@@ -12,11 +12,13 @@ import { BlueprintIcons_16Id } from "@blueprintjs/icons/lib/esm/generated/16px/b
 
 export interface ActivityBarProps {
   activity: Activity;
+  showDataSources: boolean;
   stateRef: StateRef<AppState>;
 }
 
 export const ActivityBar: React.FC<ActivityBarProps> = ({
   activity,
+  showDataSources,
   stateRef,
 }) => {
   const handleActivityClick =
@@ -41,9 +43,13 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
     />
   );
 
+  const dataSourceButton = showDataSources
+    ? activityButton("DataSource", "database")
+    : null;
+
   return (
     <div className={"activityBar"}>
-      {activityButton("DataSource", "database")}
+      {dataSourceButton}
       {/* activityButton("Query", "build") */}
       {activityButton("Pivot", "pivot-table")}
       {/* activityButton("Preferences", "cog") */}

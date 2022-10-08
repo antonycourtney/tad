@@ -1,7 +1,7 @@
 // for debugging resize handler:
 // import $ from 'jquery'
 import * as React from "react";
-import _, { cloneDeep } from "lodash";
+import _, { cloneDeep, CurriedFunction1 } from "lodash";
 
 /* /// <reference path="slickgrid-es6.d.ts"> */
 import * as SlickGrid from "slickgrid-es6";
@@ -28,7 +28,9 @@ import { Schema } from "reltab";
 
 export type OpenURLFn = (url: string) => void;
 
-const container = "#epGrid"; // for now
+let divCounter = 0;
+
+const genContainerId = (): string => `epGrid${divCounter++}`;
 
 const gridOptions = {
   multiColumnSort: true,
@@ -223,13 +225,14 @@ export interface GridPaneProps {
 /* Create grid from the specified set of columns */
 const createGrid = (
   stateRef: StateRef<AppState>,
+  containerId: string,
   viewStateRef: MutableRefObject<ViewState>,
   columns: any,
   data: any,
   clipboard: SimpleClipboard,
   openURL: (url: string) => void
 ) => {
-  let grid = new Slick.Grid(container, data, columns, gridOptions);
+  let grid = new Slick.Grid(`#${containerId}`, data, columns, gridOptions);
 
   const selectionModel = new CellSelectionModel();
   grid.setSelectionModel(selectionModel);
@@ -363,6 +366,7 @@ interface GridState {
   grid: any;
   colWidthsMap: ColWidthMap | null;
   slickColMap: any;
+  containerId: string;
 }
 
 const updateColWidth = (
@@ -438,6 +442,7 @@ const updateGrid = (gs: GridState, viewState: ViewState) => {
 const createGridState = (
   stateRef: StateRef<AppState>,
   viewStateRef: MutableRefObject<ViewState>,
+  containerId: string,
   clipboard: SimpleClipboard,
   openURL: (url: string) => void
 ): GridState => {
@@ -448,11 +453,12 @@ const createGridState = (
     dataView!
   );
   const slickColMap = mkSlickColMap(dataView!.schema, viewParams, colWidthsMap);
-  const gs = { grid: null, colWidthsMap, slickColMap };
+  const gs = { grid: null, colWidthsMap, slickColMap, containerId };
 
   const gridCols = getGridCols(gs, viewStateRef.current);
   gs.grid = createGrid(
     stateRef,
+    containerId,
     viewStateRef,
     gridCols,
     dataView,
@@ -470,6 +476,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   clipboard,
   openURL,
 }) => {
+  const containerIdRef = useRef(genContainerId());
   const [gridState, setGridState] = useState<GridState | null>(null);
   const [prevDataView, setPrevDataView] = useState<PagedDataView | null>(null);
   const viewStateRef = useRef<ViewState>(viewState);
@@ -477,11 +484,17 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   viewStateRef.current = viewState;
   // log.debug("RawGridPane: ", appState.toJS(), viewState.toJS());
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     let gs = gridState;
     const dataView = viewState.dataView;
     if (gs === null) {
-      gs = createGridState(stateRef, viewStateRef, clipboard, openURL);
+      gs = createGridState(
+        stateRef,
+        viewStateRef,
+        containerIdRef.current,
+        clipboard,
+        openURL
+      );
       if (onSlickGridCreated) {
         onSlickGridCreated(gs.grid);
       }
@@ -525,11 +538,15 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   const lt = viewState.loadingTimer;
   // Only show loading modal if we've been loading more than 500 ms
   const lm = lt.running && lt.elapsed > 500 ? <LoadingModal /> : null;
+
   return (
     <div className="gridPaneOuter">
       <div className="gridPaneInner">
         <ResizeSensor onResize={handleGridResize}>
-          <div id="epGrid" className="slickgrid-container full-height" />
+          <div
+            id={containerIdRef.current}
+            className="slickgrid-container full-height"
+          />
         </ResizeSensor>
       </div>
       {lm}

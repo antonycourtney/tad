@@ -130,7 +130,7 @@ export class DbDataSource implements DataSourceConnection {
 
     if (trueOptions.showQueries) {
       // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.info("DuckDBContext.evalQuery: evaluating:\n" + sqlQuery);
+      log.info("evalQuery: evaluating:\n" + sqlQuery);
     }
 
     const rows = await this.db.runSqlQuery(sqlQuery);
@@ -154,7 +154,7 @@ export class DbDataSource implements DataSourceConnection {
 
     if (trueOptions.showQueries) {
       // log.info("time to generate sql: %ds %dms", t1s, t1ns / 1e6);
-      log.debug("DuckDBContext.rowCount: evaluating: \n" + countSql);
+      log.debug("rowCount: evaluating: \n" + countSql);
     }
 
     const rows = await this.db.runSqlQuery(countSql);

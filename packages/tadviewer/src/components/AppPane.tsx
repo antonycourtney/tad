@@ -25,6 +25,7 @@ import { DataSourcePath, ReltabConnection, resolvePath } from "reltab";
 import { useDeepCompareEffect } from "use-deep-compare";
 import { Timer } from "../Timer";
 import { SimpleClipboard } from "./SimpleClipboard";
+import { createDragDropManager } from "dnd-core";
 /**
  * top level application pane
  */
@@ -37,6 +38,7 @@ export type NewWindowFn = (
 export interface AppPaneBaseProps {
   newWindow: NewWindowFn;
   openURL: OpenURLFn;
+  showDataSources?: boolean;
   clipboard: SimpleClipboard;
 }
 
@@ -177,11 +179,14 @@ function timerShowModal(timer: Timer): boolean {
   return timer.running && timer.elapsed > 500;
 }
 
+const dndManager = createDragDropManager(HTML5Backend);
+
 export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   newWindow,
   appState,
   stateRef,
   clipboard,
+  showDataSources: rawShowDataSources,
   openURL,
 }: AppPaneProps) => {
   const { activity } = appState;
@@ -189,6 +194,8 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   const pivotPropsExpanded = activity === "Pivot";
   const [grid, setGrid] = useState<any>(null);
   let mainContents: JSX.Element | null = null;
+  const showDataSources =
+    rawShowDataSources === undefined ? true : rawShowDataSources;
 
   // console.log("AppPane: ", appState.toJS());
 
@@ -247,9 +254,13 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     ) : null;
   }
   mainContents = (
-    <div className="container-fluid full-height main-container">
-      <DndProvider backend={HTML5Backend}>
-        <ActivityBar activity={activity} stateRef={stateRef} />
+    <div className="container-fluid full-height main-container tad-app-pane">
+      <DndProvider manager={dndManager}>
+        <ActivityBar
+          activity={activity}
+          showDataSources={showDataSources}
+          stateRef={stateRef}
+        />
         <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
         {pivotSidebar}
         {centerPane}

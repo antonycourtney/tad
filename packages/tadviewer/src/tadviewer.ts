@@ -1,6 +1,6 @@
 import * as actions from "./actions";
 require("./slickgrid.scss");
-require("../less/app.less");
+require("../less/tadviewer.less");
 
 require("../less/activityBar.less");
 require("../less/sidebar.less");
@@ -19,6 +19,7 @@ require("../less/filterEditor.less");
 require("../less/delayedCalcFooter.less");
 
 export * from "./components/AppPane";
+export * from "./components/TadViewerPane";
 export * from "./PivotRequester";
 export * from "./AppState";
 export * from "./ViewParams";
