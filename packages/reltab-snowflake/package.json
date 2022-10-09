@@ -1,6 +1,6 @@
 {
   "name": "reltab-snowflake",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Snowflake driver for reltab",
   "main": "dist/reltab-snowflake.js",
   "types": "dist/reltab-snowflake.d.ts",

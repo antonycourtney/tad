@@ -1,6 +1,6 @@
 {
   "name": "tadweb-app",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Tabular data viewer web app",
   "main": "dist/tadweb.bundle.js",
   "scripts": {

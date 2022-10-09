@@ -1,6 +1,6 @@
 {
   "name": "reltab-bigquery",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Google BigQuery driver for reltab",
   "main": "dist/reltab-bigquery.js",
   "types": "dist/reltab-bigquery.d.ts",

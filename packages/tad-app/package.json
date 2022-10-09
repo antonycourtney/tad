@@ -1,6 +1,6 @@
 {
   "name": "tad",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "homepage": "https://www.tadviewer.com",
   "description": "Tabular data viewer desktop app, built with Electron",
   "main": "dist/main.bundle.js",
@@ -97,7 +97,7 @@
     ],
     "afterPack": "./tools/afterPack.js",
     "afterSign": "./tools/notarize.js",
-    "buildVersion": "0.10.1",
+    "buildVersion": "0.10.2",
     "directories": {
       "buildResources": "buildRes"
     },

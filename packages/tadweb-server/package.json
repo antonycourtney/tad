@@ -1,6 +1,6 @@
 {
   "name": "tadweb-server",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "ExpressJS based web server for Tad",
   "main": "dist/server.js",
   "scripts": {
