@@ -11,3 +11,5 @@ driverPackages=(reltab-sqlite reltab-duckdb reltab-fs reltab-aws-athena reltab-b
 componentPackages=(tadviewer)
 appPackages=(tadweb-app tadweb-server tad-app)
 allPackages=("${basePackages[@]}" "${driverPackages[@]}" "${componentPackages[@]}" "${appPackages[@]}")
+# embeddedPackages builds everything except the app packages
+embeddedPackages=("${basePackages[@]}" "${driverPackages[@]}" "${componentPackages[@]}")
