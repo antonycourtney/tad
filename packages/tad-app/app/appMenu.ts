@@ -92,6 +92,11 @@ export const createMenu = () => {
     { label: "Copy", accelerator: "CmdOrCtrl+C", role: "copy" },
     { label: "Paste", accelerator: "CmdOrCtrl+V", role: "paste" },
   ];
+  const viewSubmenu: MenuItemConstructorOptions[] = [
+    { label: "Zoom Reset", accelerator: "CmdOrCtrl+0", role: "resetZoom" },
+    { label: "Zoom In", accelerator: "CmdOrCtrl+=", role: "zoomIn" },
+    { label: "Zoom Out", accelerator: "CmdOrCtrl+-", role: "zoomOut" },
+  ];
   const debugSubmenu: MenuItemConstructorOptions[] = [
     {
       role: "toggleDevTools",
@@ -139,6 +144,10 @@ export const createMenu = () => {
     {
       label: "Edit",
       submenu: editSubmenu,
+    },
+    {
+      label: "View",
+      submenu: viewSubmenu,
     },
   ];
 
