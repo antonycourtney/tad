@@ -1,4 +1,4 @@
-import * as duckdb from "ac-node-duckdb";
+import * as duckdb from "duckdb-async";
 import * as _ from "lodash";
 import * as reltab from "reltab";
 import {
@@ -31,7 +31,7 @@ test("t0 - trivial query generation", () => {
   `);
 });
 
-const importCsv = async (db: duckdb.DuckDB, path: string) => {
+const importCsv = async (db: duckdb.Database, path: string) => {
   await reltabDuckDB.nativeCSVImport(db, path);
 };
 
@@ -314,10 +314,10 @@ test("DuckDb date type", async () => {
   expect(rowData).toMatchInlineSnapshot(`
     Array [
       Object {
-        "d": "1991-07-21",
+        "d": 1991-07-21T00:00:00.000Z,
       },
       Object {
-        "d": "2022-02-11",
+        "d": 2022-02-11T00:00:00.000Z,
       },
     ]
   `);

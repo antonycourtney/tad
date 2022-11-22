@@ -1,4 +1,4 @@
-import { Connection, DuckDB, IDuckDBConfig } from "ac-node-duckdb";
+import { Connection, Database } from "duckdb-async";
 import * as log from "loglevel";
 import {
   ColumnMetaMap,
@@ -17,7 +17,6 @@ import {
   SQLDialect,
 } from "reltab"; // eslint-disable-line
 import { initS3 } from "./s3utils";
-import { dbAll } from "./utils";
 
 export * from "./csvimport";
 
@@ -39,10 +38,10 @@ const typeLookup = (tnm: string): ColumnType => {
  * doesn't allow concurrent queries on a connection.
  */
 class ConnectionPool {
-  db: DuckDB;
+  db: Database;
   private pool: Connection[];
 
-  constructor(db: DuckDB) {
+  constructor(db: Database) {
     this.db = db;
     this.pool = [];
   }
@@ -51,7 +50,7 @@ class ConnectionPool {
     if (this.pool.length > 0) {
       return this.pool.pop()!;
     } else {
-      const conn = new Connection(this.db);
+      const conn = await this.db.connect();
       await initS3(conn);
       return conn;
     }
@@ -67,10 +66,10 @@ export class DuckDBDriver implements DbDriver {
   readonly sourceId: DataSourceId;
   readonly dialect: SQLDialect = DuckDBDialect;
   dbfile: string;
-  db: DuckDB;
+  db: Database;
   connPool: ConnectionPool;
 
-  constructor(dbfile: string, db: DuckDB, dbConn: Connection) {
+  constructor(dbfile: string, db: Database, dbConn: Connection) {
     this.dbfile = dbfile;
     this.displayName = dbfile;
     this.sourceId = { providerName: "duckdb", resourceId: dbfile };
@@ -82,7 +81,7 @@ export class DuckDBDriver implements DbDriver {
     const conn = await this.connPool.take();
     let ret: any;
     try {
-      ret = await dbAll(conn, query);
+      ret = await conn.all(query);
     } finally {
       this.connPool.giveBack(conn);
     }
@@ -171,16 +170,17 @@ export class DuckDBDriver implements DbDriver {
   }
 }
 
+const loadExtensions = async (db: Database): Promise<void> => {
+  await db.exec(`INSTALL 'httpfs'; LOAD 'httpfs'`);
+};
+
 const duckdbDataSourceProvider: DataSourceProvider = {
   providerName: "duckdb",
   connect: async (resourceId: any): Promise<DataSourceConnection> => {
     const dbfile = resourceId as string;
-    const dbOpts: IDuckDBConfig = {};
-    if (dbfile) {
-      dbOpts.path = dbfile;
-    }
-    const db = new DuckDB(dbOpts);
-    const dbConn = new Connection(db);
+    const db = await Database.create(dbfile);
+    await loadExtensions(db);
+    const dbConn = await db.connect();
     const driver = new DuckDBDriver(dbfile, db, dbConn);
     const dsConn = new DbDataSource(driver);
     return dsConn;
