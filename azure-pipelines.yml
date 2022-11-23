@@ -9,7 +9,7 @@ name: $(Build.Reason)_$(Build.SourceBranch)_$(Rev:r)
 
 jobs:
   - job: Windows
-    timeoutInMinutes: 25
+    timeoutInMinutes: 45
     pool:
       vmImage: windows-latest
     steps:
@@ -48,7 +48,7 @@ jobs:
           artifactName: WindowsBuildOutputs
 
   - job: Linux
-    timeoutInMinutes: 35
+    timeoutInMinutes: 55
     pool:
       vmImage: ubuntu-latest
     steps:
@@ -81,7 +81,7 @@ jobs:
           artifactName: LinuxBuildOutputs
 
   - job: macOS_latest
-    timeoutInMinutes: 25
+    timeoutInMinutes: 55
     pool:
       vmImage: macOS-latest
     steps:
