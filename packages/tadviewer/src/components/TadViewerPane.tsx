@@ -87,12 +87,19 @@ export function TadViewerPane({
         log.debug("*** created pivotRequester");
         setPivotRequester(preq);
         log.debug("*** App component created and pivotrequester initialized");
-        await actions.setQueryView(stateRef, dsConn, baseSqlQuery);
-        log.debug("**** set app view to base query");
       }
     }
     initTadAppState();
   }, []);
+
+  /* update the view when the query changes */
+  React.useEffect(() => {
+    console.log("*** TadViewerPane: query update, updating view...");
+    if (appStateRef != null && pivotRequester != null) {
+      actions.setQueryView(appStateRef, dsConn, baseSqlQuery);
+      log.debug("**** set app view to base query");
+    }
+  }, [baseSqlQuery, pivotRequester, appStateRef]);
 
   let tadAppElem: JSX.Element | null = null;
   if (pivotRequester && appStateRef) {
