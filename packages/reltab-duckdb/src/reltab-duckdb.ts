@@ -180,6 +180,8 @@ const duckdbDataSourceProvider: DataSourceProvider = {
     const dbfile = resourceId as string;
     const db = await Database.create(dbfile);
     await loadExtensions(db);
+    // turn on fast parallel CSV loading:
+    // await db.exec("SET experimental_parallel_csv=true;");
     const dbConn = await db.connect();
     const driver = new DuckDBDriver(dbfile, db, dbConn);
     const dsConn = new DbDataSource(driver);

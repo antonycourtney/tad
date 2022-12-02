@@ -22,7 +22,8 @@ import log from "loglevel";
 
 const { Slick } = SlickGrid;
 const { Plugins } = SlickGrid as any;
-const { CellRangeSelector, CellSelectionModel, CellCopyManager } = Plugins;
+const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
+  Plugins;
 import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
 import { Schema } from "reltab";
 
@@ -243,6 +244,7 @@ const createGrid = (
 
   const copyManager = new CellCopyManager();
   grid.registerPlugin(copyManager);
+  grid.registerPlugin(new AutoTooltips({ enableForCells: true }));
 
   const copySelectedRange = async (range: any) => {
     let copyData = [];

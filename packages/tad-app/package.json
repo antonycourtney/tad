@@ -58,7 +58,7 @@
     "tadviewer": "^0.10.1"
   },
   "devDependencies": {
-    "@blueprintjs/icons": "^4.5.0",
+    "@blueprintjs/icons": "^4.10.1",
     "@types/command-line-args": "^5.2.0",
     "@types/command-line-usage": "^5.0.2",
     "@types/react": "^18.0.15",
