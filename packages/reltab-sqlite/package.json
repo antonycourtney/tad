@@ -1,6 +1,6 @@
 {
   "name": "reltab-sqlite",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "description": "sqlite driver for reltab",
   "main": "dist/reltab-sqlite.js",
   "types": "dist/reltab-sqlite.d.ts",

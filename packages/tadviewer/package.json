@@ -1,6 +1,6 @@
 {
   "name": "tadviewer",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "description": "Tabular data viewer library",
   "main": "dist/tadviewer.js",
   "types": "dist/tadviewer.d.ts",

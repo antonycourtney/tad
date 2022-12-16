@@ -1,6 +1,6 @@
 {
   "name": "tad",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "description": "Lerna monorepo for Tabular data viewer libraries and apps",
   "devDependencies": {
     "@types/jest": "^27.4.0",

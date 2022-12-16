@@ -1,6 +1,6 @@
 {
   "name": "reltab-aws-athena",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "description": "AWS Athena driver for reltab",
   "main": "dist/reltab-aws-athena.js",
   "types": "dist/reltab-aws-athena.d.ts",
