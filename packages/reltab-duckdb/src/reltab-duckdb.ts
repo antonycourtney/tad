@@ -92,49 +92,46 @@ export class DuckDBDriver implements DbDriver {
     return this.displayName;
   }
 
-  async getTableSchema(tableName: string): Promise<Schema> {
-    const tiQuery = `PRAGMA table_info(${tableName})`;
-    const rows = await this.runSqlQuery(tiQuery);
-    log.debug("getTableSchema: ", rows);
-
+  /**
+   * Take the rows from a table_info() or DESCRIBE and turn it into
+   * a reltab Schema
+   * @param metaRows
+   */
+  schemaFromTableInfo(
+    metaRows: Row[],
+    columNameKey: string,
+    columnTypeKey: string
+  ): Schema {
     const extendCMap = (
-      cmm: ColumnMetaMap,
+      columnMetaMap: ColumnMetaMap,
       row: any,
       idx: number
     ): ColumnMetaMap => {
-      const cnm = row.name;
-      const cType = row.type.toLocaleUpperCase();
-
-      if (cType == null) {
-        log.error(
-          'mkTableInfo: No column type for "' + cnm + '", index: ' + idx
-        );
-      }
-      const cmd = {
-        displayName: cnm,
-        columnType: cType,
-      };
-      cmm[cnm] = cmd;
-      return cmm;
+      const displayName = row[columNameKey];
+      const columnType = row[columnTypeKey].toLocaleUpperCase();
+      const columnMetadata = { displayName, columnType };
+      columnMetaMap[displayName] = columnMetadata;
+      return columnMetaMap;
     };
 
-    const cmMap = rows.reduce(extendCMap, {});
-    const columnIds = rows.map((r) => r.name);
+    const cmMap = metaRows.reduce(extendCMap, {});
+    const columnIds = metaRows.map((r) => r[columNameKey]);
     const schema = new Schema(DuckDBDialect, columnIds as string[], cmMap);
     return schema;
   }
 
+  async getTableSchema(tableName: string): Promise<Schema> {
+    const tiQuery = `PRAGMA table_info(${tableName})`;
+    const rows = await this.runSqlQuery(tiQuery);
+
+    return this.schemaFromTableInfo(rows, "name", "type");
+  }
+
   async getSqlQuerySchema(sqlQuery: string): Promise<Schema> {
-    const tmpViewName = genViewName();
-    const mkViewQuery = `create temporary view ${tmpViewName} as ${sqlQuery}`;
-    const queryRes = await this.runSqlQuery(mkViewQuery);
-    // Now that we've created the temporary view, we can extract the schema the same
-    // way we would for a table:
-    const schema = await this.getTableSchema(tmpViewName);
-    // clean up after ourselves, since view was only needed to extract schema:
-    const dropViewQuery = `drop view ${tmpViewName}`;
-    const dropQueryRes = await this.runSqlQuery(dropViewQuery);
-    return schema;
+    const describeQuery = `describe ${sqlQuery}`;
+    const descRows = await this.runSqlQuery(describeQuery);
+
+    return this.schemaFromTableInfo(descRows, "column_name", "column_type");
   }
 
   async getRootNode(): Promise<DataSourceNode> {
