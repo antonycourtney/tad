@@ -70,9 +70,9 @@
     "webpack-node-externals": "^3.0.0"
   },
   "peerDependencies": {
-    "aggtree": "^0.10.0",
+    "aggtree": "^0.11.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "reltab": "^0.10.0"
+    "reltab": "^0.11.0"
   }
 }

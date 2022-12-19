@@ -42,6 +42,6 @@
     "typescript": "^4.8.3"
   },
   "peerDependencies": {
-    "reltab": "^0.10.0"
+    "reltab": "^0.11.0"
   }
 }

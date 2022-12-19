@@ -39,7 +39,7 @@
     "typescript": "^4.8.3"
   },
   "peerDependencies": {
-    "aggtree": "^0.10.0",
-    "reltab": "^0.10.0"
+    "aggtree": "^0.11.0",
+    "reltab": "^0.11.0"
   }
 }
