@@ -94,7 +94,7 @@ export const createMenu = () => {
   ];
   const viewSubmenu: MenuItemConstructorOptions[] = [
     { label: "Zoom Reset", accelerator: "CmdOrCtrl+0", role: "resetZoom" },
-    { label: "Zoom In", accelerator: "CmdOrCtrl+=", role: "zoomIn" },
+    { label: "Zoom In", accelerator: "CmdOrCtrl+Plus", role: "zoomIn" },
     { label: "Zoom Out", accelerator: "CmdOrCtrl+-", role: "zoomOut" },
   ];
   const debugSubmenu: MenuItemConstructorOptions[] = [
