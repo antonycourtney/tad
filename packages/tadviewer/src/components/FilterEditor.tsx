@@ -78,6 +78,11 @@ export const FilterEditor: React.FunctionComponent<FilterEditorProps> = ({
     onDone();
   };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleApply();
+  };
+
   const feRows = opArgs.map((re, idx) => {
     return (
       <FilterEditorRow
@@ -93,7 +98,7 @@ export const FilterEditor: React.FunctionComponent<FilterEditorProps> = ({
   });
 
   return (
-    <div className="filter-editor">
+    <form className="filter-editor" onSubmit={handleFormSubmit}>
       <div className="filter-editor-filter-pane">
         <div className="filter-editor-select-row">
           <div className="bp4-select bp4-minimal">
@@ -126,6 +131,6 @@ export const FilterEditor: React.FunctionComponent<FilterEditorProps> = ({
         onApply={handleApply}
         onDone={handleDone}
       />
-    </div>
+    </form>
   );
 };
