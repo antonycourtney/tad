@@ -69,7 +69,7 @@
     "css-loader": "^6.5.1",
     "duplicate-package-checker-webpack-plugin": "^3.0.0",
     "electron": "22.0.0",
-    "electron-builder": "^24.0.0-alpha.8",
+    "electron-builder": "^23.6.0",
     "electron-notarize": "^1.2.2",
     "file-loader": "^6.2.0",
     "image-webpack-loader": "^8.0.1",
