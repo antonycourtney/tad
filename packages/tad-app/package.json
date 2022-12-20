@@ -24,7 +24,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder --publish=never",
     "prepublish": "npm run build",
-    "publish": "electron-builder --publish onTagOrDraft",
+    "publish": "electron-builder",
     "electron-builder-postinstall": "electron-builder install-app-deps",
     "start": "electron ."
   },
