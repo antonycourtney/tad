@@ -11,7 +11,7 @@ async function afterPack(context) {
     const { appOutDir } = context;
     const addonPath = path.join(
       appOutDir,
-      "Tad.app/Contents/Resources/app.asar.unpacked/node_modules/ac-node-duckdb/build/Release/node-duckdb-addon.node"
+      "Tad.app/Contents/Resources/app.asar.unpacked/node_modules/duckdb/lib/binding/duckdb.node"
     );
     const { stdout, stderr } = await exec(
       `./tools/dylib-fixup.sh ${addonPath}`
@@ -25,7 +25,7 @@ async function afterPack(context) {
     const { appOutDir } = context;
     const duckDbTargetDir = path.join(
       appOutDir,
-      "resources/app.asar.unpacked/node_modules/ac-node-duckdb/build/Release"
+      "resources/app.asar.unpacked/node_modules/duckdb/lib/binding/duckdb.node"
     );
     const sslBinDir = path.join(WIN_SSL_DIR, "bin");
     const results = await copy(sslBinDir, duckDbTargetDir);
