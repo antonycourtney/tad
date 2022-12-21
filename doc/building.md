@@ -5,9 +5,9 @@
 To build Tad, you should have [node](https://nodejs.org/en/) and `npm`(https://www.npmjs.com/get-npm) (included when you install Node.js) installed. The versions of these tools used for development are:
 
     $ node --version
-    v16.5.0
+    v19.3.0
     $ npm --version
-    7.19.1
+    9.2.0
 
 Once you have Node installed, run `npm install` at the top level:
 
