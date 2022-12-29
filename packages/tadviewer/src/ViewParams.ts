@@ -269,7 +269,7 @@ export class ViewParams
 
   getClickHandler(schema: reltab.Schema, cid: string): ClickHandler {
     const cf = this.getColumnFormat(schema, cid);
-    return cf.getClickHandler() ?? defaultClickHandler;
+    return cf?.getClickHandler() ?? defaultClickHandler;
   }
 
   setColumnFormat(cid: string, opts: any): ViewParams {
