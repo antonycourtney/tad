@@ -45,6 +45,7 @@ function TadViewerPaneInner({ stateRef, baseQuery }: TadViewerPaneInnerProps) {
       clipboard={navigator.clipboard}
       openURL={openURL}
       showDataSources={false}
+      embedded={true}
     />
   );
 }

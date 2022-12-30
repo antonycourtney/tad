@@ -221,6 +221,7 @@ export interface GridPaneProps {
   onSlickGridCreated: (grid: any) => void;
   clipboard: SimpleClipboard;
   openURL: OpenURLFn;
+  embedded: boolean;
 }
 
 /* Create grid from the specified set of columns */
@@ -231,7 +232,8 @@ const createGrid = (
   columns: any,
   data: any,
   clipboard: SimpleClipboard,
-  openURL: (url: string) => void
+  openURL: (url: string) => void,
+  embedded: boolean
 ) => {
   let grid = new Slick.Grid(`#${containerId}`, data, columns, gridOptions);
 
@@ -277,13 +279,14 @@ const createGrid = (
   });
 
   // gross hack, but makes copy menu item work in Electron:
-  document.addEventListener("copy", function (e) {
-    const ranges = grid.getSelectionModel().getSelectedRanges();
-    if (ranges && ranges.length != 0) {
-      copySelectedRange(ranges[0]);
-    }
-  });
-
+  if (!embedded) {
+    document.addEventListener("copy", function (e) {
+      const ranges = grid.getSelectionModel().getSelectedRanges();
+      if (ranges && ranges.length != 0) {
+        copySelectedRange(ranges[0]);
+      }
+    });
+  }
   const rangeSelector = new CellRangeSelector();
 
   grid.registerPlugin(rangeSelector);
@@ -446,7 +449,8 @@ const createGridState = (
   viewStateRef: MutableRefObject<ViewState>,
   containerId: string,
   clipboard: SimpleClipboard,
-  openURL: (url: string) => void
+  openURL: (url: string) => void,
+  embedded: boolean
 ): GridState => {
   const { viewParams, dataView, baseSchema } = viewStateRef.current;
   const colWidthsMap = getInitialColWidthsMap(
@@ -465,7 +469,8 @@ const createGridState = (
     gridCols,
     dataView,
     clipboard,
-    openURL
+    openURL,
+    embedded
   );
   return gs;
 };
@@ -477,6 +482,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   onSlickGridCreated,
   clipboard,
   openURL,
+  embedded,
 }) => {
   const containerIdRef = useRef(genContainerId());
   const [gridState, setGridState] = useState<GridState | null>(null);
@@ -495,7 +501,8 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
         viewStateRef,
         containerIdRef.current,
         clipboard,
-        openURL
+        openURL,
+        embedded
       );
       if (onSlickGridCreated) {
         onSlickGridCreated(gs.grid);

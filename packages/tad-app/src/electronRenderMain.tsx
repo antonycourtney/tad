@@ -127,6 +127,7 @@ const init = async () => {
         newWindow={newWindowFromDSPath}
         clipboard={clipboard}
         openURL={openURL}
+        embedded={false}
       />,
       document.getElementById("app")
     );

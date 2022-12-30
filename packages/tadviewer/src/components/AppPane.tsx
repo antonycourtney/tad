@@ -40,6 +40,7 @@ export interface AppPaneBaseProps {
   openURL: OpenURLFn;
   showDataSources?: boolean;
   clipboard: SimpleClipboard;
+  embedded: boolean;
 }
 
 type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
@@ -188,6 +189,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   clipboard,
   showDataSources: rawShowDataSources,
   openURL,
+  embedded,
 }: AppPaneProps) => {
   const { activity } = appState;
   const dataSourceExpanded = activity === "DataSource";
@@ -243,6 +245,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
           stateRef={stateRef}
           clipboard={clipboard}
           openURL={openURL}
+          embedded={embedded}
         />
         <Footer appState={appState} stateRef={stateRef} />
       </div>
