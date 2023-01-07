@@ -1,6 +1,6 @@
 {
   "name": "tad",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "homepage": "https://www.tadviewer.com",
   "description": "Tabular data viewer desktop app, built with Electron",
   "main": "dist/main.bundle.js",
@@ -49,13 +49,13 @@
     "oneref": "^0.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "reltab": "^0.11.0",
-    "reltab-bigquery": "^0.11.0",
-    "reltab-duckdb": "^0.11.0",
-    "reltab-fs": "^0.11.0",
-    "reltab-sqlite": "^0.11.0",
+    "reltab": "^0.11.1",
+    "reltab-bigquery": "^0.11.1",
+    "reltab-duckdb": "^0.11.1",
+    "reltab-fs": "^0.11.1",
+    "reltab-sqlite": "^0.11.1",
     "source-map-support": "^0.5.21",
-    "tadviewer": "^0.11.0"
+    "tadviewer": "^0.11.1"
   },
   "devDependencies": {
     "@blueprintjs/icons": "^4.10.1",

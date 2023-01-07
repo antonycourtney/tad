@@ -1,6 +1,6 @@
 {
   "name": "tadviewer",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Tabular data viewer library",
   "main": "dist/tadviewer.js",
   "types": "dist/tadviewer.d.ts",
@@ -70,9 +70,9 @@
     "webpack-node-externals": "^3.0.0"
   },
   "peerDependencies": {
-    "aggtree": "^0.11.0",
+    "aggtree": "^0.11.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "reltab": "^0.11.0"
+    "reltab": "^0.11.1"
   }
 }

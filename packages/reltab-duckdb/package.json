@@ -1,6 +1,6 @@
 {
   "name": "reltab-duckdb",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "sqlite driver for reltab",
   "main": "dist/reltab-duckdb.js",
   "types": "dist/reltab-duckdb.d.ts",
@@ -35,6 +35,6 @@
     "typescript": "^4.8.3"
   },
   "peerDependencies": {
-    "reltab": "^0.11.0"
+    "reltab": "^0.11.1"
   }
 }

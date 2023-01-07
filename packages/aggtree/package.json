@@ -1,6 +1,6 @@
 {
   "name": "aggtree",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "pivot table built on top of reltab",
   "author": "Antony Courtney <antony.courtney@gmail.com>",
   "homepage": "https://github.com/antonycourtney/tad#readme",
@@ -29,8 +29,8 @@
     "typescript": "^4.8.3"
   },
   "peerDependencies": {
-    "reltab": "^0.11.0",
-    "reltab-sqlite": "^0.11.0"
+    "reltab": "^0.11.1",
+    "reltab-sqlite": "^0.11.1"
   },
   "repository": {
     "type": "git",

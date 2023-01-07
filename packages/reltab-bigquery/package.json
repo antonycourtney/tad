@@ -1,6 +1,6 @@
 {
   "name": "reltab-bigquery",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Google BigQuery driver for reltab",
   "main": "dist/reltab-bigquery.js",
   "types": "dist/reltab-bigquery.d.ts",
@@ -36,7 +36,7 @@
     "typescript": "^4.8.3"
   },
   "peerDependencies": {
-    "aggtree": "^0.11.0",
-    "reltab": "^0.11.0"
+    "aggtree": "^0.11.1",
+    "reltab": "^0.11.1"
   }
 }
