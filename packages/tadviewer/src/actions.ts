@@ -107,6 +107,7 @@ export const replaceCurrentView = async (
   stateRef: StateRef<AppState>,
   viewParams?: ViewParams
 ): Promise<void> => {
+  console.log("*** replaceCurrentView: dsPath: ", dsPath);
   const appState = mutableGet(stateRef);
 
   const targetNode = await resolvePath(appState.rtc, dsPath);

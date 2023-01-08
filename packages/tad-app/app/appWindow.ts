@@ -1,7 +1,7 @@
 import url from "url";
 
 import path from "path";
-
+import fsPromises from "fs/promises";
 import electron, { BrowserWindow, IpcMainEvent } from "electron";
 import { OpenType, OpenFSPath, OpenTad, OpenParams } from "../src/openParams";
 const dialog = electron.dialog;
@@ -200,7 +200,8 @@ export function fileOpenParams(targetPath: string): OpenParams {
 export const createFromFile = async (
   targetPath: string
 ): Promise<BrowserWindow> => {
-  const openParams = fileOpenParams(targetPath);
+  const realTargetPath = await fsPromises.realpath(targetPath);
+  const openParams = fileOpenParams(realTargetPath);
   const win = await create(openParams);
   return win;
 };

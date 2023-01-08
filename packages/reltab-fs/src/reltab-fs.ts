@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import * as log from "loglevel";
 import * as path from "path";
+import * as fsPromises from "fs/promises";
+
 import {
   DataSourceConnection,
   DataSourceId,
@@ -69,8 +71,13 @@ const isIPFSPath = (pathname: string): boolean => {
   return false;
 };
 
+interface ImportInfo {
+  tableName: string; // table name used to import this table
+  importModTime: Date; // mod time of the file at time of import, as returned from fs.stat()
+}
+
 // mapping from pathnames to imported table names:
-type ImportMap = { [path: string]: string };
+type ImportMap = { [path: string]: ImportInfo };
 
 export class FSDriver implements DbDriver {
   private dbc: DuckDBDriver;
@@ -156,13 +163,14 @@ export class FSDriver implements DbDriver {
   // Get a table name that can be used in queries:
   async getTableName(dsPath: DataSourcePath): Promise<string> {
     const targetPath = this.getTargetPath(dsPath);
-    let tableName = this.importMap[targetPath];
-    if (!tableName) {
+    let importInfo = this.importMap[targetPath];
+    if (!importInfo) {
       log.debug(
         "getTableName: no entry found for ",
         targetPath,
         ", importing..."
       );
+      let tableName: string;
       const extName = path.extname(targetPath);
       if (extName === ".parquet") {
         tableName = await reltabDuckDB.nativeParquetImport(
@@ -172,11 +180,40 @@ export class FSDriver implements DbDriver {
       } else {
         tableName = await reltabDuckDB.nativeCSVImport(this.dbc.db, targetPath);
       }
-      this.importMap[targetPath] = tableName;
+      const fileStats = await fsPromises.stat(targetPath);
+      importInfo = {
+        tableName,
+        importModTime: fileStats.mtime,
+      };
+      this.importMap[targetPath] = importInfo;
     } else {
-      log.debug(" getTableName: ", targetPath, " ---> ", tableName);
+      log.debug(" getTableName: ", targetPath, " ---> ", importInfo.tableName);
+      const fileStats = await fsPromises.stat(targetPath);
+      if (fileStats.mtime > importInfo.importModTime) {
+        log.debug(
+          "**** detected updated file, re-importing: ",
+          targetPath,
+          fileStats.mtime
+        );
+        const extName = path.extname(targetPath);
+        const tableName = importInfo.tableName;
+        if (extName === ".parquet") {
+          await reltabDuckDB.nativeParquetImport(
+            this.dbc.db,
+            targetPath,
+            tableName
+          );
+        } else {
+          await reltabDuckDB.nativeCSVImport(
+            this.dbc.db,
+            targetPath,
+            tableName
+          );
+        }
+        importInfo.importModTime = fileStats.mtime;
+      }
     }
-    return tableName;
+    return importInfo.tableName;
   }
 
   // display name for this connection

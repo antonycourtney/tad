@@ -51,14 +51,17 @@ const genTableName = (pathname: string): string => {
  */
 export const nativeCSVImport = async (
   db: Database,
-  filePath: string
+  filePath: string,
+  tableName?: string
 ): Promise<string> => {
   const importStart = process.hrtime();
 
   const dbConn = await db.connect();
   await initS3(dbConn);
-  const tableName = genTableName(filePath);
-  const query = `CREATE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}')`;
+  if (!tableName) {
+    tableName = genTableName(filePath);
+  }
+  const query = `CREATE OR REPLACE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}')`;
   // console.log('nativeCSVImport: executing: ', query);
   try {
     /*
@@ -72,7 +75,7 @@ export const nativeCSVImport = async (
   } catch (err) {
     console.log("caught exception while importing: ", err);
     console.log("retrying with SAMPLE_SIZE=-1:");
-    const noSampleQuery = `CREATE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}', sample_size=-1)`;
+    const noSampleQuery = `CREATE OR REPLACE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}', sample_size=-1)`;
     try {
       /*
       const resObj = await dbConn.executeIterator(noSampleQuery);
@@ -104,14 +107,17 @@ export const nativeCSVImport = async (
  */
 export const nativeParquetImport = async (
   db: Database,
-  filePath: string
+  filePath: string,
+  tableName?: string
 ): Promise<string> => {
   const importStart = process.hrtime();
 
   const dbConn = await db.connect();
   await initS3(dbConn);
-  const tableName = genTableName(filePath);
-  const query = `CREATE VIEW ${tableName} AS SELECT * FROM parquet_scan('${filePath}')`;
+  if (!tableName) {
+    tableName = genTableName(filePath);
+  }
+  const query = `CREATE OR REPLACE VIEW ${tableName} AS SELECT * FROM parquet_scan('${filePath}')`;
   log.debug("*** parquet import: ", query);
   try {
     // Creating a view doesn't return a useful result.

@@ -342,7 +342,16 @@ const initApp =
       if (process.defaultApp) {
         // npm / electron start -- passes '.' as first argument
         log.debug("*** defaultApp: injecting --executed-from");
-        argv.unshift("--executed-from");
+        // Find the index of the last non-option argument:
+        let lastNonOptionIndex = argv.length - 1;
+        while (
+          !argv[lastNonOptionIndex].startsWith("-") &&
+          lastNonOptionIndex > 0
+        ) {
+          lastNonOptionIndex--;
+        }
+        lastNonOptionIndex++;
+        argv.splice(lastNonOptionIndex, 0, "--executed-from");
       } // macOS insanity:  If we're started via Open With..., we get invoked
       // with -psn_0_XXXXX argument; let's just kill it:
 
