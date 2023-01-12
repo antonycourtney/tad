@@ -5,10 +5,9 @@
 import * as React from "react";
 import { StateRef } from "oneref";
 import { AppState } from "../AppState";
-import { Button } from "@blueprintjs/core";
+import { Button, IconName } from "@blueprintjs/core";
 import { Activity } from "./defs";
 import * as actions from "../actions";
-import { BlueprintIcons_16Id } from "@blueprintjs/icons/lib/esm/generated/16px/blueprint-icons-16";
 
 export interface ActivityBarProps {
   activity: Activity;
@@ -33,7 +32,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
 
   const activityButton = (
     target: Activity,
-    iconName: BlueprintIcons_16Id
+    iconName: IconName
   ): JSX.Element => (
     <Button
       icon={iconName}
