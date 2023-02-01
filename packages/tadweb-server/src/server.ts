@@ -157,7 +157,7 @@ async function main() {
   log.setLevel(log.levels.INFO);
 
   await initBigquery();
-  // await initSnowflake();
+  await initSnowflake();
 
   /*
   const dbc = await initSqlite();

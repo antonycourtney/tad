@@ -43,7 +43,7 @@ export interface AppPaneBaseProps {
   embedded: boolean;
 }
 
-type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
+export type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
 
 const handleExportDialogClose = (stateRef: StateRef<AppState>) => {
   actions.setExportDialogOpen(false, "", stateRef);
