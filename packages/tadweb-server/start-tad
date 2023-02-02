@@ -1,0 +1,10 @@
+export RELTAB_SNOWFLAKE_ACCOUNT=finserv_demo_1
+export RELTAB_SNOWFLAKE_USERNAME=tad_user
+export RELTAB_SNOWFLAKE_PASSWORD=tad_user_Pwd#1
+export RELTAB_SNOWFLAKE_WAREHOUSE=MATT_WH
+
+npm start
+
+# http://localhost:9000/tadweb-app/index.html?table=factset_firm_shared.public.FIRMAGRAPHIC_DATA
+# http://localhost:9000/tadweb-app/index.html?table=FACTSET_FIRM_SHARED.PUBLIC.RBICS_WITH_REV
+# http://localhost:9000/tadweb-app/index.html?table=SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.CUSTOMER

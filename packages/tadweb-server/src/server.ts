@@ -68,6 +68,7 @@ const initSnowflake = async () => {
   };
 
   const rtc = await reltab.getConnection(snowflakeConnKey);
+  log.info("snowflake initialization complete");
 };
 
 /*
@@ -156,15 +157,15 @@ const handleInvoke = async (
 async function main() {
   log.setLevel(log.levels.INFO);
 
-  await initBigquery();
+  //await initBigquery();
   await initSnowflake();
 
   /*
   const dbc = await initSqlite();
   testImportFile(dbc, "movie_metadata.csv");
 */
-  const ddbc = await initDuckDB();
-  await duckDBImportFile(ddbc, "movie_metadata.csv");
+ // const ddbc = await initDuckDB();
+ // await duckDBImportFile(ddbc, "movie_metadata.csv");
 
   /*
   console.log('importing metObjects:');

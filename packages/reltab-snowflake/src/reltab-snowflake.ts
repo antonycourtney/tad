@@ -40,6 +40,7 @@ function executeQuery(
   sqlText: string
 ): Promise<any[]> {
   return new Promise((resolve, reject) => {
+    log.debug(sqlText);
     let stmt = conn.execute({
       sqlText,
       complete: (err, stmt, rows) => {
@@ -121,6 +122,9 @@ export class SnowflakeDriver implements DbDriver {
   }
 
   async runSqlQuery(sqlQuery: string): Promise<Row[]> {
+    if( !this.snowConn.isUp()) {
+      this.connect();
+    }
     const qres = await executeQuery(this.snowConn, sqlQuery);
     log.trace("evalQuery: query results: ", JSON.stringify(qres, null, 2));
     const rows = qres as Row[];
