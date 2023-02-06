@@ -28,11 +28,13 @@
     "@blueprintjs/core": "4.12.0",
     "@blueprintjs/popover2": "1.10.1",
     "@types/he": "^1.1.2",
+    "dnd-core": "^14.0.1",
     "export-to-csv": "^0.2.1",
     "he": "^1.2.0",
     "immutable": "^4.0.0",
     "lodash": "^4.17.21",
     "loglevel": "^1.8.0",
+    "normalize.css": "^8.0.1",
     "oneref": "^0.9.0",
     "react-dnd": "^14.0.5",
     "react-dnd-html5-backend": "^14.1.0",
@@ -44,11 +46,13 @@
   },
   "devDependencies": {
     "@blueprintjs/icons": "^4.10.1",
+    "@types/lodash": "^4.14.178",
+    "@types/node": "^18.7.18",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
     "@types/react-select": "^5.0.0",
     "@types/slickgrid": "^2.1.31",
-    "aggtree": "^0.10.1",
+    "aggtree": "workspace:*",
     "ajv": "^6.9.1",
     "css-loader": "^6.5.1",
     "file-loader": "^6.2.0",
@@ -57,8 +61,10 @@
     "less-loader": "^10.2.0",
     "mkdirp": "^1.0.4",
     "node-sass": "^7.0.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "recursive-copy-cli": "^1.0.20",
-    "reltab": "^0.10.1",
+    "reltab": "workspace:*",
     "resolve-url-loader": "^4.0.0",
     "sass-loader": "^12.4.0",
     "source-map-loader": "^3.0.1",
@@ -70,9 +76,9 @@
     "webpack-node-externals": "^3.0.0"
   },
   "peerDependencies": {
-    "aggtree": "^0.11.1",
+    "aggtree": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "reltab": "^0.11.1"
+    "reltab": "workspace:*"
   }
 }

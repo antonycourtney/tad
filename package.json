@@ -1,17 +1,13 @@
 {
   "name": "tad",
   "version": "0.11.1",
-  "description": "Lerna monorepo for Tabular data viewer libraries and apps",
+  "description": "monorepo for Tabular data viewer libraries and apps",
   "devDependencies": {
     "@types/jest": "^27.4.0",
     "jest": "^27.4.6",
-    "lerna": "^4.0.0",
     "rimraf": "^3.0.2",
     "run-script-os": "^1.1.6",
     "ts-jest": "^27.1.2",
     "typescript": "^4.8.3"
-  },
-  "scripts": {
-    "bootstrap": "lerna bootstrap --hoist --force-local --ignore-prepublish"
   }
 }

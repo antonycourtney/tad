@@ -24,22 +24,18 @@
   "dependencies": {
     "athena-express": "^7.1.2",
     "aws-sdk": "^2.1050.0",
-    "loglevel": "^1.8.0"
+    "loglevel": "^1.8.0",
+    "reltab": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "^27.4.0",
     "@types/node": "^18.7.18",
-    "aggtree": "^0.10.1",
+    "aggtree": "workspace:*",
     "console.table": "^0.10.0",
     "jest": "^27.4.6",
     "mkdirp": "^1.0.4",
     "prettier": "^2.5.1",
-    "reltab": "^0.10.1",
     "ts-jest": "^27.1.2",
     "typescript": "^4.8.3"
-  },
-  "peerDependencies": {
-    "aggtree": "^0.11.1",
-    "reltab": "^0.11.1"
   }
 }

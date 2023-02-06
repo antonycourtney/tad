@@ -25,15 +25,17 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
+    "lodash": "^4.17.21",
     "loglevel": "^1.8.0",
     "oneref": "^0.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
-    "reltab": "^0.11.1",
-    "tadviewer": "^0.11.1"
+    "reltab": "workspace:*",
+    "tadviewer": "workspace:*"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.178",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
     "ajv": "^6.9.1",
