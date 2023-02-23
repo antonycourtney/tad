@@ -239,13 +239,16 @@ export class PivotRequester {
   pendingOffset: number;
   pendingLimit: number;
 
-  constructor(stateRef: oneref.StateRef<AppState>) {
+  errorCallback?: (e: any) => void;
+
+  constructor(stateRef: oneref.StateRef<AppState>, errorCallback?: (e: any) => void) {
     this.pendingQueryRequest = null;
     this.currentQueryView = null;
     this.pendingDataRequest = null;
     this.pendingViewParams = null;
     this.pendingOffset = 0;
     this.pendingLimit = 0;
+    this.errorCallback = errorCallback;
     addStateChangeListener(stateRef, (_) => {
       this.onStateChange(stateRef);
     });
@@ -369,12 +372,16 @@ export class PivotRequester {
           oneref.update(
             stateRef,
             vsUpdate(
-              (vs: ViewState) =>
-                vs
-                  .update("loadingTimer", (lt) => lt.stop())
-                  .set("viewParams", prevViewParams) as ViewState
+              (vs: ViewState) => {
+                return vs
+                  .update("loadingTimer", (lt) => lt.stop());
+              }
             )
           );
+          if (this.errorCallback) {
+            this.errorCallback(err);
+          }
+
         });
       const ltUpdater = util.pathUpdater<AppState, Timer>(stateRef, [
         "viewState",
