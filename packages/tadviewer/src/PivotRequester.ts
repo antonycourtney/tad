@@ -372,10 +372,9 @@ export class PivotRequester {
           oneref.update(
             stateRef,
             vsUpdate(
-              (vs: ViewState) => {
-                return vs
-                  .update("loadingTimer", (lt) => lt.stop());
-              }
+              (vs: ViewState) =>
+                vs
+                  .update("loadingTimer", (lt) => lt.stop())
             )
           );
           if (this.errorCallback) {
