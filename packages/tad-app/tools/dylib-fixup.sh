@@ -12,9 +12,7 @@ cp $BREW_PREFIX/opt/openssl@3/lib/libcrypto.3.dylib $targetDir
 cp $BREW_PREFIX/opt/openssl@3/lib/libssl.3.dylib $targetDir
 # finally, fix up libssl's ref to libcrypto:
 sslDylib=$targetDir/libssl.3.dylib
+OPENSSL_VERSION=$(brew info --json openssl |jq .[0].installed[0].version |tr -d '"')
 # sigh -- make this work for a variety of openssl versions:
-install_name_tool -change $BREW_PREFIX/Cellar/openssl@3/3.0.2/lib/libcrypto.3.dylib @rpath/libcrypto.3.dylib $sslDylib
-install_name_tool -change $BREW_PREFIX/Cellar/openssl@3/3.0.3/lib/libcrypto.3.dylib @rpath/libcrypto.3.dylib $sslDylib
-install_name_tool -change $BREW_PREFIX/Cellar/openssl@3/3.0.7/lib/libcrypto.3.dylib @rpath/libcrypto.3.dylib $sslDylib
-install_name_tool -change $BREW_PREFIX/Cellar/openssl@3/3.0.8/lib/libcrypto.3.dylib @rpath/libcrypto.3.dylib $sslDylib
+install_name_tool -change $BREW_PREFIX/Cellar/openssl@3/$OPENSSL_VERSION/lib/libcrypto.3.dylib @rpath/libcrypto.3.dylib $sslDylib
 echo "dylib-fixup: done."

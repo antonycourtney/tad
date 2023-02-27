@@ -96,6 +96,8 @@ jobs:
           secureFile: "apple-dev-certificate.p12"
       - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl@3
         displayName: "Install openssl from homebrew"
+      - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
+        displayName: "Install jq from homebrew"
       - script: npm install
         displayName: "Install top-level npm dependencies"
       - script: npm run bootstrap
