@@ -20,7 +20,7 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "@google-cloud/bigquery": "5.9.3",
+    "@google-cloud/bigquery": "6.1.0",
     "loglevel": "^1.8.0"
   },
   "devDependencies": {
@@ -33,7 +33,7 @@
     "prettier": "^2.5.1",
     "reltab": "workspace:*",
     "ts-jest": "^27.1.2",
-    "typescript": "^4.8.3"
+    "typescript": "^4.9.5"
   },
   "peerDependencies": {
     "aggtree": "workspace:*",

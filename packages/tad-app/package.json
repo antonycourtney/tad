@@ -58,6 +58,7 @@
     "tadviewer": "workspace:*"
   },
   "devDependencies": {
+    "@babel/core": "^7.15.5",
     "@blueprintjs/icons": "^4.10.1",
     "@types/command-line-args": "^5.2.0",
     "@types/command-line-usage": "^5.0.2",
@@ -68,7 +69,7 @@
     "ajv": "^6.9.1",
     "css-loader": "^6.5.1",
     "duplicate-package-checker-webpack-plugin": "^3.0.0",
-    "electron": "22.0.0",
+    "electron": "23.1.1",
     "electron-builder": "^23.6.0",
     "electron-notarize": "^1.2.2",
     "file-loader": "^6.2.0",
@@ -84,6 +85,7 @@
     "source-map-loader": "^3.0.1",
     "style-loader": "^3.3.1",
     "ts-loader": "^9.2.6",
+    "typescript": "^4.9.5",
     "webpack": "^5.65.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.9.1",
