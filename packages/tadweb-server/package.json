@@ -32,12 +32,12 @@
     "express-validator": "^6.14.0",
     "loglevel": "^1.8.0",
     "node-fetch": "3.2.3",
-    "reltab": "^0.10.1",
-    "reltab-aws-athena": "^0.10.1",
-    "reltab-bigquery": "^0.10.1",
-    "reltab-duckdb": "^0.10.1",
-    "reltab-snowflake": "^0.10.1",
-    "tadweb-app": "^0.10.1",
+    "reltab": "^0.11.1",
+    "reltab-aws-athena": "^0.11.1",
+    "reltab-bigquery": "^0.11.1",
+    "reltab-duckdb": "^0.11.1",
+    "reltab-snowflake": "^0.11.1",
+    "tadweb-app": "^0.11.1",
     "typed-promisify": "^0.4.0"
   },
   "devDependencies": {

@@ -36,7 +36,7 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "aggtree": "^0.10.1",
+    "aggtree": "^0.11.1",
     "babel-cli": "^6.26.0",
     "babel-plugin-flow-to-typescript": "^0.6.0",
     "command-line-args": "^5.2.0",
