@@ -54,12 +54,14 @@ export interface TadViewerPaneProps {
   baseSqlQuery: string;
   dsConn: DataSourceConnection;
   errorCallback?: (e: Error) => void;
+  setLoading: (loading: boolean) => void;
 }
 
 export function TadViewerPane({
   baseSqlQuery,
   dsConn,
   errorCallback,
+  setLoading,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -86,7 +88,7 @@ export function TadViewerPane({
         log.debug("*** initializing app state:");
         await initAppState(rtc, stateRef);
         log.debug("*** initialized Tad App state");
-        const preq = new PivotRequester(stateRef, errorCallback);
+        const preq = new PivotRequester(stateRef, errorCallback, setLoading);
         log.debug("*** created pivotRequester");
         setPivotRequester(preq);
         log.debug("*** App component created and pivotrequester initialized");
