@@ -53,7 +53,7 @@ function TadViewerPaneInner({ stateRef, baseQuery }: TadViewerPaneInnerProps) {
 export interface TadViewerPaneProps {
   baseSqlQuery: string;
   dsConn: DataSourceConnection;
-  errorCallback?: (e: any) => void;
+  errorCallback?: (e: Error) => void;
 }
 
 export function TadViewerPane({

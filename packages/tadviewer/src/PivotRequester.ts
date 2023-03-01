@@ -239,9 +239,9 @@ export class PivotRequester {
   pendingOffset: number;
   pendingLimit: number;
 
-  errorCallback?: (e: any) => void;
+  errorCallback?: (e: Error) => void;
 
-  constructor(stateRef: oneref.StateRef<AppState>, errorCallback?: (e: any) => void) {
+  constructor(stateRef: oneref.StateRef<AppState>, errorCallback?: (e: Error) => void) {
     this.pendingQueryRequest = null;
     this.currentQueryView = null;
     this.pendingDataRequest = null;
@@ -378,7 +378,7 @@ export class PivotRequester {
             )
           );
           if (this.errorCallback) {
-            this.errorCallback(err);
+            this.errorCallback(err instanceof Error ? err : new Error(err));
           }
 
         });
