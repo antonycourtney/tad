@@ -217,7 +217,7 @@ function getObjectDiff(obj1: any, obj2: any) {
   return diff;
 }
 
-const noopSetLoading = (loading: boolean) => {};
+const noopSetLoadingCallback = (loading: boolean) => {};
 
 /**
  * A PivotRequester listens for changes on the appState and viewport and
@@ -241,12 +241,12 @@ export class PivotRequester {
   pendingOffset: number;
   pendingLimit: number;
   errorCallback?: (e: Error) => void;
-  setLoading: (loading: boolean) => void;
+  setLoadingCallback: (loading: boolean) => void;
 
   constructor(
     stateRef: oneref.StateRef<AppState>,
     errorCallback?: (e: Error) => void,
-    setLoading?: (loading: boolean) => void
+    setLoadingCallback?: (loading: boolean) => void
   ) {
     this.pendingQueryRequest = null;
     this.currentQueryView = null;
@@ -255,7 +255,7 @@ export class PivotRequester {
     this.pendingOffset = 0;
     this.pendingLimit = 0;
     this.errorCallback = errorCallback;
-    this.setLoading = setLoading || noopSetLoading;
+    this.setLoadingCallback = setLoadingCallback || noopSetLoadingCallback;
 
     addStateChangeListener(stateRef, (_) => {
       this.onStateChange(stateRef);
@@ -270,7 +270,7 @@ export class PivotRequester {
     stateRef: oneref.StateRef<AppState>,
     queryView: QueryView
   ): Promise<PagedDataView> {
-    this.setLoading(true);
+    this.setLoadingCallback(true);
     const appState: AppState = mutableGet(stateRef);
     const viewState = appState.viewState;
     const viewParams = viewState.viewParams;
@@ -299,7 +299,7 @@ export class PivotRequester {
               .set("dataView", dataView) as ViewState
         )
       );
-      this.setLoading(false);
+      this.setLoadingCallback(false);
       return dataView;
     });
     return dreq;
@@ -377,7 +377,7 @@ export class PivotRequester {
             err.message,
             err.stack
           );
-          this.setLoading(false);
+          this.setLoadingCallback(false);
           // TODO:
           // remoteErrorDialog("Error constructing view", err.message); // Now let's try and restore to previous view params:
           oneref.update(
@@ -388,6 +388,10 @@ export class PivotRequester {
                   .update("loadingTimer", (lt) => lt.stop())
             )
           );
+          if (this.errorCallback) {
+            this.errorCallback(err instanceof Error ? err : new Error(err));
+          }
+
         });
       const ltUpdater = util.pathUpdater<AppState, Timer>(stateRef, [
         "viewState",
