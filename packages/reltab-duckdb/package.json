@@ -20,7 +20,7 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "duckdb-async": "^0.6.1",
+    "duckdb-async": "^0.7.1",
     "loglevel": "^1.8.0",
     "pretty-hrtime": "^1.0.3"
   },
