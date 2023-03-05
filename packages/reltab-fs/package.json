@@ -1,6 +1,6 @@
 {
   "name": "reltab-fs",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "filesystem datasource for reltab",
   "main": "dist/reltab-fs.js",
   "types": "dist/reltab-fs.d.ts",
@@ -29,13 +29,13 @@
     "jest": "^27.4.6",
     "mkdirp": "^1.0.4",
     "prettier": "^2.5.1",
-    "reltab": "^0.11.1",
-    "reltab-duckdb": "^0.11.1",
+    "reltab": "^0.12.0",
+    "reltab-duckdb": "^0.12.0",
     "ts-jest": "^27.1.2",
     "typescript": "^4.8.3"
   },
   "peerDependencies": {
-    "reltab": "^0.11.1",
-    "reltab-duckdb": "^0.11.1"
+    "reltab": "^0.12.0",
+    "reltab-duckdb": "^0.12.0"
   }
 }

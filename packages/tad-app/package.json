@@ -1,6 +1,6 @@
 {
   "name": "tad",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "homepage": "https://www.tadviewer.com",
   "description": "Tabular data viewer desktop app, built with Electron",
   "main": "dist/main.bundle.js",
@@ -23,6 +23,7 @@
     "watch-prod": "webpack --env prod --mode production --watch",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --publish=never",
+    "dist-arm64": "electron-builder --arm64 --publish=never",
     "prepublish": "npm run build",
     "publish": "electron-builder",
     "electron-builder-postinstall": "electron-builder install-app-deps",
@@ -36,7 +37,7 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "aggtree": "^0.11.1",
+    "aggtree": "^0.12.0",
     "babel-cli": "^6.26.0",
     "babel-plugin-flow-to-typescript": "^0.6.0",
     "command-line-args": "^5.2.0",
@@ -49,13 +50,13 @@
     "oneref": "^0.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "reltab": "^0.11.1",
-    "reltab-bigquery": "^0.11.1",
-    "reltab-duckdb": "^0.11.1",
-    "reltab-fs": "^0.11.1",
-    "reltab-sqlite": "^0.11.1",
+    "reltab": "^0.12.0",
+    "reltab-bigquery": "^0.12.0",
+    "reltab-duckdb": "^0.12.0",
+    "reltab-fs": "^0.12.0",
+    "reltab-sqlite": "^0.12.0",
     "source-map-support": "^0.5.21",
-    "tadviewer": "^0.11.1"
+    "tadviewer": "^0.12.0"
   },
   "devDependencies": {
     "@blueprintjs/icons": "^4.10.1",
@@ -165,8 +166,13 @@
       "entitlements": "res/entitlements.mac.plist",
       "entitlementsInherit": "res/entitlements.mac.plist",
       "target": [
-        "zip",
-        "dmg"
+        {
+          "target": "default",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ]
     },
     "nodeGypRebuild": false,
