@@ -18,7 +18,7 @@ import {
   LocalReltabConnection,
   resolvePath,
 } from "reltab";
-import { dataFileExtensions } from "reltab-fs";
+import { dataFileExtensions, isIPFSPath } from "reltab-fs";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -200,7 +200,10 @@ export function fileOpenParams(targetPath: string): OpenParams {
 export const createFromFile = async (
   targetPath: string
 ): Promise<BrowserWindow> => {
-  const realTargetPath = await fsPromises.realpath(targetPath);
+  let realTargetPath = targetPath;
+  if (!isIPFSPath(targetPath)) {
+    realTargetPath = await fsPromises.realpath(targetPath);
+  }
   const openParams = fileOpenParams(realTargetPath);
   const win = await create(openParams);
   return win;
