@@ -62,7 +62,7 @@ jobs:
         displayName: "Run lerna bootstrapping"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
-      - script: "( cd packages/tad-app && npm run publish )"
+      - script: "( cd packages/tad-app && BUILD_BUILDNUMBER='' npm run publish )"
         displayName: "Build packaged tad-app with electron-builder"
         env:
           {
