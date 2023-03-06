@@ -7,6 +7,7 @@ const copy = require("recursive-copy");
 
 async function afterPack(context) {
   console.log("afterPack hook called:", context.packager.platform.name);
+  console.log("env vars: ", process.env);
   console.log('skipping OpenSSL bundling (no longer required by duckdb)');
   /*
   if (context.packager.platform.name === "mac") {

@@ -81,6 +81,7 @@ export class DuckDBDriver implements DbDriver {
     const conn = await this.connPool.take();
     let ret: any;
     try {
+      log.info("runSqlQuery:\n", query);
       ret = await conn.all(query);
     } finally {
       this.connPool.giveBack(conn);

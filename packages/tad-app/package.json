@@ -166,13 +166,8 @@
       "entitlements": "res/entitlements.mac.plist",
       "entitlementsInherit": "res/entitlements.mac.plist",
       "target": [
-        {
-          "target": "default",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
+        "zip",
+        "dmg"
       ]
     },
     "nodeGypRebuild": false,
