@@ -101,29 +101,34 @@
   <div id="news" class="section news-section">
     <div class="container">
     <h3>News</h3>
-    <p class="lead">Tad 0.11.0 - Dec. 19, 2022</p>
+    <p class="lead">Tad 0.12.0 - Mar. 6, 2023</p>
     <P>
-    A packaged installer for Tad is available for macOS, Linux and Windows.
+    A packaged installer for Tad is available for macOS (x86 and Apple Silicon), Linux and Windows.
     <P>
     Tad is a perpetual work-in-progress hobby project, so you are likely to encounter bugs, UI annoyances, and corner cases. Please report them via <strong>Help...Send Feedback</strong>.
     <P>
     If you're comfortable with that caveat, pick your platform and install:
     <P class="download">
       <a id="download-latest-release" class="btn btn-default"
-        href="https://github.com/antonycourtney/tad/releases/download/v0.11.0/tad-0.11.0.dmg">
+        href="https://github.com/antonycourtney/tad/releases/download/v0.12.0/tad-0.12.0.dmg">
         <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
-        Download for Mac
+        Mac (x86)
       </a>
       <a id="download-latest-release" class="btn btn-default"
-        href="https://github.com/antonycourtney/tad/releases/download/v0.11.0/tad_0.11.0_amd64.deb"
+        href="https://github.com/antonycourtney/tad/releases/download/v0.12.0/tad-0.12.0-arm64.dmg">
+        <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+        Mac (Apple Silicon M1/M2)
+      </a>
+      <a id="download-latest-release" class="btn btn-default"
+        href="https://github.com/antonycourtney/tad/releases/download/v0.12.0/tad_0.12.0_amd64.deb"
         >
         <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
-        Download for Linux
+        Linux (x86)
       </a>
       <a id="download-latest-release" class="btn btn-default"
-        href="https://github.com/antonycourtney/tad/releases/download/v0.11.0/Tad-Setup-0.11.0.exe">
+        href="https://github.com/antonycourtney/tad/releases/download/v0.12.0/Tad-Setup-0.12.0.exe">
         <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
-        Download for Windows
+        Windows (x86)
       </a>
     </P>
     <P>
@@ -166,6 +171,17 @@
   <div id="relnotes" class="section relnotes-section">
     <div class="container">
     <h3>Release Notes</h3>
+    <div class="release-section">
+      <h4>Tad 0.12.0 - Mar. 6, 2023</h4>
+      <P>
+      <h5>New Features / Bug Fixes</h5>
+      <ul>
+        <li>Updated to latest DuckDb (0.7.1)
+        <li>Binary releases now include native build for Apple Silicon (M1/M2)
+        <li>Reloading an updated CSV/Parquet file will re-import the file (based on checking file modification time)
+      </ul>
+    </div>
+
     <div class="release-section">
       <h4>Tad 0.11.0 - Dec. 19, 2022</h4>
       <P>
