@@ -77,7 +77,10 @@ export const setQueryView = async (
   const baseSchema = await aggtree.getBaseSchema(dsc, baseQuery);
 
   // start off with all columns displayed:
-  const displayColumns = baseSchema.columns.slice();
+  const lastColumn = appState.showRecordCount
+    ? baseSchema.columns.length
+    : baseSchema.columns.length - 1;
+  const displayColumns = baseSchema.columns.slice(0, lastColumn);
 
   const openPaths = new PathTree();
   const initialViewParams = new ViewParams({
