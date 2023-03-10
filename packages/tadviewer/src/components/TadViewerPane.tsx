@@ -55,7 +55,7 @@ export interface TadViewerPaneProps {
   dsConn: DataSourceConnection;
   errorCallback?: (e: Error) => void;
   setLoadingCallback: (loading: boolean) => void;
-  showRecordCount?: boolean;
+  showRecordCount: boolean;
 }
 
 export function TadViewerPane({

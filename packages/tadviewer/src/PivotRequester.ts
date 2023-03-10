@@ -132,7 +132,8 @@ const requestQueryView = async (
   rt: DataSourceConnection,
   baseQuery: reltab.QueryExp,
   baseSchema: reltab.Schema,
-  viewParams: ViewParams
+  viewParams: ViewParams,
+  showRecordCount: boolean
 ): Promise<QueryView> => {
   const schemaCols = baseSchema.columns;
   const aggMap: any = {};
@@ -150,7 +151,8 @@ const requestQueryView = async (
     viewParams.pivotLeafColumn,
     viewParams.showRoot,
     viewParams.sortKey,
-    aggMap
+    aggMap,
+    showRecordCount
   );
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths); // const t0 = performance.now()  // eslint-disable-line
 
@@ -342,7 +344,8 @@ export class PivotRequester {
         viewState.dbc,
         viewState.baseQuery,
         viewState.baseSchema,
-        this.pendingViewParams
+        this.pendingViewParams,
+        appState.showRecordCount
       );
       this.pendingQueryRequest = qreq;
       this.pendingDataRequest = qreq

@@ -74,13 +74,14 @@ export const setQueryView = async (
   // console.log("replaceCurrentView: queryTableName: ", dsPath, queryTableName);
 
   const baseQuery = reltab.sqlQuery(sqlQuery);
-  const baseSchema = await aggtree.getBaseSchema(dsc, baseQuery);
+  const baseSchema = await aggtree.getBaseSchema(
+    dsc,
+    baseQuery,
+    appState.showRecordCount
+  );
 
   // start off with all columns displayed:
-  const lastColumn = appState.showRecordCount
-    ? baseSchema.columns.length
-    : baseSchema.columns.length - 1;
-  const displayColumns = baseSchema.columns.slice(0, lastColumn);
+  const displayColumns = baseSchema.columns.slice();
 
   const openPaths = new PathTree();
   const initialViewParams = new ViewParams({
@@ -131,7 +132,11 @@ export const replaceCurrentView = async (
   // console.log("replaceCurrentView: queryTableName: ", dsPath, queryTableName);
 
   const baseQuery = reltab.tableQuery(queryTableName);
-  const baseSchema = await aggtree.getBaseSchema(dbc, baseQuery);
+  const baseSchema = await aggtree.getBaseSchema(
+    dbc,
+    baseQuery,
+    appState.showRecordCount
+  );
 
   // start off with all columns displayed:
   const displayColumns = baseSchema.columns.slice();
