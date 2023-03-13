@@ -55,6 +55,7 @@ export interface TadViewerPaneProps {
   dsConn: DataSourceConnection;
   errorCallback?: (e: Error) => void;
   setLoadingCallback: (loading: boolean) => void;
+  showRecordCount: boolean;
 }
 
 export function TadViewerPane({
@@ -62,6 +63,7 @@ export function TadViewerPane({
   dsConn,
   errorCallback,
   setLoadingCallback,
+  showRecordCount,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -82,7 +84,7 @@ export function TadViewerPane({
       log.debug("*** TadViewerPane: got local reltab connection: ", rtc);
 
       if (!appStateRef) {
-        const appState = new AppState();
+        const appState = new AppState({ showRecordCount });
         const stateRef = mkRef(appState);
         setAppStateRef(stateRef);
         log.debug("*** initializing app state:");

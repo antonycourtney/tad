@@ -27,6 +27,7 @@ export interface AppStateProps {
 
   appLoadingTimer: Timer;
   activity: Activity;
+  showRecordCount: boolean;
 }
 
 const defaultAppStateProps: AppStateProps = {
@@ -41,6 +42,7 @@ const defaultAppStateProps: AppStateProps = {
   viewConfirmSourcePath: null,
   appLoadingTimer: new Timer(),
   activity: "None",
+  showRecordCount: true,
 };
 
 export class AppState extends Immutable.Record(defaultAppStateProps) {
@@ -58,4 +60,5 @@ export class AppState extends Immutable.Record(defaultAppStateProps) {
   public readonly viewConfirmSourcePath!: DataSourcePath | null;
   public readonly appLoadingTimer!: Timer;
   public readonly activity!: Activity;
+  public readonly showRecordCount!: boolean;
 }
