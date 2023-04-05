@@ -256,6 +256,9 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
       <LoadingModal />
     ) : null;
   }
+  const dataSourceSidebar = showDataSources ? (
+    <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
+  ) : null;
   mainContents = (
     <div className="container-fluid full-height main-container tad-app-pane">
       <DndProvider manager={dndManager}>
@@ -264,7 +267,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
           showDataSources={showDataSources}
           stateRef={stateRef}
         />
-        <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
+        {dataSourceSidebar}
         {pivotSidebar}
         {centerPane}
       </DndProvider>
