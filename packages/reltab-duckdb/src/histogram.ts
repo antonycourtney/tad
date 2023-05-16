@@ -5,6 +5,7 @@
 
 import {
   DuckDBDialect,
+  NumericColumnHistogramData,
   NumericSummaryStats,
   QueryExp,
   Schema,
@@ -105,15 +106,6 @@ export function columnHistogramQuery(
     binWidth,
   };
   return ret;
-}
-
-export interface NumericColumnHistogramData {
-  colId: string;
-  niceMinVal: number;
-  niceMaxVal: number;
-  binCount: number;
-  binWidth: number;
-  binData: number[];
 }
 
 export function getNumericColumnHistogramData(

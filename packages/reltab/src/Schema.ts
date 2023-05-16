@@ -21,11 +21,21 @@ export type TextSummaryStats = {
   pctNull: number | null;
 };
 
+export interface NumericColumnHistogramData {
+  colId: string;
+  niceMinVal: number;
+  niceMaxVal: number;
+  binCount: number;
+  binWidth: number;
+  binData: number[];
+}
+
 // metadata for a single column:
 export type ColumnMetadata = {
   displayName: string;
   columnType: string; // sql type name, based on dialect
   columnStats?: NumericSummaryStats | TextSummaryStats;
+  columnHistogram?: NumericColumnHistogramData;
 };
 
 export type ColumnMetaMap = {
