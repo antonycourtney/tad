@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`basic column stats and bin count 1`] = `
+Object {
+  "approxUnique": 23,
+  "count": 23,
+  "max": 419661,
+  "min": 104260,
+  "pctNull": 0,
+  "statsType": "numeric",
+}
+`;

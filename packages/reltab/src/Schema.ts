@@ -3,11 +3,29 @@ import { ColumnType } from "./ColumnType";
 import { SQLDialect, ensureDialectColumnType } from "./dialect";
 import { dialects } from "./dialectRegistry";
 
-// metadata for a single column:
+export type NumericSummaryStats = {
+  statsType: "numeric";
+  min: number | null;
+  max: number | null;
+  approxUnique: number | null;
+  count: number;
+  pctNull: number | null;
+};
 
+export type TextSummaryStats = {
+  statsType: "text";
+  min: number | null;
+  max: number | null;
+  approxUnique: number | null;
+  count: number;
+  pctNull: number | null;
+};
+
+// metadata for a single column:
 export type ColumnMetadata = {
   displayName: string;
   columnType: string; // sql type name, based on dialect
+  columnStats?: NumericSummaryStats | TextSummaryStats;
 };
 
 export type ColumnMetaMap = {
@@ -68,7 +86,7 @@ export class Schema {
   columnType(colId: string): ColumnType {
     const cmd = this.columnMetadata[colId];
     if (cmd == null) {
-      throw new Error(`Schema.columnType: unknown columnd '${colId}'`);
+      throw new Error(`Schema.columnType: unknown column '${colId}'`);
     }
     const sqlTypeName = cmd.columnType;
     return this.dialect.columnTypes[sqlTypeName];

@@ -9,7 +9,7 @@ import {
 import { SQLDialect } from "./dialect";
 import { BinRelExp, FilterExp, SubExp, UnaryRelExp } from "./FilterExp";
 import { queryGetSchema } from "./getSchema";
-import { ppOut, StringBuffer } from "./internals";
+import { ppOut, StringBuffer } from "./defs";
 import { ppSQLQuery } from "./pp";
 import {
   AggColSpec,

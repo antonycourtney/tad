@@ -207,8 +207,41 @@ export const getOrInferColumnType = (
         );
       }
       return colType;
+    case "BinValExp":
+      const lhsColType = getOrInferColumnType(
+        dialect,
+        inSchema,
+        undefined,
+        colExp.lhs
+      );
+      const rhsColType = getOrInferColumnType(
+        dialect,
+        inSchema,
+        undefined,
+        colExp.rhs
+      );
+      if (lhsColType !== rhsColType) {
+        throw new Error(
+          `Incompatible types for lhs and rhs of binary expression in extend expression:\n
+            ${JSON.stringify(colExp)}\n
+            lhs type: ${JSON.stringify(lhsColType)} 
+            rhs type: ${JSON.stringify(rhsColType)}`
+        );
+      }
+      return lhsColType;
+    case "UnaryValExp":
+      switch (colExp.op) {
+        case "round":
+          return dialect.coreColumnTypes.real;
+        default:
+          const invalid: never = colExp;
+          throw new Error(`Unknown unary expression expType: ${invalid}`);
+      }
+      break;
     case "AsString":
       return dialect.coreColumnTypes.string;
+    case "CastExp":
+      return colExp.asType;
     case "ConstVal":
       switch (typeof colExp.val) {
         case "number":

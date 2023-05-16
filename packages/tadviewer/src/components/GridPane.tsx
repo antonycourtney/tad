@@ -26,6 +26,9 @@ const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
   Plugins;
 import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
 import { Schema } from "reltab";
+import ReactDOM from "react-dom";
+
+import * as d3 from "d3";
 
 export type OpenURLFn = (url: string) => void;
 
@@ -35,6 +38,8 @@ const genContainerId = (): string => `epGrid${divCounter++}`;
 
 const gridOptions = {
   multiColumnSort: true,
+  showHeaderRow: true,
+  headerRowHeight: 64,
 };
 
 const INDENT_PER_LEVEL = 15; // pixels
@@ -210,6 +215,15 @@ const mkSlickColMap = (
   return slickColMap;
 };
 
+const Circle = () => {
+  return (
+    <svg className="columnHeaderCell">
+      {/*<circle cx="80" cy="50" r="20" />*/}
+      <rect className="histoBar" x="50" y="30" width="10" height="20" />
+    </svg>
+  );
+};
+
 /**
  * React component wrapper around SlickGrid
  *
@@ -298,6 +312,29 @@ const createGrid = (
 
   grid.onViewportChanged.subscribe((e: any, args: any) => {
     updateViewportDebounced();
+  });
+
+  grid.onHeaderRowCellRendered.subscribe((e: any, { node, column }: any) => {
+    console.log("headerRowCellRendered callback: ", column.id);
+    // TODO: ReactDOM.createRoot(node).render(...)
+    ReactDOM.render(<Circle />, node);
+    node.classList.add("slick-editable");
+    /*
+    if (['_checkbox_selector', 'historic', 'health'].indexOf(column.id) === -1){
+      ReactDOM.render(<Filter columnId={column.id} columnFilters={columnFilters} dv={dv}/>, node);
+      node.classList.add('slick-editable');
+    }
+    else if (column.id === 'health'){
+      ReactDOM.render(
+        <input className="range" defaultValue={healthValue} type="range" onChange={e => changeFilter(e.target.value)}/>, node)
+    }
+    else {
+      node.classList.add('slick-uneditable');
+    }
+    if (column.id === '_checkbox_selector'){
+      node.innerHTML = '<i class="fa fa-filter" />';
+    }
+    */
   });
 
   grid.onSort.subscribe((e: any, args: any) => {

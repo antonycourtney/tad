@@ -1,6 +1,8 @@
 import { Connection, Database } from "duckdb-async";
 import * as log from "loglevel";
 import {
+  colIsNumeric,
+  ColumnMetadata,
   ColumnMetaMap,
   ColumnType,
   DataSourceConnection,
@@ -11,14 +13,17 @@ import {
   DbDataSource,
   DbDriver,
   DuckDBDialect,
+  NumericSummaryStats,
   registerProvider,
   Row,
   Schema,
   SQLDialect,
+  TextSummaryStats,
 } from "reltab"; // eslint-disable-line
 import { initS3 } from "./s3utils";
 
 export * from "./csvimport";
+export * from "./histogram";
 
 const columnTypes = DuckDBDialect.columnTypes;
 
@@ -60,6 +65,15 @@ class ConnectionPool {
     this.pool.push(conn);
   }
 }
+
+const parsePercentage = (s: string | undefined): number | null => {
+  if (s != undefined && s.endsWith("%")) {
+    const noPct = s.replace(/%$/, "");
+    const ret = Number.parseFloat(noPct) / 100.0;
+    return ret;
+  }
+  return null;
+};
 
 export class DuckDBDriver implements DbDriver {
   readonly displayName: string;
@@ -109,8 +123,31 @@ export class DuckDBDriver implements DbDriver {
       idx: number
     ): ColumnMetaMap => {
       const displayName = row[columNameKey];
-      const columnType = row[columnTypeKey].toLocaleUpperCase();
-      const columnMetadata = { displayName, columnType };
+      const columnType: string = row[columnTypeKey].toLocaleUpperCase();
+      const ct = DuckDBDialect.columnTypes[columnType];
+      let columnStats: NumericSummaryStats | TextSummaryStats | undefined;
+      if (ct && colIsNumeric(ct)) {
+        // numeric type!
+        // annoyingly, DuckDb summarize stats returned as varchar:
+        const minVal = Number.parseFloat(row["min"]);
+        const maxVal = Number.parseFloat(row["max"]);
+        const approxUnique = Number.parseInt(row["approx_unique"]);
+        const count = Number.parseInt(row["count"]);
+        const pctNull = parsePercentage(row["null_percentage"]);
+        columnStats = {
+          statsType: "numeric",
+          min: minVal,
+          max: maxVal,
+          approxUnique,
+          count,
+          pctNull,
+        };
+      }
+      const columnMetadata: ColumnMetadata = {
+        displayName,
+        columnType,
+        columnStats,
+      };
       columnMetaMap[displayName] = columnMetadata;
       return columnMetaMap;
     };
@@ -121,15 +158,22 @@ export class DuckDBDriver implements DbDriver {
     return schema;
   }
 
+  /*
   async getTableSchema(tableName: string): Promise<Schema> {
     const tiQuery = `PRAGMA table_info(${tableName})`;
     const rows = await this.runSqlQuery(tiQuery);
+    console.log("*** getTableSchema: ", rows);
 
     return this.schemaFromTableInfo(rows, "name", "type");
   }
+*/
+
+  async getTableSchema(tableName: string): Promise<Schema> {
+    return this.getSqlQuerySchema(tableName);
+  }
 
   async getSqlQuerySchema(sqlQuery: string): Promise<Schema> {
-    const describeQuery = `describe ${sqlQuery}`;
+    const describeQuery = `summarize ${sqlQuery}`;
     const descRows = await this.runSqlQuery(describeQuery);
 
     return this.schemaFromTableInfo(descRows, "column_name", "column_type");

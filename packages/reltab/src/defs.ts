@@ -1,6 +1,7 @@
 /**
  *  Common type definitions used throughout reltab
  */
+import { ColumnType } from "./ColumnType";
 import { SQLDialect } from "./dialect";
 import { SQLiteDialect, SQLiteDialectClass } from "./dialects/SQLiteDialect";
 
@@ -42,7 +43,83 @@ interface WindowExp {
   fn: WindowFn;
 }
 
-export type ValExp = ConstVal | ColRef | WindowExp;
+interface CastExp {
+  expType: "CastExp";
+  subExp: ValExp;
+  asType: ColumnType;
+}
+
+export const cast = (subExp: ValExp, asType: ColumnType): CastExp => ({
+  expType: "CastExp",
+  subExp,
+  asType,
+});
+
+export type BinValOp = "+" | "-" | "*" | "/";
+
+// A binary operator value expression (can appear in a SQL select):
+export class BinValExp {
+  expType: "BinValExp";
+  op: BinValOp;
+  lhs: ValExp;
+  rhs: ValExp;
+
+  constructor(op: BinValOp, lhs: ValExp, rhs: ValExp) {
+    this.expType = "BinValExp";
+    this.op = op;
+    this.lhs = lhs;
+    this.rhs = rhs;
+  }
+
+  toSqlStr(dialect: SQLDialect): string {
+    return `(${valExpToSqlStr(dialect, this.lhs)} ${this.op} ${valExpToSqlStr(
+      dialect,
+      this.rhs
+    )})`;
+  }
+}
+export const plus = (lhs: ValExp, rhs: ValExp): BinValExp =>
+  new BinValExp("+", lhs, rhs);
+export const minus = (lhs: ValExp, rhs: ValExp): BinValExp =>
+  new BinValExp("-", lhs, rhs);
+export const multiply = (lhs: ValExp, rhs: ValExp): BinValExp =>
+  new BinValExp("*", lhs, rhs);
+export const divide = (lhs: ValExp, rhs: ValExp): BinValExp =>
+  new BinValExp("/", lhs, rhs);
+
+export type UnaryValOp = "round";
+
+export class UnaryValExp {
+  expType: "UnaryValExp";
+  op: UnaryValOp;
+  arg: ValExp;
+
+  constructor(op: UnaryValOp, arg: ValExp) {
+    this.expType = "UnaryValExp";
+    this.op = op;
+    this.arg = arg;
+  }
+
+  toSqlStr(dialect: SQLDialect): string {
+    switch (this.op) {
+      case "round":
+        return `round(${valExpToSqlStr(dialect, this.arg)})`;
+      default:
+        const invalid: never = this.op;
+        throw new Error(`Unknown unary operator: ${invalid}`);
+    }
+  }
+}
+export const round = (arg: ValExp): UnaryValExp =>
+  new UnaryValExp("round", arg);
+
+export type ValExp =
+  | ConstVal
+  | ColRef
+  | WindowExp
+  | BinValExp
+  | UnaryValExp
+  | CastExp;
 
 // A text cast operator applied to a ValExp:
 interface AsString {
@@ -94,4 +171,84 @@ export const sqlEscapeString = (inStr: string): string => {
     }
   });
   return ["'", outStr, "'"].join("");
+};
+
+export const valExpToSqlStr = (dialect: SQLDialect, vexp: ValExp): string => {
+  let ret: string;
+  switch (vexp.expType) {
+    case "ConstVal":
+      ret =
+        vexp.val == null
+          ? "null"
+          : typeof vexp.val === "string"
+          ? sqlEscapeString(vexp.val)
+          : vexp.val.toString();
+      break;
+    case "ColRef":
+      const qCol = dialect.quoteCol(vexp.colName);
+      ret = vexp.tblAlias ? `${vexp.tblAlias}.${qCol}` : qCol;
+      break;
+    case "WindowExp":
+      ret = `${vexp.fn}() OVER ()`;
+      break;
+    case "BinValExp":
+      ret = vexp.toSqlStr(dialect);
+      break;
+    case "UnaryValExp":
+      ret = vexp.toSqlStr(dialect);
+      break;
+    case "CastExp":
+      ret = `CAST(${valExpToSqlStr(dialect, vexp.subExp)} AS ${
+        vexp.asType.sqlTypeName
+      })`;
+      break;
+    default:
+      const invalid: never = vexp;
+      throw new Error(`Unknown value expression expType: ${invalid}`);
+  }
+  return ret;
+};
+
+export const colExtendExpToSqlStr = (
+  dialect: SQLDialect,
+  cexp: ColumnExtendExp
+): string => {
+  let ret: string;
+  switch (cexp.expType) {
+    case "AsString":
+      ret = `CAST(${valExpToSqlStr(dialect, cexp.valExp)} AS ${
+        dialect.coreColumnTypes.string.sqlTypeName
+      })`;
+      break;
+    default:
+      ret = valExpToSqlStr(dialect, cexp);
+  }
+  return ret;
+};
+
+export const deserializeValExp = (js: any): ValExp => {
+  // attempt to deal with migration from v0.9 format,
+  // where the discriminator was called "expType" instead of "expType"
+  // and we used classes rather than tagged unions.
+  if (js.hasOwnProperty("expType")) {
+    if (js.expType === "ConstVal") {
+      return constVal(js.val);
+    } else {
+      return col(js.colName);
+    }
+  } else {
+    // tagged union format should just serialize as itself
+    return js as ValExp;
+  }
+};
+
+/* An array of strings that will be joined with Array.join('') to
+ * form a final result string
+ */
+
+export type StringBuffer = string[];
+export const ppOut = (dst: StringBuffer, depth: number, str: string): void => {
+  const indentStr = "  ".repeat(depth);
+  dst.push(indentStr);
+  dst.push(str);
 };
