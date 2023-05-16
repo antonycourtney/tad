@@ -8,6 +8,7 @@ import {
   NumericSummaryStats,
   QueryExp,
   Schema,
+  TableRep,
   cast,
   col,
   constVal,
@@ -45,6 +46,7 @@ export interface NumericColumnHistogramQuery {
   maxVal: number;
   niceMinVal: number;
   niceMaxVal: number;
+  binCount: number;
   binWidth: number;
 }
 
@@ -60,11 +62,11 @@ export function columnHistogramQuery(
   if (minVal == null || maxVal == null) {
     return null;
   }
-  const numBins = binsForColumn(colStats);
+  const binCount = binsForColumn(colStats);
 
-  const [niceMinVal, niceMaxVal] = nice(minVal, maxVal, numBins);
+  const [niceMinVal, niceMaxVal] = nice(minVal, maxVal, binCount);
 
-  const binWidth = (niceMaxVal - niceMinVal) / numBins;
+  const binWidth = (niceMaxVal - niceMinVal) / binCount;
 
   // add a column with bin number:
 
@@ -99,7 +101,44 @@ export function columnHistogramQuery(
     maxVal,
     niceMinVal,
     niceMaxVal,
+    binCount,
     binWidth,
   };
   return ret;
+}
+
+export interface NumericColumnHistogramData {
+  colId: string;
+  niceMinVal: number;
+  niceMaxVal: number;
+  binCount: number;
+  binWidth: number;
+  binData: number[];
+}
+
+export function getNumericColumnHistogramData(
+  colId: string,
+  histoQuery: NumericColumnHistogramQuery,
+  queryRes: TableRep
+): NumericColumnHistogramData {
+  const { niceMinVal, niceMaxVal, binCount, binWidth } = histoQuery;
+  const numBins = Math.ceil((niceMaxVal - niceMinVal) / binWidth);
+  const binData = new Array(numBins).fill(0);
+  const { rowData } = queryRes;
+  // we could do better by partitioning by column id, but unlikely to be a lot of data for now
+  for (const row of rowData) {
+    if (row.column === colId) {
+      const bin = row.bin as number;
+      const binCount = row.binCount;
+      binData[bin] = binCount;
+    }
+  }
+  return {
+    colId,
+    niceMinVal,
+    niceMaxVal,
+    binCount,
+    binWidth,
+    binData,
+  };
 }

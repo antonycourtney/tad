@@ -10,7 +10,11 @@ import {
 import * as reltabDuckDB from "../src/reltab-duckdb";
 import * as util from "./testUtils";
 import { getFormattedRows } from "./testUtils";
-import { binsForColumn, columnHistogramQuery } from "../src/reltab-duckdb";
+import {
+  binsForColumn,
+  columnHistogramQuery,
+  getNumericColumnHistogramData,
+} from "../src/reltab-duckdb";
 
 const { col, constVal } = reltab;
 
@@ -68,6 +72,9 @@ test("histogram query for column", async () => {
   console.log("histoInfo: ", histoInfo);
 
   const histoRes = await testCtx.evalQuery(histoInfo!.histoQuery);
-  console.log("*** histoRes: ");
   util.logTable(histoRes);
+
+  const histoData = getNumericColumnHistogramData("TCOE", histoInfo!, histoRes);
+  console.log("histogram data:", histoData);
+  expect(histoData).toMatchSnapshot();
 });

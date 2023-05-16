@@ -10,3 +10,22 @@ Object {
   "statsType": "numeric",
 }
 `;
+
+exports[`histogram query for column 1`] = `
+Object {
+  "binCount": 7,
+  "binData": Array [
+    7,
+    3,
+    6,
+    1,
+    4,
+    0,
+    2,
+  ],
+  "binWidth": 50000,
+  "colId": "TCOE",
+  "niceMaxVal": 450000,
+  "niceMinVal": 100000,
+}
+`;
