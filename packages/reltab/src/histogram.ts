@@ -3,22 +3,13 @@
  * Column histograms using reltab-duckdb
  */
 
-import {
-  DuckDBDialect,
-  NumericColumnHistogramData,
-  NumericSummaryStats,
-  QueryExp,
-  Schema,
-  TableRep,
-  cast,
-  col,
-  constVal,
-  divide,
-  minus,
-  round,
-  sqlQuery,
-} from "reltab";
+import { ColumnType } from "./ColumnType";
+import { QueryExp } from "./QueryExp";
+import { NumericSummaryStats, NumericColumnHistogramData } from "./Schema";
+import { TableRep } from "./TableRep";
 import { nice, thresholdSturges } from "./d3utils";
+import { constVal, cast, minus, col, round, divide } from "./defs";
+import { DuckDBDialect } from "./dialectRegistry";
 
 export interface Bin {
   lower: number;
@@ -53,8 +44,8 @@ export interface NumericColumnHistogramQuery {
 
 export function columnHistogramQuery(
   baseQuery: QueryExp,
-  querySchema: Schema,
   colId: string,
+  colType: ColumnType,
   colStats: NumericSummaryStats
 ): NumericColumnHistogramQuery | null {
   const minVal = colStats.min;
@@ -70,9 +61,6 @@ export function columnHistogramQuery(
   const binWidth = (niceMaxVal - niceMinVal) / binCount;
 
   // add a column with bin number:
-
-  const colType = querySchema.columnType(colId);
-
   const binQuery = baseQuery
     .extend("column", constVal(colId))
     .extend(

@@ -41,9 +41,7 @@
     "url-loader": "^4.1.1",
     "url-regex": "5.0.0",
     "use-deep-compare": "^1.1.0",
-    "vega-lite": "^5.9.0",
-    "vega-lite-api": "5.6.0",
-    "d3": "^7.8.4"
+    "victory": "^36.6.10"
   },
   "devDependencies": {
     "@blueprintjs/icons": "^4.10.1",
@@ -51,7 +49,6 @@
     "@types/react-dom": "^18.0.6",
     "@types/react-select": "^5.0.0",
     "@types/slickgrid": "^2.1.31",
-    "@types/d3": "^7.4.0",
     "aggtree": "^0.12.0",
     "ajv": "^6.9.1",
     "css-loader": "^6.5.1",

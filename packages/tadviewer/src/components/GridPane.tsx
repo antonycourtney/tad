@@ -27,6 +27,7 @@ const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
 import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
 import { Schema } from "reltab";
 import ReactDOM from "react-dom";
+import { VictoryBar } from "victory";
 
 import * as d3 from "d3";
 
@@ -215,13 +216,15 @@ const mkSlickColMap = (
   return slickColMap;
 };
 
-const Circle = () => {
+const ColumnHisto = () => {
+  return <VictoryBar />;
+  /*
   return (
     <svg className="columnHeaderCell">
-      {/*<circle cx="80" cy="50" r="20" />*/}
       <rect className="histoBar" x="50" y="30" width="10" height="20" />
     </svg>
   );
+*/
 };
 
 /**
@@ -317,7 +320,7 @@ const createGrid = (
   grid.onHeaderRowCellRendered.subscribe((e: any, { node, column }: any) => {
     console.log("headerRowCellRendered callback: ", column.id);
     // TODO: ReactDOM.createRoot(node).render(...)
-    ReactDOM.render(<Circle />, node);
+    ReactDOM.render(<ColumnHisto />, node);
     node.classList.add("slick-editable");
     /*
     if (['_checkbox_selector', 'historic', 'health'].indexOf(column.id) === -1){

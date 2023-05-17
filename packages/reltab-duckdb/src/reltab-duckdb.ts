@@ -23,7 +23,6 @@ import {
 import { initS3 } from "./s3utils";
 
 export * from "./csvimport";
-export * from "./histogram";
 
 const columnTypes = DuckDBDialect.columnTypes;
 
@@ -112,11 +111,11 @@ export class DuckDBDriver implements DbDriver {
    * a reltab Schema
    * @param metaRows
    */
-  schemaFromTableInfo(
+  async schemaFromTableInfo(
     metaRows: Row[],
     columNameKey: string,
     columnTypeKey: string
-  ): Schema {
+  ): Promise<Schema> {
     const extendCMap = (
       columnMetaMap: ColumnMetaMap,
       row: any,
@@ -154,19 +153,17 @@ export class DuckDBDriver implements DbDriver {
 
     const cmMap = metaRows.reduce(extendCMap, {});
     const columnIds = metaRows.map((r) => r[columNameKey]);
+    /*
+    cmMap.forEach((cm, colId) => {
+      const { columnType } = cm;
+      const ct = DuckDBDialect.columnTypes[columnType];
+      if (ct && colIsNumeric(ct)) {
+      }
+    }
+    */
     const schema = new Schema(DuckDBDialect, columnIds as string[], cmMap);
     return schema;
   }
-
-  /*
-  async getTableSchema(tableName: string): Promise<Schema> {
-    const tiQuery = `PRAGMA table_info(${tableName})`;
-    const rows = await this.runSqlQuery(tiQuery);
-    console.log("*** getTableSchema: ", rows);
-
-    return this.schemaFromTableInfo(rows, "name", "type");
-  }
-*/
 
   async getTableSchema(tableName: string): Promise<Schema> {
     return this.getSqlQuerySchema(tableName);
@@ -176,7 +173,12 @@ export class DuckDBDriver implements DbDriver {
     const describeQuery = `summarize ${sqlQuery}`;
     const descRows = await this.runSqlQuery(describeQuery);
 
-    return this.schemaFromTableInfo(descRows, "column_name", "column_type");
+    const schema = await this.schemaFromTableInfo(
+      descRows,
+      "column_name",
+      "column_type"
+    );
+    return schema;
   }
 
   async getRootNode(): Promise<DataSourceNode> {

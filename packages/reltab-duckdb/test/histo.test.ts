@@ -5,16 +5,15 @@ import {
   asString,
   DataSourceConnection,
   DbDataSource,
+  DuckDBDialect,
   tableQuery,
+  binsForColumn,
+  columnHistogramQuery,
+  getNumericColumnHistogramData,
 } from "reltab";
 import * as reltabDuckDB from "../src/reltab-duckdb";
 import * as util from "./testUtils";
 import { getFormattedRows } from "./testUtils";
-import {
-  binsForColumn,
-  columnHistogramQuery,
-  getNumericColumnHistogramData,
-} from "../src/reltab-duckdb";
 
 const { col, constVal } = reltab;
 
@@ -60,6 +59,8 @@ test("basic column stats and bin count", async () => {
   console.log("*** number of histogram bins: ", binCount);
 });
 
+const intType = DuckDBDialect.columnTypes["INTEGER"];
+
 test("histogram query for column", async () => {
   const schema = await testCtx.getSchema(q1);
   const qres = await testCtx.evalQuery(q1);
@@ -67,7 +68,7 @@ test("histogram query for column", async () => {
   const tcoeColumnStats = qres.schema.columnMetadata["TCOE"]
     .columnStats as reltab.NumericSummaryStats;
 
-  const histoInfo = columnHistogramQuery(q1, schema, "TCOE", tcoeColumnStats);
+  const histoInfo = columnHistogramQuery(q1, "TCOE", intType, tcoeColumnStats);
 
   console.log("histoInfo: ", histoInfo);
 
