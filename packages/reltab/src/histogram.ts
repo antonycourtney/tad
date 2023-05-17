@@ -1,11 +1,12 @@
 /**
  *
- * Column histograms using reltab-duckdb
+ * Column histograms using reltab
  */
 
-import { ColumnType } from "./ColumnType";
+import { ColumnType, colIsNumeric } from "./ColumnType";
+import { DataSourceConnection } from "./DataSource";
 import { QueryExp } from "./QueryExp";
-import { NumericSummaryStats, NumericColumnHistogramData } from "./Schema";
+import { NumericSummaryStats, Schema } from "./Schema";
 import { TableRep } from "./TableRep";
 import { nice, thresholdSturges } from "./d3utils";
 import { constVal, cast, minus, col, round, divide } from "./defs";
@@ -25,6 +26,8 @@ export function binsForColumn(colStats: NumericSummaryStats): number {
   return numBins;
 }
 
+// TODO: adjust to work with any dialect:
+// grab dialect.coreColumnTypes.real
 const doubleType = DuckDBDialect.columnTypes["DOUBLE"];
 const intType = DuckDBDialect.columnTypes["INTEGER"];
 
@@ -96,6 +99,20 @@ export function columnHistogramQuery(
   return ret;
 }
 
+// histogram data for rendering a single column histogram
+export interface NumericColumnHistogramData {
+  colId: string;
+  niceMinVal: number;
+  niceMaxVal: number;
+  binCount: number;
+  binWidth: number;
+  binData: number[];
+}
+
+/*
+ *
+ * Given the result of running a histogram query, extract the histogram data for a single column
+ */
 export function getNumericColumnHistogramData(
   colId: string,
   histoQuery: NumericColumnHistogramQuery,
@@ -121,4 +138,44 @@ export function getNumericColumnHistogramData(
     binWidth,
     binData,
   };
+}
+
+export type ColumnHistogramMap = {
+  [colId: string]: NumericColumnHistogramData;
+};
+
+export async function getColumnHistogramMap(
+  dsConn: DataSourceConnection,
+  baseQuery: QueryExp,
+  baseSchema: Schema
+): Promise<ColumnHistogramMap> {
+  const histoMap: ColumnHistogramMap = {};
+
+  // TODO: join this into one mega-query that does a union all
+  for (const colId of baseSchema.columns) {
+    const colType = baseSchema.columnType(colId);
+    if (colIsNumeric(colType)) {
+      const colStats = baseSchema.columnStats(colId);
+      if (colStats != null) {
+        const histoInfo = columnHistogramQuery(
+          baseQuery,
+          colId,
+          colType,
+          colStats as NumericSummaryStats
+        );
+        if (histoInfo) {
+          console.log("getting histo for colId: ", colId);
+          const histoRes = await dsConn.evalQuery(histoInfo!.histoQuery);
+          const histoData = getNumericColumnHistogramData(
+            colId,
+            histoInfo,
+            histoRes
+          );
+          console.log("histogram data: ", histoData);
+          histoMap[colId] = histoData;
+        }
+      }
+    }
+  }
+  return histoMap;
 }

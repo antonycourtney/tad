@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@types/react": "^18.0.15",
-    "@types/react-dom": "^18.0.6",
+    "@types/react-dom": "^18.2.4",
     "ajv": "^6.9.1",
     "css-loader": "^6.5.1",
     "file-loader": "^6.2.0",

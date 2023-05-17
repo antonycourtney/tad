@@ -1,10 +1,13 @@
 import { colIsString, ColumnType } from "./ColumnType";
 import {
   asString,
+  BinValExp,
+  cast,
   col,
   ColumnExtendExp,
   constVal,
   sqlEscapeString,
+  UnaryValExp,
 } from "./defs";
 import { SQLDialect } from "./dialect";
 import { BinRelExp, FilterExp, SubExp, UnaryRelExp } from "./FilterExp";
@@ -201,6 +204,9 @@ const reviverMap = {
   UnaryRelExp: (v: any) => new UnaryRelExp(v.op, v.arg),
   FilterExp: (v: any) => new FilterExp(v.op, v.opArgs),
   QueryExp: (v: any) => new QueryExp(v._rep),
+  CastExp: (v: any) => cast(v.subExp, v.asType),
+  BinValExp: (v: any) => new BinValExp(v.op, v.lhs, v.rhs),
+  UnaryValExp: (v: any) => new UnaryValExp(v.op, v.arg),
 };
 
 export const queryReviver = (key: string, val: any): any => {

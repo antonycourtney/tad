@@ -25,9 +25,9 @@ const { Plugins } = SlickGrid as any;
 const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
   Plugins;
 import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
-import { Schema } from "reltab";
-import ReactDOM from "react-dom";
-import { VictoryBar } from "victory";
+import { NumericColumnHistogramData, Schema } from "reltab";
+import ReactDOM from "react-dom/client";
+import { VictoryAxis, VictoryBar, VictoryChart, VictoryTheme } from "victory";
 
 import * as d3 from "d3";
 
@@ -40,7 +40,7 @@ const genContainerId = (): string => `epGrid${divCounter++}`;
 const gridOptions = {
   multiColumnSort: true,
   showHeaderRow: true,
-  headerRowHeight: 64,
+  headerRowHeight: 80,
 };
 
 const INDENT_PER_LEVEL = 15; // pixels
@@ -79,7 +79,7 @@ const groupCellFormatter = (
 };
 
 // scan table data to make best effort at initial column widths
-const MINCOLWIDTH = 80;
+const MINCOLWIDTH = 150;
 const MAXCOLWIDTH = 300;
 
 // TODO: use real font metrics:
@@ -216,15 +216,47 @@ const mkSlickColMap = (
   return slickColMap;
 };
 
-const ColumnHisto = () => {
-  return <VictoryBar />;
-  /*
+interface NumericColumnHistogramProps {
+  histData: NumericColumnHistogramData;
+}
+
+const NumericColumnHistogram = ({ histData }: NumericColumnHistogramProps) => {
+  const { binWidth, niceMinVal, niceMaxVal, binData } = histData;
+  const chartData = binData.map((count: number, binIndex: number) => ({
+    binMid: niceMinVal + (binIndex + 0.5) * binWidth,
+    count,
+  }));
+  const fmtOpts = {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+    useGrouping: true,
+  };
   return (
-    <svg className="columnHeaderCell">
-      <rect className="histoBar" x="50" y="30" width="10" height="20" />
-    </svg>
+    <VictoryChart padding={60}>
+      <VictoryAxis
+        tickValues={[niceMinVal, niceMaxVal]}
+        tickFormat={(tick: number) => tick.toLocaleString(undefined, fmtOpts)}
+        style={{
+          axis: { stroke: "none" },
+          tickLabels: { fontSize: 40 },
+        }}
+      />
+      <VictoryAxis
+        dependentAxis
+        tickCount={2}
+        style={{
+          axis: { stroke: "none" },
+          tickLabels: { fontSize: 40 },
+        }}
+      />
+      <VictoryBar
+        style={{ data: { fill: "rgb(25, 118, 210)" } }}
+        data={chartData}
+        x="binMid"
+        y="count"
+      />
+    </VictoryChart>
   );
-*/
 };
 
 /**
@@ -319,25 +351,16 @@ const createGrid = (
 
   grid.onHeaderRowCellRendered.subscribe((e: any, { node, column }: any) => {
     console.log("headerRowCellRendered callback: ", column.id);
-    // TODO: ReactDOM.createRoot(node).render(...)
-    ReactDOM.render(<ColumnHisto />, node);
-    node.classList.add("slick-editable");
-    /*
-    if (['_checkbox_selector', 'historic', 'health'].indexOf(column.id) === -1){
-      ReactDOM.render(<Filter columnId={column.id} columnFilters={columnFilters} dv={dv}/>, node);
-      node.classList.add('slick-editable');
+    const viewState = viewStateRef.current;
+    const { queryView } = viewState;
+    console.log("*** queryView: ", queryView?.toJS());
+    if (queryView && queryView.histoMap && queryView.histoMap[column.id]) {
+      console.log("found histogram for column ", column.id);
+      const histo = queryView.histoMap[column.id];
+      const root = ReactDOM.createRoot(node);
+      root.render(<NumericColumnHistogram histData={histo} />);
+      node.classList.add("slick-editable");
     }
-    else if (column.id === 'health'){
-      ReactDOM.render(
-        <input className="range" defaultValue={healthValue} type="range" onChange={e => changeFilter(e.target.value)}/>, node)
-    }
-    else {
-      node.classList.add('slick-uneditable');
-    }
-    if (column.id === '_checkbox_selector'){
-      node.innerHTML = '<i class="fa fa-filter" />';
-    }
-    */
   });
 
   grid.onSort.subscribe((e: any, args: any) => {

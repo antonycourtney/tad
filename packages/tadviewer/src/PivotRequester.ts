@@ -5,7 +5,12 @@ import { PagedDataView } from "./PagedDataView";
 import { ViewParams } from "./ViewParams";
 import { AppState } from "./AppState";
 import { QueryView } from "./QueryView";
-import { ReltabConnection, DataSourceId, DataSourceConnection } from "reltab"; // eslint-disable-line
+import {
+  ReltabConnection,
+  DataSourceId,
+  DataSourceConnection,
+  getColumnHistogramMap,
+} from "reltab"; // eslint-disable-line
 
 import * as oneref from "oneref"; // eslint-disable-line
 import { mutableGet, addStateChangeListener } from "oneref";
@@ -171,8 +176,12 @@ const requestQueryView = async (
   ); // const t1 = performance.now() // eslint-disable-line
   // console.log('gathering row counts took ', (t1 - t0) / 1000, ' sec')
 
+  // TODO: Some form of caching based on baseQuery!
+  const histoMap = await getColumnHistogramMap(rt, baseQuery, baseSchema);
+
   const ret = new QueryView({
     query: treeQuery,
+    histoMap,
     baseRowCount,
     filterRowCount,
     rowCount,
@@ -385,16 +394,13 @@ export class PivotRequester {
           // remoteErrorDialog("Error constructing view", err.message); // Now let's try and restore to previous view params:
           oneref.update(
             stateRef,
-            vsUpdate(
-              (vs: ViewState) =>
-                vs
-                  .update("loadingTimer", (lt) => lt.stop())
+            vsUpdate((vs: ViewState) =>
+              vs.update("loadingTimer", (lt) => lt.stop())
             )
           );
           if (this.errorCallback) {
             this.errorCallback(err instanceof Error ? err : new Error(err));
           }
-
         });
       const ltUpdater = util.pathUpdater<AppState, Timer>(stateRef, [
         "viewState",
