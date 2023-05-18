@@ -16,6 +16,8 @@ import {
   col,
   constVal,
   NumericColumnHistogramData,
+  SubExp,
+  FilterExp,
 } from "reltab";
 import * as util from "./util";
 import { QueryView } from "./QueryView";
@@ -479,13 +481,40 @@ export const setHistogramBrushFilter = (
   range: [number, number] | null,
   stateRef: StateRef<AppState>
 ) => {
+  let baseFE: FilterExp;
   if (range !== null) {
-    const fe = and()
+    const appState = mutableGet(stateRef);
+    const prevFE = appState.viewState.viewParams.filterExp;
+    // ensure that prevFE is either null or a top-level "AND" operator:
+    if (prevFE != null) {
+      if (prevFE.op !== "AND") {
+        log.info(
+          "setHistogramBrushFilter: unexpected structure for current filter expression, ignoring brush filter"
+        );
+        return;
+      }
+      // drop any previous mentions of colId from the filter expression:
+      const cleanOpArgs = prevFE.opArgs.filter((subExp: SubExp) => {
+        if (subExp.expType === "BinRelExp") {
+          const lhs = subExp.lhs;
+          if (lhs.expType === "ColRef" && lhs.colName === colId) {
+            return false;
+          }
+        }
+        return true;
+      });
+      baseFE = new FilterExp("AND", cleanOpArgs);
+    } else {
+      baseFE = and();
+    }
+    const nextFE = baseFE
       .ge(col(colId), constVal(range[0]))
       .le(col(colId), constVal(range[1]));
     update(
       stateRef,
-      vpUpdate((viewParams) => viewParams.set("filterExp", fe) as ViewParams)
+      vpUpdate(
+        (viewParams) => viewParams.set("filterExp", nextFE) as ViewParams
+      )
     );
   }
 };

@@ -25,7 +25,7 @@ const { Plugins } = SlickGrid as any;
 const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
   Plugins;
 import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
-import { NumericColumnHistogramData, Schema } from "reltab";
+import { ColumnType, NumericColumnHistogramData, Schema } from "reltab";
 import ReactDOM from "react-dom/client";
 import {
   VictoryAxis,
@@ -224,11 +224,21 @@ const mkSlickColMap = (
 
 interface NumericColumnHistogramProps {
   histData: NumericColumnHistogramData;
+  colType: ColumnType;
   stateRef: StateRef<AppState>;
 }
 
+// gross hack to round to two decimal places:
+function round(value: number, decimals: number): number {
+  return Number(
+    Math.round(Number(value.toString() + "e" + decimals.toString())) +
+      "e-" +
+      decimals
+  );
+}
 const NumericColumnHistogram = ({
   stateRef,
+  colType,
   histData,
 }: NumericColumnHistogramProps) => {
   const {
@@ -254,7 +264,15 @@ const NumericColumnHistogram = ({
     actions.setHistogramBrushRange(colId, brushInfo.x, stateRef);
   };
   const handleBrushEnd = (brushInfo: any) => {
-    actions.setHistogramBrushFilter(colId, brushInfo.x, stateRef);
+    let [minVal, maxVal] = brushInfo.x;
+    if (colType.kind === "integer") {
+      minVal = Math.round(minVal);
+      maxVal = Math.round(maxVal);
+    } else {
+      minVal = round(minVal, 2);
+      maxVal = round(maxVal, 2);
+    }
+    actions.setHistogramBrushFilter(colId, [minVal, maxVal], stateRef);
   };
 
   return (
@@ -392,9 +410,14 @@ const createGrid = (
     const { queryView } = viewState;
     if (queryView && queryView.histoMap && queryView.histoMap[column.id]) {
       const histo = queryView.histoMap[column.id];
+      const colType = viewState.baseSchema.columnType(column.id);
       const root = ReactDOM.createRoot(node);
       root.render(
-        <NumericColumnHistogram histData={histo} stateRef={stateRef} />
+        <NumericColumnHistogram
+          histData={histo}
+          colType={colType}
+          stateRef={stateRef}
+        />
       );
       node.classList.add("slick-editable");
     }
