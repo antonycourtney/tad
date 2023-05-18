@@ -12,8 +12,13 @@ import {
   DataSourceId,
   resolvePath,
   DataSourceConnection,
+  and,
+  col,
+  constVal,
+  NumericColumnHistogramData,
 } from "reltab";
 import * as util from "./util";
+import { QueryView } from "./QueryView";
 
 export async function initAppState(
   rtc: reltab.ReltabConnection,
@@ -324,11 +329,12 @@ export const setSortKey = (
   sortKey: Array<[string, boolean]>,
   stateRef: StateRef<AppState>
 ) => {
-  console.log("setSortKey: ", sortKey);
-  update(
-    stateRef,
-    vpUpdate((viewParams) => viewParams.set("sortKey", sortKey) as ViewParams)
-  );
+  update(stateRef, (st: AppState): AppState => {
+    const nextSt = vpUpdate(
+      (viewParams) => viewParams.set("sortKey", sortKey) as ViewParams
+    )(st);
+    return nextSt;
+  });
 };
 
 export const setColumnOrder = (
@@ -466,6 +472,50 @@ export const setFilter = (
     stateRef,
     vpUpdate((viewParams) => viewParams.set("filterExp", fe) as ViewParams)
   );
+};
+
+export const setHistogramBrushFilter = (
+  colId: string,
+  range: [number, number] | null,
+  stateRef: StateRef<AppState>
+) => {
+  if (range !== null) {
+    const fe = and()
+      .ge(col(colId), constVal(range[0]))
+      .le(col(colId), constVal(range[1]));
+    update(
+      stateRef,
+      vpUpdate((viewParams) => viewParams.set("filterExp", fe) as ViewParams)
+    );
+  }
+};
+
+export const setHistogramBrushRange = (
+  colId: string,
+  range: [number, number] | null,
+  stateRef: StateRef<AppState>
+) => {
+  if (range !== null) {
+    update(
+      stateRef,
+      (st: AppState): AppState =>
+        st.updateIn(["viewState", "queryView"], (qvu: unknown) => {
+          const oldQueryView = qvu as QueryView;
+          const oldHistData = oldQueryView.histoMap[colId];
+          const newHistData: NumericColumnHistogramData = {
+            ...oldHistData,
+            brushMinVal: range[0],
+            brushMaxVal: range[1],
+          };
+          const newHistoMap = {
+            ...oldQueryView.histoMap,
+            [colId]: newHistData,
+          };
+          const newQueryView = oldQueryView.set("histoMap", newHistoMap);
+          return newQueryView;
+        }) as AppState
+    );
+  }
 };
 
 /*

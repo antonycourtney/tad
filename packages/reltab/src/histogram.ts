@@ -107,6 +107,8 @@ export interface NumericColumnHistogramData {
   binCount: number;
   binWidth: number;
   binData: number[];
+  brushMinVal: number;
+  brushMaxVal: number;
 }
 
 /*
@@ -130,6 +132,8 @@ export function getNumericColumnHistogramData(
       binData[bin] = binCount;
     }
   }
+  const brushMinVal = niceMinVal;
+  const brushMaxVal = niceMaxVal;
   return {
     colId,
     niceMinVal,
@@ -137,6 +141,8 @@ export function getNumericColumnHistogramData(
     binCount,
     binWidth,
     binData,
+    brushMinVal,
+    brushMaxVal,
   };
 }
 
@@ -164,14 +170,12 @@ export async function getColumnHistogramMap(
           colStats as NumericSummaryStats
         );
         if (histoInfo) {
-          console.log("getting histo for colId: ", colId);
           const histoRes = await dsConn.evalQuery(histoInfo!.histoQuery);
           const histoData = getNumericColumnHistogramData(
             colId,
             histoInfo,
             histoRes
           );
-          console.log("histogram data: ", histoData);
           histoMap[colId] = histoData;
         }
       }

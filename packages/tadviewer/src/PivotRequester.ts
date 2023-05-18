@@ -10,6 +10,7 @@ import {
   DataSourceId,
   DataSourceConnection,
   getColumnHistogramMap,
+  ColumnHistogramMap,
 } from "reltab"; // eslint-disable-line
 
 import * as oneref from "oneref"; // eslint-disable-line
@@ -138,7 +139,8 @@ const requestQueryView = async (
   baseQuery: reltab.QueryExp,
   baseSchema: reltab.Schema,
   viewParams: ViewParams,
-  showRecordCount: boolean
+  showRecordCount: boolean,
+  prevQueryView: QueryView | null | undefined
 ): Promise<QueryView> => {
   const schemaCols = baseSchema.columns;
   const aggMap: any = {};
@@ -176,10 +178,15 @@ const requestQueryView = async (
   ); // const t1 = performance.now() // eslint-disable-line
   // console.log('gathering row counts took ', (t1 - t0) / 1000, ' sec')
 
-  // TODO: Some form of caching based on baseQuery!
-  const histoMap = await getColumnHistogramMap(rt, baseQuery, baseSchema);
+  let histoMap: ColumnHistogramMap = {};
+  if (prevQueryView == null || prevQueryView.baseQuery !== baseQuery) {
+    histoMap = await getColumnHistogramMap(rt, baseQuery, baseSchema);
+  } else {
+    histoMap = prevQueryView.histoMap;
+  }
 
   const ret = new QueryView({
+    baseQuery,
     query: treeQuery,
     histoMap,
     baseRowCount,
@@ -324,6 +331,7 @@ export class PivotRequester {
       return;
     }
 
+    const { queryView } = viewState;
     const viewParams = viewState.viewParams;
 
     if (viewParams !== this.pendingViewParams) {
@@ -349,12 +357,17 @@ export class PivotRequester {
       // if viewParams are same and only page range differs.
       const prevViewParams = this.pendingViewParams as ViewParams;
       this.pendingViewParams = viewParams;
+      // NOTE!  Very important to pass queryView (latest from appState) and not
+      // this.currentQueryView, which may be stale.
+      // TODO:  The sequencing and control flow here is really subtle; we should rework this to make
+      // it easier to reason about the sequencing.
       const qreq = requestQueryView(
         viewState.dbc,
         viewState.baseQuery,
         viewState.baseSchema,
         this.pendingViewParams,
-        appState.showRecordCount
+        appState.showRecordCount,
+        queryView
       );
       this.pendingQueryRequest = qreq;
       this.pendingDataRequest = qreq

@@ -16,7 +16,7 @@ import { ExportToCsv } from "export-to-csv";
 import * as he from "he";
 import { AppState } from "../AppState";
 import { ViewState } from "../ViewState";
-import { StateRef } from "oneref";
+import { mutableGet, StateRef } from "oneref";
 import { useState, useRef, MutableRefObject } from "react";
 import log from "loglevel";
 
@@ -27,7 +27,13 @@ const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
 import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
 import { NumericColumnHistogramData, Schema } from "reltab";
 import ReactDOM from "react-dom/client";
-import { VictoryAxis, VictoryBar, VictoryChart, VictoryTheme } from "victory";
+import {
+  VictoryAxis,
+  VictoryBar,
+  VictoryBrushContainer,
+  VictoryChart,
+  VictoryTheme,
+} from "victory";
 
 import * as d3 from "d3";
 
@@ -218,10 +224,22 @@ const mkSlickColMap = (
 
 interface NumericColumnHistogramProps {
   histData: NumericColumnHistogramData;
+  stateRef: StateRef<AppState>;
 }
 
-const NumericColumnHistogram = ({ histData }: NumericColumnHistogramProps) => {
-  const { binWidth, niceMinVal, niceMaxVal, binData } = histData;
+const NumericColumnHistogram = ({
+  stateRef,
+  histData,
+}: NumericColumnHistogramProps) => {
+  const {
+    colId,
+    binWidth,
+    niceMinVal,
+    niceMaxVal,
+    binData,
+    brushMinVal,
+    brushMaxVal,
+  } = histData;
   const chartData = binData.map((count: number, binIndex: number) => ({
     binMid: niceMinVal + (binIndex + 0.5) * binWidth,
     count,
@@ -231,8 +249,27 @@ const NumericColumnHistogram = ({ histData }: NumericColumnHistogramProps) => {
     maximumFractionDigits: 2,
     useGrouping: true,
   };
+
+  const handleBrush = (brushInfo: any) => {
+    actions.setHistogramBrushRange(colId, brushInfo.x, stateRef);
+  };
+  const handleBrushEnd = (brushInfo: any) => {
+    actions.setHistogramBrushFilter(colId, brushInfo.x, stateRef);
+  };
+
   return (
-    <VictoryChart padding={60}>
+    <VictoryChart
+      padding={60}
+      containerComponent={
+        <VictoryBrushContainer
+          responsive={true}
+          brushDimension="x"
+          brushDomain={{ x: [brushMinVal, brushMaxVal] }}
+          onBrushDomainChange={handleBrush}
+          onBrushDomainChangeEnd={handleBrushEnd}
+        />
+      }
+    >
       <VictoryAxis
         tickValues={[niceMinVal, niceMaxVal]}
         tickFormat={(tick: number) => tick.toLocaleString(undefined, fmtOpts)}
@@ -350,15 +387,15 @@ const createGrid = (
   });
 
   grid.onHeaderRowCellRendered.subscribe((e: any, { node, column }: any) => {
-    console.log("headerRowCellRendered callback: ", column.id);
-    const viewState = viewStateRef.current;
+    const appState = mutableGet(stateRef);
+    const viewState = appState.viewState;
     const { queryView } = viewState;
-    console.log("*** queryView: ", queryView?.toJS());
     if (queryView && queryView.histoMap && queryView.histoMap[column.id]) {
-      console.log("found histogram for column ", column.id);
       const histo = queryView.histoMap[column.id];
       const root = ReactDOM.createRoot(node);
-      root.render(<NumericColumnHistogram histData={histo} />);
+      root.render(
+        <NumericColumnHistogram histData={histo} stateRef={stateRef} />
+      );
       node.classList.add("slick-editable");
     }
   });
@@ -478,14 +515,7 @@ const getGridCols = (gs: GridState, viewState: ViewState) => {
 const updateGrid = (gs: GridState, viewState: ViewState) => {
   const { viewParams, dataView } = viewState;
   if (dataView == null) return;
-  /*
-  console.log(
-    "updateGrid: dataView: offset: ",
-    dataView.getOffset(),
-    "length: ",
-    dataView.getLength()
-  );
-  */
+
   gs.slickColMap = mkSlickColMap(dataView.schema, viewParams, gs.colWidthsMap!);
   const gridCols = getGridCols(gs, viewState);
 
@@ -626,7 +656,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   );
 };
 
-const shouldGridPaneUpdate = (oldProps: any, nextProps: any): boolean => {
+const gridPanePropsEqual = (oldProps: any, nextProps: any): boolean => {
   const viewState = oldProps.viewState;
   const nextViewState = nextProps.viewState;
   const omitPred = (val: any, key: string, obj: Object) =>
@@ -639,4 +669,4 @@ const shouldGridPaneUpdate = (oldProps: any, nextProps: any): boolean => {
   return ret;
 };
 
-export const GridPane = React.memo(RawGridPane, shouldGridPaneUpdate);
+export const GridPane = React.memo(RawGridPane, gridPanePropsEqual);
