@@ -157,7 +157,8 @@ export async function getColumnHistogramMap(
 ): Promise<ColumnHistogramMap> {
   const histoMap: ColumnHistogramMap = {};
 
-  // TODO: join this into one mega-query that does a union all
+  let histoQuery: QueryExp | null = null;
+  let histoInfos: NumericColumnHistogramQuery[] = [];
   for (const colId of baseSchema.columns) {
     const colType = baseSchema.columnType(colId);
     if (colIsNumeric(colType)) {
@@ -170,16 +171,24 @@ export async function getColumnHistogramMap(
           colStats as NumericSummaryStats
         );
         if (histoInfo) {
-          const histoRes = await dsConn.evalQuery(histoInfo!.histoQuery);
-          const histoData = getNumericColumnHistogramData(
-            colId,
-            histoInfo,
-            histoRes
-          );
-          histoMap[colId] = histoData;
+          if (histoQuery == null) {
+            histoQuery = histoInfo!.histoQuery;
+          } else {
+            histoQuery = histoQuery.concat(histoInfo!.histoQuery);
+          }
         }
+        histoInfos.push(histoInfo!);
       }
     }
+  }
+  const histoRes = await dsConn.evalQuery(histoQuery!);
+  for (const histoInfo of histoInfos) {
+    const histoData = getNumericColumnHistogramData(
+      histoInfo.colId,
+      histoInfo,
+      histoRes
+    );
+    histoMap[histoInfo.colId] = histoData;
   }
   return histoMap;
 }
