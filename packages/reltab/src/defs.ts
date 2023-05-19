@@ -87,7 +87,7 @@ export const multiply = (lhs: ValExp, rhs: ValExp): BinValExp =>
 export const divide = (lhs: ValExp, rhs: ValExp): BinValExp =>
   new BinValExp("/", lhs, rhs);
 
-export type UnaryValOp = "round";
+export type UnaryValOp = "round" | "floor" | "ceil";
 
 export class UnaryValExp {
   expType: "UnaryValExp";
@@ -103,7 +103,9 @@ export class UnaryValExp {
   toSqlStr(dialect: SQLDialect): string {
     switch (this.op) {
       case "round":
-        return `round(${valExpToSqlStr(dialect, this.arg)})`;
+      case "floor":
+      case "ceil":
+        return `${this.op}(${valExpToSqlStr(dialect, this.arg)})`;
       default:
         const invalid: never = this.op;
         throw new Error(`Unknown unary operator: ${invalid}`);
@@ -112,6 +114,9 @@ export class UnaryValExp {
 }
 export const round = (arg: ValExp): UnaryValExp =>
   new UnaryValExp("round", arg);
+export const floor = (arg: ValExp): UnaryValExp =>
+  new UnaryValExp("floor", arg);
+export const ceil = (arg: ValExp): UnaryValExp => new UnaryValExp("ceil", arg);
 
 export type ValExp =
   | ConstVal

@@ -9,7 +9,7 @@ import { QueryExp } from "./QueryExp";
 import { NumericSummaryStats, Schema } from "./Schema";
 import { TableRep } from "./TableRep";
 import { nice, thresholdSturges } from "./d3utils";
-import { constVal, cast, minus, col, round, divide } from "./defs";
+import { constVal, cast, minus, col, divide, floor } from "./defs";
 import { DuckDBDialect } from "./dialectRegistry";
 
 export interface Bin {
@@ -54,7 +54,7 @@ export function columnHistogramQuery(
   const minVal = colStats.min;
   const maxVal = colStats.max;
 
-  if (minVal == null || maxVal == null) {
+  if (minVal == null || maxVal == null || minVal === maxVal) {
     return null;
   }
   const binCount = binsForColumn(colStats);
@@ -69,7 +69,7 @@ export function columnHistogramQuery(
     .extend(
       "bin",
       cast(
-        round(
+        floor(
           divide(
             minus(
               cast(col(colId), doubleType),
@@ -121,7 +121,7 @@ export function getNumericColumnHistogramData(
   queryRes: TableRep
 ): NumericColumnHistogramData {
   const { niceMinVal, niceMaxVal, binCount, binWidth } = histoQuery;
-  const numBins = Math.ceil((niceMaxVal - niceMinVal) / binWidth);
+  const numBins = Math.max(Math.ceil((niceMaxVal - niceMinVal) / binWidth), 1);
   const binData = new Array(numBins).fill(0);
   const { rowData } = queryRes;
   // we could do better by partitioning by column id, but unlikely to be a lot of data for now
@@ -129,7 +129,7 @@ export function getNumericColumnHistogramData(
     if (row.column === colId) {
       const bin = row.bin as number;
       const binCount = row.binCount;
-      binData[bin] = binCount;
+      binData[bin] = Number(binCount);
     }
   }
   const brushMinVal = niceMinVal;
@@ -176,19 +176,21 @@ export async function getColumnHistogramMap(
           } else {
             histoQuery = histoQuery.concat(histoInfo!.histoQuery);
           }
+          histoInfos.push(histoInfo);
         }
-        histoInfos.push(histoInfo!);
       }
     }
   }
-  const histoRes = await dsConn.evalQuery(histoQuery!);
-  for (const histoInfo of histoInfos) {
-    const histoData = getNumericColumnHistogramData(
-      histoInfo.colId,
-      histoInfo,
-      histoRes
-    );
-    histoMap[histoInfo.colId] = histoData;
+  if (histoQuery) {
+    const histoRes = await dsConn.evalQuery(histoQuery!);
+    for (const histoInfo of histoInfos) {
+      const histoData = getNumericColumnHistogramData(
+        histoInfo.colId,
+        histoInfo,
+        histoRes
+      );
+      histoMap[histoInfo.colId] = histoData;
+    }
   }
   return histoMap;
 }
