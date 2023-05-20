@@ -232,6 +232,8 @@ export const getOrInferColumnType = (
     case "UnaryValExp":
       switch (colExp.op) {
         case "round":
+        case "floor":
+        case "ceil":
           return dialect.coreColumnTypes.real;
         default:
           const invalid: never = colExp;
