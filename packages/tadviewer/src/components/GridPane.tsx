@@ -275,6 +275,7 @@ const NumericColumnHistogram = ({
   return (
     <VictoryChart
       padding={60}
+      domain={{ x: [niceMinVal, niceMaxVal + binWidth * 2] }}
       containerComponent={
         <VictoryBrushContainer
           responsive={true}

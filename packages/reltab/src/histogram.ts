@@ -133,7 +133,7 @@ export function getNumericColumnHistogramData(
     }
   }
   const brushMinVal = niceMinVal;
-  const brushMaxVal = niceMaxVal;
+  const brushMaxVal = niceMaxVal + binWidth;
   return {
     colId,
     niceMinVal,
