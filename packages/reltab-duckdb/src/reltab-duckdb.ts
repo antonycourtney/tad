@@ -215,7 +215,12 @@ export class DuckDBDriver implements DbDriver {
 }
 
 const loadExtensions = async (db: Database): Promise<void> => {
-  await db.exec(`INSTALL 'httpfs'; LOAD 'httpfs'`);
+  try {
+    const ret = await db.exec(`INSTALL 'httpfs'; LOAD 'httpfs'`);
+  } catch (err) {
+    log.error("caught exception loading extensions: ", err);
+    log.error("(ignoring unloadable extensions...)");
+  }
 };
 
 const duckdbDataSourceProvider: DataSourceProvider = {
