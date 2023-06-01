@@ -35,17 +35,14 @@ import {
   VictoryTheme,
 } from "victory";
 
-import * as d3 from "d3";
-
 export type OpenURLFn = (url: string) => void;
 
 let divCounter = 0;
 
 const genContainerId = (): string => `epGrid${divCounter++}`;
 
-const gridOptions = {
+const baseGridOptions = {
   multiColumnSort: true,
-  showHeaderRow: true,
   headerRowHeight: 80,
 };
 
@@ -328,6 +325,19 @@ export interface GridPaneProps {
   embedded: boolean;
 }
 
+const getGridOptions = (showColumnHistograms: boolean) => {
+  const gridOptions = {
+    ...baseGridOptions,
+    showHeaderRow: showColumnHistograms,
+  };
+  return gridOptions;
+};
+
+const getGridOptionsFromStateRef = (stateRef: StateRef<AppState>) => {
+  const appState = mutableGet(stateRef);
+  return getGridOptions(appState.showColumnHistograms);
+};
+
 /* Create grid from the specified set of columns */
 const createGrid = (
   stateRef: StateRef<AppState>,
@@ -339,6 +349,7 @@ const createGrid = (
   openURL: (url: string) => void,
   embedded: boolean
 ) => {
+  const gridOptions = getGridOptionsFromStateRef(stateRef);
   let grid = new Slick.Grid(`#${containerId}`, data, columns, gridOptions);
 
   const selectionModel = new CellSelectionModel();
@@ -535,7 +546,11 @@ const getGridCols = (gs: GridState, viewState: ViewState) => {
 /*
  * update grid from dataView
  */
-const updateGrid = (gs: GridState, viewState: ViewState) => {
+const updateGrid = (
+  gs: GridState,
+  viewState: ViewState,
+  showColumnHistograms: boolean
+) => {
   const { viewParams, dataView } = viewState;
   if (dataView == null) return;
 
@@ -543,6 +558,11 @@ const updateGrid = (gs: GridState, viewState: ViewState) => {
   const gridCols = getGridCols(gs, viewState);
 
   const grid = gs.grid;
+
+  const gridOptions = getGridOptions(showColumnHistograms);
+
+  grid.setOptions(gridOptions);
+  grid.setHeaderRowVisibility(showColumnHistograms);
 
   // In pre-Hooks version, we wouldn't do this on first render (grid creation).
   // May want or need to optimize for that case.
@@ -602,16 +622,27 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
 }) => {
   const containerIdRef = useRef(genContainerId());
   const [gridState, setGridState] = useState<GridState | null>(null);
-  const [prevDataView, setPrevDataView] = useState<PagedDataView | null>(null);
   const viewStateRef = useRef<ViewState>(viewState);
 
+  const prevShowColumnHistograms = useRef(appState.showColumnHistograms);
+
   viewStateRef.current = viewState;
+
+  const dataView = viewState.dataView;
+
+  const { showColumnHistograms } = appState;
+
   // log.debug("RawGridPane: ", appState.toJS(), viewState.toJS());
 
   React.useLayoutEffect(() => {
     let gs = gridState;
-    const dataView = viewState.dataView;
-    if (gs === null) {
+    // The extra check here for prevShowColumnHistograms is a workaround
+    // for an apparent bug in SlickGrid where it doesn't seem to re-render
+    // correctly when we dynamically change the showHeaderRow option on the grid.
+    if (
+      gs === null ||
+      prevShowColumnHistograms.current !== showColumnHistograms
+    ) {
       gs = createGridState(
         stateRef,
         viewStateRef,
@@ -627,14 +658,14 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
       setGridState(gs);
     }
     // log.debug("GridPane effect: ", prevDataView, dataView);
-    if (dataView !== prevDataView && dataView != null) {
+    if (dataView != null) {
       // log.debug("RawGridPane: updating grid");
-      updateGrid(gs, viewStateRef.current);
-      setPrevDataView(dataView);
+      updateGrid(gs, viewStateRef.current, showColumnHistograms);
     } else {
       // log.debug("RawGridPane: no view change, skipping grid update");
     }
-  });
+    prevShowColumnHistograms.current = showColumnHistograms;
+  }, [dataView, gridState, showColumnHistograms]);
 
   const handleGridResize = (entries: ResizeEntry[]) => {
     // TODO: debounce?
@@ -688,7 +719,10 @@ const gridPanePropsEqual = (oldProps: any, nextProps: any): boolean => {
   // shallow conversion
   const vs = _.omitBy(viewState.toObject(), omitPred);
   const nvs = _.omitBy(nextViewState.toObject(), omitPred);
-  const ret = util.shallowEqual(vs, nvs);
+  const ret =
+    util.shallowEqual(vs, nvs) &&
+    oldProps.appState.showColumnHistograms ===
+      nextProps.appState.showColumnHistograms;
   return ret;
 };
 

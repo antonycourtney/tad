@@ -140,6 +140,7 @@ const requestQueryView = async (
   baseSchema: reltab.Schema,
   viewParams: ViewParams,
   showRecordCount: boolean,
+  showColumnHistograms: boolean,
   prevQueryView: QueryView | null | undefined
 ): Promise<QueryView> => {
   const schemaCols = baseSchema.columns;
@@ -178,11 +179,20 @@ const requestQueryView = async (
   ); // const t1 = performance.now() // eslint-disable-line
   // console.log('gathering row counts took ', (t1 - t0) / 1000, ' sec')
 
-  let histoMap: ColumnHistogramMap = {};
-  if (prevQueryView == null || prevQueryView.baseQuery !== baseQuery) {
+  let histoMap: ColumnHistogramMap | null = null;
+  if (
+    showColumnHistograms &&
+    (prevQueryView == null ||
+      prevQueryView.baseQuery !== baseQuery ||
+      prevQueryView.histoMap == null)
+  ) {
     histoMap = await getColumnHistogramMap(rt, baseQuery, baseSchema);
   } else {
-    histoMap = prevQueryView.histoMap;
+    if (prevQueryView != null) {
+      histoMap = prevQueryView.histoMap;
+    } else {
+      histoMap = null;
+    }
   }
 
   const ret = new QueryView({
@@ -258,6 +268,7 @@ export class PivotRequester {
 
   pendingOffset: number;
   pendingLimit: number;
+  pendingShowColumnHistograms: boolean;
   errorCallback?: (e: Error) => void;
   setLoadingCallback: (loading: boolean) => void;
 
@@ -266,12 +277,14 @@ export class PivotRequester {
     errorCallback?: (e: Error) => void,
     setLoadingCallback?: (loading: boolean) => void
   ) {
+    const appState = mutableGet(stateRef);
     this.pendingQueryRequest = null;
     this.currentQueryView = null;
     this.pendingDataRequest = null;
     this.pendingViewParams = null;
     this.pendingOffset = 0;
     this.pendingLimit = 0;
+    this.pendingShowColumnHistograms = appState.showColumnHistograms;
     this.errorCallback = errorCallback;
     this.setLoadingCallback = setLoadingCallback || noopSetLoadingCallback;
 
@@ -334,7 +347,10 @@ export class PivotRequester {
     const { queryView } = viewState;
     const viewParams = viewState.viewParams;
 
-    if (viewParams !== this.pendingViewParams) {
+    if (
+      viewParams !== this.pendingViewParams ||
+      appState.showColumnHistograms !== this.pendingShowColumnHistograms
+    ) {
       log.debug(
         "*** onStateChange: requesting new query: ",
         viewState.toJS(),
@@ -357,6 +373,7 @@ export class PivotRequester {
       // if viewParams are same and only page range differs.
       const prevViewParams = this.pendingViewParams as ViewParams;
       this.pendingViewParams = viewParams;
+      this.pendingShowColumnHistograms = appState.showColumnHistograms;
       // NOTE!  Very important to pass queryView (latest from appState) and not
       // this.currentQueryView, which may be stale.
       // TODO:  The sequencing and control flow here is really subtle; we should rework this to make
@@ -367,6 +384,7 @@ export class PivotRequester {
         viewState.baseSchema,
         this.pendingViewParams,
         appState.showRecordCount,
+        appState.showColumnHistograms,
         queryView
       );
       this.pendingQueryRequest = qreq;

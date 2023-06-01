@@ -261,6 +261,18 @@ export const toggleShowRoot = (stateRef: StateRef<AppState>): void => {
     )
   );
 };
+export const setShowColumnHistograms = (
+  stateRef: StateRef<AppState>,
+  showColumnHistograms: boolean
+): void => {
+  update(stateRef, (s) => {
+    const nextS = s.set(
+      "showColumnHistograms",
+      showColumnHistograms
+    ) as AppState;
+    return nextS;
+  });
+};
 export const reorderColumnList = (dstProps: any, srcProps: any) => {
   console.log("reorderColumnList: ", dstProps, srcProps);
 
