@@ -27,7 +27,6 @@
   "devDependencies": {
     "@types/jest": "^27.4.0",
     "@types/node": "^18.7.18",
-    "@types/d3": "^7.4.0",
     "jest": "^27.4.6",
     "mkdirp": "^1.0.4",
     "prettier": "^2.5.1",
