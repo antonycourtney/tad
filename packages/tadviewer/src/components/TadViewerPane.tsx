@@ -4,7 +4,7 @@
 import log from "loglevel";
 import { mkRef, refContainer, StateRef } from "oneref";
 import * as React from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   DataSourceConnection,
   DataSourcePath,
@@ -30,24 +30,28 @@ const newWindowFromDSPath = (
 };
 
 function TadViewerPaneInner({ stateRef, baseQuery }: TadViewerPaneInnerProps) {
-  const [AppComponent, _listenerId] = refContainer<AppState, AppPaneBaseProps>(
-    stateRef,
-    AppPane
-  );
+  const viewerPane = useRef<JSX.Element | null>(null);
 
   const openURL = (url: string) => {
     window.open(url, "_blank");
   };
 
-  return (
-    <AppComponent
-      newWindow={newWindowFromDSPath}
-      clipboard={navigator.clipboard}
-      openURL={openURL}
-      showDataSources={false}
-      embedded={true}
-    />
-  );
+  if (viewerPane.current == null) {
+    const [AppComponent, _listenerId] = refContainer<
+      AppState,
+      AppPaneBaseProps
+    >(stateRef, AppPane);
+    viewerPane.current = (
+      <AppComponent
+        newWindow={newWindowFromDSPath}
+        clipboard={navigator.clipboard}
+        openURL={openURL}
+        showDataSources={false}
+        embedded={true}
+      />
+    );
+  }
+  return viewerPane.current;
 }
 
 export interface TadViewerPaneProps {
@@ -56,6 +60,7 @@ export interface TadViewerPaneProps {
   errorCallback?: (e: Error) => void;
   setLoadingCallback: (loading: boolean) => void;
   showRecordCount: boolean;
+  showColumnHistograms: boolean;
 }
 
 export function TadViewerPane({
@@ -64,6 +69,7 @@ export function TadViewerPane({
   errorCallback,
   setLoadingCallback,
   showRecordCount,
+  showColumnHistograms,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -84,13 +90,20 @@ export function TadViewerPane({
       log.debug("*** TadViewerPane: got local reltab connection: ", rtc);
 
       if (!appStateRef) {
-        const appState = new AppState({ showRecordCount });
+        const appState = new AppState({
+          showRecordCount,
+          showColumnHistograms,
+        });
         const stateRef = mkRef(appState);
         setAppStateRef(stateRef);
         log.debug("*** initializing app state:");
         await initAppState(rtc, stateRef);
         log.debug("*** initialized Tad App state");
-        const preq = new PivotRequester(stateRef, errorCallback, setLoadingCallback);
+        const preq = new PivotRequester(
+          stateRef,
+          errorCallback,
+          setLoadingCallback
+        );
         log.debug("*** created pivotRequester");
         setPivotRequester(preq);
         log.debug("*** App component created and pivotrequester initialized");
@@ -101,12 +114,18 @@ export function TadViewerPane({
 
   /* update the view when the query changes */
   React.useEffect(() => {
-    console.log("*** TadViewerPane: query update, updating view...");
     if (appStateRef != null && pivotRequester != null) {
       actions.setQueryView(appStateRef, dsConn, baseSqlQuery);
       log.debug("**** set app view to base query");
     }
   }, [baseSqlQuery, pivotRequester, appStateRef]);
+
+  /* update showColumnHistograms when it changes */
+  React.useEffect(() => {
+    if (appStateRef != null) {
+      actions.setShowColumnHistograms(appStateRef, showColumnHistograms);
+    }
+  }, [showColumnHistograms, appStateRef]);
 
   let tadAppElem: JSX.Element | null = null;
   if (pivotRequester && appStateRef) {

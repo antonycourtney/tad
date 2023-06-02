@@ -63,7 +63,7 @@
     "@types/command-line-args": "^5.2.0",
     "@types/command-line-usage": "^5.0.2",
     "@types/react": "^18.0.15",
-    "@types/react-dom": "^18.0.6",
+    "@types/react-dom": "^18.2.4",
     "@types/react-select": "^5.0.0",
     "@types/slickgrid": "^2.1.31",
     "ajv": "^6.9.1",

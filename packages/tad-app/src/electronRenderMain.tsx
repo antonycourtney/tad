@@ -3,7 +3,7 @@
  */
 import "source-map-support/register";
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import * as ReactDOM from "react-dom/client";
 import OneRef, { mkRef, refContainer, mutableGet, StateRef } from "oneref";
 import { AppPane, AppPaneBaseProps } from "tadviewer";
 import { PivotRequester } from "tadviewer";
@@ -122,14 +122,15 @@ const init = async () => {
       shell.openExternal(url);
     };
 
-    ReactDOM.render(
+    const root = ReactDOM.createRoot(document.getElementById("app")!);
+
+    root.render(
       <App
         newWindow={newWindowFromDSPath}
         clipboard={clipboard}
         openURL={openURL}
         embedded={false}
-      />,
-      document.getElementById("app")
+      />
     );
     const tRender = performance.now();
     log.debug("Time to initial render: ", (tRender - tStart) / 1000, " sec");

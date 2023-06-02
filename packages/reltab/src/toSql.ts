@@ -372,6 +372,12 @@ const isConstExtendExp = (colExp: ColumnExtendExp): boolean => {
       return isConstExtendExp(colExp.valExp);
     case "ColRef":
       return false;
+    case "BinValExp":
+      return isConstExtendExp(colExp.lhs) && isConstExtendExp(colExp.rhs);
+    case "UnaryValExp":
+      return isConstExtendExp(colExp.arg);
+    case "CastExp":
+      return isConstExtendExp(colExp.subExp);
     default:
       throw new Error(
         "isConstExtendExp: unknown expType in " + JSON.stringify(colExp)

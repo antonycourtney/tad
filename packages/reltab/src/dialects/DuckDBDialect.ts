@@ -40,6 +40,7 @@ export class DuckDBDialectClass extends BaseSQLDialect {
   readonly columnTypes: ColumnTypeMap = {
     INTEGER: intCT,
     BIGINT: intCT,
+    HUGEINT: intCT,
     DOUBLE: realCT,
     REAL: realCT,
     FLOAT: realCT,

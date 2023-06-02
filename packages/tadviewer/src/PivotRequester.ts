@@ -5,7 +5,13 @@ import { PagedDataView } from "./PagedDataView";
 import { ViewParams } from "./ViewParams";
 import { AppState } from "./AppState";
 import { QueryView } from "./QueryView";
-import { ReltabConnection, DataSourceId, DataSourceConnection } from "reltab"; // eslint-disable-line
+import {
+  ReltabConnection,
+  DataSourceId,
+  DataSourceConnection,
+  getColumnHistogramMap,
+  ColumnHistogramMap,
+} from "reltab"; // eslint-disable-line
 
 import * as oneref from "oneref"; // eslint-disable-line
 import { mutableGet, addStateChangeListener } from "oneref";
@@ -133,7 +139,9 @@ const requestQueryView = async (
   baseQuery: reltab.QueryExp,
   baseSchema: reltab.Schema,
   viewParams: ViewParams,
-  showRecordCount: boolean
+  showRecordCount: boolean,
+  showColumnHistograms: boolean,
+  prevQueryView: QueryView | null | undefined
 ): Promise<QueryView> => {
   const schemaCols = baseSchema.columns;
   const aggMap: any = {};
@@ -171,8 +179,26 @@ const requestQueryView = async (
   ); // const t1 = performance.now() // eslint-disable-line
   // console.log('gathering row counts took ', (t1 - t0) / 1000, ' sec')
 
+  let histoMap: ColumnHistogramMap | null = null;
+  if (
+    showColumnHistograms &&
+    (prevQueryView == null ||
+      prevQueryView.baseQuery !== baseQuery ||
+      prevQueryView.histoMap == null)
+  ) {
+    histoMap = await getColumnHistogramMap(rt, baseQuery, baseSchema);
+  } else {
+    if (prevQueryView != null) {
+      histoMap = prevQueryView.histoMap;
+    } else {
+      histoMap = null;
+    }
+  }
+
   const ret = new QueryView({
+    baseQuery,
     query: treeQuery,
+    histoMap,
     baseRowCount,
     filterRowCount,
     rowCount,
@@ -242,6 +268,7 @@ export class PivotRequester {
 
   pendingOffset: number;
   pendingLimit: number;
+  pendingShowColumnHistograms: boolean;
   errorCallback?: (e: Error) => void;
   setLoadingCallback: (loading: boolean) => void;
 
@@ -250,12 +277,14 @@ export class PivotRequester {
     errorCallback?: (e: Error) => void,
     setLoadingCallback?: (loading: boolean) => void
   ) {
+    const appState = mutableGet(stateRef);
     this.pendingQueryRequest = null;
     this.currentQueryView = null;
     this.pendingDataRequest = null;
     this.pendingViewParams = null;
     this.pendingOffset = 0;
     this.pendingLimit = 0;
+    this.pendingShowColumnHistograms = appState.showColumnHistograms;
     this.errorCallback = errorCallback;
     this.setLoadingCallback = setLoadingCallback || noopSetLoadingCallback;
 
@@ -315,9 +344,13 @@ export class PivotRequester {
       return;
     }
 
+    const { queryView } = viewState;
     const viewParams = viewState.viewParams;
 
-    if (viewParams !== this.pendingViewParams) {
+    if (
+      viewParams !== this.pendingViewParams ||
+      appState.showColumnHistograms !== this.pendingShowColumnHistograms
+    ) {
       log.debug(
         "*** onStateChange: requesting new query: ",
         viewState.toJS(),
@@ -340,12 +373,19 @@ export class PivotRequester {
       // if viewParams are same and only page range differs.
       const prevViewParams = this.pendingViewParams as ViewParams;
       this.pendingViewParams = viewParams;
+      this.pendingShowColumnHistograms = appState.showColumnHistograms;
+      // NOTE!  Very important to pass queryView (latest from appState) and not
+      // this.currentQueryView, which may be stale.
+      // TODO:  The sequencing and control flow here is really subtle; we should rework this to make
+      // it easier to reason about the sequencing.
       const qreq = requestQueryView(
         viewState.dbc,
         viewState.baseQuery,
         viewState.baseSchema,
         this.pendingViewParams,
-        appState.showRecordCount
+        appState.showRecordCount,
+        appState.showColumnHistograms,
+        queryView
       );
       this.pendingQueryRequest = qreq;
       this.pendingDataRequest = qreq
@@ -385,16 +425,13 @@ export class PivotRequester {
           // remoteErrorDialog("Error constructing view", err.message); // Now let's try and restore to previous view params:
           oneref.update(
             stateRef,
-            vsUpdate(
-              (vs: ViewState) =>
-                vs
-                  .update("loadingTimer", (lt) => lt.stop())
+            vsUpdate((vs: ViewState) =>
+              vs.update("loadingTimer", (lt) => lt.stop())
             )
           );
           if (this.errorCallback) {
             this.errorCallback(err instanceof Error ? err : new Error(err));
           }
-
         });
       const ltUpdater = util.pathUpdater<AppState, Timer>(stateRef, [
         "viewState",

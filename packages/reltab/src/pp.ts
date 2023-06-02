@@ -1,6 +1,6 @@
 import { SQLDialect } from "./dialect";
 import { asString, constVal, ColumnExtendExp } from "./defs";
-import { StringBuffer, colExtendExpToSqlStr, ppOut } from "./internals";
+import { StringBuffer, colExtendExpToSqlStr, ppOut } from "./defs";
 import {
   SQLValExp,
   SQLSelectListItem,
@@ -33,7 +33,7 @@ const ppAggNull = (
   subExpStr: string,
   colType: ColumnType
 ) => dialect.ppAggNull(aggStr, subExpStr, colType);
-"null";
+("null");
 const ppAggNullStr = (
   dialect: SQLDialect,
   aggStr: string,
@@ -106,7 +106,7 @@ let aliasCounter = 0;
 const genAliasName = (): string => {
   const ret = `tableAlias_${aliasCounter++}`;
   return ret;
-}
+};
 
 const ppSQLSelect = (
   dialect: SQLDialect,
@@ -207,10 +207,10 @@ export const ppSQLQuery = (dialect: SQLDialect, query: SQLQueryAST): string => {
   } catch (err) {
     console.error(
       "ppSQLQuery: Caught exception pretty printing SQLQuery: ",
-      err, 
+      err,
       JSON.stringify(query, undefined, 2)
     );
-    
+
     throw err;
   }
 };

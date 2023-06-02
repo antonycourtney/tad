@@ -40,12 +40,13 @@
     "slickgrid-es6": "^3.0.3",
     "url-loader": "^4.1.1",
     "url-regex": "5.0.0",
-    "use-deep-compare": "^1.1.0"
+    "use-deep-compare": "^1.1.0",
+    "victory": "^36.6.10"
   },
   "devDependencies": {
     "@blueprintjs/icons": "^4.10.1",
     "@types/react": "^18.0.15",
-    "@types/react-dom": "^18.0.6",
+    "@types/react-dom": "^18.2.4",
     "@types/react-select": "^5.0.0",
     "@types/slickgrid": "^2.1.31",
     "aggtree": "^0.12.0",
