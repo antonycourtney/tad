@@ -37,12 +37,15 @@ const isValidURL = (s: string): boolean =>
     exact: true,
   }).test(s);
 
-function stringify(value: any): string {
+function stringify(value: any): string | null {
+  if (value === null) {
+    return null;
+  }
   switch (typeof value) {
     case "string":
       return value;
     case "object":
-      return value.toString();
+      return JSON.stringify(value);
     default:
       return String(value);
   }
