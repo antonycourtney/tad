@@ -37,6 +37,17 @@ const isValidURL = (s: string): boolean =>
     exact: true,
   }).test(s);
 
+function stringify(value: any): string {
+  switch (typeof value) {
+    case "string":
+      return value;
+    case "object":
+      return value.toString();
+    default:
+      return String(value);
+  }
+}
+
 export class TextFormatOptions
   extends Immutable.Record(defaultTextFormatOptionsProps)
   implements TextFormatOptionsProps, FormatOptions
@@ -45,14 +56,16 @@ export class TextFormatOptions
   public readonly urlsAsHyperlinks!: boolean;
 
   getFormatter(): CellFormatter {
-    const ff = (val?: string | null): string | undefined | null => {
+    const ff = (val?: any): string | undefined | null => {
       if (this.urlsAsHyperlinks && val && isValidURL(val)) {
         // Just return false from onclick handler to prevent default link handling
         const ret = `<a href="${val}" onclick='return false;'>${val}</a>`;
         return ret;
       }
-
-      return val ? he.encode(val) : val;
+      // Try to deal with non-string values for cell values like lists or maps
+      const valStr = stringify(val);
+      const fmtStr = valStr ? he.encode(valStr) : valStr;
+      return fmtStr;
     };
 
     return ff;
