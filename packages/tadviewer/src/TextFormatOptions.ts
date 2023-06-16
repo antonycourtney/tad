@@ -45,7 +45,10 @@ function stringify(value: any): string | null {
     case "string":
       return value;
     case "object":
-      return JSON.stringify(value);
+      const ret = JSON.stringify(value, (_, v) =>
+        typeof v === "bigint" ? v.toString() : v
+      );
+      return ret;
     default:
       return String(value);
   }

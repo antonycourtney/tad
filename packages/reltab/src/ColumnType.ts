@@ -56,7 +56,12 @@ const defaultValRender: StringRenderFn = (val: any) => {
   if (typeof val === "bigint") {
     return val.toString();
   }
-  return JSON.stringify(val);
+  try {
+    return String(val);
+  } catch (err) {
+    console.error("error stringifying value: ", val);
+    return "";
+  }
 };
 
 export class ColumnType {
