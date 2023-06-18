@@ -326,17 +326,27 @@ export interface GridPaneProps {
   embedded: boolean;
 }
 
-const getGridOptions = (showColumnHistograms: boolean) => {
+const getGridOptions = (
+  showColumnHistograms: boolean,
+  viewState: ViewState
+) => {
+  const { queryView } = viewState;
+  const histoCount = queryView?.histoMap
+    ? Object.keys(queryView.histoMap).length
+    : 0;
+
+  const showHeaderRow = showColumnHistograms && histoCount > 0;
   const gridOptions = {
     ...baseGridOptions,
-    showHeaderRow: showColumnHistograms,
+    showHeaderRow,
   };
   return gridOptions;
 };
 
 const getGridOptionsFromStateRef = (stateRef: StateRef<AppState>) => {
   const appState = mutableGet(stateRef);
-  return getGridOptions(appState.showColumnHistograms);
+
+  return getGridOptions(appState.showColumnHistograms, appState.viewState);
 };
 
 /* Create grid from the specified set of columns */
@@ -560,10 +570,10 @@ const updateGrid = (
 
   const grid = gs.grid;
 
-  const gridOptions = getGridOptions(showColumnHistograms);
+  const gridOptions = getGridOptions(showColumnHistograms, viewState);
 
   grid.setOptions(gridOptions);
-  grid.setHeaderRowVisibility(showColumnHistograms);
+  grid.setHeaderRowVisibility(gridOptions.showHeaderRow);
 
   // In pre-Hooks version, we wouldn't do this on first render (grid creation).
   // May want or need to optimize for that case.
