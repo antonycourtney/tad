@@ -1,6 +1,9 @@
 import { ColumnType, CoreColumnTypes, ColumnTypeMap } from "../ColumnType";
 import { BaseSQLDialect } from "../BaseSQLDialect";
 import { isNode } from "environ";
+import { LeafSchemaMap } from "../TableRep";
+import { QueryRep } from "../QueryRep";
+import { SQLQueryAST, SQLValExp } from "../SQLQuery";
 
 const intCT = new ColumnType("INTEGER", "integer");
 const realCT = new ColumnType("DOUBLE", "real");
@@ -12,26 +15,8 @@ const timestampCT = new ColumnType("TIMESTAMP", "timestamp", {
     if (val == null) {
       return "";
     }
-    let retStr: string;
-    try {
-      retStr = new Date(val).toISOString();
-    } catch (err) {
-      if (err instanceof RangeError) {
-        console.info(
-          "*** DuckDbDialect: Error converting Invalid time value: ",
-          val
-        );
-      } else {
-        console.warn(
-          "*** DuckDbDialect: Error converting timestamp: ",
-          val,
-          err
-        );
-      }
-      // Not a lot of great choices here; we'll render as the raw numeric timestamp value
-      retStr = String(val);
-    }
-    return retStr;
+    // Don't parse date to keep microsecond accuracy
+    return String(val);
   },
 });
 
@@ -82,6 +67,35 @@ export class DuckDBDialectClass extends BaseSQLDialect {
       DuckDBDialectClass.instance = new DuckDBDialectClass();
     }
     return DuckDBDialectClass.instance;
+  }
+
+  queryToSql(
+    tableMap: LeafSchemaMap,
+    query: QueryRep,
+    offset?: number,
+    limit?: number
+  ): SQLQueryAST {
+
+    // Very hacky way to select timestamps as strings to keep microseconds precision
+    var ast = super.queryToSql(tableMap, query, offset, limit)
+    return {
+      ...ast,
+      selectStmts: ast.selectStmts.map(s => 
+        ({
+          ...s,
+          selectCols: s.selectCols.map(c => 
+            c.colType.kind == "timestamp" && c.colExp.expType == "ColRef"
+              ? { 
+                colExp: {
+                  expType: "AsString",
+                  valExp: c.colExp
+                } as SQLValExp,
+                colType: c.colType,
+                as: c.colExp.colName
+              }
+              : c),            
+        }))
+    }
   }
 }
 
