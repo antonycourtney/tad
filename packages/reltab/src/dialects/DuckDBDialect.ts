@@ -66,6 +66,7 @@ export class DuckDBDialectClass extends BaseSQLDialect {
     INTEGER: intCT,
     BIGINT: intCT,
     HUGEINT: intCT,
+    DECIMAL: realCT,
     DOUBLE: realCT,
     REAL: realCT,
     FLOAT: realCT,
@@ -76,6 +77,17 @@ export class DuckDBDialectClass extends BaseSQLDialect {
     BOOLEAN: boolCT,
     BLOB: blobCT,
   };
+
+  /*
+   * DuckDb seems to support either single or double quote for quoting of columns.
+   * While double quotes are most standard, DuckDb will sometimes generate column names that
+   * have embedded double quotes without escaping them. For example:
+   *   CREATE TABLE t1 AS select hour(timestamp) FROM t0
+   * will generate a column in t1 named 'hour("timestamp")'.
+   */
+  quoteCol(cid: string): string {
+    return `'${cid}'`;
+  }
 
   static getInstance(): DuckDBDialectClass {
     if (!DuckDBDialectClass.instance) {

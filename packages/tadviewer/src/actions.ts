@@ -488,75 +488,79 @@ export const setFilter = (
   );
 };
 
-export const setHistogramBrushFilter = (
+const brushRangeUpdater =
+  (colId: string, range: [number, number]) =>
+  (st: AppState): AppState => {
+    return st.updateIn(["viewState", "queryView"], (qvu: unknown) => {
+      const oldQueryView = qvu as QueryView;
+      const oldHistData = oldQueryView.histoMap[colId];
+      const newHistData: NumericColumnHistogramData = {
+        ...oldHistData,
+        brushMinVal: range[0],
+        brushMaxVal: range[1],
+      };
+      const newHistoMap = {
+        ...oldQueryView.histoMap,
+        [colId]: newHistData,
+      };
+      const newQueryView = oldQueryView.set("histoMap", newHistoMap);
+      return newQueryView;
+    }) as AppState;
+  };
+
+/* dead code 
+const setHistogramBrushRange = (
   colId: string,
   range: [number, number] | null,
+  stateRef: StateRef<AppState>
+) => {
+  if (range !== null) {
+    update(stateRef, brushRangeUpdater(colId, range));
+  }
+};
+*/
+
+export const setHistogramBrushFilter = (
+  colId: string,
+  brushRange: [number, number], // range from histogram brush
+  filterRange: [number, number], // adjusted range used for filter
   stateRef: StateRef<AppState>
 ) => {
   let baseFE: FilterExp;
-  if (range !== null) {
-    const appState = mutableGet(stateRef);
-    const prevFE = appState.viewState.viewParams.filterExp;
-    // ensure that prevFE is either null or a top-level "AND" operator:
-    if (prevFE != null) {
-      if (prevFE.op !== "AND") {
-        log.info(
-          "setHistogramBrushFilter: unexpected structure for current filter expression, ignoring brush filter"
-        );
-        return;
-      }
-      // drop any previous mentions of colId from the filter expression:
-      const cleanOpArgs = prevFE.opArgs.filter((subExp: SubExp) => {
-        if (subExp.expType === "BinRelExp") {
-          const lhs = subExp.lhs;
-          if (lhs.expType === "ColRef" && lhs.colName === colId) {
-            return false;
-          }
-        }
-        return true;
-      });
-      baseFE = new FilterExp("AND", cleanOpArgs);
-    } else {
-      baseFE = and();
+  const appState = mutableGet(stateRef);
+  const prevFE = appState.viewState.viewParams.filterExp;
+  // ensure that prevFE is either null or a top-level "AND" operator:
+  if (prevFE != null) {
+    if (prevFE.op !== "AND") {
+      log.info(
+        "setHistogramBrushFilter: unexpected structure for current filter expression, ignoring brush filter"
+      );
+      return;
     }
-    const nextFE = baseFE
-      .ge(col(colId), constVal(range[0]))
-      .le(col(colId), constVal(range[1]));
-    update(
-      stateRef,
-      vpUpdate(
-        (viewParams) => viewParams.set("filterExp", nextFE) as ViewParams
-      )
-    );
+    // drop any previous mentions of colId from the filter expression:
+    const cleanOpArgs = prevFE.opArgs.filter((subExp: SubExp) => {
+      if (subExp.expType === "BinRelExp") {
+        const lhs = subExp.lhs;
+        if (lhs.expType === "ColRef" && lhs.colName === colId) {
+          return false;
+        }
+      }
+      return true;
+    });
+    baseFE = new FilterExp("AND", cleanOpArgs);
+  } else {
+    baseFE = and();
   }
-};
-
-export const setHistogramBrushRange = (
-  colId: string,
-  range: [number, number] | null,
-  stateRef: StateRef<AppState>
-) => {
-  if (range !== null) {
-    update(
-      stateRef,
-      (st: AppState): AppState =>
-        st.updateIn(["viewState", "queryView"], (qvu: unknown) => {
-          const oldQueryView = qvu as QueryView;
-          const oldHistData = oldQueryView.histoMap[colId];
-          const newHistData: NumericColumnHistogramData = {
-            ...oldHistData,
-            brushMinVal: range[0],
-            brushMaxVal: range[1],
-          };
-          const newHistoMap = {
-            ...oldQueryView.histoMap,
-            [colId]: newHistData,
-          };
-          const newQueryView = oldQueryView.set("histoMap", newHistoMap);
-          return newQueryView;
-        }) as AppState
-    );
-  }
+  const nextFE = baseFE
+    .ge(col(colId), constVal(filterRange[0]))
+    .le(col(colId), constVal(filterRange[1]));
+  update(stateRef, (st: AppState): AppState => {
+    const st1 = vpUpdate(
+      (viewParams) => viewParams.set("filterExp", nextFE) as ViewParams
+    )(st);
+    const st2 = brushRangeUpdater(colId, brushRange)(st1);
+    return st2;
+  });
 };
 
 /*

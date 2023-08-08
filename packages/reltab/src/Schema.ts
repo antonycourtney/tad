@@ -24,7 +24,8 @@ export type TextSummaryStats = {
 // metadata for a single column:
 export type ColumnMetadata = {
   displayName: string;
-  columnType: string; // sql type name, based on dialect
+  columnType: string; // full sql type name, e.g. "VARCHAR(255)"
+  columnTypeBaseName?: string; // base type name, e.g. "VARCHAR", "DECIMAL", etc.
   columnStats?: NumericSummaryStats | TextSummaryStats;
 };
 
@@ -88,8 +89,8 @@ export class Schema {
     if (cmd == null) {
       throw new Error(`Schema.columnType: unknown column '${colId}'`);
     }
-    const sqlTypeName = cmd.columnType;
-    return this.dialect.columnTypes[sqlTypeName];
+    const columnTypeName = cmd.columnTypeBaseName ?? cmd.columnType;
+    return this.dialect.columnTypes[columnTypeName];
   }
 
   displayName(colId: string): string {

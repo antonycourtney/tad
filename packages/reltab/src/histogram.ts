@@ -182,6 +182,7 @@ export async function getColumnHistogramMap(
     }
   }
   if (histoQuery) {
+    console.log("*** histoQuery: ", histoQuery);
     const histoRes = await dsConn.evalQuery(histoQuery!);
     for (const histoInfo of histoInfos) {
       const histoData = getNumericColumnHistogramData(

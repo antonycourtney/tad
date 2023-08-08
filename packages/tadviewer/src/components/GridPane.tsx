@@ -247,6 +247,7 @@ const NumericColumnHistogram = ({
     brushMinVal,
     brushMaxVal,
   } = histData;
+  const [brushRange, setBrushRange] = useState([brushMinVal, brushMaxVal]);
   const chartData = binData.map((count: number, binIndex: number) => ({
     binMid: niceMinVal + (binIndex + 0.5) * binWidth,
     count,
@@ -258,20 +259,31 @@ const NumericColumnHistogram = ({
   };
 
   const handleBrush = (brushInfo: any) => {
-    actions.setHistogramBrushRange(colId, brushInfo.x, stateRef);
+    console.log("**** handleBrush: ", brushInfo.x);
+    setBrushRange(brushInfo.x);
   };
   const handleBrushEnd = (brushInfo: any) => {
-    let [minVal, maxVal] = brushInfo.x;
-    if (colType.kind === "integer") {
-      minVal = Math.round(minVal);
-      maxVal = Math.round(maxVal);
-    } else {
-      minVal = round(minVal, 2);
-      maxVal = round(maxVal, 2);
-    }
-    actions.setHistogramBrushFilter(colId, [minVal, maxVal], stateRef);
+    const [minVal, maxVal] = brushInfo.x;
+    const filterMinVal =
+      colType.kind === "integer" ? Math.round(minVal) : round(minVal, 2);
+    const filterMaxVal =
+      colType.kind === "integer" ? Math.round(maxVal) : round(maxVal, 2);
+    console.log(
+      "*** handleBrushEnd: ",
+      minVal,
+      maxVal,
+      filterMinVal,
+      filterMaxVal
+    );
+    actions.setHistogramBrushFilter(
+      colId,
+      [minVal, maxVal],
+      [filterMinVal, filterMaxVal],
+      stateRef
+    );
   };
 
+  console.log(`rendering brush with range:, [${brushMinVal}, ${brushMaxVal}]`);
   return (
     <VictoryChart
       padding={60}
@@ -280,7 +292,7 @@ const NumericColumnHistogram = ({
         <VictoryBrushContainer
           responsive={true}
           brushDimension="x"
-          brushDomain={{ x: [brushMinVal, brushMaxVal] }}
+          brushDomain={{ x: [brushRange[0], brushRange[1]] }}
           onBrushDomainChange={handleBrush}
           onBrushDomainChangeEnd={handleBrushEnd}
         />
