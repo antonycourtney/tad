@@ -42,12 +42,10 @@ TableRep {
   "schema": Object {
     "columnMetadata": Object {
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -64,7 +62,6 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
@@ -149,12 +146,10 @@ TableRep {
         "displayName": "Base",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -171,12 +166,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -250,12 +243,10 @@ TableRep {
         "displayName": "Base",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -272,12 +263,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -409,12 +398,10 @@ TableRep {
         "displayName": "Base",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -431,12 +418,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -654,12 +639,10 @@ TableRep {
         "displayName": "Base",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -676,12 +659,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -758,12 +739,10 @@ TableRep {
         "displayName": "Base",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -780,12 +759,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -1052,12 +1029,10 @@ TableRep {
         "displayName": "Base",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -1074,12 +1049,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -1166,12 +1139,10 @@ TableRep {
         "displayName": "Base",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -1188,12 +1159,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -1437,12 +1406,10 @@ TableRep {
         "displayName": "Base",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -1463,12 +1430,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -1717,12 +1682,10 @@ TableRep {
         "displayName": "BasePct",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -1739,12 +1702,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -2020,12 +1981,10 @@ TableRep {
         "displayName": "BasePctInt",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -2042,12 +2001,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -2302,12 +2259,10 @@ TableRep {
         "displayName": "Base",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -2324,12 +2279,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
@@ -2413,22 +2366,18 @@ TableRep {
   "schema": Object {
     "columnMetadata": Object {
       "column0": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "column0",
       },
       "column1": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "column1",
       },
       "column2": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "column2",
       },
       "column3": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "column3",
       },
@@ -2647,12 +2596,10 @@ TableRep {
         "displayName": "Base",
       },
       "Job Family": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Job Family",
       },
       "Name": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Name",
       },
@@ -2669,12 +2616,10 @@ TableRep {
         "displayName": "TCOE",
       },
       "Title": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Title",
       },
       "Union": Object {
-        "columnStats": undefined,
         "columnType": "VARCHAR",
         "displayName": "Union",
       },
