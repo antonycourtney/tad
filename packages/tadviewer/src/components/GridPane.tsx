@@ -16,7 +16,7 @@ import { ExportToCsv } from "export-to-csv";
 import * as he from "he";
 import { AppState } from "../AppState";
 import { ViewState } from "../ViewState";
-import { StateRef } from "oneref";
+import { mutableGet, StateRef } from "oneref";
 import { useState, useRef, MutableRefObject } from "react";
 import log from "loglevel";
 
@@ -25,7 +25,15 @@ const { Plugins } = SlickGrid as any;
 const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
   Plugins;
 import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
-import { Schema } from "reltab";
+import { ColumnType, NumericColumnHistogramData, Schema } from "reltab";
+import ReactDOM from "react-dom/client";
+import {
+  VictoryAxis,
+  VictoryBar,
+  VictoryBrushContainer,
+  VictoryChart,
+  VictoryTheme,
+} from "victory";
 
 export type OpenURLFn = (url: string) => void;
 
@@ -33,8 +41,9 @@ let divCounter = 0;
 
 const genContainerId = (): string => `epGrid${divCounter++}`;
 
-const gridOptions = {
+const baseGridOptions = {
   multiColumnSort: true,
+  headerRowHeight: 80,
 };
 
 const INDENT_PER_LEVEL = 15; // pixels
@@ -73,7 +82,7 @@ const groupCellFormatter = (
 };
 
 // scan table data to make best effort at initial column widths
-const MINCOLWIDTH = 80;
+const MINCOLWIDTH = 150;
 const MAXCOLWIDTH = 300;
 
 // TODO: use real font metrics:
@@ -210,6 +219,99 @@ const mkSlickColMap = (
   return slickColMap;
 };
 
+interface NumericColumnHistogramProps {
+  histData: NumericColumnHistogramData;
+  colType: ColumnType;
+  stateRef: StateRef<AppState>;
+}
+
+// gross hack to round to two decimal places:
+function round(value: number, decimals: number): number {
+  return Number(
+    Math.round(Number(value.toString() + "e" + decimals.toString())) +
+      "e-" +
+      decimals
+  );
+}
+const NumericColumnHistogram = ({
+  stateRef,
+  colType,
+  histData,
+}: NumericColumnHistogramProps) => {
+  const {
+    colId,
+    binWidth,
+    niceMinVal,
+    niceMaxVal,
+    binData,
+    brushMinVal,
+    brushMaxVal,
+  } = histData;
+  const chartData = binData.map((count: number, binIndex: number) => ({
+    binMid: niceMinVal + (binIndex + 0.5) * binWidth,
+    count,
+  }));
+  const fmtOpts = {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+    useGrouping: true,
+  };
+
+  const handleBrush = (brushInfo: any) => {
+    actions.setHistogramBrushRange(colId, brushInfo.x, stateRef);
+  };
+  const handleBrushEnd = (brushInfo: any) => {
+    let [minVal, maxVal] = brushInfo.x;
+    if (colType.kind === "integer") {
+      minVal = Math.round(minVal);
+      maxVal = Math.round(maxVal);
+    } else {
+      minVal = round(minVal, 2);
+      maxVal = round(maxVal, 2);
+    }
+    actions.setHistogramBrushFilter(colId, [minVal, maxVal], stateRef);
+  };
+
+  return (
+    <VictoryChart
+      padding={60}
+      domain={{ x: [niceMinVal, niceMaxVal + binWidth * 2] }}
+      containerComponent={
+        <VictoryBrushContainer
+          responsive={true}
+          brushDimension="x"
+          brushDomain={{ x: [brushMinVal, brushMaxVal] }}
+          onBrushDomainChange={handleBrush}
+          onBrushDomainChangeEnd={handleBrushEnd}
+        />
+      }
+    >
+      <VictoryAxis
+        tickValues={[niceMinVal, niceMaxVal]}
+        tickFormat={(tick: number) => tick.toLocaleString(undefined, fmtOpts)}
+        style={{
+          axis: { stroke: "none" },
+          tickLabels: { fontSize: 40 },
+        }}
+      />
+      <VictoryAxis
+        dependentAxis
+        tickCount={2}
+        style={{
+          axis: { stroke: "none" },
+          tickLabels: { fontSize: 40 },
+        }}
+      />
+      <VictoryBar
+        style={{ data: { fill: "rgb(25, 118, 210)" } }}
+        data={chartData}
+        x="binMid"
+        y="count"
+      />
+    </VictoryChart>
+  );
+};
+
 /**
  * React component wrapper around SlickGrid
  *
@@ -224,6 +326,29 @@ export interface GridPaneProps {
   embedded: boolean;
 }
 
+const getGridOptions = (
+  showColumnHistograms: boolean,
+  viewState: ViewState
+) => {
+  const { queryView } = viewState;
+  const histoCount = queryView?.histoMap
+    ? Object.keys(queryView.histoMap).length
+    : 0;
+
+  const showHeaderRow = showColumnHistograms && histoCount > 0;
+  const gridOptions = {
+    ...baseGridOptions,
+    showHeaderRow,
+  };
+  return gridOptions;
+};
+
+const getGridOptionsFromStateRef = (stateRef: StateRef<AppState>) => {
+  const appState = mutableGet(stateRef);
+
+  return getGridOptions(appState.showColumnHistograms, appState.viewState);
+};
+
 /* Create grid from the specified set of columns */
 const createGrid = (
   stateRef: StateRef<AppState>,
@@ -235,6 +360,7 @@ const createGrid = (
   openURL: (url: string) => void,
   embedded: boolean
 ) => {
+  const gridOptions = getGridOptionsFromStateRef(stateRef);
   let grid = new Slick.Grid(`#${containerId}`, data, columns, gridOptions);
 
   const selectionModel = new CellSelectionModel();
@@ -298,6 +424,25 @@ const createGrid = (
 
   grid.onViewportChanged.subscribe((e: any, args: any) => {
     updateViewportDebounced();
+  });
+
+  grid.onHeaderRowCellRendered.subscribe((e: any, { node, column }: any) => {
+    const appState = mutableGet(stateRef);
+    const viewState = appState.viewState;
+    const { queryView } = viewState;
+    if (queryView && queryView.histoMap && queryView.histoMap[column.id]) {
+      const histo = queryView.histoMap[column.id];
+      const colType = viewState.baseSchema.columnType(column.id);
+      const root = ReactDOM.createRoot(node);
+      root.render(
+        <NumericColumnHistogram
+          histData={histo}
+          colType={colType}
+          stateRef={stateRef}
+        />
+      );
+      node.classList.add("slick-editable");
+    }
   });
 
   grid.onSort.subscribe((e: any, args: any) => {
@@ -412,21 +557,23 @@ const getGridCols = (gs: GridState, viewState: ViewState) => {
 /*
  * update grid from dataView
  */
-const updateGrid = (gs: GridState, viewState: ViewState) => {
+const updateGrid = (
+  gs: GridState,
+  viewState: ViewState,
+  showColumnHistograms: boolean
+) => {
   const { viewParams, dataView } = viewState;
   if (dataView == null) return;
-  /*
-  console.log(
-    "updateGrid: dataView: offset: ",
-    dataView.getOffset(),
-    "length: ",
-    dataView.getLength()
-  );
-  */
+
   gs.slickColMap = mkSlickColMap(dataView.schema, viewParams, gs.colWidthsMap!);
   const gridCols = getGridCols(gs, viewState);
 
   const grid = gs.grid;
+
+  const gridOptions = getGridOptions(showColumnHistograms, viewState);
+
+  grid.setOptions(gridOptions);
+  grid.setHeaderRowVisibility(gridOptions.showHeaderRow);
 
   // In pre-Hooks version, we wouldn't do this on first render (grid creation).
   // May want or need to optimize for that case.
@@ -486,16 +633,27 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
 }) => {
   const containerIdRef = useRef(genContainerId());
   const [gridState, setGridState] = useState<GridState | null>(null);
-  const [prevDataView, setPrevDataView] = useState<PagedDataView | null>(null);
   const viewStateRef = useRef<ViewState>(viewState);
 
+  const prevShowColumnHistograms = useRef(appState.showColumnHistograms);
+
   viewStateRef.current = viewState;
+
+  const dataView = viewState.dataView;
+
+  const { showColumnHistograms } = appState;
+
   // log.debug("RawGridPane: ", appState.toJS(), viewState.toJS());
 
   React.useLayoutEffect(() => {
     let gs = gridState;
-    const dataView = viewState.dataView;
-    if (gs === null) {
+    // The extra check here for prevShowColumnHistograms is a workaround
+    // for an apparent bug in SlickGrid where it doesn't seem to re-render
+    // correctly when we dynamically change the showHeaderRow option on the grid.
+    if (
+      gs === null ||
+      prevShowColumnHistograms.current !== showColumnHistograms
+    ) {
       gs = createGridState(
         stateRef,
         viewStateRef,
@@ -511,14 +669,14 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
       setGridState(gs);
     }
     // log.debug("GridPane effect: ", prevDataView, dataView);
-    if (dataView !== prevDataView && dataView != null) {
+    if (dataView != null) {
       // log.debug("RawGridPane: updating grid");
-      updateGrid(gs, viewStateRef.current);
-      setPrevDataView(dataView);
+      updateGrid(gs, viewStateRef.current, showColumnHistograms);
     } else {
       // log.debug("RawGridPane: no view change, skipping grid update");
     }
-  });
+    prevShowColumnHistograms.current = showColumnHistograms;
+  }, [dataView, gridState, showColumnHistograms]);
 
   const handleGridResize = (entries: ResizeEntry[]) => {
     // TODO: debounce?
@@ -563,7 +721,7 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   );
 };
 
-const shouldGridPaneUpdate = (oldProps: any, nextProps: any): boolean => {
+const gridPanePropsEqual = (oldProps: any, nextProps: any): boolean => {
   const viewState = oldProps.viewState;
   const nextViewState = nextProps.viewState;
   const omitPred = (val: any, key: string, obj: Object) =>
@@ -572,8 +730,11 @@ const shouldGridPaneUpdate = (oldProps: any, nextProps: any): boolean => {
   // shallow conversion
   const vs = _.omitBy(viewState.toObject(), omitPred);
   const nvs = _.omitBy(nextViewState.toObject(), omitPred);
-  const ret = util.shallowEqual(vs, nvs);
+  const ret =
+    util.shallowEqual(vs, nvs) &&
+    oldProps.appState.showColumnHistograms ===
+      nextProps.appState.showColumnHistograms;
   return ret;
 };
 
-export const GridPane = React.memo(RawGridPane, shouldGridPaneUpdate);
+export const GridPane = React.memo(RawGridPane, gridPanePropsEqual);

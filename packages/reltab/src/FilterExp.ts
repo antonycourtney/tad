@@ -19,7 +19,7 @@
 
 import { SQLDialect } from "./dialect";
 import { ValExp, sqlEscapeString } from "./defs";
-import { deserializeValExp, valExpToSqlStr } from "./internals";
+import { deserializeValExp, valExpToSqlStr } from "./defs";
 import { ColumnType } from "./ColumnType";
 
 export type BinRelOp =

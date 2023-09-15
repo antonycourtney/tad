@@ -12,8 +12,15 @@ import {
   DataSourceId,
   resolvePath,
   DataSourceConnection,
+  and,
+  col,
+  constVal,
+  NumericColumnHistogramData,
+  SubExp,
+  FilterExp,
 } from "reltab";
 import * as util from "./util";
+import { QueryView } from "./QueryView";
 
 export async function initAppState(
   rtc: reltab.ReltabConnection,
@@ -254,6 +261,18 @@ export const toggleShowRoot = (stateRef: StateRef<AppState>): void => {
     )
   );
 };
+export const setShowColumnHistograms = (
+  stateRef: StateRef<AppState>,
+  showColumnHistograms: boolean
+): void => {
+  update(stateRef, (s) => {
+    const nextS = s.set(
+      "showColumnHistograms",
+      showColumnHistograms
+    ) as AppState;
+    return nextS;
+  });
+};
 export const reorderColumnList = (dstProps: any, srcProps: any) => {
   console.log("reorderColumnList: ", dstProps, srcProps);
 
@@ -324,11 +343,12 @@ export const setSortKey = (
   sortKey: Array<[string, boolean]>,
   stateRef: StateRef<AppState>
 ) => {
-  console.log("setSortKey: ", sortKey);
-  update(
-    stateRef,
-    vpUpdate((viewParams) => viewParams.set("sortKey", sortKey) as ViewParams)
-  );
+  update(stateRef, (st: AppState): AppState => {
+    const nextSt = vpUpdate(
+      (viewParams) => viewParams.set("sortKey", sortKey) as ViewParams
+    )(st);
+    return nextSt;
+  });
 };
 
 export const setColumnOrder = (
@@ -466,6 +486,77 @@ export const setFilter = (
     stateRef,
     vpUpdate((viewParams) => viewParams.set("filterExp", fe) as ViewParams)
   );
+};
+
+export const setHistogramBrushFilter = (
+  colId: string,
+  range: [number, number] | null,
+  stateRef: StateRef<AppState>
+) => {
+  let baseFE: FilterExp;
+  if (range !== null) {
+    const appState = mutableGet(stateRef);
+    const prevFE = appState.viewState.viewParams.filterExp;
+    // ensure that prevFE is either null or a top-level "AND" operator:
+    if (prevFE != null) {
+      if (prevFE.op !== "AND") {
+        log.info(
+          "setHistogramBrushFilter: unexpected structure for current filter expression, ignoring brush filter"
+        );
+        return;
+      }
+      // drop any previous mentions of colId from the filter expression:
+      const cleanOpArgs = prevFE.opArgs.filter((subExp: SubExp) => {
+        if (subExp.expType === "BinRelExp") {
+          const lhs = subExp.lhs;
+          if (lhs.expType === "ColRef" && lhs.colName === colId) {
+            return false;
+          }
+        }
+        return true;
+      });
+      baseFE = new FilterExp("AND", cleanOpArgs);
+    } else {
+      baseFE = and();
+    }
+    const nextFE = baseFE
+      .ge(col(colId), constVal(range[0]))
+      .le(col(colId), constVal(range[1]));
+    update(
+      stateRef,
+      vpUpdate(
+        (viewParams) => viewParams.set("filterExp", nextFE) as ViewParams
+      )
+    );
+  }
+};
+
+export const setHistogramBrushRange = (
+  colId: string,
+  range: [number, number] | null,
+  stateRef: StateRef<AppState>
+) => {
+  if (range !== null) {
+    update(
+      stateRef,
+      (st: AppState): AppState =>
+        st.updateIn(["viewState", "queryView"], (qvu: unknown) => {
+          const oldQueryView = qvu as QueryView;
+          const oldHistData = oldQueryView.histoMap[colId];
+          const newHistData: NumericColumnHistogramData = {
+            ...oldHistData,
+            brushMinVal: range[0],
+            brushMaxVal: range[1],
+          };
+          const newHistoMap = {
+            ...oldQueryView.histoMap,
+            [colId]: newHistData,
+          };
+          const newQueryView = oldQueryView.set("histoMap", newHistoMap);
+          return newQueryView;
+        }) as AppState
+    );
+  }
 };
 
 /*

@@ -3,8 +3,13 @@ import * as _ from "lodash";
 import * as reltab from "reltab";
 import {
   asString,
+  cast,
   DataSourceConnection,
   DbDataSource,
+  divide,
+  minus,
+  multiply,
+  round,
   tableQuery,
 } from "reltab";
 import * as reltabDuckDB from "../src/reltab-duckdb";
@@ -247,6 +252,38 @@ const qex4 = q1.extend("_pivot", asString(constVal(null)));
 test("null const extend", async () => {
   const res = await testCtx.evalQuery(qex4);
   // util.logTable(res);
+  expect(res).toMatchSnapshot();
+});
+
+const qex5 = q1.extend("Overhead", minus(col("TCOE"), col("Base")));
+test("extend with binary expression col", async () => {
+  const res = await testCtx.evalQuery(qex5);
+  console.log("*** qex5 result: ");
+  util.logTable(res);
+  expect(res).toMatchSnapshot();
+});
+
+const realType = reltab.DuckDBDialect.columnTypes["REAL"];
+
+const qex6 = q1.extend(
+  "BasePct",
+  divide(cast(col("Base"), realType), cast(col("TCOE"), realType))
+);
+test("extend with binary expression col and casts", async () => {
+  const res = await testCtx.evalQuery(qex6);
+  console.log("*** qex6 result: ");
+  util.logTable(res);
+  expect(res).toMatchSnapshot();
+});
+
+const qex7 = qex6.extend(
+  "BasePctInt",
+  round(multiply(col("BasePct"), cast(constVal(100), realType)))
+);
+test("extend with unary op round", async () => {
+  const res = await testCtx.evalQuery(qex7);
+  console.log("*** qex7 result: ");
+  util.logTable(res);
   expect(res).toMatchSnapshot();
 });
 

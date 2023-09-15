@@ -3,6 +3,7 @@ export * from "./dialect";
 export * from "./remote/Connection";
 export { getConnection } from "./remote/server";
 export * from "./defs";
+export * from "./histogram";
 export * from "./FilterExp";
 export * from "./QueryExp";
 export * from "./Schema";
