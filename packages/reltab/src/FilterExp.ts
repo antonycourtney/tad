@@ -149,7 +149,7 @@ const textOpToSqlWhere = (
       valExpToSqlStr(dialect, lhs) +
       " " +
       negStr +
-      "LIKE " +
+      "ILIKE " +
       sqlEscapeString(matchStr);
   }
 
