@@ -8,6 +8,7 @@ import { LeafSchemaMap } from "./TableRep";
 export abstract class BaseSQLDialect implements SQLDialect {
   abstract readonly dialectName: string;
   readonly requireSubqueryAlias: boolean = false;
+  readonly allowNonConstExtend: boolean = false;
 
   quoteCol(cid: string): string {
     return '"' + cid + '"';

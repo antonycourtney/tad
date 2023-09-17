@@ -72,9 +72,20 @@ test("q1 - basic sqlQuery", async () => {
 const bartTableQuery = reltab.tableQuery("barttest");
 
 test("t2 - basic bart table query", async () => {
+  const dbds = testCtx as DbDataSource;
+
+  const sqlQuery = await dbds.getSqlForQuery(bartTableQuery);
+  console.log("*** sql for basic table query:\n", sqlQuery);
+
   const qres = await testCtx.evalQuery(bartTableQuery);
 
   expect(qres).toMatchSnapshot();
+});
+
+const qtex = bartTableQuery.extend("foo", constVal(99));
+test("trivial table extend with const col", async () => {
+  const res = await testCtx.evalQuery(qtex);
+  expect(res).toMatchSnapshot();
 });
 
 test("basic rowcount", async () => {

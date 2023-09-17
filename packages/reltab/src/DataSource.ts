@@ -116,16 +116,25 @@ export class DbDataSource implements DataSourceConnection {
     this.tableMap = {};
   }
 
+  async getSqlForQuery(
+    query: QueryExp,
+    offset?: number,
+    limit?: number
+  ): Promise<string> {
+    await this.ensureLeafDeps(query);
+    const schema = query.getSchema(this.db.dialect, this.tableMap);
+    const sqlQuery = query.toSql(this.db.dialect, this.tableMap, offset, limit);
+    return sqlQuery;
+  }
+
   async evalQuery(
     query: QueryExp,
     offset?: number,
     limit?: number,
     options?: EvalQueryOptions
   ): Promise<TableRep> {
-    await this.ensureLeafDeps(query);
+    const sqlQuery = await this.getSqlForQuery(query, offset, limit);
     const schema = query.getSchema(this.db.dialect, this.tableMap);
-    const sqlQuery = query.toSql(this.db.dialect, this.tableMap, offset, limit);
-
     const trueOptions = options ? options : defaultEvalQueryOptions;
 
     if (trueOptions.showQueries) {

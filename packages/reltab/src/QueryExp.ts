@@ -518,10 +518,16 @@ const colExtendExpToJSStr = (colExp: ColumnExtendExp): string => {
     case "ConstVal":
       return `constVal(${JSON.stringify(colExp.val)})`;
     case "AsString":
-      return `asString(${colExtendExpToJSStr(colExp.valExp)})`;
+      return `asString(${JSON.stringify(colExp.valExp)})`;
+    case "CastExp":
+      return `cast('${colExp.asType.sqlTypeName}', ${JSON.stringify(
+        colExp.subExp
+      )})`;
     default:
       throw new Error(
-        `colExtendExptoJSStr: unknown expType in column expression ${colExp}`
+        `colExtendExptoJSStr: unknown expType in column expression ${JSON.stringify(
+          colExp
+        )}`
       );
   }
 };

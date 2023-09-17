@@ -398,10 +398,12 @@ const extendQueryToSql = (
   // Note: We only want to extract the column ids from subquery for use at this level; we
   // want to skip any calculated expressions or aggregate functions
 
-  const isConst = isConstExtendExp(colExp);
   let retSel: SQLSelectAST;
 
-  if (isConst && sqsql.selectStmts.length === 1) {
+  if (
+    (dialect.allowNonConstExtend || isConstExtendExp(colExp)) &&
+    sqsql.selectStmts.length === 1
+  ) {
     // just append our column to existing selectCols list:
     const outSel = subSel.selectCols.slice();
     outSel.push({

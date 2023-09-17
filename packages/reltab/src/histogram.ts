@@ -84,6 +84,7 @@ export function columnHistogramQuery(
 
   const histoQuery = binQuery
     .extend("binCount", constVal(1))
+    .project(["column", "bin", "binCount"])
     .groupBy(["column", "bin"], [["count", "binCount"]]);
 
   const ret = {
@@ -150,12 +151,21 @@ export type ColumnHistogramMap = {
   [colId: string]: NumericColumnHistogramData;
 };
 
-export async function getColumnHistogramMap(
+/**
+ * Get the monster query for creating the full column histogram map for all
+ * query columns.
+ * Exposed primarily for testing; most reltab users should call `getColumnHistogramMap`,
+ * which runs the query and provides a useful map of all histogram data.
+ * returns: array of NumericColumnHistogramQuery, and combined QueryExp
+ */
+
+export function getColumnHistogramMapQuery(
   dsConn: DataSourceConnection,
   baseQuery: QueryExp,
   baseSchema: Schema
-): Promise<ColumnHistogramMap> {
+): [NumericColumnHistogramQuery[], QueryExp | null] {
   const histoMap: ColumnHistogramMap = {};
+  const histoCols: string[] = [];
 
   let histoQuery: QueryExp | null = null;
   let histoInfos: NumericColumnHistogramQuery[] = [];
@@ -181,6 +191,21 @@ export async function getColumnHistogramMap(
       }
     }
   }
+  return [histoInfos, histoQuery];
+}
+
+export async function getColumnHistogramMap(
+  dsConn: DataSourceConnection,
+  baseQuery: QueryExp,
+  baseSchema: Schema
+): Promise<ColumnHistogramMap> {
+  const histoMap: ColumnHistogramMap = {};
+
+  const [histoInfos, histoQuery] = getColumnHistogramMapQuery(
+    dsConn,
+    baseQuery,
+    baseSchema
+  );
   if (histoQuery) {
     const histoRes = await dsConn.evalQuery(histoQuery!);
     for (const histoInfo of histoInfos) {

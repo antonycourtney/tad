@@ -72,10 +72,37 @@ test("histogram query for column", async () => {
 
   console.log("histoInfo: ", histoInfo);
 
+  const dbds = testCtx as DbDataSource;
+
+  console.log("*** histogram query: ", histoInfo!.histoQuery.toJS());
+
+  const sqlQuery = await dbds.getSqlForQuery(histoInfo!.histoQuery);
+  console.log("**** histogram sql query: \n", sqlQuery);
+
+  expect(sqlQuery).toMatchSnapshot();
+
   const histoRes = await testCtx.evalQuery(histoInfo!.histoQuery);
   util.logTable(histoRes);
 
   const histoData = getNumericColumnHistogramData("TCOE", histoInfo!, histoRes);
   console.log("histogram data:", histoData);
   expect(histoData).toMatchSnapshot();
+});
+
+test("full histogram query for all column", async () => {
+  const schema = await testCtx.getSchema(q1);
+
+  const [histoInfos, histoQuery] = reltab.getColumnHistogramMapQuery(
+    testCtx,
+    q1,
+    schema
+  );
+
+  console.log("full histogram infos: ", histoInfos);
+  const dbds = testCtx as DbDataSource;
+
+  const sqlQuery = await dbds.getSqlForQuery(histoQuery!);
+  console.log("full histogram query:\n", sqlQuery);
+
+  expect(sqlQuery).toMatchSnapshot();
 });

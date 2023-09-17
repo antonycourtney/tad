@@ -1,6 +1,6 @@
 import { ColumnType, CoreColumnTypes, ColumnTypeMap } from "../ColumnType";
 import { BaseSQLDialect } from "../BaseSQLDialect";
-import { isNode } from "environ";
+import { isNode } from "../util/environ";
 
 const intCT = new ColumnType("INTEGER", "integer");
 const realCT = new ColumnType("DOUBLE", "real");
@@ -54,7 +54,8 @@ const blobCT = new ColumnType("BLOB", "blob", {
 export class DuckDBDialectClass extends BaseSQLDialect {
   private static instance: DuckDBDialectClass;
   readonly dialectName: string = "duckdb";
-  readonly requireSubqueryAlias: boolean = true;
+  readonly requireSubqueryAlias: boolean = false;
+  readonly allowNonConstExtend: boolean = true;
   readonly coreColumnTypes: CoreColumnTypes = {
     integer: intCT,
     real: realCT,

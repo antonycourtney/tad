@@ -11,7 +11,34 @@ Object {
 }
 `;
 
+exports[`full histogram query for all column 1`] = `
+"SELECT \\"column\\", \\"bin\\", count(\\"binCount\\") as \\"binCount\\"
+FROM (
+  SELECT 'Base' as \\"column\\", CAST(floor(((CAST(\\"Base\\" AS DOUBLE) - CAST(50000 AS DOUBLE)) / CAST(42857.142857142855 AS DOUBLE))) AS INTEGER) as \\"bin\\", 1 as \\"binCount\\"
+  FROM barttest
+)
+GROUP BY \\"column\\", \\"bin\\"
+UNION ALL
+SELECT \\"column\\", \\"bin\\", count(\\"binCount\\") as \\"binCount\\"
+FROM (
+  SELECT 'TCOE' as \\"column\\", CAST(floor(((CAST(\\"TCOE\\" AS DOUBLE) - CAST(100000 AS DOUBLE)) / CAST(50000 AS DOUBLE))) AS INTEGER) as \\"bin\\", 1 as \\"binCount\\"
+  FROM barttest
+)
+GROUP BY \\"column\\", \\"bin\\"
+"
+`;
+
 exports[`histogram query for column 1`] = `
+"SELECT \\"column\\", \\"bin\\", count(\\"binCount\\") as \\"binCount\\"
+FROM (
+  SELECT 'TCOE' as \\"column\\", CAST(floor(((CAST(\\"TCOE\\" AS DOUBLE) - CAST(100000 AS DOUBLE)) / CAST(50000 AS DOUBLE))) AS INTEGER) as \\"bin\\", 1 as \\"binCount\\"
+  FROM barttest
+)
+GROUP BY \\"column\\", \\"bin\\"
+"
+`;
+
+exports[`histogram query for column 2`] = `
 Object {
   "binCount": 7,
   "binData": Array [
