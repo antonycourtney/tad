@@ -12,7 +12,6 @@ import { SimpleClipboard } from "./SimpleClipboard";
 import { PagedDataView } from "../PagedDataView";
 import { ViewParams } from "../ViewParams";
 import * as util from "../util";
-import { ExportToCsv } from "export-to-csv";
 import * as he from "he";
 import { AppState } from "../AppState";
 import { ViewState } from "../ViewState";
@@ -349,6 +348,14 @@ const getGridOptionsFromStateRef = (stateRef: StateRef<AppState>) => {
   return getGridOptions(appState.showColumnHistograms, appState.viewState);
 };
 
+// escape tabs by placing string in quotes
+function escapeTabs(cellData: any): any {
+  if (typeof cellData === "string" && cellData.indexOf("\t") >= 0) {
+    return '"' + cellData.replace(/"/g, '""') + '"';
+  }
+  return cellData;
+}
+
 /* Create grid from the specified set of columns */
 const createGrid = (
   stateRef: StateRef<AppState>,
@@ -375,7 +382,7 @@ const createGrid = (
   grid.registerPlugin(new AutoTooltips({ enableForCells: true }));
 
   const copySelectedRange = async (range: any) => {
-    let copyData = [];
+    let copyRowStrings: string[] = [];
     const gridCols = grid.getColumns();
     const gridData = grid.getData();
     for (let row = range.fromRow; row <= range.toRow; row++) {
@@ -383,20 +390,12 @@ const createGrid = (
       const copyRow = [];
       for (let col = range.fromCell; col <= range.toCell; col++) {
         const cid = gridCols[col].id;
-        copyRow.push(rowData[cid]);
+        copyRow.push(escapeTabs(rowData[cid]));
       }
-      copyData.push(copyRow);
+      copyRowStrings.push(copyRow.join("\t"));
     }
-    try {
-      // const data = await csv.writeToString(copyData, { headers: false });
-      const csvExporter = new ExportToCsv();
-      const data = csvExporter.generateCsv(copyData, true);
-      console.log("writing text to clipboard: ", data);
-      clipboard.writeText(data);
-    } catch (err) {
-      console.error("error converting copied data to CSV: ", err);
-      return;
-    }
+    const copyData = copyRowStrings.join("\r\n") + "\r\n";
+    clipboard.writeText(copyData);
   };
 
   copyManager.onCopyCells.subscribe(async (e: any, args: any) => {
