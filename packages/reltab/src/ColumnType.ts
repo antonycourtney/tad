@@ -56,6 +56,9 @@ const defaultValRender: StringRenderFn = (val: any) => {
   if (typeof val === "bigint") {
     return val.toString();
   }
+  if (val instanceof Date) {
+    return val.toISOString();
+  }
   try {
     return String(val);
   } catch (err) {
