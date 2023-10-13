@@ -36,6 +36,8 @@ const createTimestampStringRenderer = (dateOnly = false) => ({
   },
 });
 
+// see https://duckdb.org/docs/sql/data_types/timestamp
+// for timestamp type coverage.
 const timestampCT = new ColumnType(
   "TIMESTAMP",
   "timestamp",
