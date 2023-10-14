@@ -371,35 +371,57 @@ test("DuckDb date type", async () => {
   `);
 });
 
-test("DuckDb timestamp type", async () => {
+test("DuckDb timestamp types", async () => {
   const dbc = testCtx;
   const dbds = dbc as DbDataSource;
   const driver = dbds.db as reltabDuckDB.DuckDBDriver;
 
-  await driver.runSqlQuery("create table tstamp_ttest(t timestamp); ");
+  const d1 = "1991-07-21T11:30:00.000Z";
+  const d2 = "2022-02-11T14:15:45.000Z";
+
+  // NOTE:
+  // fully uniform results with duckdb-node blocked on https://github.com/duckdb/duckdb-node/issues/13.
+  // Once this issue is fixed, we can comment out the timestamp_ns, timestamp_ms, and timestamp_s
+  // columns and add the results to the snapshot.
   await driver.runSqlQuery(
-    "insert into tstamp_ttest values ('1991-07-21 11:30:00');"
-  );
-  await driver.runSqlQuery(
-    "insert into tstamp_ttest values ('2022-02-11 14:15:45');"
+    `
+    create table timestamp_test as (
+      select '${d1}' as t,
+      cast('${d1}' as TIMESTAMP WITH TIME ZONE) as tz,
+      -- cast('${d1}' as timestamp_ns) as t_ns,
+      -- cast('${d1}' as timestamp_ms) as t_ms,
+      -- cast('${d1}' as timestamp_s) as t_s,
+      cast('${d1}' as datetime) as dt,
+      cast('${d1}' as date) as d
+      UNION ALL select
+      '${d2}' as t,
+      cast('${d2}' as TIMESTAMP WITH TIME ZONE) as tz,
+      -- cast('${d2}' as timestamp_ns) as t_ns,
+      -- cast('${d2}' as timestamp_ms) as t_ms,
+      -- cast('${d2}' as timestamp_s) as t_s,
+      cast('${d2}' as datetime) as dt,
+      cast('${d2}' as date) as d
+      );`
   );
 
-  const q0 = tableQuery("tstamp_ttest");
+  const q0 = tableQuery("timestamp_test");
   const q0res = await dbc.evalQuery(q0);
-  // console.log("q0res: ", q0res);
-  // const rowData = q0res.rowData;
-  // console.log("rowData: ", rowData);
 
   const fmtRows = getFormattedRows(q0res);
-  // console.log("fmtRows: ", fmtRows);
 
   expect(fmtRows).toMatchInlineSnapshot(`
     Array [
       Array [
         "1991-07-21T11:30:00.000Z",
+        "1991-07-21T11:30:00.000Z",
+        "1991-07-21T11:30:00.000Z",
+        "1991-07-21",
       ],
       Array [
         "2022-02-11T14:15:45.000Z",
+        "2022-02-11T14:15:45.000Z",
+        "2022-02-11T14:15:45.000Z",
+        "2022-02-11",
       ],
     ]
   `);

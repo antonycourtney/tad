@@ -74,6 +74,12 @@ const timestampWithTimeZoneCT = new ColumnType(
   createTimestampStringRenderer()
 );
 
+const timestampTZCT = new ColumnType(
+  "TIMESTAMPTZ",
+  "timestamp",
+  createTimestampStringRenderer()
+);
+
 const dateCT = new ColumnType(
   "DATE",
   "timestamp",
@@ -117,6 +123,7 @@ export class DuckDBDialectClass extends BaseSQLDialect {
     FLOAT: realCT,
     TEXT: textCT,
     TIMESTAMP: timestampCT,
+    TIMESTAMPTZ: timestampTZCT,
     "TIMESTAMP WITH TIME ZONE": timestampWithTimeZoneCT,
     TIMESTAMP_NS: timestampNSCT,
     TIMESTAMP_S: timestampSCT,
