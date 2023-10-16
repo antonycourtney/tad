@@ -7,7 +7,7 @@ const realCT = new ColumnType("DOUBLE", "real");
 const textCT = new ColumnType("VARCHAR", "string");
 const boolCT = new ColumnType("BOOL", "boolean");
 
-const timestampCT = new ColumnType("TIMESTAMP", "timestamp", {
+const createTimestampStringRenderer = (dateOnly = false) => ({
   stringRender: (val: any) => {
     if (val == null) {
       return "";
@@ -15,6 +15,7 @@ const timestampCT = new ColumnType("TIMESTAMP", "timestamp", {
     let retStr: string;
     try {
       retStr = new Date(val).toISOString();
+      if (dateOnly) retStr = retStr.split("T")[0];
     } catch (err) {
       if (err instanceof RangeError) {
         console.info(
@@ -34,6 +35,56 @@ const timestampCT = new ColumnType("TIMESTAMP", "timestamp", {
     return retStr;
   },
 });
+
+// see https://duckdb.org/docs/sql/data_types/timestamp
+// for timestamp type coverage.
+const timestampCT = new ColumnType(
+  "TIMESTAMP",
+  "timestamp",
+  createTimestampStringRenderer()
+);
+
+const timestampNSCT = new ColumnType(
+  "TIMESTAMP_NS",
+  "timestamp",
+  createTimestampStringRenderer()
+);
+
+const timestampSCT = new ColumnType(
+  "TIMESTAMP_S",
+  "timestamp",
+  createTimestampStringRenderer()
+);
+
+const timestampMSCT = new ColumnType(
+  "TIMESTAMP_MS",
+  "timestamp",
+  createTimestampStringRenderer()
+);
+
+const datetimeCT = new ColumnType(
+  "DATETIME",
+  "timestamp",
+  createTimestampStringRenderer()
+);
+
+const timestampWithTimeZoneCT = new ColumnType(
+  "TIMESTAMP WITH TIME ZONE",
+  "timestamp",
+  createTimestampStringRenderer()
+);
+
+const timestampTZCT = new ColumnType(
+  "TIMESTAMPTZ",
+  "timestamp",
+  createTimestampStringRenderer()
+);
+
+const dateCT = new ColumnType(
+  "DATE",
+  "timestamp",
+  createTimestampStringRenderer(true)
+);
 
 const blobCT = new ColumnType("BLOB", "blob", {
   stringRender: (val: any) => {
@@ -72,6 +123,13 @@ export class DuckDBDialectClass extends BaseSQLDialect {
     FLOAT: realCT,
     TEXT: textCT,
     TIMESTAMP: timestampCT,
+    TIMESTAMPTZ: timestampTZCT,
+    "TIMESTAMP WITH TIME ZONE": timestampWithTimeZoneCT,
+    TIMESTAMP_NS: timestampNSCT,
+    TIMESTAMP_S: timestampSCT,
+    TIMESTAMP_MS: timestampMSCT,
+    DATETIME: datetimeCT,
+    DATE: dateCT,
     VARCHAR: textCT,
     BOOL: boolCT,
     BOOLEAN: boolCT,
