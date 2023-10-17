@@ -100,7 +100,7 @@ async function openFromOpenParams(
 // TODO: figure out how to initialize based on saved views or different file / table names
 const init = async () => {
   const tStart = performance.now();
-  log.setLevel(log.levels.DEBUG);
+  log.setLevel(log.levels.INFO); // debug for more verbosity
   const appState = new AppState();
   const stateRef = mkRef(appState);
   const [App, listenerId] = refContainer<AppState, AppPaneBaseProps>(

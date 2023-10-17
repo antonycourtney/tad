@@ -28,7 +28,6 @@ export interface AppStateProps {
   appLoadingTimer: Timer;
   activity: Activity;
   showRecordCount: boolean;
-  showColumnHistograms: boolean;
 }
 
 const defaultAppStateProps: AppStateProps = {
@@ -44,7 +43,6 @@ const defaultAppStateProps: AppStateProps = {
   appLoadingTimer: new Timer(),
   activity: "None",
   showRecordCount: true,
-  showColumnHistograms: true,
 };
 
 export class AppState extends Immutable.Record(defaultAppStateProps) {
@@ -63,5 +61,4 @@ export class AppState extends Immutable.Record(defaultAppStateProps) {
   public readonly appLoadingTimer!: Timer;
   public readonly activity!: Activity;
   public readonly showRecordCount!: boolean;
-  public readonly showColumnHistograms!: boolean;
 }

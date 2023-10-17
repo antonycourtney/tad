@@ -92,7 +92,6 @@ export function TadViewerPane({
       if (!appStateRef) {
         const appState = new AppState({
           showRecordCount,
-          showColumnHistograms,
         });
         const stateRef = mkRef(appState);
         setAppStateRef(stateRef);
@@ -115,7 +114,12 @@ export function TadViewerPane({
   /* update the view when the query changes */
   React.useEffect(() => {
     if (appStateRef != null && pivotRequester != null) {
-      actions.setQueryView(appStateRef, dsConn, baseSqlQuery);
+      actions.setQueryView(
+        appStateRef,
+        dsConn,
+        baseSqlQuery,
+        showColumnHistograms
+      );
       log.debug("**** set app view to base query");
     }
   }, [baseSqlQuery, pivotRequester, appStateRef]);

@@ -227,6 +227,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
         schema={viewState.baseSchema}
         viewParams={viewState.viewParams}
         delayedCalcMode={viewState.delayedCalcMode}
+        embedded={embedded}
         stateRef={stateRef}
       />
     );

@@ -325,16 +325,14 @@ export interface GridPaneProps {
   embedded: boolean;
 }
 
-const getGridOptions = (
-  showColumnHistograms: boolean,
-  viewState: ViewState
-) => {
+const getGridOptions = (viewState: ViewState) => {
   const { queryView } = viewState;
   const histoCount = queryView?.histoMap
     ? Object.keys(queryView.histoMap).length
     : 0;
 
-  const showHeaderRow = showColumnHistograms && histoCount > 0;
+  const showHeaderRow =
+    viewState.viewParams.showColumnHistograms && histoCount > 0;
   const gridOptions = {
     ...baseGridOptions,
     showHeaderRow,
@@ -345,7 +343,7 @@ const getGridOptions = (
 const getGridOptionsFromStateRef = (stateRef: StateRef<AppState>) => {
   const appState = mutableGet(stateRef);
 
-  return getGridOptions(appState.showColumnHistograms, appState.viewState);
+  return getGridOptions(appState.viewState);
 };
 
 // escape tabs by placing string in quotes
@@ -429,6 +427,7 @@ const createGrid = (
     const appState = mutableGet(stateRef);
     const viewState = appState.viewState;
     const { queryView } = viewState;
+    console.log("onHeaderRowCellRendered: ", column);
     if (queryView && queryView.histoMap && queryView.histoMap[column.id]) {
       const histo = queryView.histoMap[column.id];
       const colType = viewState.baseSchema.columnType(column.id);
@@ -441,6 +440,8 @@ const createGrid = (
         />
       );
       node.classList.add("slick-editable");
+    } else {
+      console.log("*** no histo for column: ", column.id);
     }
   });
 
@@ -556,11 +557,7 @@ const getGridCols = (gs: GridState, viewState: ViewState) => {
 /*
  * update grid from dataView
  */
-const updateGrid = (
-  gs: GridState,
-  viewState: ViewState,
-  showColumnHistograms: boolean
-) => {
+const updateGrid = (gs: GridState, viewState: ViewState) => {
   const { viewParams, dataView } = viewState;
   if (dataView == null) return;
 
@@ -569,7 +566,8 @@ const updateGrid = (
 
   const grid = gs.grid;
 
-  const gridOptions = getGridOptions(showColumnHistograms, viewState);
+  const gridOptions = getGridOptions(viewState);
+  // console.log("updateGrid: gridOptions: ", gridOptions);
 
   grid.setOptions(gridOptions);
   grid.setHeaderRowVisibility(gridOptions.showHeaderRow);
@@ -588,6 +586,7 @@ const updateGrid = (
   grid.invalidateAllRows();
   grid.updateRowCount();
   grid.render();
+  grid.resizeCanvas();
 };
 
 const createGridState = (
@@ -634,13 +633,15 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
   const [gridState, setGridState] = useState<GridState | null>(null);
   const viewStateRef = useRef<ViewState>(viewState);
 
-  const prevShowColumnHistograms = useRef(appState.showColumnHistograms);
+  const prevShowColumnHistograms = useRef(
+    viewState.viewParams.showColumnHistograms
+  );
 
   viewStateRef.current = viewState;
 
   const dataView = viewState.dataView;
 
-  const { showColumnHistograms } = appState;
+  const { showColumnHistograms } = viewState.viewParams;
 
   // log.debug("RawGridPane: ", appState.toJS(), viewState.toJS());
 
@@ -649,10 +650,12 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
     // The extra check here for prevShowColumnHistograms is a workaround
     // for an apparent bug in SlickGrid where it doesn't seem to re-render
     // correctly when we dynamically change the showHeaderRow option on the grid.
+    const histoMap = viewState.queryView?.histoMap;
     if (
       gs === null ||
-      prevShowColumnHistograms.current !== showColumnHistograms
+      (prevShowColumnHistograms.current !== showColumnHistograms && histoMap)
     ) {
+      // log.debug("RawGridPane: creating grid state");
       gs = createGridState(
         stateRef,
         viewStateRef,
@@ -666,15 +669,15 @@ const RawGridPane: React.FunctionComponent<GridPaneProps> = ({
       }
       gs.grid.resizeCanvas();
       setGridState(gs);
+      // log.debug("RawGridPane: done creating grid state");
+      prevShowColumnHistograms.current = showColumnHistograms;
     }
-    // log.debug("GridPane effect: ", prevDataView, dataView);
     if (dataView != null) {
       // log.debug("RawGridPane: updating grid");
-      updateGrid(gs, viewStateRef.current, showColumnHistograms);
+      updateGrid(gs, viewStateRef.current);
     } else {
       // log.debug("RawGridPane: no view change, skipping grid update");
     }
-    prevShowColumnHistograms.current = showColumnHistograms;
   }, [dataView, gridState, showColumnHistograms]);
 
   const handleGridResize = (entries: ResizeEntry[]) => {

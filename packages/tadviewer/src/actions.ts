@@ -74,7 +74,8 @@ export async function stopAppLoadingTimer(
 export const setQueryView = async (
   stateRef: StateRef<AppState>,
   dsc: DataSourceConnection,
-  sqlQuery: string
+  sqlQuery: string,
+  showColumnHistograms: boolean
 ): Promise<void> => {
   const appState = mutableGet(stateRef);
 
@@ -94,6 +95,7 @@ export const setQueryView = async (
   const initialViewParams = new ViewParams({
     displayColumns,
     openPaths,
+    showColumnHistograms,
   });
 
   const viewState = new ViewState({
@@ -265,14 +267,32 @@ export const setShowColumnHistograms = (
   stateRef: StateRef<AppState>,
   showColumnHistograms: boolean
 ): void => {
-  update(stateRef, (s) => {
-    const nextS = s.set(
-      "showColumnHistograms",
-      showColumnHistograms
-    ) as AppState;
-    return nextS;
-  });
+  update(
+    stateRef,
+    vpUpdate(
+      (viewParams) =>
+        viewParams.set(
+          "showColumnHistograms",
+          showColumnHistograms
+        ) as ViewParams
+    )
+  );
 };
+export const toggleShowColumnHistograms = (
+  stateRef: StateRef<AppState>
+): void => {
+  update(
+    stateRef,
+    vpUpdate(
+      (viewParams) =>
+        viewParams.set(
+          "showColumnHistograms",
+          !viewParams.showColumnHistograms
+        ) as ViewParams
+    )
+  );
+};
+
 export const reorderColumnList = (dstProps: any, srcProps: any) => {
   console.log("reorderColumnList: ", dstProps, srcProps);
 

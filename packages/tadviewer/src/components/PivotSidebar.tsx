@@ -21,6 +21,7 @@ export interface PivotSidebarProps {
   viewParams: ViewParams;
   delayedCalcMode: boolean;
   onColumnClick?: (cid: string) => void;
+  embedded: boolean;
   stateRef: StateRef<AppState>;
 }
 
@@ -30,6 +31,7 @@ export const PivotSidebar: React.FC<PivotSidebarProps> = ({
   viewParams,
   delayedCalcMode,
   onColumnClick,
+  embedded,
   stateRef,
 }) => {
   const onLeafColumnSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -75,11 +77,21 @@ export const PivotSidebar: React.FC<PivotSidebarProps> = ({
     <FormatPanel schema={schema} viewParams={viewParams} stateRef={stateRef} />
   );
 
+  const columnHistoCheckElem = (
+    <Checkbox
+      className="bp4-condensed"
+      checked={viewParams.showColumnHistograms}
+      onChange={() => actions.toggleShowColumnHistograms(stateRef)}
+      label="Show Numeric Column Histograms"
+    />
+  );
+
   return (
     <Sidebar expanded={expanded}>
       <div className="ui-block">
         <h5 className="bp4-heading">General</h5>
         <div className="root-check-group">
+          {columnHistoCheckElem}
           <Checkbox
             className="bp4-condensed"
             checked={viewParams.showRoot}

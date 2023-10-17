@@ -114,12 +114,14 @@ export const DataSourceSidebar: React.FC<DataSourceSidebarProps> = ({
                 sourceId,
                 path: ["."],
               };
+              /*
               log.debug(
                 "DataSourceSidebar: creating root node for",
                 sourceIdStr,
                 rootPath,
                 rootNode
               );
+              */
               rootTreeNode = dsNodeTreeNode(dsc, rootPath, rootNode);
               nextNodeMap[sourceIdStr] = rootTreeNode;
               if (rootNode.isContainer) {
