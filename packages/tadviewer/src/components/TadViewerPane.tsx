@@ -2,7 +2,7 @@
  * A Tad Viewer pane for embedding a tad view of a SQL query on a data source
  */
 import log from "loglevel";
-import { mkRef, refContainer, StateRef } from "oneref";
+import { mkRef, mutableGet, refContainer, StateRef } from "oneref";
 import * as React from "react";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -127,7 +127,10 @@ export function TadViewerPane({
   /* update showColumnHistograms when it changes */
   React.useEffect(() => {
     if (appStateRef != null) {
-      actions.setShowColumnHistograms(appStateRef, showColumnHistograms);
+      const appState = mutableGet(appStateRef);
+      if (appState.viewState) {
+        actions.setShowColumnHistograms(appStateRef, showColumnHistograms);
+      }
     }
   }, [showColumnHistograms, appStateRef]);
 
