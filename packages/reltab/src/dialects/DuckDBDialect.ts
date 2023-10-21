@@ -7,10 +7,21 @@ const realCT = new ColumnType("DOUBLE", "real");
 const textCT = new ColumnType("VARCHAR", "string");
 const boolCT = new ColumnType("BOOL", "boolean");
 
+interface DuckDBStringRenderer {
+  toDuckDBString(): string;
+}
+
+function isDuckDBStringRenderer(val: any): val is DuckDBStringRenderer {
+  return val != null && typeof val === 'object' && !!(val as DuckDBStringRenderer).toDuckDBString;
+}
+
 const createTimestampStringRenderer = (dateOnly = false) => ({
   stringRender: (val: any) => {
     if (val == null) {
       return "";
+    }
+    if (isDuckDBStringRenderer(val)) {
+      return val.toDuckDBString();
     }
     let retStr: string;
     try {
