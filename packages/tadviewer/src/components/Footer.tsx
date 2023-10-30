@@ -11,6 +11,7 @@ import { getDefaultDialect } from "reltab";
 export interface FooterProps {
   appState: AppState;
   stateRef: StateRef<AppState>;
+  rightFooterSlot?: JSX.Element | null;
 }
 
 export const Footer: React.FunctionComponent<FooterProps> = (
