@@ -41,7 +41,7 @@ export interface AppPaneBaseProps {
   showDataSources?: boolean;
   clipboard: SimpleClipboard;
   embedded: boolean;
-  rightFooterSlot?: JSX.Element;
+  rightFooterSlot?: JSX.Element | null;
 }
 
 export type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
@@ -191,7 +191,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   showDataSources: rawShowDataSources,
   openURL,
   embedded,
-  rightFooterSlot,
+  rightFooterSlot = null,
 }: AppPaneProps) => {
   const { activity } = appState;
   const dataSourceExpanded = activity === "DataSource";
