@@ -67,7 +67,7 @@ export interface TadViewerPaneProps {
   setLoadingCallback: (loading: boolean) => void;
   showRecordCount: boolean;
   showColumnHistograms: boolean;
-  rightFooterSlot?: JSX.Element;
+  rightFooterSlot?: JSX.Element | null;
 }
 
 export function TadViewerPane({
