@@ -13,10 +13,10 @@ export interface FooterProps {
   stateRef: StateRef<AppState>;
 }
 
-export const Footer: React.FunctionComponent<FooterProps> = ({
-  appState,
-  stateRef,
-}: FooterProps) => {
+export const Footer: React.FunctionComponent<FooterProps> = (
+  props: FooterProps
+) => {
+  const { appState, stateRef, rightFooterSlot = null } = props;
   const [expanded, setExpanded] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [prevFilter, setPrevFilter] = useState<reltab.FilterExp | null>(null);
@@ -100,8 +100,9 @@ export const Footer: React.FunctionComponent<FooterProps> = ({
     const rcStr = rcParts.join("");
     rowCountBlock = (
       <div className="footer-block">
-        <span className="footer-label">Rows: </span>
-        <span className="footer-value">{rcStr}</span>
+        <span className="footer-value">
+          {rcStr} Row{rowCount === 1 ? "" : "s"}
+        </span>
       </div>
     );
   }
@@ -114,7 +115,10 @@ export const Footer: React.FunctionComponent<FooterProps> = ({
           </a>
           <span className="filter-summary"> {filterStr}</span>
         </div>
-        {rowCountBlock}
+        <div className="footer-right-block">
+          {rowCountBlock}
+          {rightFooterSlot}
+        </div>
       </div>
       {editorComponent}
     </div>

@@ -19,6 +19,7 @@ import { AppPaneBaseProps, AppPane, tadReact } from "./AppPane";
 interface TadViewerPaneInnerProps {
   stateRef: StateRef<AppState>;
   baseQuery: string;
+  rightFooterSlot?: JSX.Element;
 }
 
 const newWindowFromDSPath = (
@@ -29,7 +30,11 @@ const newWindowFromDSPath = (
   console.log("TODO: newWindowFromDSPath: ", dsPath);
 };
 
-function TadViewerPaneInner({ stateRef, baseQuery }: TadViewerPaneInnerProps) {
+function TadViewerPaneInner({
+  stateRef,
+  baseQuery,
+  rightFooterSlot,
+}: TadViewerPaneInnerProps) {
   const viewerPane = useRef<JSX.Element | null>(null);
 
   const openURL = (url: string) => {
@@ -48,6 +53,7 @@ function TadViewerPaneInner({ stateRef, baseQuery }: TadViewerPaneInnerProps) {
         openURL={openURL}
         showDataSources={false}
         embedded={true}
+        rightFooterSlot={rightFooterSlot}
       />
     );
   }
@@ -61,6 +67,7 @@ export interface TadViewerPaneProps {
   setLoadingCallback: (loading: boolean) => void;
   showRecordCount: boolean;
   showColumnHistograms: boolean;
+  rightFooterSlot?: JSX.Element;
 }
 
 export function TadViewerPane({
@@ -70,6 +77,7 @@ export function TadViewerPane({
   setLoadingCallback,
   showRecordCount,
   showColumnHistograms,
+  rightFooterSlot = null,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -137,7 +145,11 @@ export function TadViewerPane({
   let tadAppElem: JSX.Element | null = null;
   if (pivotRequester && appStateRef) {
     tadAppElem = (
-      <TadViewerPaneInner baseQuery={baseSqlQuery} stateRef={appStateRef} />
+      <TadViewerPaneInner
+        baseQuery={baseSqlQuery}
+        stateRef={appStateRef}
+        rightFooterSlot={rightFooterSlot}
+      />
     );
   }
   return tadAppElem;
