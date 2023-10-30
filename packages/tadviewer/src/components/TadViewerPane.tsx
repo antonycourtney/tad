@@ -33,7 +33,7 @@ const newWindowFromDSPath = (
 function TadViewerPaneInner({
   stateRef,
   baseQuery,
-  rightFooterSlot,
+  rightFooterSlot = undefined,
 }: TadViewerPaneInnerProps) {
   const viewerPane = useRef<JSX.Element | null>(null);
 
@@ -67,7 +67,7 @@ export interface TadViewerPaneProps {
   setLoadingCallback: (loading: boolean) => void;
   showRecordCount: boolean;
   showColumnHistograms: boolean;
-  rightFooterSlot?: JSX.Element | null;
+  rightFooterSlot?: JSX.Element;
 }
 
 export function TadViewerPane({
@@ -77,7 +77,7 @@ export function TadViewerPane({
   setLoadingCallback,
   showRecordCount,
   showColumnHistograms,
-  rightFooterSlot = null,
+  rightFooterSlot = undefined,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
