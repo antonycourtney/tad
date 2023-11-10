@@ -196,7 +196,6 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   const { activity } = appState;
   const dataSourceExpanded = activity === "DataSource";
   const pivotPropsExpanded = activity === "Pivot";
-  const [grid, setGrid] = useState<any>(null);
   let mainContents: JSX.Element | null = null;
   const showDataSources =
     rawShowDataSources === undefined ? true : rawShowDataSources;
@@ -242,7 +241,6 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
       <div className="center-app-pane">
         {loadingModal}
         <GridPane
-          onSlickGridCreated={(grid) => setGrid(grid)}
           appState={appState}
           viewState={appState.viewState}
           stateRef={stateRef}

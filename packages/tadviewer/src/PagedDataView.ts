@@ -5,17 +5,26 @@ import * as reltab from "reltab";
  * some offset
  */
 
+// Note: This doesn't explicitly include the '_path' or "_sortVal_X_Y" columns
+export interface DataRow {
+  _isLeaf: boolean;
+  _depth: number;
+  _pivot: string;
+  _isOpen: boolean;
+  [columnId: string]: reltab.Scalar;
+}
+
 export class PagedDataView {
   schema: reltab.Schema;
   totalRowCount: number;
   offset: number;
-  rawData: Array<any>;
+  rawData: Array<DataRow>;
 
   constructor(
     schema: reltab.Schema,
     totalRowCount: number,
     offset: number,
-    items: Array<any>
+    items: Array<DataRow>
   ) {
     this.schema = schema;
     this.totalRowCount = totalRowCount;
@@ -35,7 +44,7 @@ export class PagedDataView {
     return this.rawData.length;
   }
 
-  getItem(index: number): any {
+  getItem(index: number): DataRow | null {
     let ret = null;
     const itemIndex = index - this.offset;
 

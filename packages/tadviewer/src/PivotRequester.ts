@@ -1,7 +1,7 @@
 import log from "loglevel";
 import * as reltab from "reltab";
 import * as aggtree from "aggtree";
-import { PagedDataView } from "./PagedDataView";
+import { PagedDataView, DataRow } from "./PagedDataView";
 import { ViewParams } from "./ViewParams";
 import { AppState } from "./AppState";
 import { QueryView } from "./QueryView";
@@ -28,18 +28,13 @@ import _ from "lodash";
  * SlickGrid from reltab.TableRep
  */
 
-interface RowMap {
-  [s: string]: any;
-  _depth: number;
-}
-
 const mkDataView = (
   viewParams: ViewParams,
   rowCount: number,
   offset: number,
   tableData: reltab.TableRep
 ): PagedDataView => {
-  const getPath = (rowMap: RowMap, depth: number) => {
+  const getPath = (dataRow: DataRow, depth: number) => {
     let path: Array<string | null> = [];
 
     for (let i = 0; i < depth; i++) {
@@ -56,7 +51,7 @@ const mkDataView = (
 
   for (var i = 0; i < tableData.rowData.length; i++) {
     // ?? shouldn't we just be constructing the rowMap once and re-use it for every row??
-    var rowMap: RowMap = tableData.rowData[i] as RowMap;
+    var rowMap: DataRow = tableData.rowData[i] as DataRow;
     var depth: number = rowMap._depth;
     var path = getPath(rowMap, depth);
     rowMap._isOpen = viewParams.openPaths.isOpen(path);
