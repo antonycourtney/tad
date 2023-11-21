@@ -21,12 +21,7 @@ import * as oneref from "oneref";
 import { useState } from "react";
 import { Activity } from "./defs";
 import { mutableGet, StateRef } from "oneref";
-import {
-  DataSourcePath,
-  DuckDBDialect,
-  ReltabConnection,
-  resolvePath,
-} from "reltab";
+import { DataSourcePath, ReltabConnection, resolvePath } from "reltab";
 import { useDeepCompareEffect } from "use-deep-compare";
 import { Timer } from "../Timer";
 import { SimpleClipboard } from "./SimpleClipboard";
@@ -198,8 +193,8 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   showDataSources: rawShowDataSources,
   openURL,
   embedded,
-  rightFooterSlot = undefined,
-  onFilter = undefined,
+  rightFooterSlot,
+  onFilter,
 }: AppPaneProps) => {
   const { activity } = appState;
   const dataSourceExpanded = activity === "DataSource";

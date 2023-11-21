@@ -82,8 +82,8 @@ export function TadViewerPane({
   setLoadingCallback,
   showRecordCount,
   showColumnHistograms,
-  rightFooterSlot = undefined,
-  onFilter = undefined,
+  rightFooterSlot,
+  onFilter,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
