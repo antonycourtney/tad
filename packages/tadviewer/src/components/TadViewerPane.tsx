@@ -8,6 +8,7 @@ import { useMemo, useRef, useState } from "react";
 import {
   DataSourceConnection,
   DataSourcePath,
+  FilterExp,
   LocalReltabConnection,
 } from "reltab";
 import { initAppState } from "../actions";
@@ -20,6 +21,7 @@ interface TadViewerPaneInnerProps {
   stateRef: StateRef<AppState>;
   baseQuery: string;
   rightFooterSlot?: JSX.Element;
+  onFilter?: (filterExp: FilterExp) => void;
 }
 
 const newWindowFromDSPath = (
@@ -34,6 +36,7 @@ function TadViewerPaneInner({
   stateRef,
   baseQuery,
   rightFooterSlot = undefined,
+  onFilter = undefined,
 }: TadViewerPaneInnerProps) {
   const viewerPane = useRef<JSX.Element | null>(null);
 
@@ -54,6 +57,7 @@ function TadViewerPaneInner({
         showDataSources={false}
         embedded={true}
         rightFooterSlot={rightFooterSlot}
+        onFilter={onFilter}
       />
     );
   }
@@ -68,6 +72,7 @@ export interface TadViewerPaneProps {
   showRecordCount: boolean;
   showColumnHistograms: boolean;
   rightFooterSlot?: JSX.Element;
+  onFilter?: (filterExp: FilterExp) => void;
 }
 
 export function TadViewerPane({
@@ -78,6 +83,7 @@ export function TadViewerPane({
   showRecordCount,
   showColumnHistograms,
   rightFooterSlot = undefined,
+  onFilter = undefined,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -149,6 +155,7 @@ export function TadViewerPane({
         baseQuery={baseSqlQuery}
         stateRef={appStateRef}
         rightFooterSlot={rightFooterSlot}
+        onFilter={onFilter}
       />
     );
   }

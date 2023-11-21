@@ -21,11 +21,17 @@ import * as oneref from "oneref";
 import { useState } from "react";
 import { Activity } from "./defs";
 import { mutableGet, StateRef } from "oneref";
-import { DataSourcePath, ReltabConnection, resolvePath } from "reltab";
+import {
+  DataSourcePath,
+  DuckDBDialect,
+  ReltabConnection,
+  resolvePath,
+} from "reltab";
 import { useDeepCompareEffect } from "use-deep-compare";
 import { Timer } from "../Timer";
 import { SimpleClipboard } from "./SimpleClipboard";
 import { createDragDropManager } from "dnd-core";
+import { type FilterExp } from "reltab";
 /**
  * top level application pane
  */
@@ -42,6 +48,7 @@ export interface AppPaneBaseProps {
   clipboard: SimpleClipboard;
   embedded: boolean;
   rightFooterSlot?: JSX.Element;
+  onFilter?: (filterExp: FilterExp) => void;
 }
 
 export type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
@@ -192,6 +199,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   openURL,
   embedded,
   rightFooterSlot = undefined,
+  onFilter = undefined,
 }: AppPaneProps) => {
   const { activity } = appState;
   const dataSourceExpanded = activity === "DataSource";
@@ -254,6 +262,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
           appState={appState}
           stateRef={stateRef}
           rightFooterSlot={rightFooterSlot}
+          onFilter={onFilter}
         />
       </div>
     );
