@@ -11,13 +11,14 @@ import { getDefaultDialect } from "reltab";
 export interface FooterProps {
   appState: AppState;
   stateRef: StateRef<AppState>;
+  onFilter?: (filterExp: reltab.FilterExp) => void;
   rightFooterSlot?: JSX.Element;
 }
 
 export const Footer: React.FunctionComponent<FooterProps> = (
   props: FooterProps
 ) => {
-  const { appState, stateRef, rightFooterSlot = undefined } = props;
+  const { appState, stateRef, rightFooterSlot = undefined, onFilter } = props;
   const [expanded, setExpanded] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [prevFilter, setPrevFilter] = useState<reltab.FilterExp | null>(null);
@@ -54,6 +55,7 @@ export const Footer: React.FunctionComponent<FooterProps> = (
 
   const handleFilterApply = (filterExp: reltab.FilterExp) => {
     actions.setFilter(filterExp, stateRef);
+    onFilter?.(filterExp);
   };
 
   const handleFilterDone = () => {
