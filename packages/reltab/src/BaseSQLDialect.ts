@@ -5,13 +5,17 @@ import { pagedQueryToSql } from "./toSql";
 import { ColumnType, CoreColumnTypes, ColumnTypeMap } from "./ColumnType";
 import { LeafSchemaMap } from "./TableRep";
 
+function escapeQuotes(s: string): string {
+  return s.replace(/"/g, '""');
+}
+
 export abstract class BaseSQLDialect implements SQLDialect {
   abstract readonly dialectName: string;
   readonly requireSubqueryAlias: boolean = false;
   readonly allowNonConstExtend: boolean = false;
 
   quoteCol(cid: string): string {
-    return '"' + cid + '"';
+    return '"' + escapeQuotes(cid) + '"';
   }
 
   ppAggNull(aggStr: string, subExpStr: string, expType: ColumnType): string {
