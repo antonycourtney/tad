@@ -39,7 +39,7 @@
     "slickgrid-es6": "^3.0.3",
     "url-loader": "^4.1.1",
     "url-regex": "5.0.0",
-    "use-deep-compare": "^1.1.0",
+    "use-deep-compare": "1.1.0",
     "victory": "^36.6.10"
   },
   "devDependencies": {
