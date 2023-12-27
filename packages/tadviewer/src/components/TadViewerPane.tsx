@@ -16,12 +16,15 @@ import { AppState } from "../AppState";
 import { PivotRequester } from "../PivotRequester";
 import { actions } from "../tadviewer";
 import { AppPaneBaseProps, AppPane, tadReact } from "./AppPane";
+import { show } from "@blueprintjs/core/lib/esm/components/context-menu/contextMenu";
+import { showHotkeysDialog } from "@blueprintjs/core/lib/esm/components/hotkeys/hotkeysDialog";
 
 interface TadViewerPaneInnerProps {
   stateRef: StateRef<AppState>;
   baseQuery: string;
   rightFooterSlot?: JSX.Element;
   onFilter?: (filterExp: FilterExp) => void;
+  showSidebar?: boolean;
 }
 
 const newWindowFromDSPath = (
@@ -37,6 +40,7 @@ function TadViewerPaneInner({
   baseQuery,
   rightFooterSlot = undefined,
   onFilter = undefined,
+  showSidebar,
 }: TadViewerPaneInnerProps) {
   const viewerPane = useRef<JSX.Element | null>(null);
 
@@ -58,6 +62,7 @@ function TadViewerPaneInner({
         embedded={true}
         rightFooterSlot={rightFooterSlot}
         onFilter={onFilter}
+        showSidebar={showSidebar}
       />
     );
   }
@@ -73,6 +78,7 @@ export interface TadViewerPaneProps {
   showColumnHistograms: boolean;
   rightFooterSlot?: JSX.Element;
   onFilter?: (filterExp: FilterExp) => void;
+  showSidebar?: boolean; // show activity bar and sidebar?
 }
 
 export function TadViewerPane({
@@ -84,6 +90,7 @@ export function TadViewerPane({
   showColumnHistograms,
   rightFooterSlot,
   onFilter,
+  showSidebar,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -156,6 +163,7 @@ export function TadViewerPane({
         stateRef={appStateRef}
         rightFooterSlot={rightFooterSlot}
         onFilter={onFilter}
+        showSidebar={showSidebar}
       />
     );
   }

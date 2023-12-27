@@ -44,6 +44,7 @@ export interface AppPaneBaseProps {
   embedded: boolean;
   rightFooterSlot?: JSX.Element;
   onFilter?: (filterExp: FilterExp) => void;
+  showSidebar?: boolean; // show activity bar and sidebar?
 }
 
 export type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
@@ -195,6 +196,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   embedded,
   rightFooterSlot,
   onFilter,
+  showSidebar = true,
 }: AppPaneProps) => {
   const { activity } = appState;
   const dataSourceExpanded = activity === "DataSource";
@@ -225,7 +227,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     viewState !== null &&
     viewState.dataView !== null
   ) {
-    pivotSidebar = (
+    pivotSidebar = showSidebar ? (
       <PivotSidebar
         expanded={pivotPropsExpanded}
         schema={viewState.baseSchema}
@@ -234,7 +236,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
         embedded={embedded}
         stateRef={stateRef}
       />
-    );
+    ) : null;
     const loadingModal =
       timerShowModal(appState.appLoadingTimer) ||
       timerShowModal(viewState.loadingTimer) ? (
@@ -265,17 +267,21 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
       <LoadingModal />
     ) : null;
   }
-  const dataSourceSidebar = showDataSources ? (
-    <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
+  const dataSourceSidebar =
+    showSidebar && showDataSources ? (
+      <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
+    ) : null;
+  const activityBar = showSidebar ? (
+    <ActivityBar
+      activity={activity}
+      showDataSources={showDataSources}
+      stateRef={stateRef}
+    />
   ) : null;
   mainContents = (
     <div className="container-fluid full-height main-container tad-app-pane">
       <DndProvider manager={dndManager}>
-        <ActivityBar
-          activity={activity}
-          showDataSources={showDataSources}
-          stateRef={stateRef}
-        />
+        {activityBar}
         {dataSourceSidebar}
         {pivotSidebar}
         {centerPane}
