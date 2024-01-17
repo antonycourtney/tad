@@ -6,6 +6,7 @@ export * from "./defs";
 export * from "./histogram";
 export * from "./FilterExp";
 export * from "./QueryExp";
+export * from "./ColumnStats";
 export * from "./Schema";
 export * from "./TableRep";
 export * from "./AggFn";

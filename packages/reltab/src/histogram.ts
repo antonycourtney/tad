@@ -6,7 +6,8 @@
 import { ColumnType, colIsNumeric } from "./ColumnType";
 import { DataSourceConnection } from "./DataSource";
 import { QueryExp } from "./QueryExp";
-import { NumericSummaryStats, Schema } from "./Schema";
+import { ColumnStatsMap, NumericSummaryStats } from "./ColumnStats";
+import { Schema } from "./Schema";
 import { TableRep } from "./TableRep";
 import { nice, thresholdSturges } from "./d3utils";
 import { constVal, cast, minus, col, divide, floor } from "./defs";
@@ -162,7 +163,8 @@ export type ColumnHistogramMap = {
 export function getColumnHistogramMapQuery(
   dsConn: DataSourceConnection,
   baseQuery: QueryExp,
-  baseSchema: Schema
+  baseSchema: Schema,
+  columnStatsMap: ColumnStatsMap
 ): [NumericColumnHistogramQuery[], QueryExp | null] {
   const histoMap: ColumnHistogramMap = {};
   const histoCols: string[] = [];
@@ -172,7 +174,7 @@ export function getColumnHistogramMapQuery(
   for (const colId of baseSchema.columns) {
     const colType = baseSchema.columnType(colId);
     if (colIsNumeric(colType)) {
-      const colStats = baseSchema.columnStats(colId);
+      const colStats = columnStatsMap[colId];
       if (colStats != null) {
         const histoInfo = columnHistogramQuery(
           baseQuery,
@@ -197,14 +199,16 @@ export function getColumnHistogramMapQuery(
 export async function getColumnHistogramMap(
   dsConn: DataSourceConnection,
   baseQuery: QueryExp,
-  baseSchema: Schema
+  baseSchema: Schema,
+  columnStatsMap: ColumnStatsMap
 ): Promise<ColumnHistogramMap> {
   const histoMap: ColumnHistogramMap = {};
 
   const [histoInfos, histoQuery] = getColumnHistogramMapQuery(
     dsConn,
     baseQuery,
-    baseSchema
+    baseSchema,
+    columnStatsMap
   );
   if (histoQuery) {
     const histoRes = await dsConn.evalQuery(histoQuery!);

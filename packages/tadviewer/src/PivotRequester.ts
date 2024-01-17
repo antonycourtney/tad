@@ -180,7 +180,8 @@ const requestQueryView = async (
       prevQueryView.baseQuery !== baseQuery ||
       prevQueryView.histoMap == null)
   ) {
-    histoMap = await getColumnHistogramMap(rt, baseQuery, baseSchema);
+    const statsMap = await rt.getColumnStatsMap(baseQuery);
+    histoMap = await getColumnHistogramMap(rt, baseQuery, baseSchema, statsMap);
   } else {
     if (prevQueryView != null) {
       histoMap = prevQueryView.histoMap;

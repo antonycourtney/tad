@@ -18,6 +18,7 @@ import {
   DbDriver,
   DbDataSource,
   SQLDialect,
+  ColumnStatsMap,
 } from "reltab";
 import { BigQuery, Dataset } from "@google-cloud/bigquery";
 import path = require("path");
@@ -132,6 +133,10 @@ export class BigQueryDriver implements DbDriver {
     throw new Error(
       "BigQueryDriver.getSqlQuerySchema: base sql queries not supported"
     );
+  }
+
+  async getSqlQueryColumnStatsMap(sqlQuery: string): Promise<ColumnStatsMap> {
+    return {};
   }
 
   async getRootNode(): Promise<DataSourceNode> {
