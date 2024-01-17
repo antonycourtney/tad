@@ -6,9 +6,11 @@ import { SQLDialect } from "./dialect";
 import { QueryExp } from "./QueryExp";
 import { defaultEvalQueryOptions } from "./remote/Connection";
 import { Schema } from "./Schema";
+
 import { Row, LeafSchemaMap, TableRep } from "./TableRep";
 import * as log from "loglevel";
 import { QueryLeafDep, TableQueryRep } from "./QueryRep";
+import { ColumnStatsMap } from "./ColumnStats";
 
 export type DataSourceKind =
   | "DataSource"
@@ -64,6 +66,8 @@ export interface DbDriver {
   getTableSchema(tableName: string): Promise<Schema>;
   getSqlQuerySchema(sqlQuery: string): Promise<Schema>;
 
+  getSqlQueryColumnStatsMap(sqlQuery: string): Promise<ColumnStatsMap>;
+
   getRootNode(): Promise<DataSourceNode>;
   getChildren(path: DataSourcePath): Promise<DataSourceNode[]>;
 
@@ -89,6 +93,8 @@ export interface DataSourceConnection {
   rowCount(query: QueryExp, options?: EvalQueryOptions): Promise<number>;
 
   getTableSchema(tableName: string): Promise<Schema>;
+
+  getColumnStatsMap(query: QueryExp): Promise<ColumnStatsMap>;
 
   getRootNode(): Promise<DataSourceNode>;
   getChildren(path: DataSourcePath): Promise<DataSourceNode[]>;
@@ -221,6 +227,12 @@ export class DbDataSource implements DataSourceConnection {
     const leafDep: TableQueryRep = { operator: "table", tableName };
     const leafKey = JSON.stringify(leafDep);
     return this.getLeafDepSchema(leafKey, leafDep);
+  }
+
+  async getColumnStatsMap(query: QueryExp): Promise<ColumnStatsMap> {
+    const sqlQuery = await this.getSqlForQuery(query);
+    const columnStatsMap = await this.db.getSqlQueryColumnStatsMap(sqlQuery);
+    return columnStatsMap;
   }
 
   getRootNode(): Promise<DataSourceNode> {

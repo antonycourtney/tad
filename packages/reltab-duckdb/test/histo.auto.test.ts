@@ -49,8 +49,9 @@ beforeAll(async (): Promise<DataSourceConnection> => {
 test("basic column stats and bin count", async () => {
   const qres = await testCtx.evalQuery(q1);
 
-  const tcoeColumnStats = qres.schema.columnMetadata["TCOE"]
-    .columnStats as reltab.NumericSummaryStats;
+  const statsMap = await testCtx.getColumnStatsMap(q1);
+
+  const tcoeColumnStats = statsMap["TCOE"] as reltab.NumericSummaryStats;
 
   expect(tcoeColumnStats).toMatchSnapshot();
 
@@ -65,8 +66,9 @@ test("histogram query for column", async () => {
   const schema = await testCtx.getSchema(q1);
   const qres = await testCtx.evalQuery(q1);
 
-  const tcoeColumnStats = qres.schema.columnMetadata["TCOE"]
-    .columnStats as reltab.NumericSummaryStats;
+  const statsMap = await testCtx.getColumnStatsMap(q1);
+
+  const tcoeColumnStats = statsMap["TCOE"] as reltab.NumericSummaryStats;
 
   const histoInfo = columnHistogramQuery(q1, "TCOE", intType, tcoeColumnStats);
 
@@ -92,10 +94,13 @@ test("histogram query for column", async () => {
 test("full histogram query for all column", async () => {
   const schema = await testCtx.getSchema(q1);
 
+  const statsMap = await testCtx.getColumnStatsMap(q1);
+
   const [histoInfos, histoQuery] = reltab.getColumnHistogramMapQuery(
     testCtx,
     q1,
-    schema
+    schema,
+    statsMap
   );
 
   console.log("full histogram infos: ", histoInfos);

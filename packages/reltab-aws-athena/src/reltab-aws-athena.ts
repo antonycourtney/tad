@@ -11,6 +11,7 @@ import {
   DbDriver,
   SQLDialect,
   DbDataSource,
+  ColumnStatsMap,
 } from "reltab";
 import {
   LeafSchemaMap,
@@ -94,6 +95,10 @@ export class AWSAthenaDriver implements DbDriver {
     throw new Error(
       "AWSAthenaDriver.getSqlQuerySchema: base sql queries not supported"
     );
+  }
+
+  async getSqlQueryColumnStatsMap(sqlQuery: string): Promise<ColumnStatsMap> {
+    return {};
   }
 
   async getRootNode(): Promise<DataSourceNode> {

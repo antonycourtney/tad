@@ -1,6 +1,7 @@
 import * as log from "loglevel";
 import {
   ColumnMetaMap,
+  ColumnStatsMap,
   ColumnType,
   DataSourceConnection,
   DataSourceId,
@@ -110,6 +111,10 @@ export class SqliteDriver implements DbDriver {
     const dropViewQuery = `drop view ${tmpViewName}`;
     const dropQueryRes = await this.runSqlQuery(dropViewQuery);
     return schema;
+  }
+
+  async getSqlQueryColumnStatsMap(sqlQuery: string): Promise<ColumnStatsMap> {
+    return {};
   }
 
   async getRootNode(): Promise<DataSourceNode> {

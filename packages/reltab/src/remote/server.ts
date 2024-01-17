@@ -10,6 +10,7 @@ import {
   DbConnEvalQueryRequest,
   DbConnRowCountRequest,
   DbConnGetTableSchemaRequest,
+  DbConnGetColumnStatsMapRequest,
   DbConnGetChildrenRequest,
   DbConnGetTableNameRequest,
   ReltabConnection,
@@ -31,6 +32,7 @@ import { TableRep } from "../TableRep";
 import { Result } from "./result";
 import { serializeError } from "./errorUtils";
 import { Schema } from "../Schema";
+import { ColumnStatsMap } from "../ColumnStats";
 
 const dbConnEvalQuery = async (
   conn: DataSourceConnection,
@@ -110,6 +112,19 @@ const dbConnGetTableSchema = async (
   return schema;
 };
 
+const dbConnGetColumnStatsMap = async (
+  conn: DataSourceConnection,
+  req: DbConnGetColumnStatsMapRequest
+): Promise<ColumnStatsMap> => {
+  const hrstart = process.hrtime();
+  const { queryStr } = req;
+  const query = deserializeQueryReq(queryStr) as any;
+  const columnStatsMap = await conn.getColumnStatsMap(query);
+  const elapsed = process.hrtime(hrstart);
+  log.info("dbGetColumnStatsMap: evaluated query in", prettyHRTime(elapsed));
+  return columnStatsMap;
+};
+
 // an EngineReqHandler wraps a req in an EngineReq that carries an
 // db engine identifier (DataSourceId) that is used to identify
 // a particular Db instance for dispatching the Db request.
@@ -134,6 +149,9 @@ const handleDbConnGetRootNode = mkEngineReqHandler(dbConnGetRootNode);
 const handleDbConnGetChildren = mkEngineReqHandler(dbConnGetChildren);
 const handleDbConnGetTableName = mkEngineReqHandler(dbConnGetTableName);
 const handleDbConnGetTableSchema = mkEngineReqHandler(dbConnGetTableSchema);
+const handleDbConnGetColumnStatsMap = mkEngineReqHandler(
+  dbConnGetColumnStatsMap
+);
 
 let providerRegistry: { [providerName: string]: DataSourceProvider } = {};
 
@@ -311,6 +329,10 @@ export const serverInit = (ts: TransportServer) => {
   ts.registerInvokeHandler(
     "DataSourceConnection.getTableSchema",
     simpleJSONHandler(exceptionHandler(handleDbConnGetTableSchema))
+  );
+  ts.registerInvokeHandler(
+    "DataSourceConnection.getColumnStatsMap",
+    simpleJSONHandler(exceptionHandler(handleDbConnGetColumnStatsMap))
   );
 };
 
