@@ -382,7 +382,7 @@ const createGrid = (
       }
       copyRowStrings.push(copyRow.join("\t"));
     }
-    const copyData = copyRowStrings.join("\r\n") + "\r\n";
+    const copyData = copyRowStrings.join("\r\n");
     clipboard.writeText(copyData);
   };
 
