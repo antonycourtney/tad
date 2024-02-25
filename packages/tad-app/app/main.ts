@@ -36,6 +36,7 @@ import {
   DataSourcePath,
   DbDataSource,
 } from "reltab";
+import { isIPFSPath } from "reltab-fs";
 
 require("console.table"); // Can insert delay in promise chain by:
 // delay(amount).then(() => ...)
@@ -283,9 +284,7 @@ const getTargetPath = (options: any, filePath: string): string => {
     srcDir &&
     filePath &&
     !filePath.startsWith("/") &&
-    !filePath.startsWith("sqlite://") &&
-    !filePath.startsWith("s3://") &&
-    !filePath.startsWith("https://")
+    !isIPFSPath(filePath)
   ) {
     if (srcDir === ".") {
       srcDir = process.cwd();
@@ -297,7 +296,6 @@ const getTargetPath = (options: any, filePath: string): string => {
     // absolute pathname or no srcDir:
     targetPath = filePath;
   }
-
   return targetPath;
 };
 
@@ -350,8 +348,11 @@ const initApp =
         ) {
           lastNonOptionIndex--;
         }
-        lastNonOptionIndex++;
+        if (argv[lastNonOptionIndex].startsWith("-")) {
+          lastNonOptionIndex++;
+        }
         argv.splice(lastNonOptionIndex, 0, "--executed-from");
+        log.debug("*** after argument processing: ", argv);
       } // macOS insanity:  If we're started via Open With..., we get invoked
       // with -psn_0_XXXXX argument; let's just kill it:
 
@@ -418,7 +419,6 @@ const initApp =
             }
           };
 
-          console.log("*** registering handler for open-file event");
           app.on("open-file", handleOpen);
           app.on("open-url", (event, url) => {
             log.warn("got open-url: ", event, url);

@@ -1,6 +1,7 @@
 import * as log from "loglevel";
 import {
   ColumnMetaMap,
+  ColumnStatsMap,
   DataSourceConnection,
   DataSourceId,
   DataSourceNode,
@@ -163,6 +164,10 @@ export class SnowflakeDriver implements DbDriver {
     throw new Error(
       "SnowflakeDriver.getSqlQuerySchema: base sql queries not supported"
     );
+  }
+
+  async getSqlQueryColumnStatsMap(sqlQuery: string): Promise<ColumnStatsMap> {
+    return {};
   }
 
   async getRootNode(): Promise<DataSourceNode> {

@@ -17,7 +17,7 @@ jobs:
         inputs:
           versionSpec: 16.x
         displayName: "Use node.js 16"
-      - script: curl.exe -o openssl-1.1.1q.zip https://mirror.firedaemon.com/OpenSSL/openssl-1.1.1q.zip
+      - script: curl.exe -o openssl-1.1.1q.zip https://www.antonycourtney.com/files/openssl-win64/openssl-1.1.1q.zip
         displayName: "download OpenSSL"
       - script: mkdir .\openssl-1.1.1q
         displayName: "make openssl dir"
@@ -62,7 +62,7 @@ jobs:
         displayName: "Run lerna bootstrapping"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
-      - script: "( cd packages/tad-app && npm run publish )"
+      - script: "( cd packages/tad-app && BUILD_BUILDNUMBER='' npm run publish )"
         displayName: "Build packaged tad-app with electron-builder"
         env:
           {
@@ -96,6 +96,8 @@ jobs:
           secureFile: "apple-dev-certificate.p12"
       - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl@3
         displayName: "Install openssl from homebrew"
+      - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
+        displayName: "Install jq from homebrew"
       - script: npm install
         displayName: "Install top-level npm dependencies"
       - script: npm run bootstrap

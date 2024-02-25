@@ -1,7 +1,10 @@
 import { Connection, Database } from "duckdb-async";
 import * as log from "loglevel";
 import {
+  colIsNumeric,
+  ColumnMetadata,
   ColumnMetaMap,
+  ColumnStatsMap,
   ColumnType,
   DataSourceConnection,
   DataSourceId,
@@ -11,10 +14,12 @@ import {
   DbDataSource,
   DbDriver,
   DuckDBDialect,
+  NumericSummaryStats,
   registerProvider,
   Row,
   Schema,
   SQLDialect,
+  TextSummaryStats,
 } from "reltab"; // eslint-disable-line
 import { initS3 } from "./s3utils";
 
@@ -61,6 +66,109 @@ class ConnectionPool {
   }
 }
 
+const parsePercentage = (s: string | undefined): number | null => {
+  if (s != undefined && s.endsWith("%")) {
+    const noPct = s.replace(/%$/, "");
+    const ret = Number.parseFloat(noPct) / 100.0;
+    return ret;
+  }
+  return null;
+};
+
+/**
+ * checkCols: check that all of the specified column names are present in the row and non-null
+ */
+function checkCols(row: Row, colNames: string[]): boolean {
+  for (const colName of colNames) {
+    if (row[colName] == null) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Take the rows from a table_info() or DESCRIBE and turn it into
+ * a reltab Schema
+ * @param metaRows
+ */
+export function schemaFromTableInfo(
+  metaRows: Row[],
+  columNameKey: string,
+  columnTypeKey: string
+): Schema {
+  const extendCMap = (
+    columnMetaMap: ColumnMetaMap,
+    row: any,
+    idx: number
+  ): ColumnMetaMap => {
+    const displayName = row[columNameKey];
+    const columnType: string = row[columnTypeKey].toLocaleUpperCase();
+    const ct = DuckDBDialect.columnTypes[columnType];
+    const columnMetadata: ColumnMetadata = {
+      displayName,
+      columnType,
+    };
+    columnMetaMap[displayName] = columnMetadata;
+    return columnMetaMap;
+  };
+
+  const cmMap = metaRows.reduce(extendCMap, {});
+  const columnIds = metaRows.map((r) => r[columNameKey]);
+  const schema = new Schema(DuckDBDialect, columnIds as string[], cmMap);
+  return schema;
+}
+
+/**
+ * Take the rows from a table_info() or DESCRIBE and turn it into
+ * a reltab Schema
+ * @param metaRows
+ */
+export function columnStatsFromSummarize(
+  metaRows: Row[],
+  columNameKey: string,
+  columnTypeKey: string
+): ColumnStatsMap {
+  const columnStatsMap: ColumnStatsMap = {};
+
+  for (const row of metaRows) {
+    const colId = row[columNameKey] as string;
+    const columnType: string = (
+      row[columnTypeKey] as string
+    ).toLocaleUpperCase();
+    const ct = DuckDBDialect.columnTypes[columnType];
+    if (
+      ct &&
+      colIsNumeric(ct) &&
+      checkCols(row, [
+        "min",
+        "max",
+        "approx_unique",
+        "count",
+        "null_percentage",
+      ])
+    ) {
+      // numeric type!
+      // annoyingly, DuckDb summarize stats returned as a (nullable!) varchar:
+      const minVal = Number.parseFloat(row.min as string);
+      const maxVal = Number.parseFloat(row.max as string);
+      const approxUnique = Number.parseInt(row.approx_unique as string);
+      const count = Number.parseInt(row.count as string);
+      const pctNull = parsePercentage(row.null_percentage as string);
+      const columnStats: NumericSummaryStats = {
+        statsType: "numeric",
+        min: minVal,
+        max: maxVal,
+        approxUnique,
+        count,
+        pctNull,
+      };
+      columnStatsMap[colId] = columnStats;
+    }
+  }
+  return columnStatsMap;
+}
+
 export class DuckDBDriver implements DbDriver {
   readonly displayName: string;
   readonly sourceId: DataSourceId;
@@ -81,6 +189,7 @@ export class DuckDBDriver implements DbDriver {
     const conn = await this.connPool.take();
     let ret: any;
     try {
+      log.info("runSqlQuery:\n", query);
       ret = await conn.all(query);
     } finally {
       this.connPool.giveBack(conn);
@@ -92,46 +201,33 @@ export class DuckDBDriver implements DbDriver {
     return this.displayName;
   }
 
-  /**
-   * Take the rows from a table_info() or DESCRIBE and turn it into
-   * a reltab Schema
-   * @param metaRows
-   */
-  schemaFromTableInfo(
-    metaRows: Row[],
-    columNameKey: string,
-    columnTypeKey: string
-  ): Schema {
-    const extendCMap = (
-      columnMetaMap: ColumnMetaMap,
-      row: any,
-      idx: number
-    ): ColumnMetaMap => {
-      const displayName = row[columNameKey];
-      const columnType = row[columnTypeKey].toLocaleUpperCase();
-      const columnMetadata = { displayName, columnType };
-      columnMetaMap[displayName] = columnMetadata;
-      return columnMetaMap;
-    };
-
-    const cmMap = metaRows.reduce(extendCMap, {});
-    const columnIds = metaRows.map((r) => r[columNameKey]);
-    const schema = new Schema(DuckDBDialect, columnIds as string[], cmMap);
-    return schema;
-  }
-
   async getTableSchema(tableName: string): Promise<Schema> {
-    const tiQuery = `PRAGMA table_info(${tableName})`;
-    const rows = await this.runSqlQuery(tiQuery);
-
-    return this.schemaFromTableInfo(rows, "name", "type");
+    return this.getSqlQuerySchema(tableName);
   }
 
   async getSqlQuerySchema(sqlQuery: string): Promise<Schema> {
+    let descRows: Row[];
     const describeQuery = `describe ${sqlQuery}`;
-    const descRows = await this.runSqlQuery(describeQuery);
+    descRows = await this.runSqlQuery(describeQuery);
 
-    return this.schemaFromTableInfo(descRows, "column_name", "column_type");
+    const schema = schemaFromTableInfo(descRows, "column_name", "column_type");
+    return schema;
+  }
+
+  async getSqlQueryColumnStatsMap(sqlQuery: string): Promise<ColumnStatsMap> {
+    try {
+      const summarizeQuery = `summarize ${sqlQuery}`;
+      const descRows = await this.runSqlQuery(summarizeQuery);
+      const columnStatsMap = columnStatsFromSummarize(
+        descRows,
+        "column_name",
+        "column_type"
+      );
+      return columnStatsMap;
+    } catch (err) {
+      console.warn("*** summarize query failed: ", err);
+      return {};
+    }
   }
 
   async getRootNode(): Promise<DataSourceNode> {
@@ -168,7 +264,12 @@ export class DuckDBDriver implements DbDriver {
 }
 
 const loadExtensions = async (db: Database): Promise<void> => {
-  await db.exec(`INSTALL 'httpfs'; LOAD 'httpfs'`);
+  try {
+    const ret = await db.exec(`INSTALL 'httpfs'; LOAD 'httpfs'`);
+  } catch (err) {
+    log.error("caught exception loading extensions: ", err);
+    log.error("(ignoring unloadable extensions...)");
+  }
 };
 
 const duckdbDataSourceProvider: DataSourceProvider = {

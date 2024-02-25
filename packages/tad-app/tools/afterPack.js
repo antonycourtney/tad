@@ -6,6 +6,9 @@ const copy = require("recursive-copy");
 //const WIN_SSL_DIR = '../../../openssl-1.1';
 
 async function afterPack(context) {
+  console.log("afterPack hook called:", context.packager.platform.name);
+  console.log('skipping OpenSSL bundling (no longer required by duckdb)');
+  /*
   if (context.packager.platform.name === "mac") {
     console.log("On Mac, running dylib-fixup script:");
     const { appOutDir } = context;
@@ -35,6 +38,7 @@ async function afterPack(context) {
         " files from SSL bin dir to target"
     );
   }
+  */
 }
 
 exports.default = afterPack;

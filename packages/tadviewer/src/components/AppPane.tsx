@@ -26,6 +26,7 @@ import { useDeepCompareEffect } from "use-deep-compare";
 import { Timer } from "../Timer";
 import { SimpleClipboard } from "./SimpleClipboard";
 import { createDragDropManager } from "dnd-core";
+import { type FilterExp } from "reltab";
 /**
  * top level application pane
  */
@@ -41,6 +42,8 @@ export interface AppPaneBaseProps {
   showDataSources?: boolean;
   clipboard: SimpleClipboard;
   embedded: boolean;
+  rightFooterSlot?: JSX.Element;
+  onFilter?: (filterExp: FilterExp) => void;
 }
 
 export type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
@@ -190,11 +193,12 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   showDataSources: rawShowDataSources,
   openURL,
   embedded,
+  rightFooterSlot,
+  onFilter,
 }: AppPaneProps) => {
   const { activity } = appState;
   const dataSourceExpanded = activity === "DataSource";
   const pivotPropsExpanded = activity === "Pivot";
-  const [grid, setGrid] = useState<any>(null);
   let mainContents: JSX.Element | null = null;
   const showDataSources =
     rawShowDataSources === undefined ? true : rawShowDataSources;
@@ -227,6 +231,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
         schema={viewState.baseSchema}
         viewParams={viewState.viewParams}
         delayedCalcMode={viewState.delayedCalcMode}
+        embedded={embedded}
         stateRef={stateRef}
       />
     );
@@ -239,7 +244,6 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
       <div className="center-app-pane">
         {loadingModal}
         <GridPane
-          onSlickGridCreated={(grid) => setGrid(grid)}
           appState={appState}
           viewState={appState.viewState}
           stateRef={stateRef}
@@ -247,7 +251,12 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
           openURL={openURL}
           embedded={embedded}
         />
-        <Footer appState={appState} stateRef={stateRef} />
+        <Footer
+          appState={appState}
+          stateRef={stateRef}
+          rightFooterSlot={rightFooterSlot}
+          onFilter={onFilter}
+        />
       </div>
     );
   } else {
@@ -256,6 +265,9 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
       <LoadingModal />
     ) : null;
   }
+  const dataSourceSidebar = showDataSources ? (
+    <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
+  ) : null;
   mainContents = (
     <div className="container-fluid full-height main-container tad-app-pane">
       <DndProvider manager={dndManager}>
@@ -264,7 +276,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
           showDataSources={showDataSources}
           stateRef={stateRef}
         />
-        <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
+        {dataSourceSidebar}
         {pivotSidebar}
         {centerPane}
       </DndProvider>

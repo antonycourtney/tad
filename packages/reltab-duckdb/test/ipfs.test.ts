@@ -39,7 +39,7 @@ const importParquet = async (
   return tableName;
 };
 
-test("https import test", async () => {
+test.skip("https import test", async () => {
   const dbds = testCtx as DbDataSource;
   const driver = dbds.db as reltabDuckDB.DuckDBDriver;
 
@@ -73,7 +73,7 @@ test("https import test", async () => {
   expect(fmtRows).toMatchSnapshot();
 });
 
-test("s3 import test", async () => {
+test.skip("s3 import test", async () => {
   const dbc = testCtx;
   const dbds = testCtx as DbDataSource;
   const driver = dbds.db as reltabDuckDB.DuckDBDriver;

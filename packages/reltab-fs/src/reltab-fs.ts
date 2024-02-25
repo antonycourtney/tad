@@ -4,6 +4,7 @@ import * as path from "path";
 import * as fsPromises from "fs/promises";
 
 import {
+  ColumnStatsMap,
   DataSourceConnection,
   DataSourceId,
   DataSourceNode,
@@ -62,7 +63,7 @@ function extNameEx(path: string): string {
 }
 
 const ipfsPathPrefixes = ["s3://", "https://"];
-const isIPFSPath = (pathname: string): boolean => {
+export const isIPFSPath = (pathname: string): boolean => {
   for (const prefix of ipfsPathPrefixes) {
     if (pathname.startsWith(prefix)) {
       return true;
@@ -73,7 +74,7 @@ const isIPFSPath = (pathname: string): boolean => {
 
 interface ImportInfo {
   tableName: string; // table name used to import this table
-  importModTime: Date; // mod time of the file at time of import, as returned from fs.stat()
+  importModTime?: Date; // mod time of the file at time of import, as returned from fs.stat() (iff not an IPFS path)
 }
 
 // mapping from pathnames to imported table names:
@@ -112,6 +113,10 @@ export class FSDriver implements DbDriver {
   }
   getSqlQuerySchema(sqlQuery: string): Promise<Schema> {
     return this.dbc.getSqlQuerySchema(sqlQuery);
+  }
+
+  async getSqlQueryColumnStatsMap(sqlQuery: string): Promise<ColumnStatsMap> {
+    return this.dbc.getSqlQueryColumnStatsMap(sqlQuery);
   }
 
   async getRootNode(): Promise<DataSourceNode> {
@@ -180,37 +185,45 @@ export class FSDriver implements DbDriver {
       } else {
         tableName = await reltabDuckDB.nativeCSVImport(this.dbc.db, targetPath);
       }
-      const fileStats = await fsPromises.stat(targetPath);
-      importInfo = {
-        tableName,
-        importModTime: fileStats.mtime,
-      };
+      if (isIPFSPath(targetPath)) {
+        importInfo = {
+          tableName,
+        };
+      } else {
+        const fileStats = await fsPromises.stat(targetPath);
+        importInfo = {
+          tableName,
+          importModTime: fileStats.mtime,
+        };
+      }
       this.importMap[targetPath] = importInfo;
     } else {
       log.debug(" getTableName: ", targetPath, " ---> ", importInfo.tableName);
-      const fileStats = await fsPromises.stat(targetPath);
-      if (fileStats.mtime > importInfo.importModTime) {
-        log.debug(
-          "**** detected updated file, re-importing: ",
-          targetPath,
-          fileStats.mtime
-        );
-        const extName = path.extname(targetPath);
-        const tableName = importInfo.tableName;
-        if (extName === ".parquet") {
-          await reltabDuckDB.nativeParquetImport(
-            this.dbc.db,
+      if (importInfo.importModTime !== undefined) {
+        const fileStats = await fsPromises.stat(targetPath);
+        if (fileStats.mtime > importInfo.importModTime) {
+          log.debug(
+            "**** detected updated file, re-importing: ",
             targetPath,
-            tableName
+            fileStats.mtime
           );
-        } else {
-          await reltabDuckDB.nativeCSVImport(
-            this.dbc.db,
-            targetPath,
-            tableName
-          );
+          const extName = path.extname(targetPath);
+          const tableName = importInfo.tableName;
+          if (extName === ".parquet") {
+            await reltabDuckDB.nativeParquetImport(
+              this.dbc.db,
+              targetPath,
+              tableName
+            );
+          } else {
+            await reltabDuckDB.nativeCSVImport(
+              this.dbc.db,
+              targetPath,
+              tableName
+            );
+          }
+          importInfo.importModTime = fileStats.mtime;
         }
-        importInfo.importModTime = fileStats.mtime;
       }
     }
     return importInfo.tableName;

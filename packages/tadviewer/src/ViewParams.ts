@@ -75,6 +75,7 @@ class FormatDefaults extends Immutable.Record(defaultFormatDefaultProps) {
 
 export interface ViewParamsProps {
   showRoot: boolean;
+  showColumnHistograms: boolean;
   displayColumns: Array<string>; // array of column ids to display, in order
 
   vpivots: Array<string>; // array of columns to pivot
@@ -91,6 +92,7 @@ export interface ViewParamsProps {
 
 const defaultViewParamsProps: ViewParamsProps = {
   showRoot: false,
+  showColumnHistograms: false,
   displayColumns: [],
   vpivots: [],
   pivotLeafColumn: null,
@@ -122,6 +124,7 @@ export class ViewParams
   implements ViewParamsProps
 {
   public readonly showRoot!: boolean;
+  public readonly showColumnHistograms!: boolean;
   public readonly displayColumns!: Array<string>; // array of column ids to display, in order
 
   public readonly vpivots!: Array<string>; // array of columns to pivot

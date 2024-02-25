@@ -2,12 +2,13 @@
  * A Tad Viewer pane for embedding a tad view of a SQL query on a data source
  */
 import log from "loglevel";
-import { mkRef, refContainer, StateRef } from "oneref";
+import { mkRef, mutableGet, refContainer, StateRef } from "oneref";
 import * as React from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   DataSourceConnection,
   DataSourcePath,
+  FilterExp,
   LocalReltabConnection,
 } from "reltab";
 import { initAppState } from "../actions";
@@ -19,6 +20,8 @@ import { AppPaneBaseProps, AppPane, tadReact } from "./AppPane";
 interface TadViewerPaneInnerProps {
   stateRef: StateRef<AppState>;
   baseQuery: string;
+  rightFooterSlot?: JSX.Element;
+  onFilter?: (filterExp: FilterExp) => void;
 }
 
 const newWindowFromDSPath = (
@@ -29,35 +32,58 @@ const newWindowFromDSPath = (
   console.log("TODO: newWindowFromDSPath: ", dsPath);
 };
 
-function TadViewerPaneInner({ stateRef, baseQuery }: TadViewerPaneInnerProps) {
-  const [AppComponent, _listenerId] = refContainer<AppState, AppPaneBaseProps>(
-    stateRef,
-    AppPane
-  );
+function TadViewerPaneInner({
+  stateRef,
+  baseQuery,
+  rightFooterSlot = undefined,
+  onFilter = undefined,
+}: TadViewerPaneInnerProps) {
+  const viewerPane = useRef<JSX.Element | null>(null);
 
   const openURL = (url: string) => {
     window.open(url, "_blank");
   };
 
-  return (
-    <AppComponent
-      newWindow={newWindowFromDSPath}
-      clipboard={navigator.clipboard}
-      openURL={openURL}
-      showDataSources={false}
-      embedded={true}
-    />
-  );
+  if (viewerPane.current == null) {
+    const [AppComponent, _listenerId] = refContainer<
+      AppState,
+      AppPaneBaseProps
+    >(stateRef, AppPane);
+    viewerPane.current = (
+      <AppComponent
+        newWindow={newWindowFromDSPath}
+        clipboard={navigator.clipboard}
+        openURL={openURL}
+        showDataSources={false}
+        embedded={true}
+        rightFooterSlot={rightFooterSlot}
+        onFilter={onFilter}
+      />
+    );
+  }
+  return viewerPane.current;
 }
 
 export interface TadViewerPaneProps {
   baseSqlQuery: string;
   dsConn: DataSourceConnection;
+  errorCallback?: (e: Error) => void;
+  setLoadingCallback: (loading: boolean) => void;
+  showRecordCount: boolean;
+  showColumnHistograms: boolean;
+  rightFooterSlot?: JSX.Element;
+  onFilter?: (filterExp: FilterExp) => void;
 }
 
 export function TadViewerPane({
   baseSqlQuery,
   dsConn,
+  errorCallback,
+  setLoadingCallback,
+  showRecordCount,
+  showColumnHistograms,
+  rightFooterSlot,
+  onFilter,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -78,13 +104,19 @@ export function TadViewerPane({
       log.debug("*** TadViewerPane: got local reltab connection: ", rtc);
 
       if (!appStateRef) {
-        const appState = new AppState();
+        const appState = new AppState({
+          showRecordCount,
+        });
         const stateRef = mkRef(appState);
         setAppStateRef(stateRef);
         log.debug("*** initializing app state:");
         await initAppState(rtc, stateRef);
         log.debug("*** initialized Tad App state");
-        const preq = new PivotRequester(stateRef);
+        const preq = new PivotRequester(
+          stateRef,
+          errorCallback,
+          setLoadingCallback
+        );
         log.debug("*** created pivotRequester");
         setPivotRequester(preq);
         log.debug("*** App component created and pivotrequester initialized");
@@ -95,17 +127,36 @@ export function TadViewerPane({
 
   /* update the view when the query changes */
   React.useEffect(() => {
-    console.log("*** TadViewerPane: query update, updating view...");
     if (appStateRef != null && pivotRequester != null) {
-      actions.setQueryView(appStateRef, dsConn, baseSqlQuery);
+      actions.setQueryView(
+        appStateRef,
+        dsConn,
+        baseSqlQuery,
+        showColumnHistograms
+      );
       log.debug("**** set app view to base query");
     }
   }, [baseSqlQuery, pivotRequester, appStateRef]);
 
+  /* update showColumnHistograms when it changes */
+  React.useEffect(() => {
+    if (appStateRef != null) {
+      const appState = mutableGet(appStateRef);
+      if (appState.viewState) {
+        actions.setShowColumnHistograms(appStateRef, showColumnHistograms);
+      }
+    }
+  }, [showColumnHistograms, appStateRef]);
+
   let tadAppElem: JSX.Element | null = null;
   if (pivotRequester && appStateRef) {
     tadAppElem = (
-      <TadViewerPaneInner baseQuery={baseSqlQuery} stateRef={appStateRef} />
+      <TadViewerPaneInner
+        baseQuery={baseSqlQuery}
+        stateRef={appStateRef}
+        rightFooterSlot={rightFooterSlot}
+        onFilter={onFilter}
+      />
     );
   }
   return tadAppElem;

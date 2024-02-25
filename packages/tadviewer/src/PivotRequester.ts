@@ -1,11 +1,17 @@
 import log from "loglevel";
 import * as reltab from "reltab";
 import * as aggtree from "aggtree";
-import { PagedDataView } from "./PagedDataView";
+import { PagedDataView, DataRow } from "./PagedDataView";
 import { ViewParams } from "./ViewParams";
 import { AppState } from "./AppState";
 import { QueryView } from "./QueryView";
-import { ReltabConnection, DataSourceId, DataSourceConnection } from "reltab"; // eslint-disable-line
+import {
+  ReltabConnection,
+  DataSourceId,
+  DataSourceConnection,
+  getColumnHistogramMap,
+  ColumnHistogramMap,
+} from "reltab"; // eslint-disable-line
 
 import * as oneref from "oneref"; // eslint-disable-line
 import { mutableGet, addStateChangeListener } from "oneref";
@@ -22,18 +28,13 @@ import _ from "lodash";
  * SlickGrid from reltab.TableRep
  */
 
-interface RowMap {
-  [s: string]: any;
-  _depth: number;
-}
-
 const mkDataView = (
   viewParams: ViewParams,
   rowCount: number,
   offset: number,
   tableData: reltab.TableRep
 ): PagedDataView => {
-  const getPath = (rowMap: RowMap, depth: number) => {
+  const getPath = (dataRow: DataRow, depth: number) => {
     let path: Array<string | null> = [];
 
     for (let i = 0; i < depth; i++) {
@@ -50,7 +51,7 @@ const mkDataView = (
 
   for (var i = 0; i < tableData.rowData.length; i++) {
     // ?? shouldn't we just be constructing the rowMap once and re-use it for every row??
-    var rowMap: RowMap = tableData.rowData[i] as RowMap;
+    var rowMap: DataRow = tableData.rowData[i] as DataRow;
     var depth: number = rowMap._depth;
     var path = getPath(rowMap, depth);
     rowMap._isOpen = viewParams.openPaths.isOpen(path);
@@ -132,7 +133,9 @@ const requestQueryView = async (
   rt: DataSourceConnection,
   baseQuery: reltab.QueryExp,
   baseSchema: reltab.Schema,
-  viewParams: ViewParams
+  viewParams: ViewParams,
+  showRecordCount: boolean,
+  prevQueryView: QueryView | null | undefined
 ): Promise<QueryView> => {
   const schemaCols = baseSchema.columns;
   const aggMap: any = {};
@@ -150,7 +153,8 @@ const requestQueryView = async (
     viewParams.pivotLeafColumn,
     viewParams.showRoot,
     viewParams.sortKey,
-    aggMap
+    aggMap,
+    showRecordCount
   );
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths); // const t0 = performance.now()  // eslint-disable-line
 
@@ -169,8 +173,27 @@ const requestQueryView = async (
   ); // const t1 = performance.now() // eslint-disable-line
   // console.log('gathering row counts took ', (t1 - t0) / 1000, ' sec')
 
+  let histoMap: ColumnHistogramMap | null = null;
+  if (
+    viewParams.showColumnHistograms &&
+    (prevQueryView == null ||
+      prevQueryView.baseQuery !== baseQuery ||
+      prevQueryView.histoMap == null)
+  ) {
+    const statsMap = await rt.getColumnStatsMap(baseQuery);
+    histoMap = await getColumnHistogramMap(rt, baseQuery, baseSchema, statsMap);
+  } else {
+    if (prevQueryView != null) {
+      histoMap = prevQueryView.histoMap;
+    } else {
+      histoMap = null;
+    }
+  }
+
   const ret = new QueryView({
+    baseQuery,
     query: treeQuery,
+    histoMap,
     baseRowCount,
     filterRowCount,
     rowCount,
@@ -217,6 +240,8 @@ function getObjectDiff(obj1: any, obj2: any) {
   return diff;
 }
 
+const noopSetLoadingCallback = (loading: boolean) => {};
+
 /**
  * A PivotRequester listens for changes on the appState and viewport and
  * manages issuing of query requests
@@ -238,14 +263,24 @@ export class PivotRequester {
 
   pendingOffset: number;
   pendingLimit: number;
+  errorCallback?: (e: Error) => void;
+  setLoadingCallback: (loading: boolean) => void;
 
-  constructor(stateRef: oneref.StateRef<AppState>) {
+  constructor(
+    stateRef: oneref.StateRef<AppState>,
+    errorCallback?: (e: Error) => void,
+    setLoadingCallback?: (loading: boolean) => void
+  ) {
+    const appState = mutableGet(stateRef);
     this.pendingQueryRequest = null;
     this.currentQueryView = null;
     this.pendingDataRequest = null;
     this.pendingViewParams = null;
     this.pendingOffset = 0;
     this.pendingLimit = 0;
+    this.errorCallback = errorCallback;
+    this.setLoadingCallback = setLoadingCallback || noopSetLoadingCallback;
+
     addStateChangeListener(stateRef, (_) => {
       this.onStateChange(stateRef);
     });
@@ -259,6 +294,7 @@ export class PivotRequester {
     stateRef: oneref.StateRef<AppState>,
     queryView: QueryView
   ): Promise<PagedDataView> {
+    this.setLoadingCallback(true);
     const appState: AppState = mutableGet(stateRef);
     const viewState = appState.viewState;
     const viewParams = viewState.viewParams;
@@ -287,6 +323,7 @@ export class PivotRequester {
               .set("dataView", dataView) as ViewState
         )
       );
+      this.setLoadingCallback(false);
       return dataView;
     });
     return dreq;
@@ -300,14 +337,17 @@ export class PivotRequester {
       return;
     }
 
+    const { queryView } = viewState;
     const viewParams = viewState.viewParams;
 
     if (viewParams !== this.pendingViewParams) {
+      /*
       log.debug(
         "*** onStateChange: requesting new query: ",
         viewState.toJS(),
         this.pendingViewParams?.toJS()
       );
+      */
       /*
       const viewStateJS = viewState.toJS();
       const pendingJS = this.pendingViewParams?.toJS();
@@ -325,11 +365,17 @@ export class PivotRequester {
       // if viewParams are same and only page range differs.
       const prevViewParams = this.pendingViewParams as ViewParams;
       this.pendingViewParams = viewParams;
+      // NOTE!  Very important to pass queryView (latest from appState) and not
+      // this.currentQueryView, which may be stale.
+      // TODO:  The sequencing and control flow here is really subtle; we should rework this to make
+      // it easier to reason about the sequencing.
       const qreq = requestQueryView(
         viewState.dbc,
         viewState.baseQuery,
         viewState.baseSchema,
-        this.pendingViewParams
+        this.pendingViewParams,
+        appState.showRecordCount,
+        queryView
       );
       this.pendingQueryRequest = qreq;
       this.pendingDataRequest = qreq
@@ -353,9 +399,11 @@ export class PivotRequester {
                 .set("queryView", queryView) as ViewState;
             })
           );
+          /*
           log.debug(
             "*** onStateChange: sending request to satisfy view state update"
           );
+          */
           return this.sendDataRequest(stateRef, queryView);
         })
         .catch((err) => {
@@ -364,17 +412,18 @@ export class PivotRequester {
             err.message,
             err.stack
           );
+          this.setLoadingCallback(false);
           // TODO:
           // remoteErrorDialog("Error constructing view", err.message); // Now let's try and restore to previous view params:
           oneref.update(
             stateRef,
-            vsUpdate(
-              (vs: ViewState) =>
-                vs
-                  .update("loadingTimer", (lt) => lt.stop())
-                  .set("viewParams", prevViewParams) as ViewState
+            vsUpdate((vs: ViewState) =>
+              vs.update("loadingTimer", (lt) => lt.stop())
             )
           );
+          if (this.errorCallback) {
+            this.errorCallback(err instanceof Error ? err : new Error(err));
+          }
         });
       const ltUpdater = util.pathUpdater<AppState, Timer>(stateRef, [
         "viewState",
@@ -398,6 +447,7 @@ export class PivotRequester {
         // No change in view parameters, but check for viewport out of range of
         // pendingOffset, pendingLimit:
         const qv: QueryView = this.currentQueryView as any; // Flow misses null check above!
+        /*
         log.debug(
           "*** onStateChange: sending request because paging parameters out of viewport: ",
           this.pendingOffset,
@@ -405,6 +455,7 @@ export class PivotRequester {
           viewState.viewportTop,
           viewState.viewportBottom
         );
+        */
         this.sendDataRequest(stateRef, qv);
       }
     }

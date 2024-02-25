@@ -1,0 +1,60 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`basic column stats and bin count 1`] = `
+Object {
+  "approxUnique": 23,
+  "count": 23,
+  "max": 419661,
+  "min": 104260,
+  "pctNull": 0,
+  "statsType": "numeric",
+}
+`;
+
+exports[`full histogram query for all column 1`] = `
+"SELECT \\"column\\", \\"bin\\", count(\\"binCount\\") as \\"binCount\\"
+FROM (
+  SELECT 'Base' as \\"column\\", CAST(floor(((CAST(\\"Base\\" AS DOUBLE) - CAST(50000 AS DOUBLE)) / CAST(42857.142857142855 AS DOUBLE))) AS INTEGER) as \\"bin\\", 1 as \\"binCount\\"
+  FROM barttest
+)
+GROUP BY \\"column\\", \\"bin\\"
+UNION ALL
+SELECT \\"column\\", \\"bin\\", count(\\"binCount\\") as \\"binCount\\"
+FROM (
+  SELECT 'TCOE' as \\"column\\", CAST(floor(((CAST(\\"TCOE\\" AS DOUBLE) - CAST(100000 AS DOUBLE)) / CAST(50000 AS DOUBLE))) AS INTEGER) as \\"bin\\", 1 as \\"binCount\\"
+  FROM barttest
+)
+GROUP BY \\"column\\", \\"bin\\"
+"
+`;
+
+exports[`histogram query for column 1`] = `
+"SELECT \\"column\\", \\"bin\\", count(\\"binCount\\") as \\"binCount\\"
+FROM (
+  SELECT 'TCOE' as \\"column\\", CAST(floor(((CAST(\\"TCOE\\" AS DOUBLE) - CAST(100000 AS DOUBLE)) / CAST(50000 AS DOUBLE))) AS INTEGER) as \\"bin\\", 1 as \\"binCount\\"
+  FROM barttest
+)
+GROUP BY \\"column\\", \\"bin\\"
+"
+`;
+
+exports[`histogram query for column 2`] = `
+Object {
+  "binCount": 7,
+  "binData": Array [
+    10,
+    1,
+    6,
+    3,
+    1,
+    1,
+    1,
+  ],
+  "binWidth": 50000,
+  "brushMaxVal": 500000,
+  "brushMinVal": 100000,
+  "colId": "TCOE",
+  "niceMaxVal": 450000,
+  "niceMinVal": 100000,
+}
+`;

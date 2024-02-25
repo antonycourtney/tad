@@ -344,12 +344,15 @@ export class VPivotTree {
 }
 export const getBaseSchema = (
   rt: DataSourceConnection,
-  baseQuery: QueryExp
+  baseQuery: QueryExp,
+  showRecordCount = true
 ): Promise<Schema> => {
   // add a count column and do the usual SQL where 1=0 trick:
-  const schemaQuery = baseQuery
-    .extend("Rec", constVal(1))
-    .filter(reltab.and().eq(constVal(1), constVal(0)));
+  let schemaQuery = baseQuery.filter(reltab.and().eq(constVal(1), constVal(0)));
+  if (showRecordCount) {
+    schemaQuery = schemaQuery.extend("Rec", constVal(1));
+  }
+
   const schemap = rt.evalQuery(schemaQuery);
   return schemap.then((schemaRes) => schemaRes.schema);
 };
@@ -366,11 +369,14 @@ export function vpivot(
         [cid: string]: reltab.AggFn;
       }
     | undefined
-    | null = null
+    | null = null,
+  showRecordCount = true
 ): VPivotTree {
   const aggMap = inAggMap; // just for Flow
 
-  baseQuery = baseQuery.extend("Rec", constVal(1));
+  if (showRecordCount) {
+    baseQuery = baseQuery.extend("Rec", constVal(1));
+  }
   const hiddenCols = ["_depth", "_pivot", "_isRoot"];
   const outCols = baseSchema.columns.concat(hiddenCols);
   const gbCols = baseSchema.columns.slice();
