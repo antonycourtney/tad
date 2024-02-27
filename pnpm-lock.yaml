@@ -114,7 +114,7 @@ importers:
         version: 7.1.5
       aws-sdk:
         specifier: ^2.1050.0
-        version: 2.1565.0
+        version: 2.1566.0
       loglevel:
         specifier: ^1.8.0
         version: 1.9.1
@@ -340,7 +340,7 @@ importers:
         specifier: ^1.8.0
         version: 1.9.1
       sqlite3:
-        specifier: ^5.0.2
+        specifier: ^5.1.7
         version: 5.1.7
       through:
         specifier: ^2.3.8
@@ -457,13 +457,13 @@ importers:
         version: 5.0.4
       '@types/react':
         specifier: ^18.0.15
-        version: 18.2.58
+        version: 18.2.59
       '@types/react-dom':
         specifier: ^18.2.4
         version: 18.2.19
       '@types/react-select':
         specifier: ^5.0.0
-        version: 5.0.1(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0)
+        version: 5.0.1(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0)
       '@types/slickgrid':
         specifier: ^2.1.31
         version: 2.1.40
@@ -544,10 +544,10 @@ importers:
     dependencies:
       '@blueprintjs/core':
         specifier: 4.12.0
-        version: 4.12.0(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0)
       '@blueprintjs/popover2':
         specifier: 1.10.1
-        version: 1.10.1(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0)
+        version: 1.10.1(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0)
       '@types/he':
         specifier: ^1.1.2
         version: 1.2.3
@@ -577,13 +577,13 @@ importers:
         version: 0.9.0(react@18.2.0)
       react-dnd:
         specifier: ^14.0.5
-        version: 14.0.5(@types/node@18.19.18)(@types/react@18.2.58)(react@18.2.0)
+        version: 14.0.5(@types/node@18.19.18)(@types/react@18.2.59)(react@18.2.0)
       react-dnd-html5-backend:
         specifier: ^14.1.0
         version: 14.1.0
       react-select:
         specifier: ^5.2.1
-        version: 5.8.0(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0)
+        version: 5.8.0(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0)
       slickgrid-es6:
         specifier: ^3.0.3
         version: 3.0.3
@@ -611,13 +611,13 @@ importers:
         version: 18.19.18
       '@types/react':
         specifier: ^18.0.15
-        version: 18.2.58
+        version: 18.2.59
       '@types/react-dom':
         specifier: ^18.2.4
         version: 18.2.19
       '@types/react-select':
         specifier: ^5.0.0
-        version: 5.0.1(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0)
+        version: 5.0.1(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0)
       '@types/slickgrid':
         specifier: ^2.1.31
         version: 2.1.40
@@ -720,7 +720,7 @@ importers:
         version: 4.14.202
       '@types/react':
         specifier: ^18.0.15
-        version: 18.2.58
+        version: 18.2.59
       '@types/react-dom':
         specifier: ^18.2.4
         version: 18.2.19
@@ -1910,7 +1910,7 @@ packages:
       tslib: 2.5.3
     dev: false
 
-  /@blueprintjs/core@4.12.0(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0):
+  /@blueprintjs/core@4.12.0(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-obbtEMzKOTwB56vlw4A8+9lvYwtB1mK4S8/b5Dy7WqdJ66L1WfcbIWcGxc2jWsGxanvMIzi6Pd+0XXuRRNkmhQ==}
     hasBin: true
     peerDependencies:
@@ -1925,7 +1925,7 @@ packages:
       '@blueprintjs/icons': 4.16.0
       '@juggle/resize-observer': 3.4.0
       '@types/dom4': 2.0.4
-      '@types/react': 18.2.58
+      '@types/react': 18.2.59
       classnames: 2.5.1
       dom4: 2.1.6
       normalize.css: 8.0.1
@@ -1944,7 +1944,7 @@ packages:
       classnames: 2.5.1
       tslib: 2.5.3
 
-  /@blueprintjs/popover2@1.10.1(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0):
+  /@blueprintjs/popover2@1.10.1(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-WWKCvwvPoDUeAXUfsWg5aqbSFI09H+EGbsKZ8CVyRLHC3K0j6k4ljI6ic9iTiDUXLD/0TKGFCd1mOy9GOGaONg==}
     peerDependencies:
       '@types/react': ^16.14.32 || 17 || 18
@@ -1954,10 +1954,10 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@blueprintjs/core': 4.12.0(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0)
+      '@blueprintjs/core': 4.12.0(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0)
       '@juggle/resize-observer': 3.4.0
       '@popperjs/core': 2.11.8
-      '@types/react': 18.2.58
+      '@types/react': 18.2.59
       classnames: 2.5.1
       dom4: 2.1.6
       react: 18.2.0
@@ -2096,7 +2096,7 @@ packages:
   /@emotion/memoize@0.8.1:
     resolution: {integrity: sha512-W2P2c/VRW1/1tLox0mVUalvnWXxavmv/Oum2aPsRcoDJuob75FC3Y8FbpfLwUegRcxINtGUMPq0tFCvYNTBXNA==}
 
-  /@emotion/react@11.11.3(@types/react@18.2.58)(react@18.2.0):
+  /@emotion/react@11.11.3(@types/react@18.2.59)(react@18.2.0):
     resolution: {integrity: sha512-Cnn0kuq4DoONOMcnoVsTOR8E+AdnKFf//6kUWc4LCdnxj31pZWn7rIULd6Y7/Js1PiPHzn7SKCM9vB/jBni8eA==}
     peerDependencies:
       '@types/react': '*'
@@ -2112,7 +2112,7 @@ packages:
       '@emotion/use-insertion-effect-with-fallbacks': 1.0.1(react@18.2.0)
       '@emotion/utils': 1.2.1
       '@emotion/weak-memoize': 0.3.1
-      '@types/react': 18.2.58
+      '@types/react': 18.2.59
       hoist-non-react-statics: 3.3.2
       react: 18.2.0
 
@@ -3497,14 +3497,14 @@ packages:
   /@types/react-dom@18.2.19:
     resolution: {integrity: sha512-aZvQL6uUbIJpjZk4U8JZGbau9KDeAwMfmhyWorxgBkqDIEf6ROjRozcmPIicqsUwPUjbkDfHKgGee1Lq65APcA==}
     dependencies:
-      '@types/react': 18.2.58
+      '@types/react': 18.2.59
     dev: true
 
-  /@types/react-select@5.0.1(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0):
+  /@types/react-select@5.0.1(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-h5Im0AP0dr4AVeHtrcvQrLV+gmPa7SA0AGdxl2jOhtwiE6KgXBFSogWw8az32/nusE6AQHlCOHQWjP1S/+oMWA==}
     deprecated: This is a stub types definition. react-select provides its own type definitions, so you do not need this installed.
     dependencies:
-      react-select: 5.8.0(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0)
+      react-select: 5.8.0(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0)
     transitivePeerDependencies:
       - '@types/react'
       - react
@@ -3514,10 +3514,10 @@ packages:
   /@types/react-transition-group@4.4.10:
     resolution: {integrity: sha512-hT/+s0VQs2ojCX823m60m5f0sL5idt9SO6Tj6Dg+rdphGPIeJbJ6CxvBYkgkGKrYeDjvIpKTR38UzmtHJOGW3Q==}
     dependencies:
-      '@types/react': 18.2.58
+      '@types/react': 18.2.59
 
-  /@types/react@18.2.58:
-    resolution: {integrity: sha512-TaGvMNhxvG2Q0K0aYxiKfNDS5m5ZsoIBBbtfUorxdH4NGSXIlYvZxLJI+9Dd3KjeB3780bciLyAb7ylO8pLhPw==}
+  /@types/react@18.2.59:
+    resolution: {integrity: sha512-DE+F6BYEC8VtajY85Qr7mmhTd/79rJKIHCg99MU9SWPB4xvLb6D1za2vYflgZfmPqQVEr6UqJTnLXEwzpVPuOg==}
     dependencies:
       '@types/prop-types': 15.7.11
       '@types/scheduler': 0.16.8
@@ -4202,8 +4202,8 @@ packages:
       possible-typed-array-names: 1.0.0
     dev: false
 
-  /aws-sdk@2.1565.0:
-    resolution: {integrity: sha512-5+qkIUd6GfzybqWP43RCMqCNL5Ry3ztCWcC5d9Mq0O9cqQQM9eoUfktdgiu1eFc3zAM01dFNUR6fZfXnmZgkuQ==}
+  /aws-sdk@2.1566.0:
+    resolution: {integrity: sha512-4LmOUWrHUk/SIIWzn7j6DaGs92zjDH42v0dovPw7l5usb8ZAQ5yk1bDltM/xs1C/L36gkxixEFVjv7Ac1KNgNw==}
     engines: {node: '>= 10.0.0'}
     dependencies:
       buffer: 4.9.2
@@ -4750,7 +4750,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001589
-      electron-to-chromium: 1.4.681
+      electron-to-chromium: 1.4.682
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.23.0)
 
@@ -6249,8 +6249,8 @@ packages:
       - supports-color
     dev: true
 
-  /electron-to-chromium@1.4.681:
-    resolution: {integrity: sha512-1PpuqJUFWoXZ1E54m8bsLPVYwIVCRzvaL+n5cjigGga4z854abDnFRc+cTa2th4S79kyGqya/1xoR7h+Y5G5lg==}
+  /electron-to-chromium@1.4.682:
+    resolution: {integrity: sha512-oCglfs8yYKs9RQjJFOHonSnhikPK3y+0SvSYc/YpYJV//6rqc0/hbwd0c7vgK4vrl6y2gJAwjkhkSGWK+z4KRA==}
 
   /electron-updater@4.6.5:
     resolution: {integrity: sha512-kdTly8O9mSZfm9fslc1mnCY+mYOeaYRy7ERa2Fed240u01BKll3aiupzkd07qKw69KvhBSzuHroIW3mF0D8DWA==}
@@ -10317,7 +10317,7 @@ packages:
     dependencies:
       '@types/events': 3.0.3
       '@types/lodash': 4.14.202
-      '@types/react': 18.2.58
+      '@types/react': 18.2.59
       events: 3.3.0
       lodash: 4.17.21
       react: 18.2.0
@@ -11061,7 +11061,7 @@ packages:
       dnd-core: 14.0.1
     dev: false
 
-  /react-dnd@14.0.5(@types/node@18.19.18)(@types/react@18.2.58)(react@18.2.0):
+  /react-dnd@14.0.5(@types/node@18.19.18)(@types/react@18.2.59)(react@18.2.0):
     resolution: {integrity: sha512-9i1jSgbyVw0ELlEVt/NkCUkxy1hmhJOkePoCH713u75vzHGyXhPDm28oLfc2NMSBjZRM1Y+wRjHXJT3sPrTy+A==}
     peerDependencies:
       '@types/hoist-non-react-statics': '>= 3.3.1'
@@ -11079,7 +11079,7 @@ packages:
       '@react-dnd/invariant': 2.0.0
       '@react-dnd/shallowequal': 2.0.0
       '@types/node': 18.19.18
-      '@types/react': 18.2.58
+      '@types/react': 18.2.59
       dnd-core: 14.0.1
       fast-deep-equal: 3.1.3
       hoist-non-react-statics: 3.3.2
@@ -11158,7 +11158,7 @@ packages:
       react: 18.2.0
     dev: false
 
-  /react-select@5.8.0(@types/react@18.2.58)(react-dom@18.2.0)(react@18.2.0):
+  /react-select@5.8.0(@types/react@18.2.59)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-TfjLDo58XrhP6VG5M/Mi56Us0Yt8X7xD6cDybC7yoRMUNm7BGO7qk8J0TLQOua/prb8vUOtsfnXZwfm30HGsAA==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
@@ -11166,7 +11166,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.9
       '@emotion/cache': 11.11.0
-      '@emotion/react': 11.11.3(@types/react@18.2.58)(react@18.2.0)
+      '@emotion/react': 11.11.3(@types/react@18.2.59)(react@18.2.0)
       '@floating-ui/dom': 1.6.3
       '@types/react-transition-group': 4.4.10
       memoize-one: 6.0.0
@@ -11174,7 +11174,7 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       react-transition-group: 4.4.5(react-dom@18.2.0)(react@18.2.0)
-      use-isomorphic-layout-effect: 1.1.2(@types/react@18.2.58)(react@18.2.0)
+      use-isomorphic-layout-effect: 1.1.2(@types/react@18.2.59)(react@18.2.0)
     transitivePeerDependencies:
       - '@types/react'
 
@@ -13171,7 +13171,7 @@ packages:
       react: 18.2.0
     dev: false
 
-  /use-isomorphic-layout-effect@1.1.2(@types/react@18.2.58)(react@18.2.0):
+  /use-isomorphic-layout-effect@1.1.2(@types/react@18.2.59)(react@18.2.0):
     resolution: {integrity: sha512-49L8yCO3iGT/ZF9QttjwLF/ZD9Iwto5LnH5LmEdk/6cFmXddqi2ulF0edxTwjj+7mqvpVVGQWvbXZdn32wRSHA==}
     peerDependencies:
       '@types/react': '*'
@@ -13180,7 +13180,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@types/react': 18.2.58
+      '@types/react': 18.2.59
       react: 18.2.0
 
   /use@3.1.1:

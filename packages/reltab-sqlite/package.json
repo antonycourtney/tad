@@ -27,7 +27,7 @@
     "fast-csv": "^4.3.6",
     "gauge": "^4.0.0",
     "loglevel": "^1.8.0",
-    "sqlite3": "^5.0.2",
+    "sqlite3": "^5.1.7",
     "through": "^2.3.8",
     "typed-promisify": "^0.4.0"
   },
