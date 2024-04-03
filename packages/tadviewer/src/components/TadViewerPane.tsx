@@ -72,6 +72,7 @@ export interface TadViewerPaneProps {
   showRecordCount: boolean;
   showColumnHistograms: boolean;
   rightFooterSlot?: JSX.Element;
+  filterExp?: FilterExp;
   onFilter?: (filterExp: FilterExp) => void;
 }
 
@@ -83,6 +84,7 @@ export function TadViewerPane({
   showRecordCount,
   showColumnHistograms,
   rightFooterSlot,
+  filterExp,
   onFilter,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
@@ -137,6 +139,16 @@ export function TadViewerPane({
       log.debug("**** set app view to base query");
     }
   }, [baseSqlQuery, pivotRequester, appStateRef]);
+
+  /* update filterExp when it changes */
+  React.useEffect(() => {
+    if (appStateRef != null && filterExp != null) {
+      const appState = mutableGet(appStateRef);
+      if (appState.viewState) {
+        actions.setFilter(filterExp, appStateRef);
+      }
+    }
+  }, [filterExp, pivotRequester, appStateRef]);
 
   /* update showColumnHistograms when it changes */
   React.useEffect(() => {
