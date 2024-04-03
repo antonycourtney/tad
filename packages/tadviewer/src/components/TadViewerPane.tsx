@@ -94,6 +94,8 @@ export function TadViewerPane({
     null
   );
 
+  const viewState = appStateRef ? mutableGet(appStateRef).viewState : null;
+
   const openURL = (url: string) => {
     window.open(url, "_blank");
   };
@@ -142,13 +144,13 @@ export function TadViewerPane({
 
   /* update filterExp when it changes */
   React.useEffect(() => {
-    if (appStateRef != null && filterExp != null) {
+    if (appStateRef != null && pivotRequester != null && filterExp != null) {
       const appState = mutableGet(appStateRef);
       if (appState.viewState) {
         actions.setFilter(filterExp, appStateRef);
       }
     }
-  }, [filterExp, pivotRequester, appStateRef]);
+  }, [filterExp, pivotRequester, viewState, appStateRef]);
 
   /* update showColumnHistograms when it changes */
   React.useEffect(() => {
