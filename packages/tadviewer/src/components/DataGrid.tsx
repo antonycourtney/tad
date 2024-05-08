@@ -710,7 +710,7 @@ export const DataGrid: React.FunctionComponent<DataGridProps> = (
     }
   };
 
-  const lm = showLoadingModal ? <LoadingModal /> : null;
+  const lm = showLoadingModal ? <LoadingModal embedded={embedded} /> : null;
 
   return (
     <div className="gridPaneOuter">

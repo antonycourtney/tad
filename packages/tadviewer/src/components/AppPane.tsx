@@ -238,7 +238,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     const loadingModal =
       timerShowModal(appState.appLoadingTimer) ||
       timerShowModal(viewState.loadingTimer) ? (
-        <LoadingModal />
+        <LoadingModal embedded={embedded} />
       ) : null;
     centerPane = (
       <div className="center-app-pane">
@@ -262,7 +262,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   } else {
     pivotSidebar = null;
     centerPane = timerShowModal(appState.appLoadingTimer) ? (
-      <LoadingModal />
+      <LoadingModal embedded={embedded} />
     ) : null;
   }
   const dataSourceSidebar = showDataSources ? (
