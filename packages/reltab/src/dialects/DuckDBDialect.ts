@@ -12,7 +12,11 @@ interface DuckDBStringRenderer {
 }
 
 function isDuckDBStringRenderer(val: any): val is DuckDBStringRenderer {
-  return val != null && typeof val === 'object' && !!(val as DuckDBStringRenderer).toDuckDBString;
+  return (
+    val != null &&
+    typeof val === "object" &&
+    !!(val as DuckDBStringRenderer).toDuckDBString
+  );
 }
 
 const createTimestampStringRenderer = (dateOnly = false) => ({
@@ -79,6 +83,12 @@ const datetimeCT = new ColumnType(
   createTimestampStringRenderer()
 );
 
+const timesWithTimeZoneCT = new ColumnType(
+  "TIME WITH TIME ZONE",
+  "timestamp",
+  createTimestampStringRenderer()
+);
+
 const timestampWithTimeZoneCT = new ColumnType(
   "TIMESTAMP WITH TIME ZONE",
   "timestamp",
@@ -126,25 +136,34 @@ export class DuckDBDialectClass extends BaseSQLDialect {
   };
 
   readonly columnTypes: ColumnTypeMap = {
-    INTEGER: intCT,
     BIGINT: intCT,
-    HUGEINT: intCT,
+    BOOL: boolCT,
+    BOOLEAN: boolCT,
+    BLOB: blobCT,
+    DATE: dateCT,
+    DATETIME: datetimeCT,
+    DECIMAL: realCT,
     DOUBLE: realCT,
-    REAL: realCT,
     FLOAT: realCT,
+    HUGEINT: intCT,
+    INTEGER: intCT,
+    REAL: realCT,
+    SMALLINT: intCT,
+    TINYINT: intCT,
     TEXT: textCT,
+    TIME: timestampCT,
+    "TIME WITH TIME ZONE": timestampWithTimeZoneCT,
     TIMESTAMP: timestampCT,
     TIMESTAMPTZ: timestampTZCT,
     "TIMESTAMP WITH TIME ZONE": timestampWithTimeZoneCT,
     TIMESTAMP_NS: timestampNSCT,
     TIMESTAMP_S: timestampSCT,
     TIMESTAMP_MS: timestampMSCT,
-    DATETIME: datetimeCT,
-    DATE: dateCT,
+    UBIGINT: intCT,
+    UINTEGER: intCT,
+    USMALLINT: intCT,
+    UTINYINT: intCT,
     VARCHAR: textCT,
-    BOOL: boolCT,
-    BOOLEAN: boolCT,
-    BLOB: blobCT,
   };
 
   static getInstance(): DuckDBDialectClass {

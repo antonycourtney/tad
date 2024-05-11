@@ -382,7 +382,7 @@ const createGrid = (
       }
       copyRowStrings.push(copyRow.join("\t"));
     }
-    const copyData = copyRowStrings.join("\r\n") + "\r\n";
+    const copyData = copyRowStrings.join("\r\n");
     clipboard.writeText(copyData);
   };
 
@@ -710,7 +710,7 @@ export const DataGrid: React.FunctionComponent<DataGridProps> = (
     }
   };
 
-  const lm = showLoadingModal ? <LoadingModal /> : null;
+  const lm = showLoadingModal ? <LoadingModal embedded={embedded} /> : null;
 
   return (
     <div className="gridPaneOuter">

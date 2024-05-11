@@ -5,22 +5,17 @@ import * as React from "react";
 import { Spinner, Intent } from "@blueprintjs/core";
 import { INTENT_PRIMARY } from "@blueprintjs/core/lib/esm/common/classes";
 
-/*
-        <div className="modal-container">
+export interface LoadingModalProps {
+  embedded: boolean;
+}
 
-          <div className="modal-body-container">
-            <span className="loading-indicator">
-              <label>Loading...</label>
-            </span>
-*/
-export class LoadingModal extends React.Component {
-  render() {
-    return (
-      <div className="modal-overlay">
-        <div className="loading-modal-container">
-            <Spinner className="loading-spinner" intent={Intent.PRIMARY} />
-        </div>
-      </div>
-    );
-  }
+export function LoadingModal({ embedded }: LoadingModalProps) {
+  const spinner = embedded ? null : (
+    <Spinner className="loading-spinner" intent={Intent.PRIMARY} />
+  );
+  return (
+    <div className="loading-modal-overlay">
+      <div className="loading-modal-container">{spinner}</div>
+    </div>
+  );
 }

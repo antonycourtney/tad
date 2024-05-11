@@ -4,6 +4,7 @@ import * as path from "path";
 import * as fsPromises from "fs/promises";
 
 import {
+  ColumnStatsMap,
   DataSourceConnection,
   DataSourceId,
   DataSourceNode,
@@ -112,6 +113,10 @@ export class FSDriver implements DbDriver {
   }
   getSqlQuerySchema(sqlQuery: string): Promise<Schema> {
     return this.dbc.getSqlQuerySchema(sqlQuery);
+  }
+
+  async getSqlQueryColumnStatsMap(sqlQuery: string): Promise<ColumnStatsMap> {
+    return this.dbc.getSqlQueryColumnStatsMap(sqlQuery);
   }
 
   async getRootNode(): Promise<DataSourceNode> {

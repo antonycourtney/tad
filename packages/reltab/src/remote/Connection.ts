@@ -1,3 +1,4 @@
+import { ColumnStatsMap } from "../ColumnStats";
 import {
   DataSourceConnection,
   DataSourceId,
@@ -30,6 +31,10 @@ export interface DbConnRowCountRequest {
 
 export interface DbConnGetTableSchemaRequest {
   tableName: string;
+}
+
+export interface DbConnGetColumnStatsMapRequest {
+  queryStr: string; // JSON-encoded QueryExp
 }
 
 export interface DbConnGetChildrenRequest {
@@ -111,6 +116,18 @@ class RemoteDataSourceConnection implements DataSourceConnection {
       this.tconn,
       this.sourceId,
       "getTableSchema",
+      req
+    ).then(decodeResult);
+  }
+
+  async getColumnStatsMap(query: QueryExp): Promise<ColumnStatsMap> {
+    const req: DbConnGetColumnStatsMapRequest = {
+      queryStr: JSON.stringify(query),
+    };
+    return invokeDbFunction(
+      this.tconn,
+      this.sourceId,
+      "getColumnStatsMap",
       req
     ).then(decodeResult);
   }

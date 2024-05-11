@@ -132,6 +132,7 @@ const textOpToSqlWhere = (
         matchStr = rhsStr + "%";
         break;
 
+      case "ENDS":
       case "NOTENDS":
         matchStr = "%" + rhsStr;
         break;
