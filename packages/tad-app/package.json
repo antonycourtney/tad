@@ -54,7 +54,6 @@
     "reltab-bigquery": "^0.12.0",
     "reltab-duckdb": "^0.12.0",
     "reltab-fs": "^0.12.0",
-    "reltab-sqlite": "^0.12.0",
     "source-map-support": "^0.5.21",
     "tadviewer": "^0.12.0"
   },

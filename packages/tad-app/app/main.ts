@@ -9,8 +9,6 @@ import * as logLevel from "loglevel";
 import * as reltab from "reltab";
 import * as reltabBigQuery from "reltab-bigquery";
 import "reltab-bigquery";
-import * as reltabSqlite from "reltab-sqlite";
-import "reltab-sqlite";
 import * as reltabDuckDB from "reltab-duckdb";
 import "reltab-duckdb";
 import * as reltabFS from "reltab-fs";
@@ -131,28 +129,6 @@ const initMainAsync = async (options: any): Promise<void> => {
 
 const newWindowFromDSPath = async (path: DataSourcePath) => {
   await appWindow.createFromDSPath(path);
-};
-
-const importCSVSqlite = async (targetPath: string): Promise<string> => {
-  let pathname = targetPath;
-
-  // check if pathname exists
-  if (!fs.existsSync(pathname)) {
-    let msg = '"' + pathname + '": file not found.';
-    throw new Error(msg);
-  }
-
-  // TODO:
-  //   const noHeaderRow = options["no-headers"] || false;
-  const noHeaderRow = false;
-
-  const dbds = (global as any).appRtc as DbDataSource;
-  const driver = dbds.db as reltabSqlite.SqliteDriver;
-
-  const tableName = await reltabSqlite.fastImport(driver.db, pathname, {
-    noHeaderRow,
-  });
-  return tableName;
 };
 
 const remotableNewWindowFromDSPath = (
