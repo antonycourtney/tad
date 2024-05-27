@@ -1,8 +1,6 @@
 import * as reltab from "reltab";
-import * as reltabSqlite from "reltab-sqlite";
 import * as csv from "fast-csv";
 import * as fs from "fs";
-import * as reltabDuckDB from "reltab-duckdb";
 import { BrowserWindow } from "electron";
 import { DbDataSource } from "reltab";
 
