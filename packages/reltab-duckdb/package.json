@@ -1,6 +1,6 @@
 {
   "name": "reltab-duckdb",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "sqlite driver for reltab",
   "main": "dist/reltab-duckdb.js",
   "types": "dist/reltab-duckdb.d.ts",
@@ -20,7 +20,7 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "duckdb-async": "^0.9.1",
+    "duckdb-async": "^1.0.0",
     "loglevel": "^1.8.0",
     "pretty-hrtime": "^1.0.3"
   },

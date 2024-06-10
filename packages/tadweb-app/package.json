@@ -1,6 +1,6 @@
 {
   "name": "tadweb-app",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Tabular data viewer web app",
   "main": "dist/tadweb.bundle.js",
   "scripts": {
@@ -43,9 +43,9 @@
     "less": "^3.13.1",
     "less-loader": "^10.2.0",
     "mkdirp": "^1.0.4",
-    "node-sass": "^7.0.1",
+    "node-sass": "^9.0.0",
     "resolve-url-loader": "^4.0.0",
-    "sass-loader": "^12.4.0",
+    "sass-loader": "^14.2.1",
     "source-map-loader": "^3.0.1",
     "style-loader": "^3.3.1",
     "ts-loader": "^9.2.6",
