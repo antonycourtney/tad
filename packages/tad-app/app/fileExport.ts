@@ -4,6 +4,17 @@ import * as fs from "fs";
 import { BrowserWindow } from "electron";
 import { DbDataSource } from "reltab";
 
+export const openExportBeginDialog = async (
+  win: BrowserWindow,
+  filterRowCount: number,
+  query: reltab.QueryExp
+) => {
+  win.webContents.send("open-export-begin-dialog", {
+    openState: true,
+    filterRowCount,
+  });
+};
+
 // maximum number of items outstanding before pause and commit:
 // Some studies of sqlite found this number about optimal
 const BATCHSIZE = 10000;

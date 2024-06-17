@@ -463,7 +463,14 @@ export const setShowHiddenCols = (
   );
 };
 
-export const setExportDialogOpen = (
+export const setExportBeginDialogOpen = (
+  openState: boolean,
+  stateRef: StateRef<AppState>
+) => {
+  update(stateRef, (s) => s.set("exportBeginDialogOpen", openState));
+};
+
+export const setExportProgressDialogOpen = (
   openState: boolean,
   saveFilename: string,
   stateRef: StateRef<AppState>
@@ -472,9 +479,15 @@ export const setExportDialogOpen = (
     stateRef,
     (s) =>
       s
-        .set("exportDialogOpen", openState)
-        .set("exportFilename", saveFilename) as AppState
+        .set("exportProgressDialogOpen", openState)
+        .set("exportPath", saveFilename) as AppState
   );
+};
+export const setExportPath = (
+  exportPath: string,
+  stateRef: StateRef<AppState>
+) => {
+  update(stateRef, (s) => s.set("exportPath", exportPath));
 };
 
 export const setViewConfirmDialogOpen = (

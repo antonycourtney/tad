@@ -130,6 +130,7 @@ const init = async () => {
         clipboard={clipboard}
         openURL={openURL}
         embedded={false}
+        onBrowseExportPath={() => ipcRenderer.send("browse-export-path")}
       />
     );
     const tRender = performance.now();
@@ -174,9 +175,13 @@ const init = async () => {
         contents,
       });
     });
-    ipcRenderer.on("open-export-dialog", (event, req) => {
+    ipcRenderer.on("open-export-begin-dialog", (event, req) => {
       const { openState, saveFilename } = req;
-      actions.setExportDialogOpen(openState, saveFilename, stateRef);
+      actions.setExportBeginDialogOpen(openState, stateRef);
+    });
+    ipcRenderer.on("set-export-path", (event, req) => {
+      const { exportPath } = req;
+      actions.setExportPath(exportPath, stateRef);
     });
     ipcRenderer.on("export-progress", (event, req) => {
       const { percentComplete } = req;

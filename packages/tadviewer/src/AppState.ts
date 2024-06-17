@@ -18,8 +18,9 @@ export interface AppStateProps {
   rtc: reltab.ReltabConnection | null;
 
   viewState: ViewState | null;
-  exportDialogOpen: boolean;
-  exportFilename: string;
+  exportBeginDialogOpen: boolean;
+  exportProgressDialogOpen: boolean;
+  exportPath: string;
   exportPercent: number;
 
   viewConfirmDialogOpen: boolean;
@@ -35,8 +36,9 @@ const defaultAppStateProps: AppStateProps = {
   windowTitle: "",
   rtc: null,
   viewState: null,
-  exportDialogOpen: false,
-  exportFilename: "",
+  exportBeginDialogOpen: false,
+  exportProgressDialogOpen: false,
+  exportPath: "",
   exportPercent: 0,
   viewConfirmDialogOpen: false,
   viewConfirmSourcePath: null,
@@ -54,7 +56,7 @@ export class AppState extends Immutable.Record(defaultAppStateProps) {
 
   public readonly viewState!: ViewState;
   public readonly exportDialogOpen!: boolean;
-  public readonly exportFilename!: string;
+  public readonly exportPath!: string;
   public readonly exportPercent!: number;
   public readonly viewConfirmDialogOpen!: boolean;
   public readonly viewConfirmSourcePath!: DataSourcePath | null;

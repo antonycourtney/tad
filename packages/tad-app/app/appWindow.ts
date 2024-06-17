@@ -2,14 +2,14 @@ import url from "url";
 
 import path from "path";
 import fsPromises from "fs/promises";
-import electron, { BrowserWindow, IpcMainEvent } from "electron";
+import electron, { BrowserWindow, IpcMainEvent, ipcRenderer } from "electron";
 import { OpenType, OpenFSPath, OpenTad, OpenParams } from "../src/openParams";
 const dialog = electron.dialog;
 const ipcMain = electron.ipcMain;
 
 import fs from "fs";
 import log from "electron-log";
-import * as csvexport from "./csvexport";
+import * as fileExport from "./fileExport";
 import * as reltab from "reltab";
 import {
   DataSourceId,
@@ -348,6 +348,60 @@ export const saveAsDialog = async () => {
     log.info("succesfully saved workspace to ", saveFilename);
   });
 };
+
+const browseExportPath = async (
+  event: IpcMainEvent,
+  browseInfo: any
+): Promise<void> => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) {
+    return;
+  }
+  const exportPath = dialog.showSaveDialogSync(win, {
+    title: "Export Filtered CSV",
+    filters: [
+      {
+        name: "CSV Files",
+        extensions: ["csv"],
+      },
+    ],
+  });
+  win.webContents.send("set-export-path", { exportPath });
+};
+
+ipcMain.on("browse-export-path", browseExportPath);
+
+/*
+ * Begin the export dialog to export a filtered or unfiltered dataset as
+ * either a CSV or Parquet file.
+ */
+export const beginExport = async (win: BrowserWindow) => {
+  const queryStr: string = await getFilterQuery(win);
+  const req = reltab.deserializeQueryReq(queryStr);
+  const { query, filterRowCount } = req;
+  await fileExport.openExportBeginDialog(win, filterRowCount, query);
+  /*
+  let saveFilename = null;
+  saveFilename = dialog.showSaveDialogSync(win, {
+    title: "Export Filtered CSV",
+    filters: [
+      {
+        name: "CSV Files",
+        extensions: ["csv"],
+      },
+    ],
+  });
+
+  if (!saveFilename) {
+    // user cancelled save as...
+    return;
+  }
+
+  await fileExport.exportAs(win, saveFilename, filterRowCount, query);
+  */
+};
+
+/*
 export const exportFiltered = async (win: BrowserWindow) => {
   const queryStr: string = await getFilterQuery(win);
   const req = reltab.deserializeQueryReq(queryStr);
@@ -370,3 +424,4 @@ export const exportFiltered = async (win: BrowserWindow) => {
 
   await csvexport.exportAs(win, saveFilename, filterRowCount, query);
 };
+*/

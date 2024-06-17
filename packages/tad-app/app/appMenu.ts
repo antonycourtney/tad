@@ -67,6 +67,20 @@ export const createMenu = () => {
       },
     },
     {
+      label: "Export...",
+      click: (
+        item: MenuItem,
+        focusedWindow: BrowserWindow | undefined,
+        event: KeyboardEvent
+      ) => {
+        if (focusedWindow) {
+          appWindow.beginExport(focusedWindow);
+        }
+      },
+    },
+
+    /*
+    {
       label: "Export Filtered CSV...",
       click: (
         item: MenuItem,
@@ -78,6 +92,7 @@ export const createMenu = () => {
         }
       },
     },
+*/
   ];
 
   if (!isDarwin) {
