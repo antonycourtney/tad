@@ -3,6 +3,7 @@ import * as csv from "fast-csv";
 import * as fs from "fs";
 import { BrowserWindow } from "electron";
 import { DbDataSource } from "reltab";
+import { ExportFormat } from "tadviewer";
 
 export const openExportBeginDialog = async (
   win: BrowserWindow,
@@ -15,17 +16,49 @@ export const openExportBeginDialog = async (
   });
 };
 
+export const exportFile = async (
+  win: BrowserWindow,
+  exportFormat: ExportFormat,
+  exportPath: string,
+  filterRowCount: number,
+  query: reltab.QueryExp
+) => {
+  console.log(
+    "*** exportFile: ",
+    exportFormat,
+    exportPath,
+    filterRowCount,
+    query
+  );
+  if (exportFormat === "csv") {
+    return exportCSV(win, exportPath, filterRowCount, query);
+  } else if (exportFormat === "parquet") {
+    return exportParquet(win, exportPath, filterRowCount, query);
+  } else {
+    console.error("Unsupported export format: ", exportFormat);
+  }
+};
+
+export const exportParquet = async (
+  win: BrowserWindow,
+  saveFilename: string,
+  filterRowCount: number,
+  query: reltab.QueryExp
+) => {
+  console.log("*** exportParquet: ", saveFilename, filterRowCount, query);
+};
+
 // maximum number of items outstanding before pause and commit:
 // Some studies of sqlite found this number about optimal
 const BATCHSIZE = 10000;
-export const exportAs = async (
+export const exportCSV = async (
   win: BrowserWindow,
   saveFilename: string,
   filterRowCount: number,
   query: reltab.QueryExp
 ) => {
   let exportPercent = 0;
-  win.webContents.send("open-export-dialog", {
+  win.webContents.send("open-export-progress-dialog", {
     openState: true,
     saveFilename,
     exportPercent,

@@ -1,6 +1,6 @@
 import { ViewParams } from "./ViewParams";
 import { ViewState } from "./ViewState";
-import { AppState } from "./AppState";
+import { AppState, ExportFormat } from "./AppState";
 import * as reltab from "reltab";
 import { Activity, ColumnListTypes } from "./components/defs";
 import { Path, PathTree } from "aggtree";
@@ -483,6 +483,13 @@ export const setExportProgressDialogOpen = (
         .set("exportPath", saveFilename) as AppState
   );
 };
+export const setExportFormat = (
+  exportFormat: ExportFormat,
+  stateRef: StateRef<AppState>
+) => {
+  update(stateRef, (s) => s.set("exportFormat", exportFormat));
+};
+
 export const setExportPath = (
   exportPath: string,
   stateRef: StateRef<AppState>

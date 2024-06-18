@@ -13,12 +13,13 @@ import {
   ProgressBar,
   FormGroup,
   InputGroup,
+  HTMLSelect,
 } from "@blueprintjs/core";
 import { GridPane, OpenURLFn } from "./GridPane";
 import { Footer } from "./Footer";
 import { LoadingModal } from "./LoadingModal";
 import * as actions from "../actions";
-import { AppState } from "../AppState";
+import { AppState, ExportFormat } from "../AppState";
 import * as oneref from "oneref";
 import { useState } from "react";
 import { Activity } from "./defs";
@@ -46,7 +47,8 @@ export interface AppPaneBaseProps {
   embedded: boolean;
   rightFooterSlot?: JSX.Element;
   onFilter?: (filterExp: FilterExp) => void;
-  onBrowseExportPath?: () => void;
+  onBrowseExportPath?: (exportFormat: ExportFormat) => void;
+  onExportFile?: (exportFormat: ExportFormat, exportPath: string) => void;
 }
 
 export type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
@@ -86,7 +88,9 @@ const ExportProgressDialog: React.FunctionComponent<ExportDialogProps> = ({
 }: ExportDialogProps) => {
   let filterCountStr = "";
 
-  const { viewState } = appState;
+  const { viewState, exportPercent } = appState;
+
+  const isBusy = exportPercent < 1;
 
   if (
     appState.initialized &&
@@ -105,20 +109,20 @@ const ExportProgressDialog: React.FunctionComponent<ExportDialogProps> = ({
   }
   return (
     <Dialog
-      title="Export Filtered CSV"
+      title="Export File"
       onClose={() => handleExportProgressDialogClose(stateRef)}
-      isOpen={appState.exportDialogOpen}
+      isOpen={appState.exportProgressDialogOpen}
     >
       <div className={Classes.DIALOG_BODY}>
         <p className="bp4-text-large">
           Exporting {filterCountStr} rows to {appState.exportPath}
         </p>
-        <ProgressBar stripes={false} value={appState.exportPercent} />
+        <ProgressBar stripes={isBusy} />
       </div>
       <div className={Classes.DIALOG_FOOTER}>
         <div className={Classes.DIALOG_FOOTER_ACTIONS}>
           <Button
-            disabled={appState.exportPercent < 1}
+            disabled={isBusy}
             onClick={() => handleExportProgressDialogClose(stateRef)}
           >
             OK
@@ -130,17 +134,19 @@ const ExportProgressDialog: React.FunctionComponent<ExportDialogProps> = ({
 };
 
 type ExportBeginDialogProps = oneref.StateRefProps<AppState> & {
-  onBrowseExportPath?: () => void;
+  onBrowseExportPath?: (exportFormat: ExportFormat) => void;
+  onExportFile?: (exportFormat: ExportFormat, exportPath: string) => void;
 };
 
 const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
   appState,
   stateRef,
   onBrowseExportPath,
+  onExportFile,
 }: ExportBeginDialogProps) => {
   let filterCountStr = "";
 
-  const { viewState, exportPath } = appState;
+  const { viewState, exportPath, exportFormat } = appState;
 
   if (
     appState.initialized &&
@@ -170,15 +176,19 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
           label="File Format"
           labelFor="export-format-select"
         >
-          <div className="bp4-html-select bp4-inline">
-            <select id="export-format-select">
-              <option selected>Parquet</option>
-              <option value="1">CSV</option>
-            </select>
-            <span className="bp4-icon bp4-icon-double-caret-vertical"></span>
-          </div>
+          <HTMLSelect
+            id="export-format-select"
+            value={exportFormat}
+            onChange={(e) =>
+              actions.setExportFormat(e.target.value as ExportFormat, stateRef)
+            }
+            options={[
+              { label: "Parquet", value: "parquet" },
+              { label: "CSV", value: "csv" },
+            ]}
+          />
         </FormGroup>
-        <FormGroup label="Export Path" labelFor="export-path">
+        <FormGroup label="Export To File" labelFor="export-path">
           <InputGroup
             id="export-path"
             value={exportPath}
@@ -187,7 +197,7 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
               <Button
                 icon="folder-open"
                 minimal
-                onClick={(e) => onBrowseExportPath?.()}
+                onClick={(e) => onBrowseExportPath?.(exportFormat)}
               />
             }
           />
@@ -196,8 +206,11 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
       <div className={Classes.DIALOG_FOOTER}>
         <div className={Classes.DIALOG_FOOTER_ACTIONS}>
           <Button
-            disabled={appState.exportPercent < 1}
-            onClick={() => handleExportBeginDialogClose(stateRef)}
+            disabled={!exportPath}
+            onClick={() => {
+              actions.setExportBeginDialogOpen(false, stateRef);
+              onExportFile?.(exportFormat, exportPath);
+            }}
           >
             OK
           </Button>
@@ -281,6 +294,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   rightFooterSlot,
   onFilter,
   onBrowseExportPath,
+  onExportFile,
 }: AppPaneProps) => {
   const { activity, exportBeginDialogOpen } = appState;
   const dataSourceExpanded = activity === "DataSource";
@@ -368,6 +382,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
         appState={appState}
         stateRef={stateRef}
         onBrowseExportPath={onBrowseExportPath}
+        onExportFile={onExportFile}
       />
       <ExportProgressDialog appState={appState} stateRef={stateRef} />
       <ViewConfirmDialog

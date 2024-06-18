@@ -5,7 +5,7 @@ import "source-map-support/register";
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import OneRef, { mkRef, refContainer, mutableGet, StateRef } from "oneref";
-import { AppPane, AppPaneBaseProps } from "tadviewer";
+import { AppPane, AppPaneBaseProps, ExportFormat } from "tadviewer";
 import { PivotRequester } from "tadviewer";
 import { AppState } from "tadviewer";
 import { ViewParams, actions } from "tadviewer";
@@ -130,7 +130,12 @@ const init = async () => {
         clipboard={clipboard}
         openURL={openURL}
         embedded={false}
-        onBrowseExportPath={() => ipcRenderer.send("browse-export-path")}
+        onBrowseExportPath={(exportFormat: ExportFormat) =>
+          ipcRenderer.send("browse-export-path", { exportFormat })
+        }
+        onExportFile={(exportFormat: ExportFormat, exportPath: string) =>
+          ipcRenderer.send("export-file", { exportFormat, exportPath })
+        }
       />
     );
     const tRender = performance.now();
@@ -178,6 +183,11 @@ const init = async () => {
     ipcRenderer.on("open-export-begin-dialog", (event, req) => {
       const { openState, saveFilename } = req;
       actions.setExportBeginDialogOpen(openState, stateRef);
+    });
+    ipcRenderer.on("open-export-progress-dialog", (event, req) => {
+      console.log("got open-export-progress-dialog: ", req);
+      const { openState, saveFilename } = req;
+      actions.setExportProgressDialogOpen(openState, saveFilename, stateRef);
     });
     ipcRenderer.on("set-export-path", (event, req) => {
       const { exportPath } = req;

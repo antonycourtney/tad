@@ -357,19 +357,39 @@ const browseExportPath = async (
   if (!win) {
     return;
   }
+  const { exportFormat } = browseInfo;
+
+  const fmtFilter = {
+    name: `${exportFormat} files`,
+    extensions: [exportFormat],
+  };
+
   const exportPath = dialog.showSaveDialogSync(win, {
-    title: "Export Filtered CSV",
-    filters: [
-      {
-        name: "CSV Files",
-        extensions: ["csv"],
-      },
-    ],
+    title: "Export Filtered Data",
+    filters: [fmtFilter],
   });
   win.webContents.send("set-export-path", { exportPath });
 };
 
 ipcMain.on("browse-export-path", browseExportPath);
+
+ipcMain.on("export-file", async (event: IpcMainEvent, exportFileReq: any) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) {
+    return;
+  }
+  const { exportFormat, exportPath } = exportFileReq;
+  const queryStr: string = await getFilterQuery(win);
+  const req = reltab.deserializeQueryReq(queryStr);
+  const { query, filterRowCount } = req;
+  await fileExport.exportFile(
+    win,
+    exportFormat,
+    exportPath,
+    filterRowCount,
+    query
+  );
+});
 
 /*
  * Begin the export dialog to export a filtered or unfiltered dataset as
