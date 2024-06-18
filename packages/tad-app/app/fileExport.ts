@@ -1,9 +1,10 @@
 import * as reltab from "reltab";
 import * as csv from "fast-csv";
 import * as fs from "fs";
-import { BrowserWindow } from "electron";
+import { BrowserWindow, dialog } from "electron";
 import { DbDataSource } from "reltab";
 import { ExportFormat } from "tadviewer";
+import path from "path";
 
 export const openExportBeginDialog = async (
   win: BrowserWindow,
@@ -23,13 +24,6 @@ export const exportFile = async (
   filterRowCount: number,
   query: reltab.QueryExp
 ) => {
-  console.log(
-    "*** exportFile: ",
-    exportFormat,
-    exportPath,
-    filterRowCount,
-    query
-  );
   if (exportFormat === "csv") {
     return exportCSV(win, exportPath, filterRowCount, query);
   } else if (exportFormat === "parquet") {
@@ -39,28 +33,54 @@ export const exportFile = async (
   }
 };
 
-export const exportParquet = async (
-  win: BrowserWindow,
-  saveFilename: string,
-  filterRowCount: number,
-  query: reltab.QueryExp
-) => {
-  console.log("*** exportParquet: ", saveFilename, filterRowCount, query);
-};
-
-// maximum number of items outstanding before pause and commit:
-// Some studies of sqlite found this number about optimal
-const BATCHSIZE = 10000;
-export const exportCSV = async (
+const exportParquet = async (
   win: BrowserWindow,
   saveFilename: string,
   filterRowCount: number,
   query: reltab.QueryExp
 ) => {
   let exportPercent = 0;
+  const exportPathBaseName = path.basename(saveFilename);
   win.webContents.send("open-export-progress-dialog", {
     openState: true,
-    saveFilename,
+    exportPathBaseName,
+    exportPercent,
+  });
+
+  try {
+    const appRtc = reltab.getExportConnection() as DbDataSource;
+
+    const baseQuery = await appRtc.getSqlForQuery(query);
+
+    const copyQuery = `COPY (${baseQuery}) TO '${saveFilename}' (FORMAT 'parquet')`;
+
+    const rows = await appRtc.db.runSqlQuery(copyQuery);
+  } catch (rawErr) {
+    const err = rawErr as Error;
+    win.webContents.send("close-export-progress-dialog");
+
+    dialog.showErrorBox("Error saving file: ", err.toString());
+  }
+  win.webContents.send("export-progress", {
+    percentComplete: 1,
+  });
+};
+
+// maximum number of items outstanding before pause and commit:
+// Some studies of sqlite found this number about optimal
+const BATCHSIZE = 10000;
+const exportCSV = async (
+  win: BrowserWindow,
+  saveFilename: string,
+  filterRowCount: number,
+  query: reltab.QueryExp
+) => {
+  let exportPercent = 0;
+  const exportPathBaseName = path.basename(saveFilename);
+
+  win.webContents.send("open-export-progress-dialog", {
+    openState: true,
+    exportPathBaseName,
     exportPercent,
   });
   const csvStream = csv.format({

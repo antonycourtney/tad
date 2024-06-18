@@ -14,6 +14,7 @@ import {
   FormGroup,
   InputGroup,
   HTMLSelect,
+  Text,
 } from "@blueprintjs/core";
 import { GridPane, OpenURLFn } from "./GridPane";
 import { Footer } from "./Footer";
@@ -91,6 +92,7 @@ const ExportProgressDialog: React.FunctionComponent<ExportDialogProps> = ({
   const { viewState, exportPercent } = appState;
 
   const isBusy = exportPercent < 1;
+  const isComplete = !isBusy;
 
   if (
     appState.initialized &&
@@ -107,6 +109,10 @@ const ExportProgressDialog: React.FunctionComponent<ExportDialogProps> = ({
       });
     }
   }
+
+  const exportWord = isBusy ? "Exporting" : "Exported";
+  const exportEllipsis = isBusy ? "..." : "";
+  const exportText = `${exportWord} ${filterCountStr} rows to ${appState.exportPathBaseName}${exportEllipsis}`;
   return (
     <Dialog
       title="Export File"
@@ -114,9 +120,10 @@ const ExportProgressDialog: React.FunctionComponent<ExportDialogProps> = ({
       isOpen={appState.exportProgressDialogOpen}
     >
       <div className={Classes.DIALOG_BODY}>
-        <p className="bp4-text-large">
-          Exporting {filterCountStr} rows to {appState.exportPath}
-        </p>
+        <Text className="bp4-text-large" ellipsize={true}>
+          {exportText}
+        </Text>
+        <br />
         <ProgressBar stripes={isBusy} />
       </div>
       <div className={Classes.DIALOG_FOOTER}>
@@ -212,7 +219,7 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
               onExportFile?.(exportFormat, exportPath);
             }}
           >
-            OK
+            Export
           </Button>
         </div>
       </div>

@@ -472,15 +472,16 @@ export const setExportBeginDialogOpen = (
 
 export const setExportProgressDialogOpen = (
   openState: boolean,
-  saveFilename: string,
+  exportPathBaseName: string,
   stateRef: StateRef<AppState>
 ) => {
+  console.log("exportProgressDialogOpen: ", exportPathBaseName);
   update(
     stateRef,
     (s) =>
       s
         .set("exportProgressDialogOpen", openState)
-        .set("exportPath", saveFilename) as AppState
+        .set("exportPathBaseName", exportPathBaseName) as AppState
   );
 };
 export const setExportFormat = (

@@ -185,9 +185,15 @@ const init = async () => {
       actions.setExportBeginDialogOpen(openState, stateRef);
     });
     ipcRenderer.on("open-export-progress-dialog", (event, req) => {
-      console.log("got open-export-progress-dialog: ", req);
-      const { openState, saveFilename } = req;
-      actions.setExportProgressDialogOpen(openState, saveFilename, stateRef);
+      const { openState, exportPathBaseName } = req;
+      actions.setExportProgressDialogOpen(
+        openState,
+        exportPathBaseName,
+        stateRef
+      );
+    });
+    ipcRenderer.on("close-export-progress-dialog", (event, req) => {
+      actions.setExportProgressDialogOpen(false, "", stateRef);
     });
     ipcRenderer.on("set-export-path", (event, req) => {
       const { exportPath } = req;

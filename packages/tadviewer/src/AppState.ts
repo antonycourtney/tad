@@ -24,6 +24,7 @@ export interface AppStateProps {
   exportProgressDialogOpen: boolean;
   exportFormat: ExportFormat;
   exportPath: string;
+  exportPathBaseName: string;
   exportPercent: number;
 
   viewConfirmDialogOpen: boolean;
@@ -43,6 +44,7 @@ const defaultAppStateProps: AppStateProps = {
   exportProgressDialogOpen: false,
   exportFormat: "parquet",
   exportPath: "",
+  exportPathBaseName: "",
   exportPercent: 0,
   viewConfirmDialogOpen: false,
   viewConfirmSourcePath: null,
@@ -63,6 +65,7 @@ export class AppState extends Immutable.Record(defaultAppStateProps) {
   public readonly exportProgressDialogOpen!: boolean;
   public readonly exportFormat!: ExportFormat;
   public readonly exportPath!: string;
+  public readonly exportPathBaseName!: string;
   public readonly exportPercent!: number;
   public readonly viewConfirmDialogOpen!: boolean;
   public readonly viewConfirmSourcePath!: DataSourcePath | null;
