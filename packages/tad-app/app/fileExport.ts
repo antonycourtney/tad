@@ -3,7 +3,7 @@ import * as csv from "fast-csv";
 import * as fs from "fs";
 import { BrowserWindow, dialog } from "electron";
 import { DbDataSource } from "reltab";
-import { ExportFormat } from "tadviewer";
+import { ExportFormat, ParquetExportOptions } from "tadviewer";
 import path from "path";
 
 export const openExportBeginDialog = async (
@@ -22,12 +22,13 @@ export const exportFile = async (
   exportFormat: ExportFormat,
   exportPath: string,
   filterRowCount: number,
-  query: reltab.QueryExp
+  query: reltab.QueryExp,
+  parquetExportOptions: ParquetExportOptions
 ) => {
   if (exportFormat === "csv") {
     return exportCSV(win, exportPath, filterRowCount, query);
   } else if (exportFormat === "parquet") {
-    return exportParquet(win, exportPath, filterRowCount, query);
+    return exportParquet(win, exportPath, query, parquetExportOptions);
   } else {
     console.error("Unsupported export format: ", exportFormat);
   }
@@ -36,8 +37,8 @@ export const exportFile = async (
 const exportParquet = async (
   win: BrowserWindow,
   saveFilename: string,
-  filterRowCount: number,
-  query: reltab.QueryExp
+  query: reltab.QueryExp,
+  parquetExportOptions: ParquetExportOptions
 ) => {
   let exportPercent = 0;
   const exportPathBaseName = path.basename(saveFilename);
@@ -52,7 +53,7 @@ const exportParquet = async (
 
     const baseQuery = await appRtc.getSqlForQuery(query);
 
-    const copyQuery = `COPY (${baseQuery}) TO '${saveFilename}' (FORMAT 'parquet')`;
+    const copyQuery = `COPY (${baseQuery}) TO '${saveFilename}' (FORMAT 'parquet', COMPRESSION '${parquetExportOptions.compression}')`;
 
     const rows = await appRtc.db.runSqlQuery(copyQuery);
   } catch (rawErr) {

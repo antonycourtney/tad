@@ -5,7 +5,12 @@ import "source-map-support/register";
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import OneRef, { mkRef, refContainer, mutableGet, StateRef } from "oneref";
-import { AppPane, AppPaneBaseProps, ExportFormat } from "tadviewer";
+import {
+  AppPane,
+  AppPaneBaseProps,
+  ExportFormat,
+  ParquetExportOptions,
+} from "tadviewer";
 import { PivotRequester } from "tadviewer";
 import { AppState } from "tadviewer";
 import { ViewParams, actions } from "tadviewer";
@@ -133,8 +138,16 @@ const init = async () => {
         onBrowseExportPath={(exportFormat: ExportFormat) =>
           ipcRenderer.send("browse-export-path", { exportFormat })
         }
-        onExportFile={(exportFormat: ExportFormat, exportPath: string) =>
-          ipcRenderer.send("export-file", { exportFormat, exportPath })
+        onExportFile={(
+          exportFormat: ExportFormat,
+          exportPath: string,
+          parquetExportOptions: ParquetExportOptions
+        ) =>
+          ipcRenderer.send("export-file", {
+            exportFormat,
+            exportPath,
+            parquetExportOptions,
+          })
         }
       />
     );
@@ -164,7 +177,7 @@ const init = async () => {
       actions.setShowHiddenCols(val, stateRef);
     });
     ipcRenderer.on("request-serialize-filter-query", (event, req) => {
-      console.log("got request-serialize-filter-query: ", req);
+      // console.log("got request-serialize-filter-query: ", req);
       const { requestId } = req;
       const curState = mutableGet(stateRef);
       const baseQuery = curState.viewState.baseQuery;
@@ -208,9 +221,7 @@ const init = async () => {
       openFromOpenParams(openParams, stateRef);
     });
 
-    document.addEventListener("copy", function (e) {
-      console.log("**** renderMain: got copy event");
-    });
+    document.addEventListener("copy", function (e) {});
 
     ipcRenderer.send("render-init-complete");
   } catch (e) {

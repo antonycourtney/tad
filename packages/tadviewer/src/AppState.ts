@@ -12,6 +12,14 @@ import { Activity } from "./components/defs";
 
 export type ExportFormat = "csv" | "parquet";
 
+export interface ParquetExportOptions {
+  compression: "uncompressed" | "snappy" | "gzip" | "zstd";
+}
+
+export const defaultParquetExportOptions: ParquetExportOptions = {
+  compression: "snappy",
+};
+
 export interface AppStateProps {
   initialized: boolean; // Has main process initialization completed?
 

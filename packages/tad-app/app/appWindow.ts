@@ -378,7 +378,7 @@ ipcMain.on("export-file", async (event: IpcMainEvent, exportFileReq: any) => {
   if (!win) {
     return;
   }
-  const { exportFormat, exportPath } = exportFileReq;
+  const { exportFormat, exportPath, parquetExportOptions } = exportFileReq;
   const queryStr: string = await getFilterQuery(win);
   const req = reltab.deserializeQueryReq(queryStr);
   const { query, filterRowCount } = req;
@@ -387,7 +387,8 @@ ipcMain.on("export-file", async (event: IpcMainEvent, exportFileReq: any) => {
     exportFormat,
     exportPath,
     filterRowCount,
-    query
+    query,
+    parquetExportOptions
   );
 });
 
@@ -400,48 +401,4 @@ export const beginExport = async (win: BrowserWindow) => {
   const req = reltab.deserializeQueryReq(queryStr);
   const { query, filterRowCount } = req;
   await fileExport.openExportBeginDialog(win, filterRowCount, query);
-  /*
-  let saveFilename = null;
-  saveFilename = dialog.showSaveDialogSync(win, {
-    title: "Export Filtered CSV",
-    filters: [
-      {
-        name: "CSV Files",
-        extensions: ["csv"],
-      },
-    ],
-  });
-
-  if (!saveFilename) {
-    // user cancelled save as...
-    return;
-  }
-
-  await fileExport.exportAs(win, saveFilename, filterRowCount, query);
-  */
 };
-
-/*
-export const exportFiltered = async (win: BrowserWindow) => {
-  const queryStr: string = await getFilterQuery(win);
-  const req = reltab.deserializeQueryReq(queryStr);
-  const { query, filterRowCount } = req;
-  let saveFilename = null;
-  saveFilename = dialog.showSaveDialogSync(win, {
-    title: "Export Filtered CSV",
-    filters: [
-      {
-        name: "CSV Files",
-        extensions: ["csv"],
-      },
-    ],
-  });
-
-  if (!saveFilename) {
-    // user cancelled save as...
-    return;
-  }
-
-  await csvexport.exportAs(win, saveFilename, filterRowCount, query);
-};
-*/

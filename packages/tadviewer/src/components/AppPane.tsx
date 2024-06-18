@@ -15,12 +15,18 @@ import {
   InputGroup,
   HTMLSelect,
   Text,
+  Collapse,
 } from "@blueprintjs/core";
 import { GridPane, OpenURLFn } from "./GridPane";
 import { Footer } from "./Footer";
 import { LoadingModal } from "./LoadingModal";
 import * as actions from "../actions";
-import { AppState, ExportFormat } from "../AppState";
+import {
+  AppState,
+  ExportFormat,
+  ParquetExportOptions,
+  defaultParquetExportOptions,
+} from "../AppState";
 import * as oneref from "oneref";
 import { useState } from "react";
 import { Activity } from "./defs";
@@ -49,7 +55,11 @@ export interface AppPaneBaseProps {
   rightFooterSlot?: JSX.Element;
   onFilter?: (filterExp: FilterExp) => void;
   onBrowseExportPath?: (exportFormat: ExportFormat) => void;
-  onExportFile?: (exportFormat: ExportFormat, exportPath: string) => void;
+  onExportFile?: (
+    exportFormat: ExportFormat,
+    exportPath: string,
+    parquetExportOptions: ParquetExportOptions
+  ) => void;
 }
 
 export type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
@@ -140,9 +150,58 @@ const ExportProgressDialog: React.FunctionComponent<ExportDialogProps> = ({
   );
 };
 
+type ParquetOptionsSectionProps = {
+  parquetExportOptions: ParquetExportOptions;
+  onUpdateParquetOptions: (opts: ParquetExportOptions) => void;
+};
+
+export const ParquetOptionsSection: React.FunctionComponent<
+  ParquetOptionsSectionProps
+> = ({
+  parquetExportOptions,
+  onUpdateParquetOptions,
+}: ParquetOptionsSectionProps) => {
+  const { compression } = parquetExportOptions;
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setIsExpanded(!isExpanded)}>
+        Parquet Options...
+      </Button>
+      <Collapse isOpen={isExpanded}>
+        <div className={Classes.DIALOG_BODY}>
+          <FormGroup
+            inline={true}
+            label="Compression"
+            labelFor="parquet-compression-select"
+          >
+            <HTMLSelect
+              id="parquet-compression-select"
+              value={compression}
+              onChange={(e) =>
+                onUpdateParquetOptions({ compression: e.target.value as any })
+              }
+              options={[
+                { label: "uncompressed", value: "uncompressed" },
+                { label: "snappy", value: "snappy" },
+                { label: "gzip", value: "gzip" },
+                { label: "zstd", value: "zstd" },
+              ]}
+            />
+          </FormGroup>
+        </div>
+      </Collapse>
+    </>
+  );
+};
 type ExportBeginDialogProps = oneref.StateRefProps<AppState> & {
   onBrowseExportPath?: (exportFormat: ExportFormat) => void;
-  onExportFile?: (exportFormat: ExportFormat, exportPath: string) => void;
+  onExportFile?: (
+    exportFormat: ExportFormat,
+    exportPath: string,
+    parquetExportOptions: ParquetExportOptions
+  ) => void;
 };
 
 const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
@@ -154,6 +213,10 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
   let filterCountStr = "";
 
   const { viewState, exportPath, exportFormat } = appState;
+
+  const [parquetExportOptions, setParquetExportOptions] = useState(
+    defaultParquetExportOptions
+  );
 
   if (
     appState.initialized &&
@@ -170,6 +233,14 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
       });
     }
   }
+  const parquetOptionsSection =
+    exportFormat === "parquet" ? (
+      <ParquetOptionsSection
+        parquetExportOptions={parquetExportOptions}
+        onUpdateParquetOptions={setParquetExportOptions}
+      />
+    ) : null;
+
   return (
     <Dialog
       title="Export"
@@ -209,6 +280,7 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
             }
           />
         </FormGroup>
+        {parquetOptionsSection}
       </div>
       <div className={Classes.DIALOG_FOOTER}>
         <div className={Classes.DIALOG_FOOTER_ACTIONS}>
@@ -216,7 +288,7 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
             disabled={!exportPath}
             onClick={() => {
               actions.setExportBeginDialogOpen(false, stateRef);
-              onExportFile?.(exportFormat, exportPath);
+              onExportFile?.(exportFormat, exportPath, parquetExportOptions);
             }}
           >
             Export
