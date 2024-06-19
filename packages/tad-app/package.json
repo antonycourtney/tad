@@ -59,6 +59,7 @@
   },
   "devDependencies": {
     "@blueprintjs/icons": "^4.10.1",
+    "@electron/notarize": "^2.3.2",
     "@types/command-line-args": "^5.2.0",
     "@types/command-line-usage": "^5.0.2",
     "@types/react": "^18.0.15",
@@ -68,9 +69,8 @@
     "ajv": "^6.9.1",
     "css-loader": "^6.5.1",
     "duplicate-package-checker-webpack-plugin": "^3.0.0",
-    "electron": "30.0.9",
+    "electron": "31.0.1",
     "electron-builder": "^24.13.3",
-    "electron-notarize": "^1.2.2",
     "file-loader": "^6.2.0",
     "image-webpack-loader": "^8.0.1",
     "less": "^3.13.1",
