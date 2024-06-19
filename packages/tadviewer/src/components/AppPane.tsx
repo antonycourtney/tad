@@ -278,11 +278,7 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
     >
       <div className={Classes.DIALOG_BODY}>
         <p className="bp4-text-large">Export {filterCountStr} rows</p>
-        <FormGroup
-          inline={true}
-          label="File Format"
-          labelFor="export-format-select"
-        >
+        <FormGroup label="File Format" labelFor="export-format-select">
           <HTMLSelect
             id="export-format-select"
             value={exportFormat}
