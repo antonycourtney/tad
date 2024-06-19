@@ -1,5 +1,5 @@
 import * as React from "react";
-import { default as ReactDefault } from "react";
+import { default as ReactDefault, useEffect, useRef } from "react";
 import { ActivityBar } from "./ActivityBar";
 import { PivotSidebar } from "./PivotSidebar";
 import { DataSourceSidebar } from "./DataSourceSidebar";
@@ -103,6 +103,15 @@ const ExportProgressDialog: React.FunctionComponent<ExportDialogProps> = ({
 
   const isBusy = exportPercent < 1;
   const isComplete = !isBusy;
+  const okButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (isComplete) {
+      setTimeout(() => {
+        okButtonRef.current?.focus();
+      }, 0);
+    }
+  }, [isComplete, okButtonRef]);
 
   if (
     appState.initialized &&
@@ -140,6 +149,8 @@ const ExportProgressDialog: React.FunctionComponent<ExportDialogProps> = ({
         <div className={Classes.DIALOG_FOOTER_ACTIONS}>
           <Button
             disabled={isBusy}
+            autoFocus={true}
+            elementRef={okButtonRef}
             onClick={() => handleExportProgressDialogClose(stateRef)}
           >
             OK
@@ -212,7 +223,25 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
 }: ExportBeginDialogProps) => {
   let filterCountStr = "";
 
-  const { viewState, exportPath, exportFormat } = appState;
+  // I tried using the Blueprint Dialog autoFocus prop, but it didn't work
+  // So let's try setting focus explicitly using an async handler:
+  const pathButtonRef = useRef<HTMLButtonElement | null>(null);
+  const exportButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const { viewState, exportBeginDialogOpen, exportPath, exportFormat } =
+    appState;
+  const hasPath = exportPath != null && exportPath.length > 0;
+
+  useEffect(() => {
+    if (exportBeginDialogOpen) {
+      // Delay the focus to allow the dialog to fully render
+      setTimeout(() => {
+        const focusButtonRef = hasPath ? exportButtonRef : pathButtonRef;
+        focusButtonRef.current?.focus();
+        console.log("focus effect: ", hasPath, focusButtonRef.current);
+      }, 0);
+    }
+  }, [exportBeginDialogOpen, hasPath, exportButtonRef, pathButtonRef]);
 
   const [parquetExportOptions, setParquetExportOptions] = useState(
     defaultParquetExportOptions
@@ -275,6 +304,8 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
               <Button
                 icon="folder-open"
                 minimal
+                elementRef={pathButtonRef}
+                intent={hasPath ? undefined : "primary"}
                 onClick={(e) => onBrowseExportPath?.(exportFormat)}
               />
             }
@@ -285,7 +316,9 @@ const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
       <div className={Classes.DIALOG_FOOTER}>
         <div className={Classes.DIALOG_FOOTER_ACTIONS}>
           <Button
-            disabled={!exportPath}
+            disabled={!hasPath}
+            intent={hasPath ? "primary" : undefined}
+            elementRef={exportButtonRef}
             onClick={() => {
               actions.setExportBeginDialogOpen(false, stateRef);
               onExportFile?.(exportFormat, exportPath, parquetExportOptions);
