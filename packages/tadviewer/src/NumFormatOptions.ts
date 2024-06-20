@@ -39,11 +39,14 @@ export class NumFormatOptions
       let ret;
 
       if (this.exponential) {
+        const expFmtOpts: BigIntToLocaleStringOptions = {
+          notation: "scientific",
+        };
         if (this.decimalPlaces) {
-          ret = val.toExponential(this.decimalPlaces);
-        } else {
-          ret = val.toExponential();
+          expFmtOpts.minimumFractionDigits = this.decimalPlaces as any;
+          expFmtOpts.maximumFractionDigits = this.decimalPlaces as any;
         }
+        ret = val.toLocaleString(undefined, expFmtOpts);
       } else {
         ret = val.toLocaleString(undefined, fmtOpts);
       }
