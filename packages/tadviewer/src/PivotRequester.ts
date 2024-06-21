@@ -1,4 +1,3 @@
-import log from "loglevel";
 import * as reltab from "reltab";
 import * as aggtree from "aggtree";
 import { PagedDataView, DataRow } from "./PagedDataView";
@@ -6,8 +5,6 @@ import { ViewParams } from "./ViewParams";
 import { AppState } from "./AppState";
 import { QueryView } from "./QueryView";
 import {
-  ReltabConnection,
-  DataSourceId,
   DataSourceConnection,
   getColumnHistogramMap,
   ColumnHistogramMap,
@@ -97,15 +94,25 @@ const fastFilterRowCount = async (
   baseRowCount: number,
   filterExp: reltab.FilterExp,
   filterQuery: reltab.QueryExp,
-  onViewRowCount?: (query: reltab.QueryExp) => void
+  onViewRowCount?: (
+    query: reltab.QueryExp,
+    type: "filtered" | "unfiltered" | "view"
+  ) => void,
+  onViewRowCountResolved?: (
+    query: reltab.QueryExp,
+    rowCount: number,
+    type: "filtered" | "unfiltered" | "view"
+  ) => void
 ): Promise<number> => {
   if (filterExp.opArgs.length === 0) {
     // short circuit!
     return baseRowCount;
   }
 
-  onViewRowCount?.(filterQuery);
-  return rt.rowCount(filterQuery);
+  onViewRowCount?.(filterQuery, "filtered");
+  const resolvedNumber = await rt.rowCount(filterQuery);
+  onViewRowCountResolved?.(filterQuery, resolvedNumber, "filtered");
+  return resolvedNumber;
 };
 /*
  * hacky opt for using filterRowCount as viewRowCount if not pivoted
@@ -116,15 +123,25 @@ const fastViewRowCount = async (
   filterRowCount: number,
   vpivots: Array<string>,
   viewQuery: reltab.QueryExp,
-  onViewRowCount?: (query: reltab.QueryExp) => void
+  onViewRowCount?: (
+    query: reltab.QueryExp,
+    type: "filtered" | "unfiltered" | "view"
+  ) => void,
+  onViewRowCountResolved?: (
+    query: reltab.QueryExp,
+    rowCount: number,
+    type: "filtered" | "unfiltered" | "view"
+  ) => void
 ): Promise<number> => {
   if (vpivots.length === 0) {
     // short circuit!
     return filterRowCount;
   }
 
-  onViewRowCount?.(viewQuery);
-  return rt.rowCount(viewQuery);
+  onViewRowCount?.(viewQuery, "view");
+  const resolvedNumber = await rt.rowCount(viewQuery);
+  onViewRowCountResolved?.(viewQuery, resolvedNumber, "view");
+  return resolvedNumber;
 };
 /**
  * Use the current ViewParams to construct a QueryExp to send to
@@ -140,12 +157,15 @@ const requestQueryView = async (
   viewParams: ViewParams,
   showRecordCount: boolean,
   prevQueryView: QueryView | null | undefined,
-  onViewQuery?: (
+  onViewRowCount?: (
     query: reltab.QueryExp,
-    offset?: number,
-    limit?: number
+    type: "filtered" | "unfiltered" | "view"
   ) => void,
-  onViewRowCount?: (query: reltab.QueryExp) => void
+  onViewRowCountResolved?: (
+    query: reltab.QueryExp,
+    rowCount: number,
+    type: "filtered" | "unfiltered" | "view"
+  ) => void
 ): Promise<QueryView> => {
   const schemaCols = baseSchema.columns;
   const aggMap: any = {};
@@ -168,21 +188,24 @@ const requestQueryView = async (
   );
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths); // const t0 = performance.now()  // eslint-disable-line
 
-  onViewRowCount?.(baseQuery);
+  onViewRowCount?.(baseQuery, "unfiltered");
   const baseRowCount = await rt.rowCount(baseQuery);
+  onViewRowCountResolved?.(baseQuery, baseRowCount, "unfiltered");
   const filterRowCount = await fastFilterRowCount(
     rt,
     baseRowCount,
     viewParams.filterExp,
     filterQuery,
-    onViewRowCount
+    onViewRowCount,
+    onViewRowCountResolved
   );
   const rowCount = await fastViewRowCount(
     rt,
     filterRowCount,
     viewParams.vpivots,
     treeQuery,
-    onViewRowCount
+    onViewRowCount,
+    onViewRowCountResolved
   ); // const t1 = performance.now() // eslint-disable-line
   // console.log('gathering row counts took ', (t1 - t0) / 1000, ' sec')
 
@@ -285,23 +308,24 @@ export class PivotRequester {
   errorCallback?: (e: Error) => void;
   setLoadingCallback: (loading: boolean) => void;
 
-  onViewQuery?: (
-    query: reltab.QueryExp,
-    offset?: number,
-    limit?: number
-  ) => void;
-  onViewRowCount?: (query: reltab.QueryExp) => void;
-
   constructor(
     stateRef: oneref.StateRef<AppState>,
     errorCallback?: (e: Error) => void,
     setLoadingCallback?: (loading: boolean) => void,
-    onViewQuery?: (
+    public onViewQuery?: (
       query: reltab.QueryExp,
       offset?: number,
       limit?: number
     ) => void,
-    onViewRowCount?: (query: reltab.QueryExp) => void
+    public onViewRowCount?: (
+      query: reltab.QueryExp,
+      type: "filtered" | "unfiltered" | "view"
+    ) => void,
+    public onViewRowCountResolved?: (
+      query: reltab.QueryExp,
+      rowCount: number,
+      type: "filtered" | "unfiltered" | "view"
+    ) => void
   ) {
     const appState = mutableGet(stateRef);
     this.pendingQueryRequest = null;
@@ -312,8 +336,6 @@ export class PivotRequester {
     this.pendingLimit = 0;
     this.errorCallback = errorCallback;
     this.setLoadingCallback = setLoadingCallback || noopSetLoadingCallback;
-    this.onViewQuery = onViewQuery;
-    this.onViewRowCount = onViewRowCount;
 
     addStateChangeListener(stateRef, (_) => {
       this.onStateChange(stateRef);
@@ -411,8 +433,8 @@ export class PivotRequester {
         this.pendingViewParams,
         appState.showRecordCount,
         queryView,
-        this.onViewQuery,
-        this.onViewRowCount
+        this.onViewRowCount,
+        this.onViewRowCountResolved
       );
       this.pendingQueryRequest = qreq;
       this.pendingDataRequest = qreq
