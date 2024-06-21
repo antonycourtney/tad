@@ -1,6 +1,6 @@
 {
   "name": "reltab",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Backend-independent library for queries on relational tables",
   "main": "dist/reltab.js",
   "types": "dist/reltab.d.ts",

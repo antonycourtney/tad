@@ -96,13 +96,15 @@ const fastFilterRowCount = async (
   rt: DataSourceConnection,
   baseRowCount: number,
   filterExp: reltab.FilterExp,
-  filterQuery: reltab.QueryExp
+  filterQuery: reltab.QueryExp,
+  onViewRowCount?: (query: reltab.QueryExp) => void
 ): Promise<number> => {
   if (filterExp.opArgs.length === 0) {
     // short circuit!
     return baseRowCount;
   }
 
+  onViewRowCount?.(filterQuery);
   return rt.rowCount(filterQuery);
 };
 /*
@@ -113,13 +115,15 @@ const fastViewRowCount = async (
   rt: DataSourceConnection,
   filterRowCount: number,
   vpivots: Array<string>,
-  viewQuery: reltab.QueryExp
+  viewQuery: reltab.QueryExp,
+  onViewRowCount?: (query: reltab.QueryExp) => void
 ): Promise<number> => {
   if (vpivots.length === 0) {
     // short circuit!
     return filterRowCount;
   }
 
+  onViewRowCount?.(viewQuery);
   return rt.rowCount(viewQuery);
 };
 /**
@@ -135,7 +139,13 @@ const requestQueryView = async (
   baseSchema: reltab.Schema,
   viewParams: ViewParams,
   showRecordCount: boolean,
-  prevQueryView: QueryView | null | undefined
+  prevQueryView: QueryView | null | undefined,
+  onViewQuery?: (
+    query: reltab.QueryExp,
+    offset?: number,
+    limit?: number
+  ) => void,
+  onViewRowCount?: (query: reltab.QueryExp) => void
 ): Promise<QueryView> => {
   const schemaCols = baseSchema.columns;
   const aggMap: any = {};
@@ -158,18 +168,21 @@ const requestQueryView = async (
   );
   const treeQuery = await ptree.getSortedTreeQuery(viewParams.openPaths); // const t0 = performance.now()  // eslint-disable-line
 
+  onViewRowCount?.(baseQuery);
   const baseRowCount = await rt.rowCount(baseQuery);
   const filterRowCount = await fastFilterRowCount(
     rt,
     baseRowCount,
     viewParams.filterExp,
-    filterQuery
+    filterQuery,
+    onViewRowCount
   );
   const rowCount = await fastViewRowCount(
     rt,
     filterRowCount,
     viewParams.vpivots,
-    treeQuery
+    treeQuery,
+    onViewRowCount
   ); // const t1 = performance.now() // eslint-disable-line
   // console.log('gathering row counts took ', (t1 - t0) / 1000, ' sec')
 
@@ -206,8 +219,14 @@ const requestDataView = async (
   viewParams: ViewParams,
   queryView: QueryView,
   offset: number,
-  limit: number
+  limit: number,
+  onViewQuery?: (
+    query: reltab.QueryExp,
+    offset?: number,
+    limit?: number
+  ) => void
 ): Promise<PagedDataView> => {
+  onViewQuery?.(queryView.query, offset, limit);
   const tableData = await rt.evalQuery(queryView.query, offset, limit);
   const dataView = mkDataView(
     viewParams,
@@ -266,10 +285,23 @@ export class PivotRequester {
   errorCallback?: (e: Error) => void;
   setLoadingCallback: (loading: boolean) => void;
 
+  onViewQuery?: (
+    query: reltab.QueryExp,
+    offset?: number,
+    limit?: number
+  ) => void;
+  onViewRowCount?: (query: reltab.QueryExp) => void;
+
   constructor(
     stateRef: oneref.StateRef<AppState>,
     errorCallback?: (e: Error) => void,
-    setLoadingCallback?: (loading: boolean) => void
+    setLoadingCallback?: (loading: boolean) => void,
+    onViewQuery?: (
+      query: reltab.QueryExp,
+      offset?: number,
+      limit?: number
+    ) => void,
+    onViewRowCount?: (query: reltab.QueryExp) => void
   ) {
     const appState = mutableGet(stateRef);
     this.pendingQueryRequest = null;
@@ -280,6 +312,8 @@ export class PivotRequester {
     this.pendingLimit = 0;
     this.errorCallback = errorCallback;
     this.setLoadingCallback = setLoadingCallback || noopSetLoadingCallback;
+    this.onViewQuery = onViewQuery;
+    this.onViewRowCount = onViewRowCount;
 
     addStateChangeListener(stateRef, (_) => {
       this.onStateChange(stateRef);
@@ -309,7 +343,8 @@ export class PivotRequester {
       viewParams,
       queryView,
       offset,
-      limit
+      limit,
+      this.onViewQuery
     );
     this.pendingDataRequest = dreq;
     dreq.then((dataView) => {
@@ -375,7 +410,9 @@ export class PivotRequester {
         viewState.baseSchema,
         this.pendingViewParams,
         appState.showRecordCount,
-        queryView
+        queryView,
+        this.onViewQuery,
+        this.onViewRowCount
       );
       this.pendingQueryRequest = qreq;
       this.pendingDataRequest = qreq

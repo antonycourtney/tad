@@ -1,6 +1,6 @@
 import { ViewParams } from "./ViewParams";
 import { ViewState } from "./ViewState";
-import { AppState } from "./AppState";
+import { AppState, ExportFormat } from "./AppState";
 import * as reltab from "reltab";
 import { Activity, ColumnListTypes } from "./components/defs";
 import { Path, PathTree } from "aggtree";
@@ -463,18 +463,39 @@ export const setShowHiddenCols = (
   );
 };
 
-export const setExportDialogOpen = (
+export const setExportBeginDialogOpen = (
   openState: boolean,
-  saveFilename: string,
   stateRef: StateRef<AppState>
 ) => {
+  update(stateRef, (s) => s.set("exportBeginDialogOpen", openState));
+};
+
+export const setExportProgressDialogOpen = (
+  openState: boolean,
+  exportPathBaseName: string,
+  stateRef: StateRef<AppState>
+) => {
+  console.log("exportProgressDialogOpen: ", exportPathBaseName);
   update(
     stateRef,
     (s) =>
       s
-        .set("exportDialogOpen", openState)
-        .set("exportFilename", saveFilename) as AppState
+        .set("exportProgressDialogOpen", openState)
+        .set("exportPathBaseName", exportPathBaseName) as AppState
   );
+};
+export const setExportFormat = (
+  exportFormat: ExportFormat,
+  stateRef: StateRef<AppState>
+) => {
+  update(stateRef, (s) => s.set("exportFormat", exportFormat));
+};
+
+export const setExportPath = (
+  exportPath: string,
+  stateRef: StateRef<AppState>
+) => {
+  update(stateRef, (s) => s.set("exportPath", exportPath));
 };
 
 export const setViewConfirmDialogOpen = (

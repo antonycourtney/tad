@@ -10,6 +10,16 @@ import { Activity } from "./components/defs";
  * Just a single view in a single untabbed window for now.
  */
 
+export type ExportFormat = "csv" | "parquet";
+
+export interface ParquetExportOptions {
+  compression: "uncompressed" | "snappy" | "gzip" | "zstd";
+}
+
+export const defaultParquetExportOptions: ParquetExportOptions = {
+  compression: "snappy",
+};
+
 export interface AppStateProps {
   initialized: boolean; // Has main process initialization completed?
 
@@ -18,8 +28,11 @@ export interface AppStateProps {
   rtc: reltab.ReltabConnection | null;
 
   viewState: ViewState | null;
-  exportDialogOpen: boolean;
-  exportFilename: string;
+  exportBeginDialogOpen: boolean;
+  exportProgressDialogOpen: boolean;
+  exportFormat: ExportFormat;
+  exportPath: string;
+  exportPathBaseName: string;
   exportPercent: number;
 
   viewConfirmDialogOpen: boolean;
@@ -35,8 +48,11 @@ const defaultAppStateProps: AppStateProps = {
   windowTitle: "",
   rtc: null,
   viewState: null,
-  exportDialogOpen: false,
-  exportFilename: "",
+  exportBeginDialogOpen: false,
+  exportProgressDialogOpen: false,
+  exportFormat: "parquet",
+  exportPath: "",
+  exportPathBaseName: "",
   exportPercent: 0,
   viewConfirmDialogOpen: false,
   viewConfirmSourcePath: null,
@@ -53,8 +69,11 @@ export class AppState extends Immutable.Record(defaultAppStateProps) {
   public readonly rtc!: reltab.ReltabConnection;
 
   public readonly viewState!: ViewState;
-  public readonly exportDialogOpen!: boolean;
-  public readonly exportFilename!: string;
+  public readonly exportBeginDialogOpen!: boolean;
+  public readonly exportProgressDialogOpen!: boolean;
+  public readonly exportFormat!: ExportFormat;
+  public readonly exportPath!: string;
+  public readonly exportPathBaseName!: string;
   public readonly exportPercent!: number;
   public readonly viewConfirmDialogOpen!: boolean;
   public readonly viewConfirmSourcePath!: DataSourcePath | null;

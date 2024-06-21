@@ -1,5 +1,5 @@
 import * as React from "react";
-import { default as ReactDefault } from "react";
+import { default as ReactDefault, useEffect, useRef } from "react";
 import { ActivityBar } from "./ActivityBar";
 import { PivotSidebar } from "./PivotSidebar";
 import { DataSourceSidebar } from "./DataSourceSidebar";
@@ -11,12 +11,22 @@ import {
   Dialog,
   Classes,
   ProgressBar,
+  FormGroup,
+  InputGroup,
+  HTMLSelect,
+  Text,
+  Collapse,
 } from "@blueprintjs/core";
 import { GridPane, OpenURLFn } from "./GridPane";
 import { Footer } from "./Footer";
 import { LoadingModal } from "./LoadingModal";
 import * as actions from "../actions";
-import { AppState } from "../AppState";
+import {
+  AppState,
+  ExportFormat,
+  ParquetExportOptions,
+  defaultParquetExportOptions,
+} from "../AppState";
 import * as oneref from "oneref";
 import { useState } from "react";
 import { Activity } from "./defs";
@@ -45,12 +55,22 @@ export interface AppPaneBaseProps {
   rightFooterSlot?: JSX.Element;
   onFilter?: (filterExp: FilterExp) => void;
   showSidebar?: boolean; // show activity bar and sidebar?
+  onBrowseExportPath?: (exportFormat: ExportFormat) => void;
+  onExportFile?: (
+    exportFormat: ExportFormat,
+    exportPath: string,
+    parquetExportOptions: ParquetExportOptions
+  ) => void;
 }
 
 export type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
 
-const handleExportDialogClose = (stateRef: StateRef<AppState>) => {
-  actions.setExportDialogOpen(false, "", stateRef);
+const handleExportBeginDialogClose = (stateRef: StateRef<AppState>) => {
+  actions.setExportBeginDialogOpen(false, stateRef);
+};
+
+const handleExportProgressDialogClose = (stateRef: StateRef<AppState>) => {
+  actions.setExportProgressDialogOpen(false, "", stateRef);
 };
 
 const handleViewConfirmDialogReplace = async (stateRef: StateRef<AppState>) => {
@@ -74,13 +94,25 @@ const handleViewConfirmDialogClose = (stateRef: StateRef<AppState>) => {
 
 type ExportDialogProps = oneref.StateRefProps<AppState>;
 
-const ExportDialog: React.FunctionComponent<ExportDialogProps> = ({
+const ExportProgressDialog: React.FunctionComponent<ExportDialogProps> = ({
   appState,
   stateRef,
 }: ExportDialogProps) => {
   let filterCountStr = "";
 
-  const { viewState } = appState;
+  const { viewState, exportPercent } = appState;
+
+  const isBusy = exportPercent < 1;
+  const isComplete = !isBusy;
+  const okButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (isComplete) {
+      setTimeout(() => {
+        okButtonRef.current?.focus();
+      }, 0);
+    }
+  }, [isComplete, okButtonRef]);
 
   if (
     appState.initialized &&
@@ -97,25 +129,199 @@ const ExportDialog: React.FunctionComponent<ExportDialogProps> = ({
       });
     }
   }
+
+  const exportWord = isBusy ? "Exporting" : "Exported";
+  const exportEllipsis = isBusy ? "..." : "";
+  const exportText = `${exportWord} ${filterCountStr} rows to ${appState.exportPathBaseName}${exportEllipsis}`;
   return (
     <Dialog
-      title="Export Filtered CSV"
-      onClose={() => handleExportDialogClose(stateRef)}
-      isOpen={appState.exportDialogOpen}
+      title="Export File"
+      onClose={() => handleExportProgressDialogClose(stateRef)}
+      isOpen={appState.exportProgressDialogOpen}
     >
       <div className={Classes.DIALOG_BODY}>
-        <p className="bp4-text-large">
-          Exporting {filterCountStr} rows to {appState.exportFilename}
-        </p>
-        <ProgressBar stripes={false} value={appState.exportPercent} />
+        <Text className="bp4-text-large" ellipsize={true}>
+          {exportText}
+        </Text>
+        <br />
+        <ProgressBar stripes={isBusy} />
       </div>
       <div className={Classes.DIALOG_FOOTER}>
         <div className={Classes.DIALOG_FOOTER_ACTIONS}>
           <Button
-            disabled={appState.exportPercent < 1}
-            onClick={() => handleExportDialogClose(stateRef)}
+            disabled={isBusy}
+            autoFocus={true}
+            elementRef={okButtonRef}
+            onClick={() => handleExportProgressDialogClose(stateRef)}
           >
             OK
+          </Button>
+        </div>
+      </div>
+    </Dialog>
+  );
+};
+
+type ParquetOptionsSectionProps = {
+  parquetExportOptions: ParquetExportOptions;
+  onUpdateParquetOptions: (opts: ParquetExportOptions) => void;
+};
+
+export const ParquetOptionsSection: React.FunctionComponent<
+  ParquetOptionsSectionProps
+> = ({
+  parquetExportOptions,
+  onUpdateParquetOptions,
+}: ParquetOptionsSectionProps) => {
+  const { compression } = parquetExportOptions;
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setIsExpanded(!isExpanded)}>
+        Parquet Options...
+      </Button>
+      <Collapse isOpen={isExpanded}>
+        <div className={Classes.DIALOG_BODY}>
+          <FormGroup
+            inline={true}
+            label="Compression"
+            labelFor="parquet-compression-select"
+          >
+            <HTMLSelect
+              id="parquet-compression-select"
+              value={compression}
+              onChange={(e) =>
+                onUpdateParquetOptions({ compression: e.target.value as any })
+              }
+              options={[
+                { label: "uncompressed", value: "uncompressed" },
+                { label: "snappy", value: "snappy" },
+                { label: "gzip", value: "gzip" },
+                { label: "zstd", value: "zstd" },
+              ]}
+            />
+          </FormGroup>
+        </div>
+      </Collapse>
+    </>
+  );
+};
+type ExportBeginDialogProps = oneref.StateRefProps<AppState> & {
+  onBrowseExportPath?: (exportFormat: ExportFormat) => void;
+  onExportFile?: (
+    exportFormat: ExportFormat,
+    exportPath: string,
+    parquetExportOptions: ParquetExportOptions
+  ) => void;
+};
+
+const ExportBeginDialog: React.FunctionComponent<ExportBeginDialogProps> = ({
+  appState,
+  stateRef,
+  onBrowseExportPath,
+  onExportFile,
+}: ExportBeginDialogProps) => {
+  let filterCountStr = "";
+
+  // I tried using the Blueprint Dialog autoFocus prop, but it didn't work
+  // So let's try setting focus explicitly using an async handler:
+  const pathButtonRef = useRef<HTMLButtonElement | null>(null);
+  const exportButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const { viewState, exportBeginDialogOpen, exportPath, exportFormat } =
+    appState;
+  const hasPath = exportPath != null && exportPath.length > 0;
+
+  useEffect(() => {
+    if (exportBeginDialogOpen) {
+      // Delay the focus to allow the dialog to fully render
+      setTimeout(() => {
+        const focusButtonRef = hasPath ? exportButtonRef : pathButtonRef;
+        focusButtonRef.current?.focus();
+        console.log("focus effect: ", hasPath, focusButtonRef.current);
+      }, 0);
+    }
+  }, [exportBeginDialogOpen, hasPath, exportButtonRef, pathButtonRef]);
+
+  const [parquetExportOptions, setParquetExportOptions] = useState(
+    defaultParquetExportOptions
+  );
+
+  if (
+    appState.initialized &&
+    viewState !== null &&
+    viewState.dataView !== null
+  ) {
+    const viewParams = viewState.viewParams;
+    const queryView = appState.viewState.queryView;
+
+    if (queryView) {
+      const { filterRowCount } = queryView;
+      filterCountStr = filterRowCount.toLocaleString(undefined, {
+        useGrouping: true,
+      });
+    }
+  }
+  const parquetOptionsSection =
+    exportFormat === "parquet" ? (
+      <ParquetOptionsSection
+        parquetExportOptions={parquetExportOptions}
+        onUpdateParquetOptions={setParquetExportOptions}
+      />
+    ) : null;
+
+  return (
+    <Dialog
+      title="Export"
+      onClose={() => handleExportBeginDialogClose(stateRef)}
+      isOpen={appState.exportBeginDialogOpen}
+    >
+      <div className={Classes.DIALOG_BODY}>
+        <p className="bp4-text-large">Export {filterCountStr} rows</p>
+        <FormGroup label="File Format" labelFor="export-format-select">
+          <HTMLSelect
+            id="export-format-select"
+            value={exportFormat}
+            onChange={(e) =>
+              actions.setExportFormat(e.target.value as ExportFormat, stateRef)
+            }
+            options={[
+              { label: "Parquet", value: "parquet" },
+              { label: "CSV", value: "csv" },
+            ]}
+          />
+        </FormGroup>
+        <FormGroup label="Export To File" labelFor="export-path">
+          <InputGroup
+            id="export-path"
+            value={exportPath}
+            onChange={(e) => actions.setExportPath(e.target.value, stateRef)}
+            rightElement={
+              <Button
+                icon="folder-open"
+                minimal
+                elementRef={pathButtonRef}
+                intent={hasPath ? undefined : "primary"}
+                onClick={(e) => onBrowseExportPath?.(exportFormat)}
+              />
+            }
+          />
+        </FormGroup>
+        {parquetOptionsSection}
+      </div>
+      <div className={Classes.DIALOG_FOOTER}>
+        <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+          <Button
+            disabled={!hasPath}
+            intent={hasPath ? "primary" : undefined}
+            elementRef={exportButtonRef}
+            onClick={() => {
+              actions.setExportBeginDialogOpen(false, stateRef);
+              onExportFile?.(exportFormat, exportPath, parquetExportOptions);
+            }}
+          >
+            Export
           </Button>
         </div>
       </div>
@@ -197,15 +403,15 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   rightFooterSlot,
   onFilter,
   showSidebar = true,
+  onBrowseExportPath,
+  onExportFile,
 }: AppPaneProps) => {
-  const { activity } = appState;
+  const { activity, exportBeginDialogOpen } = appState;
   const dataSourceExpanded = activity === "DataSource";
   const pivotPropsExpanded = activity === "Pivot";
   let mainContents: JSX.Element | null = null;
   const showDataSources =
     rawShowDataSources === undefined ? true : rawShowDataSources;
-
-  // console.log("AppPane: ", appState.toJS());
 
   const { rtc, viewState } = appState;
 
@@ -286,7 +492,13 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
         {pivotSidebar}
         {centerPane}
       </DndProvider>
-      <ExportDialog appState={appState} stateRef={stateRef} />
+      <ExportBeginDialog
+        appState={appState}
+        stateRef={stateRef}
+        onBrowseExportPath={onBrowseExportPath}
+        onExportFile={onExportFile}
+      />
+      <ExportProgressDialog appState={appState} stateRef={stateRef} />
       <ViewConfirmDialog
         newWindow={newWindow}
         appState={appState}

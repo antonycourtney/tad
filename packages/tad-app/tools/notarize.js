@@ -1,4 +1,4 @@
-const { notarize } = require("electron-notarize");
+const { notarize } = require("@electron/notarize");
 
 exports.default = async function notarizing(context) {
   const { electronPlatformName, appOutDir } = context;
@@ -20,5 +20,6 @@ exports.default = async function notarizing(context) {
     appPath: `${appOutDir}/${appName}.app`,
     appleId,
     appleIdPassword: process.env.APPLEIDPASS,
+    teamId: "VPS8BQAV8D",
   });
 };

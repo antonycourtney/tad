@@ -10,6 +10,7 @@ import {
   DataSourcePath,
   FilterExp,
   LocalReltabConnection,
+  QueryExp,
 } from "reltab";
 import { initAppState } from "../actions";
 import { AppState } from "../AppState";
@@ -79,6 +80,8 @@ export interface TadViewerPaneProps {
   rightFooterSlot?: JSX.Element;
   onFilter?: (filterExp: FilterExp) => void;
   showSidebar?: boolean; // show activity bar and sidebar?
+  onViewQuery?: (query: QueryExp, offset?: number, limit?: number) => void;
+  onViewRowCount?: (query: QueryExp) => void;
 }
 
 export function TadViewerPane({
@@ -91,6 +94,8 @@ export function TadViewerPane({
   rightFooterSlot,
   onFilter,
   showSidebar,
+  onViewQuery,
+  onViewRowCount,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -106,9 +111,7 @@ export function TadViewerPane({
   React.useEffect(() => {
     async function initTadAppState() {
       // log.setLevel("debug");
-      log.debug("*** initTadAppState()");
       const rtc = LocalReltabConnection.getInstance();
-      log.debug("*** TadViewerPane: got local reltab connection: ", rtc);
 
       if (!appStateRef) {
         const appState = new AppState({
@@ -116,17 +119,15 @@ export function TadViewerPane({
         });
         const stateRef = mkRef(appState);
         setAppStateRef(stateRef);
-        log.debug("*** initializing app state:");
         await initAppState(rtc, stateRef);
-        log.debug("*** initialized Tad App state");
         const preq = new PivotRequester(
           stateRef,
           errorCallback,
-          setLoadingCallback
+          setLoadingCallback,
+          onViewQuery,
+          onViewRowCount
         );
-        log.debug("*** created pivotRequester");
         setPivotRequester(preq);
-        log.debug("*** App component created and pivotrequester initialized");
       }
     }
     initTadAppState();
@@ -141,7 +142,6 @@ export function TadViewerPane({
         baseSqlQuery,
         showColumnHistograms
       );
-      log.debug("**** set app view to base query");
     }
   }, [baseSqlQuery, pivotRequester, appStateRef]);
 

@@ -5,7 +5,12 @@ import "source-map-support/register";
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import OneRef, { mkRef, refContainer, mutableGet, StateRef } from "oneref";
-import { AppPane, AppPaneBaseProps } from "tadviewer";
+import {
+  AppPane,
+  AppPaneBaseProps,
+  ExportFormat,
+  ParquetExportOptions,
+} from "tadviewer";
 import { PivotRequester } from "tadviewer";
 import { AppState } from "tadviewer";
 import { ViewParams, actions } from "tadviewer";
@@ -130,6 +135,20 @@ const init = async () => {
         clipboard={clipboard}
         openURL={openURL}
         embedded={false}
+        onBrowseExportPath={(exportFormat: ExportFormat) =>
+          ipcRenderer.send("browse-export-path", { exportFormat })
+        }
+        onExportFile={(
+          exportFormat: ExportFormat,
+          exportPath: string,
+          parquetExportOptions: ParquetExportOptions
+        ) =>
+          ipcRenderer.send("export-file", {
+            exportFormat,
+            exportPath,
+            parquetExportOptions,
+          })
+        }
       />
     );
     const tRender = performance.now();
@@ -158,7 +177,7 @@ const init = async () => {
       actions.setShowHiddenCols(val, stateRef);
     });
     ipcRenderer.on("request-serialize-filter-query", (event, req) => {
-      console.log("got request-serialize-filter-query: ", req);
+      // console.log("got request-serialize-filter-query: ", req);
       const { requestId } = req;
       const curState = mutableGet(stateRef);
       const baseQuery = curState.viewState.baseQuery;
@@ -174,9 +193,24 @@ const init = async () => {
         contents,
       });
     });
-    ipcRenderer.on("open-export-dialog", (event, req) => {
+    ipcRenderer.on("open-export-begin-dialog", (event, req) => {
       const { openState, saveFilename } = req;
-      actions.setExportDialogOpen(openState, saveFilename, stateRef);
+      actions.setExportBeginDialogOpen(openState, stateRef);
+    });
+    ipcRenderer.on("open-export-progress-dialog", (event, req) => {
+      const { openState, exportPathBaseName } = req;
+      actions.setExportProgressDialogOpen(
+        openState,
+        exportPathBaseName,
+        stateRef
+      );
+    });
+    ipcRenderer.on("close-export-progress-dialog", (event, req) => {
+      actions.setExportProgressDialogOpen(false, "", stateRef);
+    });
+    ipcRenderer.on("set-export-path", (event, req) => {
+      const { exportPath } = req;
+      actions.setExportPath(exportPath, stateRef);
     });
     ipcRenderer.on("export-progress", (event, req) => {
       const { percentComplete } = req;
@@ -187,9 +221,7 @@ const init = async () => {
       openFromOpenParams(openParams, stateRef);
     });
 
-    document.addEventListener("copy", function (e) {
-      console.log("**** renderMain: got copy event");
-    });
+    document.addEventListener("copy", function (e) {});
 
     ipcRenderer.send("render-init-complete");
   } catch (e) {
