@@ -9,4 +9,3 @@ node_modules
 npm-debug.log
 .vscode
 lerna-debug.log
-package-lock.json
