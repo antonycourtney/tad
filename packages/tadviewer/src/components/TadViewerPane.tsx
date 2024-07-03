@@ -1,10 +1,9 @@
 /**
  * A Tad Viewer pane for embedding a tad view of a SQL query on a data source
  */
-import log from "loglevel";
 import { mkRef, mutableGet, refContainer, StateRef } from "oneref";
 import * as React from "react";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   DataSourceConnection,
   DataSourcePath,
@@ -75,7 +74,15 @@ export interface TadViewerPaneProps {
   rightFooterSlot?: JSX.Element;
   onFilter?: (filterExp: FilterExp) => void;
   onViewQuery?: (query: QueryExp, offset?: number, limit?: number) => void;
-  onViewRowCount?: (query: QueryExp) => void;
+  onViewRowCount?: (
+    query: QueryExp,
+    type: "filtered" | "unfiltered" | "view"
+  ) => void;
+  onViewRowCountResolved?: (
+    query: QueryExp,
+    rowCount: number,
+    type: "filtered" | "unfiltered" | "view"
+  ) => void;
 }
 
 export function TadViewerPane({
@@ -89,6 +96,7 @@ export function TadViewerPane({
   onFilter,
   onViewQuery,
   onViewRowCount,
+  onViewRowCountResolved,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -118,7 +126,8 @@ export function TadViewerPane({
           errorCallback,
           setLoadingCallback,
           onViewQuery,
-          onViewRowCount
+          onViewRowCount,
+          onViewRowCountResolved
         );
         setPivotRequester(preq);
       }
