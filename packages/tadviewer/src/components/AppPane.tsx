@@ -1,5 +1,5 @@
 import * as React from "react";
-import { default as ReactDefault, useEffect, useRef } from "react";
+import { default as ReactDefault, useEffect, useRef, useCallback } from "react";
 import { ActivityBar } from "./ActivityBar";
 import { PivotSidebar } from "./PivotSidebar";
 import { DataSourceSidebar } from "./DataSourceSidebar";
@@ -31,12 +31,12 @@ import * as oneref from "oneref";
 import { useState } from "react";
 import { Activity } from "./defs";
 import { mutableGet, StateRef } from "oneref";
-import { DataSourcePath, ReltabConnection, resolvePath } from "reltab";
+import { DataSourcePath, FilterExp, ReltabConnection, resolvePath } from "reltab";
 import { useDeepCompareEffect } from "use-deep-compare";
 import { Timer } from "../Timer";
 import { SimpleClipboard } from "./SimpleClipboard";
+import { CellClickData } from "./CellClickData";
 import { createDragDropManager } from "dnd-core";
-import { type FilterExp } from "reltab";
 /**
  * top level application pane
  */
@@ -60,6 +60,7 @@ export interface AppPaneBaseProps {
     exportPath: string,
     parquetExportOptions: ParquetExportOptions
   ) => void;
+  onCellClick?: (cell: CellClickData) => void;
 }
 
 export type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
@@ -403,6 +404,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   onFilter,
   onBrowseExportPath,
   onExportFile,
+  onCellClick,
 }: AppPaneProps) => {
   const { activity, exportBeginDialogOpen } = appState;
   const dataSourceExpanded = activity === "DataSource";
@@ -456,6 +458,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
           clipboard={clipboard}
           openURL={openURL}
           embedded={embedded}
+          onCellClick={onCellClick}
         />
         <Footer
           appState={appState}

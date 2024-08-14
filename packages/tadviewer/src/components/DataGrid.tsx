@@ -450,7 +450,7 @@ const createGrid = (
     // log.info("onGridClick: column: ", col);
     var item = grid.getDataItem(args.row);
 
-    onGridClick?.(args.row, args.cell, item, col.id, item[col.id]);
+    onGridClick?.(args.row, args.cell, item, col.id, item[col.id], col.field);
   };
 
   grid.onClick.subscribe(handleGridClick);
@@ -638,7 +638,8 @@ export interface DataGridProps {
     column: number,
     dataRow: DataRow,
     columnId: string,
-    cellVal: any
+    cellVal: any,
+    columnName: string,
   ) => void;
   onSetColumnOrder?: (displayColumns: string[]) => void;
   openURL: OpenURLFn;
