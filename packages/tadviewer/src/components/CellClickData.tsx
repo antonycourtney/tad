@@ -1,5 +1,5 @@
 export interface CellClickData {
-  readonly value: string;
+  readonly value: any;
   readonly cell: { readonly row: number; readonly col: number };
   readonly column: {
     readonly displayName: string;
