@@ -112,7 +112,6 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
       item: DataRow,
       columnId: string,
       cellVal: any,
-      columnName: string,
     ) => {
 
       const { viewState } = appState;
@@ -120,7 +119,7 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
       // log.info("onGridClick: item: ", item);
 
       if (onCellClick) {
-        const columnData = viewState?.baseSchema.columnMetadata[columnName] ?? null;
+        const columnData = viewState?.baseSchema.columnMetadata[columnId] ?? null;
         onCellClick({
           value: cellVal,
           column: columnData,
