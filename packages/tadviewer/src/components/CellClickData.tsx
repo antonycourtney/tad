@@ -4,5 +4,6 @@ export interface CellClickData {
   readonly column: {
     readonly displayName: string;
     readonly columnType: string;
+    readonly columnId: string;
   };
 }

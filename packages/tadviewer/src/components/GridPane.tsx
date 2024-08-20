@@ -141,7 +141,7 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
           const columnData = viewState?.baseSchema.columnMetadata[columnId] ?? null;
           onCellClick({
             value: cellVal,
-            column: columnData,
+            column: {...columnData, columnId},
             cell: { row, col: column },
           });
         }
