@@ -118,7 +118,15 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
       const { viewParams, dataView } = viewState;
       // log.info("onGridClick: item: ", item);
 
-      
+       if (onCellClick) {
+          const columnData = viewState?.baseSchema.columnMetadata[columnId] ?? null;
+          onCellClick({
+            value: cellVal,
+            column: {...columnData, columnId},
+            cell: { row, col: column },
+          });
+        }
+        
       if (columnId === "_pivot") {
         if (item._isLeaf) {
           return;
@@ -137,14 +145,6 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
           actions.openPath(path, stateRef);
         }
       } else {
-        if (onCellClick) {
-          const columnData = viewState?.baseSchema.columnMetadata[columnId] ?? null;
-          onCellClick({
-            value: cellVal,
-            column: {...columnData, columnId},
-            cell: { row, col: column },
-          });
-        }
         if (dataView?.schema.columnIndex(columnId)) {
           const ch = viewParams.getClickHandler(dataView.schema, columnId);
           ch({ openURL }, row, column, cellVal);
