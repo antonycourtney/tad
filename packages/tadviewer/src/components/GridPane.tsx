@@ -16,6 +16,7 @@ import log from "loglevel";
 
 import { ColumnType, NumericColumnHistogramData, Schema } from "reltab";
 import ReactDOM from "react-dom/client";
+import { CellClickData } from "./CellClickData";
 
 export type OpenURLFn = (url: string) => void;
 
@@ -26,6 +27,7 @@ export interface GridPaneProps {
   clipboard: SimpleClipboard;
   openURL: OpenURLFn;
   embedded: boolean;
+  onCellClick?: (cell: CellClickData) => void;
 }
 
 // GridPaneInternal the un-memoized GridPane component
@@ -35,7 +37,8 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
   stateRef,
   clipboard,
   openURL,
-  embedded,
+  embedded, 
+  onCellClick,
 }) => {
   const viewStateRef = useRef<ViewState>(viewState);
 
@@ -108,13 +111,22 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
       column: number,
       item: DataRow,
       columnId: string,
-      cellVal: any
+      cellVal: any,
     ) => {
       const appState = mutableGet(stateRef);
       const { viewState } = appState;
       const { viewParams, dataView } = viewState;
       // log.info("onGridClick: item: ", item);
 
+       if (onCellClick) {
+          const columnData = viewState?.baseSchema.columnMetadata[columnId] ?? null;
+          onCellClick({
+            value: cellVal,
+            column: {...columnData, columnId},
+            cell: { row, col: column },
+          });
+        }
+        
       if (columnId === "_pivot") {
         if (item._isLeaf) {
           return;

@@ -638,7 +638,7 @@ export interface DataGridProps {
     column: number,
     dataRow: DataRow,
     columnId: string,
-    cellVal: any
+    cellVal: any,
   ) => void;
   onSetColumnOrder?: (displayColumns: string[]) => void;
   openURL: OpenURLFn;

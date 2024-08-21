@@ -18,10 +18,11 @@ require("../less/footer.less");
 require("../less/filterEditor.less");
 require("../less/delayedCalcFooter.less");
 
+export { initAppState } from "./actions";
+export * from "./AppState";
 export * from "./components/AppPane";
+export * from "./components/CellClickData";
 export * from "./components/TadViewerPane";
 export * from "./PivotRequester";
-export * from "./AppState";
 export * from "./ViewParams";
-export { initAppState } from "./actions";
 export { actions };
