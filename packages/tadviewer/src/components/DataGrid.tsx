@@ -361,6 +361,16 @@ const createGrid = (
   const selectionModel = new CellSelectionModel();
   grid.setSelectionModel(selectionModel);
   selectionModel.onSelectedRangesChanged.subscribe((e: any, args: any) => {
+    const selectedRange = args[0];
+    // if user moved to a single cell using arrow keys
+    if (selectedRange.fromCell === selectedRange.toCell && selectedRange.fromRow === selectedRange.toRow) {
+      const columns = grid.getColumns();
+      const col = columns[selectedRange.fromCell];
+      var item = grid.getDataItem(selectedRange.fromRow);
+  
+      onGridClick?.(selectedRange.fromRow, selectedRange.fromCell, item, col.id, item[col.id]);
+    }
+
     // TODO: could store this in app state and show some
     // stats about selected range
   });
