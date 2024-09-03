@@ -7,34 +7,32 @@
  */
 // for debugging resize handler:
 // import $ from 'jquery'
-import * as React from "react";
 import _ from "lodash";
+import * as React from "react";
 
 /* /// <reference path="slickgrid-es6.d.ts"> */
-import * as SlickGrid from "slickgrid-es6";
-import * as reltab from "reltab";
-import { LoadingModal } from "./LoadingModal";
-import { SimpleClipboard } from "./SimpleClipboard";
-import { DataRow, PagedDataView } from "../PagedDataView";
+import { ResizeSensor } from "@blueprintjs/core";
 import * as he from "he";
-import { useState, useRef } from "react";
-import log from "loglevel";
-
-const { Slick } = SlickGrid;
-const { Plugins } = SlickGrid as any;
-const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
-  Plugins;
-import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
-import { ColumnType, NumericColumnHistogramData, Schema } from "reltab";
+import { useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
+import * as reltab from "reltab";
+import { ColumnType, NumericColumnHistogramData } from "reltab";
+import * as SlickGrid from "slickgrid-es6";
 import {
   VictoryAxis,
   VictoryBar,
   VictoryBrushContainer,
   VictoryChart,
-  VictoryTheme,
 } from "victory";
 import { CellFormatter } from "../FormatOptions";
+import { DataRow, PagedDataView } from "../PagedDataView";
+import { LoadingModal } from "./LoadingModal";
+import { SimpleClipboard } from "./SimpleClipboard";
+
+const { Slick } = SlickGrid;
+const { Plugins } = SlickGrid as any;
+const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
+  Plugins;
 
 export type OpenURLFn = (url: string) => void;
 
@@ -348,6 +346,7 @@ const createGrid = (
     onHistogramBrushFilter,
     onSetSortKey,
     onGridClick,
+    onGridSelectionChange,
     onSetColumnOrder,
     sortKey,
     clipboard,
@@ -361,14 +360,19 @@ const createGrid = (
   const selectionModel = new CellSelectionModel();
   grid.setSelectionModel(selectionModel);
   selectionModel.onSelectedRangesChanged.subscribe((e: any, args: any) => {
-    const selectedRange = args[0];
+    const { fromCell, toCell, fromRow, toRow } = args[0];
     // if user moved to a single cell using arrow keys
-    if (selectedRange.fromCell === selectedRange.toCell && selectedRange.fromRow === selectedRange.toRow) {
+    if (fromCell === toCell && fromRow === toRow) {
       const columns = grid.getColumns();
-      const col = columns[selectedRange.fromCell];
-      var item = grid.getDataItem(selectedRange.fromRow);
-  
-      onGridClick?.(selectedRange.fromRow, selectedRange.fromCell, item, col.id, item[col.id]);
+      const col = columns[fromCell];
+      var item = grid.getDataItem(fromRow);
+
+      onGridSelectionChange?.(
+        { row: fromRow, column: fromCell },
+        { row: toRow, column: toCell },
+        col.id,
+        item[col.id]
+      );
     }
 
     // TODO: could store this in app state and show some
@@ -648,7 +652,13 @@ export interface DataGridProps {
     column: number,
     dataRow: DataRow,
     columnId: string,
-    cellVal: any,
+    cellVal: any
+  ) => void;
+  onGridSelectionChange?: (
+    anchor: { row: number; column: number },
+    focus: { row: number; column: number },
+    columnId: string,
+    cellVal: any
   ) => void;
   onSetColumnOrder?: (displayColumns: string[]) => void;
   openURL: OpenURLFn;

@@ -1,22 +1,18 @@
-import * as React from "react";
-import * as reltab from "reltab";
-import * as actions from "../actions";
-import { SimpleClipboard } from "./SimpleClipboard";
-import { DataGridProps, DataGrid } from "./DataGrid";
-import { DataRow, PagedDataView } from "../PagedDataView";
-import { ViewParams } from "../ViewParams";
-import * as util from "../util";
-import * as he from "he";
-import { AppState } from "../AppState";
-import { ViewState } from "../ViewState";
-import { mutableGet, StateRef } from "oneref";
-import { useState, useRef, MutableRefObject } from "react";
 import _ from "lodash";
-import log from "loglevel";
+import { mutableGet, StateRef } from "oneref";
+import * as React from "react";
+import { useRef } from "react";
+import * as reltab from "reltab";
+import { AppState } from "../AppState";
+import { DataRow } from "../PagedDataView";
+import { ViewState } from "../ViewState";
+import * as actions from "../actions";
+import * as util from "../util";
+import { DataGrid, DataGridProps } from "./DataGrid";
+import { SimpleClipboard } from "./SimpleClipboard";
 
-import { ColumnType, NumericColumnHistogramData, Schema } from "reltab";
-import ReactDOM from "react-dom/client";
 import { CellClickData } from "./CellClickData";
+import { SelectionChangeData } from "./SelectionChangeData";
 
 export type OpenURLFn = (url: string) => void;
 
@@ -28,6 +24,7 @@ export interface GridPaneProps {
   openURL: OpenURLFn;
   embedded: boolean;
   onCellClick?: (cell: CellClickData) => void;
+  onSelectionChange?: (data: SelectionChangeData) => void;
 }
 
 // GridPaneInternal the un-memoized GridPane component
@@ -39,6 +36,7 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
   openURL,
   embedded, 
   onCellClick,
+  onSelectionChange
 }) => {
   const viewStateRef = useRef<ViewState>(viewState);
 
@@ -104,6 +102,29 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
     [stateRef]
   );
   const sortKey = viewParams.sortKey;
+
+  const onGridSelectionChange = React.useCallback(
+    (
+      anchor: { row: number; column: number },
+      focus: { row: number; column: number },
+      columnId: string,
+      cellVal: any
+    ) => {
+      const appState = mutableGet(stateRef);
+      const { viewState } = appState;
+      if (onSelectionChange) {
+        const columnData =
+          viewState?.baseSchema.columnMetadata[columnId] ?? null;
+        onSelectionChange({
+          value: cellVal,
+          column: { ...columnData, columnId },
+          anchor,
+          focus,
+        });
+      }
+    },
+    []
+  );
 
   const onGridClick = React.useCallback(
     (
@@ -178,6 +199,7 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
     onHistogramBrushFilter,
     onSetSortKey,
     onGridClick,
+    onGridSelectionChange,
     onSetColumnOrder,
     sortKey,
     isPivoted,
