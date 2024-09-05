@@ -7,34 +7,33 @@
  */
 // for debugging resize handler:
 // import $ from 'jquery'
-import * as React from "react";
 import _ from "lodash";
+import * as React from "react";
 
 /* /// <reference path="slickgrid-es6.d.ts"> */
-import * as SlickGrid from "slickgrid-es6";
-import * as reltab from "reltab";
-import { LoadingModal } from "./LoadingModal";
-import { SimpleClipboard } from "./SimpleClipboard";
-import { DataRow, PagedDataView } from "../PagedDataView";
+import { ResizeSensor } from "@blueprintjs/core";
 import * as he from "he";
-import { useState, useRef } from "react";
-import log from "loglevel";
-
-const { Slick } = SlickGrid;
-const { Plugins } = SlickGrid as any;
-const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
-  Plugins;
-import { ResizeEntry, ResizeSensor } from "@blueprintjs/core";
-import { ColumnType, NumericColumnHistogramData, Schema } from "reltab";
+import { useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
+import * as reltab from "reltab";
+import { ColumnType, NumericColumnHistogramData } from "reltab";
+import * as SlickGrid from "slickgrid-es6";
 import {
   VictoryAxis,
   VictoryBar,
   VictoryBrushContainer,
   VictoryChart,
-  VictoryTheme,
 } from "victory";
 import { CellFormatter } from "../FormatOptions";
+import { DataRow, PagedDataView } from "../PagedDataView";
+import { LoadingModal } from "./LoadingModal";
+import { Cell } from "./SelectionChangeData";
+import { SimpleClipboard } from "./SimpleClipboard";
+
+const { Slick } = SlickGrid;
+const { Plugins } = SlickGrid as any;
+const { CellRangeSelector, CellSelectionModel, CellCopyManager, AutoTooltips } =
+  Plugins;
 
 export type OpenURLFn = (url: string) => void;
 
@@ -348,6 +347,7 @@ const createGrid = (
     onHistogramBrushFilter,
     onSetSortKey,
     onGridClick,
+    onGridSelectionChange,
     onSetColumnOrder,
     sortKey,
     clipboard,
@@ -361,8 +361,33 @@ const createGrid = (
   const selectionModel = new CellSelectionModel();
   grid.setSelectionModel(selectionModel);
   selectionModel.onSelectedRangesChanged.subscribe((e: any, args: any) => {
-    // TODO: could store this in app state and show some
-    // stats about selected range
+    const { fromCell, toCell, fromRow, toRow } = args[0];
+
+    const selectedColumns = grid
+      .getColumns()
+      .slice(fromCell, toCell + 1)
+      .map((col: any) => col.id);
+
+    let items = [];
+    const gridCols = grid.getColumns();
+    const gridData = grid.getData();
+
+    for (let row = fromRow; row <= toRow; row++) {
+      const rowData = gridData.getItem(row);
+      const selectedDataInRow = [];
+      for (let col = fromCell; col <= toCell; col++) {
+        const cid = gridCols[col].id;
+        selectedDataInRow.push(rowData[cid]);
+      }
+      items.push(selectedDataInRow);
+    }
+
+    onGridSelectionChange?.(
+      { row: fromRow, column: fromCell },
+      { row: toRow, column: toCell },
+      selectedColumns,
+      items
+    );
   });
 
   const copyManager = new CellCopyManager();
@@ -638,7 +663,13 @@ export interface DataGridProps {
     column: number,
     dataRow: DataRow,
     columnId: string,
-    cellVal: any,
+    cellVal: any
+  ) => void;
+  onGridSelectionChange?: (
+    anchor: Cell,
+    focus: Cell,
+    columns: string[],
+    items: any[][]
   ) => void;
   onSetColumnOrder?: (displayColumns: string[]) => void;
   openURL: OpenURLFn;

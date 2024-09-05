@@ -17,6 +17,7 @@ import { PivotRequester } from "../PivotRequester";
 import { actions } from "../tadviewer";
 import { AppPane, AppPaneBaseProps } from "./AppPane";
 import { CellClickData } from "./CellClickData";
+import { SelectionChangeData } from "./SelectionChangeData";
 
 interface TadViewerPaneInnerProps {
   stateRef: StateRef<AppState>;
@@ -24,6 +25,7 @@ interface TadViewerPaneInnerProps {
   rightFooterSlot?: JSX.Element;
   onFilter?: (filterExp: FilterExp) => void;
   onCellClick?: (data: CellClickData) => void;
+  onSelectionChange?: (data: SelectionChangeData) => void;
 }
 
 const newWindowFromDSPath = (
@@ -40,6 +42,7 @@ function TadViewerPaneInner({
   rightFooterSlot = undefined,
   onFilter = undefined,
   onCellClick,
+  onSelectionChange
 }: TadViewerPaneInnerProps) {
   const viewerPane = useRef<JSX.Element | null>(null);
 
@@ -62,6 +65,7 @@ function TadViewerPaneInner({
         rightFooterSlot={rightFooterSlot}
         onFilter={onFilter}
         onCellClick={onCellClick}
+        onSelectionChange={onSelectionChange}
       />
     );
   }
@@ -88,6 +92,7 @@ export interface TadViewerPaneProps {
     type: "filtered" | "unfiltered" | "view"
   ) => void;
   onCellClick?: (data: CellClickData) => void;
+  onSelectionChange?: (data: SelectionChangeData) => void;
 }
 
 export function TadViewerPane({
@@ -103,6 +108,7 @@ export function TadViewerPane({
   onViewRowCount,
   onViewRowCountResolved,
   onCellClick,
+  onSelectionChange
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -172,6 +178,7 @@ export function TadViewerPane({
         rightFooterSlot={rightFooterSlot}
         onFilter={onFilter}
         onCellClick={onCellClick}
+        onSelectionChange={onSelectionChange}
       />
     );
   }

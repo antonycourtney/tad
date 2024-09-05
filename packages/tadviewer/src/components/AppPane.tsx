@@ -37,6 +37,7 @@ import { Timer } from "../Timer";
 import { SimpleClipboard } from "./SimpleClipboard";
 import { CellClickData } from "./CellClickData";
 import { createDragDropManager } from "dnd-core";
+import { SelectionChangeData } from "./SelectionChangeData";
 /**
  * top level application pane
  */
@@ -61,6 +62,7 @@ export interface AppPaneBaseProps {
     parquetExportOptions: ParquetExportOptions
   ) => void;
   onCellClick?: (cell: CellClickData) => void;
+  onSelectionChange?: (data: SelectionChangeData) => void;
 }
 
 export type AppPaneProps = AppPaneBaseProps & oneref.StateRefProps<AppState>;
@@ -405,6 +407,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   onBrowseExportPath,
   onExportFile,
   onCellClick,
+  onSelectionChange
 }: AppPaneProps) => {
   const { activity, exportBeginDialogOpen } = appState;
   const dataSourceExpanded = activity === "DataSource";
@@ -459,6 +462,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
           openURL={openURL}
           embedded={embedded}
           onCellClick={onCellClick}
+          onSelectionChange={onSelectionChange}
         />
         <Footer
           appState={appState}

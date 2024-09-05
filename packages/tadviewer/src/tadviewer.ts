@@ -22,6 +22,7 @@ export { initAppState } from "./actions";
 export * from "./AppState";
 export * from "./components/AppPane";
 export * from "./components/CellClickData";
+export * from "./components/SelectionChangeData";
 export * from "./components/TadViewerPane";
 export * from "./PivotRequester";
 export * from "./ViewParams";
