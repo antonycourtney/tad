@@ -5,12 +5,12 @@ export interface SelectionChangeData {
   readonly gridFocus: Cell;
 }
 
-interface Cell {
+export interface Cell {
   readonly row: number;
   readonly column: number;
 }
 
-interface ColumnData {
+export interface ColumnData {
   readonly displayName: string;
   readonly columnType: string;
   readonly columnId: string;

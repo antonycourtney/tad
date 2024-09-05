@@ -27,6 +27,7 @@ import {
 import { CellFormatter } from "../FormatOptions";
 import { DataRow, PagedDataView } from "../PagedDataView";
 import { LoadingModal } from "./LoadingModal";
+import { Cell } from "./SelectionChangeData";
 import { SimpleClipboard } from "./SimpleClipboard";
 
 const { Slick } = SlickGrid;
@@ -362,7 +363,7 @@ const createGrid = (
   selectionModel.onSelectedRangesChanged.subscribe((e: any, args: any) => {
     const { fromCell, toCell, fromRow, toRow } = args[0];
 
-    const columns = grid
+    const selectedColumns = grid
       .getColumns()
       .slice(fromCell, toCell + 1)
       .map((col: any) => col.id);
@@ -384,12 +385,9 @@ const createGrid = (
     onGridSelectionChange?.(
       { row: fromRow, column: fromCell },
       { row: toRow, column: toCell },
-      columns,
+      selectedColumns,
       items
     );
-
-    // TODO: could store this in app state and show some
-    // stats about selected range
   });
 
   const copyManager = new CellCopyManager();
@@ -668,8 +666,8 @@ export interface DataGridProps {
     cellVal: any
   ) => void;
   onGridSelectionChange?: (
-    anchor: { row: number; column: number },
-    focus: { row: number; column: number },
+    anchor: Cell,
+    focus: Cell,
     columns: string[],
     items: any[][]
   ) => void;

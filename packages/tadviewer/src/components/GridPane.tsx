@@ -12,7 +12,7 @@ import { DataGrid, DataGridProps } from "./DataGrid";
 import { SimpleClipboard } from "./SimpleClipboard";
 
 import { CellClickData } from "./CellClickData";
-import { SelectionChangeData } from "./SelectionChangeData";
+import { Cell, ColumnData, SelectionChangeData } from "./SelectionChangeData";
 
 export type OpenURLFn = (url: string) => void;
 
@@ -104,20 +104,11 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
   const sortKey = viewParams.sortKey;
 
   const onGridSelectionChange = React.useCallback(
-    (
-      anchor: { row: number; column: number },
-      focus: { row: number; column: number },
-      columns: string[],
-      items: any[][]
-    ) => {
+    (anchor: Cell, focus: Cell, columns: string[], items: any[][]) => {
       const appState = mutableGet(stateRef);
       const { viewState } = appState;
       if (onSelectionChange) {
-        const columnData: {
-          columnId: string;
-          displayName: string;
-          columnType: string;
-        }[] = [];
+        const columnData: ColumnData[] = [];
         columns.map((column) => {
           columnData.push({
             ...viewState?.baseSchema.columnMetadata[column],
