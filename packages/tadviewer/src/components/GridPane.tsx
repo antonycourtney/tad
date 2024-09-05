@@ -108,13 +108,10 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
       const appState = mutableGet(stateRef);
       const { viewState } = appState;
       if (onSelectionChange) {
-        const columnData: ColumnData[] = [];
-        columns.map((column) => {
-          columnData.push({
-            ...viewState?.baseSchema.columnMetadata[column],
-            columnId: column,
-          });
-        });
+        const columnData: ColumnData[] = columns.map((column) => ({
+          ...viewState?.baseSchema.columnMetadata[column],
+          columnId: column,
+        }));
         onSelectionChange({
           selectedGridItems: items,
           columns: columnData,
