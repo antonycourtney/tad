@@ -34,9 +34,9 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
   stateRef,
   clipboard,
   openURL,
-  embedded, 
+  embedded,
   onCellClick,
-  onSelectionChange
+  onSelectionChange,
 }) => {
   const viewStateRef = useRef<ViewState>(viewState);
 
@@ -107,19 +107,28 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
     (
       anchor: { row: number; column: number },
       focus: { row: number; column: number },
-      columnId: string,
-      cellVal: any
+      columns: string[],
+      items: any[][]
     ) => {
       const appState = mutableGet(stateRef);
       const { viewState } = appState;
       if (onSelectionChange) {
-        const columnData =
-          viewState?.baseSchema.columnMetadata[columnId] ?? null;
+        const columnData: {
+          columnId: string;
+          displayName: string;
+          columnType: string;
+        }[] = [];
+        columns.map((column) => {
+          columnData.push({
+            ...viewState?.baseSchema.columnMetadata[column],
+            columnId: column,
+          });
+        });
         onSelectionChange({
-          value: cellVal,
-          column: { ...columnData, columnId },
-          anchor,
-          focus,
+          selectedGridItems: items,
+          columns: columnData,
+          gridAnchor: anchor,
+          gridFocus: focus,
         });
       }
     },
@@ -132,22 +141,23 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
       column: number,
       item: DataRow,
       columnId: string,
-      cellVal: any,
+      cellVal: any
     ) => {
       const appState = mutableGet(stateRef);
       const { viewState } = appState;
       const { viewParams, dataView } = viewState;
       // log.info("onGridClick: item: ", item);
 
-       if (onCellClick) {
-          const columnData = viewState?.baseSchema.columnMetadata[columnId] ?? null;
-          onCellClick({
-            value: cellVal,
-            column: {...columnData, columnId},
-            cell: { row, col: column },
-          });
-        }
-        
+      if (onCellClick) {
+        const columnData =
+          viewState?.baseSchema.columnMetadata[columnId] ?? null;
+        onCellClick({
+          value: cellVal,
+          column: { ...columnData, columnId },
+          cell: { row, col: column },
+        });
+      }
+
       if (columnId === "_pivot") {
         if (item._isLeaf) {
           return;

@@ -361,19 +361,32 @@ const createGrid = (
   grid.setSelectionModel(selectionModel);
   selectionModel.onSelectedRangesChanged.subscribe((e: any, args: any) => {
     const { fromCell, toCell, fromRow, toRow } = args[0];
-    // if user moved to a single cell using arrow keys
-    if (fromCell === toCell && fromRow === toRow) {
-      const columns = grid.getColumns();
-      const col = columns[fromCell];
-      var item = grid.getDataItem(fromRow);
 
-      onGridSelectionChange?.(
-        { row: fromRow, column: fromCell },
-        { row: toRow, column: toCell },
-        col.id,
-        item[col.id]
-      );
+    const columns = grid
+      .getColumns()
+      .slice(fromCell, toCell + 1)
+      .map((col: any) => col.id);
+
+    let items = [];
+    const gridCols = grid.getColumns();
+    const gridData = grid.getData();
+
+    for (let row = fromRow; row <= toRow; row++) {
+      const rowData = gridData.getItem(row);
+      const selectedDataInRow = [];
+      for (let col = fromCell; col <= toCell; col++) {
+        const cid = gridCols[col].id;
+        selectedDataInRow.push(rowData[cid]);
+      }
+      items.push(selectedDataInRow);
     }
+
+    onGridSelectionChange?.(
+      { row: fromRow, column: fromCell },
+      { row: toRow, column: toCell },
+      columns,
+      items
+    );
 
     // TODO: could store this in app state and show some
     // stats about selected range
@@ -657,8 +670,8 @@ export interface DataGridProps {
   onGridSelectionChange?: (
     anchor: { row: number; column: number },
     focus: { row: number; column: number },
-    columnId: string,
-    cellVal: any
+    columns: string[],
+    items: any[][]
   ) => void;
   onSetColumnOrder?: (displayColumns: string[]) => void;
   openURL: OpenURLFn;
