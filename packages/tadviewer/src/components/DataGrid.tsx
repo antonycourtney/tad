@@ -341,6 +341,7 @@ const createGrid = (
   props: DataGridProps
 ) => {
   const {
+    getColumnFormatter,
     histoMap,
     onViewportChanged,
     onHistogramBrushRange,
@@ -403,7 +404,10 @@ const createGrid = (
       const copyRow = [];
       for (let col = range.fromCell; col <= range.toCell; col++) {
         const cid = gridCols[col].id;
-        copyRow.push(escapeTabs(rowData[cid]));
+        const cellData = rowData[cid];
+        const formatColumn = getColumnFormatter(gridData.schema, gridCols[col].name);
+        const formattedCellData = formatColumn(cellData);
+        copyRow.push(escapeTabs(formattedCellData));
       }
       copyRowStrings.push(copyRow.join("\t"));
     }
