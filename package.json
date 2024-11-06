@@ -13,6 +13,7 @@
   },
   "scripts": {
     "bootstrap": "lerna bootstrap --hoist --force-local --ignore-prepublish",
-    "bootstrap-ci": "lerna bootstrap --ci --hoist --force-local --ignore-prepublish"
+    "bootstrap-ci": "lerna bootstrap --ci --hoist --force-local --ignore-prepublish",
+    "bootstrap-base-and-component-ci": "lerna bootstrap --ignore reltab-* --ignore tad --ci --hoist --force-local --ignore-prepublish"
   }
 }
