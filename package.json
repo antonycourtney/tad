@@ -12,6 +12,7 @@
     "typescript": "^4.8.3"
   },
   "scripts": {
-    "bootstrap": "lerna bootstrap --hoist --force-local --ignore-prepublish"
+    "bootstrap": "lerna bootstrap --ci --hoist --force-local --ignore-prepublish",
+    "bootstrap-no-drivers-no-app": "lerna bootstrap --ignore reltab-* --ignore tad --ci --hoist --force-local --ignore-prepublish"
   }
 }
