@@ -67,7 +67,10 @@ const groupCellFormatter = (
 
   var indentation = calcIndent(item._depth) + "px";
 
-  var pivotStr = item._pivot || "";
+  // We could consider using the text formatter from ViewParams here, but
+  // for now let's just use he.encode() to ensure reasonable escaping
+  // of special characters and avoid any HTML / JS injection issues:
+  var pivotStr = item._pivot == null ? "" : he.encode(item._pivot);
 
   const expandClass = !item._isLeaf
     ? item._isOpen
