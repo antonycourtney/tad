@@ -85,12 +85,15 @@ const groupCellFormatter = (
 };
 
 // scan table data to make best effort at initial column widths
-const MINCOLWIDTH = 150;
-const MAXCOLWIDTH = 300;
+const MINCOLWIDTH = 60;
+const MAXCOLWIDTH = 330;
+
+const CHAR_WIDTH = 7.0; // max width of a character in the font used
 
 // TODO: use real font metrics:
-const measureStringWidth = (s: string): number => 8 + 5.5 * s.length;
-const measureHeaderStringWidth = (s: string): number => 24 + 5.5 * s.length;
+const measureStringWidth = (s: string): number => 8 + CHAR_WIDTH * s.length;
+const measureHeaderStringWidth = (s: string): number =>
+  24 + CHAR_WIDTH * s.length;
 
 // get column width for specific column:
 const getColWidth = (
