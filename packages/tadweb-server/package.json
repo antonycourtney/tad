@@ -31,7 +31,7 @@
     "express": "^4.17.2",
     "express-validator": "^6.14.0",
     "loglevel": "^1.8.0",
-    "node-fetch": "3.2.3",
+    "node-fetch": "3.2.10",
     "reltab": "^0.12.0",
     "reltab-aws-athena": "^0.12.0",
     "reltab-bigquery": "^0.12.0",
