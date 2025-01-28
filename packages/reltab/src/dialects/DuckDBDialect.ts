@@ -112,6 +112,9 @@ const blobCT = new ColumnType("BLOB", "blob", {
     if (val == null) {
       return "";
     }
+    if (isDuckDBStringRenderer(val)) {
+      return val.toDuckDBString();
+    }
     if (isNode() && val instanceof Buffer) {
       return val.toString();
     }
