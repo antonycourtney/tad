@@ -54,6 +54,7 @@ const defaultFormatDefaultProps: FormatDefaultsProps = {
   string: new TextFormatOptions(),
   integer: new NumFormatOptions({
     decimalPlaces: 0,
+    formatMethod: "toLocaleString",
   }),
   real: new NumFormatOptions(),
   boolean: new NumFormatOptions({

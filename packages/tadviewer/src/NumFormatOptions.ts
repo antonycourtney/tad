@@ -6,6 +6,7 @@ export interface NumFormatOptionsProps {
   commas: boolean;
   decimalPlaces: number | undefined;
   exponential: boolean;
+  formatMethod: "toLocaleString" | "toString";
 }
 
 const defaultNumFormatOptionsProps: NumFormatOptionsProps = {
@@ -13,6 +14,7 @@ const defaultNumFormatOptionsProps: NumFormatOptionsProps = {
   commas: true,
   decimalPlaces: 2,
   exponential: false,
+  formatMethod: "toString",
 };
 
 export class NumFormatOptions
@@ -36,21 +38,24 @@ export class NumFormatOptions
         return null;
       }
 
-      let ret;
+      let ret: string;
 
-      if (this.exponential) {
-        const expFmtOpts: BigIntToLocaleStringOptions = {
-          notation: "scientific",
-        };
-        if (this.decimalPlaces) {
-          expFmtOpts.minimumFractionDigits = this.decimalPlaces as any;
-          expFmtOpts.maximumFractionDigits = this.decimalPlaces as any;
-        }
-        ret = val.toLocaleString(undefined, expFmtOpts);
+      if (this.formatMethod === "toString") {
+        ret = val.toString();
       } else {
-        ret = val.toLocaleString(undefined, fmtOpts);
+        if (this.exponential) {
+          const expFmtOpts: BigIntToLocaleStringOptions = {
+            notation: "scientific",
+          };
+          if (this.decimalPlaces) {
+            expFmtOpts.minimumFractionDigits = this.decimalPlaces as any;
+            expFmtOpts.maximumFractionDigits = this.decimalPlaces as any;
+          }
+          ret = val.toLocaleString(undefined, expFmtOpts);
+        } else {
+          ret = val.toLocaleString(undefined, fmtOpts);
+        }
       }
-
       return ret;
     };
 
