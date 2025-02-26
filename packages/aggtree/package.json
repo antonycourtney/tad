@@ -13,13 +13,9 @@
     "build": "tsc -p tsconfig-build.json",
     "test": "jest --config jest.config.json --no-cache"
   },
-  "overrides": {
-    "ws": "8.18.1"
-  },
   "dependencies": {
     "lodash": "^4.17.21",
-    "loglevel": "^1.8.0",
-    "ws": "^8.18.1"
+    "loglevel": "^1.8.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
