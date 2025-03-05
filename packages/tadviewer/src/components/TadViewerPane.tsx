@@ -1,7 +1,13 @@
 /**
  * A Tad Viewer pane for embedding a tad view of a SQL query on a data source
  */
-import { mkRef, mutableGet, refContainer, StateRef } from "oneref";
+import {
+  addStateChangeListener,
+  mkRef,
+  mutableGet,
+  refContainer,
+  StateRef,
+} from "oneref";
 import * as React from "react";
 import { useRef, useState } from "react";
 import {
@@ -42,7 +48,7 @@ function TadViewerPaneInner({
   rightFooterSlot = undefined,
   onFilter = undefined,
   onCellClick,
-  onSelectionChange
+  onSelectionChange,
 }: TadViewerPaneInnerProps) {
   const viewerPane = useRef<JSX.Element | null>(null);
 
@@ -93,6 +99,7 @@ export interface TadViewerPaneProps {
   ) => void;
   onCellClick?: (data: CellClickData) => void;
   onSelectionChange?: (data: SelectionChangeData) => void;
+  onAppStateChange?: (appState: AppState) => void;
 }
 
 export function TadViewerPane({
@@ -108,7 +115,8 @@ export function TadViewerPane({
   onViewRowCount,
   onViewRowCountResolved,
   onCellClick,
-  onSelectionChange
+  onSelectionChange,
+  onAppStateChange,
 }: TadViewerPaneProps): JSX.Element | null {
   const [appStateRef, setAppStateRef] = useState<StateRef<AppState> | null>(
     null
@@ -142,6 +150,11 @@ export function TadViewerPane({
           onViewRowCountResolved
         );
         setPivotRequester(preq);
+        if (onAppStateChange) {
+          addStateChangeListener(stateRef, (newState) => {
+            onAppStateChange(newState);
+          });
+        }
       }
     }
     initTadAppState();
