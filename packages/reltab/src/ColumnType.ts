@@ -47,20 +47,25 @@ type ColumnTypeOpts = {
 };
 
 const defaultValRender: StringRenderFn = (val: any) => {
-  if (val == null) {
+  if (val === null) {
     return "";
   }
-  if (typeof val === "string") {
-    return val;
-  }
-  if (typeof val === "bigint") {
-    return val.toString();
-  }
-  try {
-    return String(val);
-  } catch (err) {
-    console.error("error stringifying value: ", val);
-    return "";
+  switch (typeof val) {
+    case "string":
+      return val;
+
+    case "object":
+      return JSON.stringify(val, (_, v) =>
+        typeof v === "bigint" ? v.toString() : v
+      );
+
+    default:
+      try {
+        return String(val);
+      } catch (err) {
+        console.error("error stringifying value: ", val);
+        return "";
+      }
   }
 };
 
