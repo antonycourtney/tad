@@ -50,8 +50,13 @@ open a web browser to `localhost:9000` and you should see Tad in your web browse
 
 ## Trying Experimental Backends
 
-You can try out the experimental backends by setting appropriate environment variables and un-commenting
-the relevant `init` calls in `main()` in [../src/tadweb-server/server.ts](../src/tadweb-server/server.ts).
+You can try out the experimental backends by setting the appropriate environment variables (see below) and passing
+the corresponding flags when starting the web server:
+
+    $ cd packages/tadweb-server
+    $ npm start -- --bigquery --snowflake
+
+Without these flags, the server only uses DuckDB (see `main()` in [server.ts](../packages/tadweb-server/src/server.ts)).
 
 ### Snowflake Credentials
 
