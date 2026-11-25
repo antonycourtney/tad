@@ -16,6 +16,7 @@ import {
   CustomCell,
   CustomRenderer,
   DataEditor,
+  DataEditorRef,
   getMiddleCenterBias,
   GridCell,
   GridCellKind,
@@ -47,6 +48,29 @@ const aggregateRowTheme: Partial<Theme> = { baseFontStyle: "600 11px" };
 const linkTheme: Partial<Theme> = { textDark: "#2965cc" };
 const ROW_HEIGHT = 25;
 const HEADER_HEIGHT = 28;
+
+/*
+ * Testing hook: with TAD_TEST_HOOKS=1 in the environment (Electron), expose
+ * the grid's geometry as window.__tadGrid, so that UI tests can click cells
+ * and scroll without computing pixel positions. See tad-app/e2e.
+ */
+const testHooksEnabled: boolean = (() => {
+  try {
+    return (
+      typeof process !== "undefined" && process.env?.TAD_TEST_HOOKS === "1"
+    );
+  } catch (e) {
+    return false;
+  }
+})();
+
+export interface GridTestHooks {
+  // Bounds of a cell in client (CSS pixel) coordinates; row -1 is the header:
+  getBounds: (col: number, row: number) => Rectangle | undefined;
+  scrollTo: (col: number, row: number) => void;
+  columnIds: string[];
+  rowCount: number;
+}
 
 /*
  * The pivot (tree) column.
@@ -420,11 +444,29 @@ export const GlideDataGrid: React.FunctionComponent<DataGridProps> = (
   const lm = showLoadingModal ? <LoadingModal embedded={embedded} /> : null;
   const rows = dataView ? dataView.getLength() : 0;
 
+  const gridRef = React.useRef<DataEditorRef>(null);
+  React.useEffect(() => {
+    if (!testHooksEnabled) {
+      return;
+    }
+    const hooks: GridTestHooks = {
+      getBounds: (col, row) => gridRef.current?.getBounds(col, row),
+      scrollTo: (col, row) =>
+        gridRef.current?.scrollTo(col, row, "both", 0, 0, {
+          vAlign: "start",
+        }),
+      columnIds: gridColIds,
+      rowCount: rows,
+    };
+    (window as any).__tadGrid = hooks;
+  });
+
   return (
     <div className="gridPaneOuter">
       <div className="gridPaneInner">
         {dataView ? (
           <DataEditor
+            ref={gridRef}
             width="100%"
             height="100%"
             theme={gridTheme}

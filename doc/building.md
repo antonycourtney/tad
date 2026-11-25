@@ -87,6 +87,20 @@ Similar to above, but with three windows open:
 With those running continuously, you should be able to just hit reload in your browser on `localhost:9000` to pick up any code changes. You'll still have to run `npm run build` if you make changes in any of the other library packages (`reltab`,
 `reltab-duckdb`, `aggtree`, etc.).
 
+## UI Tests (desktop app)
+
+`packages/tad-app/e2e` has [Playwright](https://playwright.dev/docs/api/class-electron) tests that launch the desktop app, open generated test data (a 100,000 row Parquet file, and `.tad` files that open it sorted and pivoted) and drive the grid with the mouse. They currently test the Glide-based grid (`TAD_GRID=glide`).
+
+```
+cd packages/tad-app
+npm run build-prod   # the tests run the built app in dist/
+npm run test:e2e     # or: npx playwright test -g "pivot"
+```
+
+Each test opens its own app window on screen, with a temporary user data directory (`TAD_USER_DATA_DIR`), so it won't interfere with an installed copy of Tad. On failure, a screenshot and an accessibility snapshot of the window are saved under `e2e-results/`.
+
+The grid is drawn on a canvas, so tests read cell text from the accessibility table that Glide renders alongside it, and find cell positions through `window.__tadGrid`, which the grid exposes when `TAD_TEST_HOOKS=1` (see `e2e/glide-grid.ts`).
+
 # Additional Info
 
 ## Useful paths:

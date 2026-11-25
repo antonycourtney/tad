@@ -10,3 +10,4 @@ npm-debug.log
 .vscode
 lerna-debug.log
 .idea
+e2e-results

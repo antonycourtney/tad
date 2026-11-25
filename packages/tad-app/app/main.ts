@@ -30,6 +30,14 @@ if (process.env.TAD_REMOTE_DEBUGGING_PORT) {
   );
 }
 
+// Testing hook: use a separate user data directory. This also gives the app
+// its own single instance lock, so that tests don't hand their files to an
+// already running Tad (the dev and packaged apps share a user data directory
+// on macOS).
+if (process.env.TAD_USER_DATA_DIR) {
+  app.setPath("userData", process.env.TAD_USER_DATA_DIR);
+}
+
 import path from "path";
 
 import pkgInfo from "../package.json";
