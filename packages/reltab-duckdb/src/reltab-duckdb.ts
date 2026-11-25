@@ -66,11 +66,18 @@ class ConnectionPool {
   }
 }
 
-const parsePercentage = (s: string | undefined): number | null => {
-  if (s != undefined && s.endsWith("%")) {
-    const noPct = s.replace(/%$/, "");
-    const ret = Number.parseFloat(noPct) / 100.0;
-    return ret;
+/*
+ * Parse SUMMARIZE's null_percentage.
+ * Older DuckDb versions returned this as a VARCHAR like "12.5%";
+ * newer versions return a DECIMAL (e.g. 12.5).
+ */
+const parsePercentage = (v: unknown): number | null => {
+  if (typeof v === "number") {
+    return v / 100.0;
+  }
+  if (typeof v === "string") {
+    const ret = Number.parseFloat(v.replace(/%$/, ""));
+    return Number.isNaN(ret) ? null : ret / 100.0;
   }
   return null;
 };

@@ -123,7 +123,14 @@ test.skip("table and schema deserialization", async () => {
 });
 
 test("basic groupBy", async () => {
-  const q3 = bartTableQuery.groupBy(["Job Family", "Title"], ["TCOE"]); // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
+  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
+  // sort so that snapshot doesn't depend on DuckDb's (unspecified) group order:
+  const q3 = bartTableQuery
+    .groupBy(["Job Family", "Title"], ["TCOE"])
+    .sort([
+      ["Job Family", true],
+      ["Title", true],
+    ]);
 
   // testCtx.showQueries = true;
   const qres = await testCtx.evalQuery(q3);

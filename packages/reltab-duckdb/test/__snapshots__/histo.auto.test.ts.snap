@@ -2,7 +2,7 @@
 
 exports[`basic column stats and bin count 1`] = `
 Object {
-  "approxUnique": 23,
+  "approxUnique": 25,
   "count": 23,
   "max": 419661,
   "min": 104260,

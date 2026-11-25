@@ -248,34 +248,14 @@ exports[`basic groupBy 1`] = `
 TableRep {
   "rowData": Array [
     Object {
-      "Job Family": "Transportation Operations",
-      "TCOE": 238211n,
-      "Title": "Chief Transportation Officer",
+      "Job Family": "Engineering & Systems Engineering",
+      "TCOE": 212535n,
+      "Title": "Group Manager Systems Capital Prog",
     },
     Object {
-      "Job Family": "Maintenance, Vehicle & Facilities",
-      "TCOE": 128332n,
-      "Title": "Wayside Inspector",
-    },
-    Object {
-      "Job Family": "Transportation Operations",
-      "TCOE": 352988n,
-      "Title": "Station Agent",
-    },
-    Object {
-      "Job Family": "Executive Management",
-      "TCOE": 281548n,
-      "Title": "Deputy General Manager",
-    },
-    Object {
-      "Job Family": "Transportation Operations",
-      "TCOE": 118799n,
-      "Title": "Train Operator",
-    },
-    Object {
-      "Job Family": "Maintenance, Vehicle & Facilities",
-      "TCOE": 113775n,
-      "Title": "Electrician",
+      "Job Family": "Engineering & Systems Engineering",
+      "TCOE": 209709n,
+      "Title": "Group Manager, Capital Projects",
     },
     Object {
       "Job Family": "Executive Management",
@@ -283,34 +263,9 @@ TableRep {
       "Title": "Assistant General Manager Operations",
     },
     Object {
-      "Job Family": "Legal & Paralegal",
-      "TCOE": 321543n,
-      "Title": "General Counsel",
-    },
-    Object {
-      "Job Family": "Legal & Paralegal",
-      "TCOE": 445028n,
-      "Title": "Senior Attorney",
-    },
-    Object {
-      "Job Family": "Safety",
-      "TCOE": 211941n,
-      "Title": "Chief Safety Officer",
-    },
-    Object {
-      "Job Family": "Maintenance, Vehicle & Facilities",
-      "TCOE": 124962n,
-      "Title": "Structures Inspector",
-    },
-    Object {
-      "Job Family": "Maintenance, Vehicle & Facilities",
-      "TCOE": 123432n,
-      "Title": "Vehicle Inspector",
-    },
-    Object {
-      "Job Family": "Police",
-      "TCOE": 127660n,
-      "Title": "Revenue Protection Guard",
+      "Job Family": "Executive Management",
+      "TCOE": 281548n,
+      "Title": "Deputy General Manager",
     },
     Object {
       "Job Family": "Executive Management",
@@ -323,14 +278,24 @@ TableRep {
       "Title": "Controller-Treasurer",
     },
     Object {
-      "Job Family": "Public Affairs & Marketing",
-      "TCOE": 181955n,
-      "Title": "Department Manager Gov't & Comm Rel",
+      "Job Family": "Legal & Paralegal",
+      "TCOE": 321543n,
+      "Title": "General Counsel",
     },
     Object {
-      "Job Family": "Engineering & Systems Engineering",
-      "TCOE": 212535n,
-      "Title": "Group Manager Systems Capital Prog",
+      "Job Family": "Legal & Paralegal",
+      "TCOE": 445028n,
+      "Title": "Senior Attorney",
+    },
+    Object {
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "TCOE": 113775n,
+      "Title": "Electrician",
+    },
+    Object {
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "TCOE": 124962n,
+      "Title": "Structures Inspector",
     },
     Object {
       "Job Family": "Maintenance, Vehicle & Facilities",
@@ -338,9 +303,44 @@ TableRep {
       "Title": "Transit Vehicle Mechanic",
     },
     Object {
-      "Job Family": "Engineering & Systems Engineering",
-      "TCOE": 209709n,
-      "Title": "Group Manager, Capital Projects",
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "TCOE": 123432n,
+      "Title": "Vehicle Inspector",
+    },
+    Object {
+      "Job Family": "Maintenance, Vehicle & Facilities",
+      "TCOE": 128332n,
+      "Title": "Wayside Inspector",
+    },
+    Object {
+      "Job Family": "Police",
+      "TCOE": 127660n,
+      "Title": "Revenue Protection Guard",
+    },
+    Object {
+      "Job Family": "Public Affairs & Marketing",
+      "TCOE": 181955n,
+      "Title": "Department Manager Gov't & Comm Rel",
+    },
+    Object {
+      "Job Family": "Safety",
+      "TCOE": 211941n,
+      "Title": "Chief Safety Officer",
+    },
+    Object {
+      "Job Family": "Transportation Operations",
+      "TCOE": 238211n,
+      "Title": "Chief Transportation Officer",
+    },
+    Object {
+      "Job Family": "Transportation Operations",
+      "TCOE": 352988n,
+      "Title": "Station Agent",
+    },
+    Object {
+      "Job Family": "Transportation Operations",
+      "TCOE": 118799n,
+      "Title": "Train Operator",
     },
   ],
   "schema": Object {
@@ -2147,54 +2147,48 @@ exports[`t1 - basic sqlite tableQuery 1`] = `
 TableRep {
   "rowData": Array [
     Object {
-      "column0": "firstName",
-      "column1": "lastName",
-      "column2": "email",
-      "column3": "phoneNumber",
+      "email": "john@doe.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "phoneNumber": "0123456789",
     },
     Object {
-      "column0": "John",
-      "column1": "Doe",
-      "column2": "john@doe.com",
-      "column3": "0123456789",
+      "email": "jane@doe.com",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "phoneNumber": "9876543210",
     },
     Object {
-      "column0": "Jane",
-      "column1": "Doe",
-      "column2": "jane@doe.com",
-      "column3": "9876543210",
-    },
-    Object {
-      "column0": "James",
-      "column1": "Bond",
-      "column2": "james.bond@mi6.co.uk",
-      "column3": "0612345678",
+      "email": "james.bond@mi6.co.uk",
+      "firstName": "James",
+      "lastName": "Bond",
+      "phoneNumber": "0612345678",
     },
   ],
   "schema": Object {
     "columnMetadata": Object {
-      "column0": Object {
+      "email": Object {
         "columnType": "VARCHAR",
-        "displayName": "column0",
+        "displayName": "email",
       },
-      "column1": Object {
+      "firstName": Object {
         "columnType": "VARCHAR",
-        "displayName": "column1",
+        "displayName": "firstName",
       },
-      "column2": Object {
+      "lastName": Object {
         "columnType": "VARCHAR",
-        "displayName": "column2",
+        "displayName": "lastName",
       },
-      "column3": Object {
+      "phoneNumber": Object {
         "columnType": "VARCHAR",
-        "displayName": "column3",
+        "displayName": "phoneNumber",
       },
     },
     "columns": Array [
-      "column0",
-      "column1",
-      "column2",
-      "column3",
+      "firstName",
+      "lastName",
+      "email",
+      "phoneNumber",
     ],
     "dialect": "duckdb",
   },
