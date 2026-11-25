@@ -24,7 +24,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder --publish=never",
     "dist-arm64": "electron-builder --arm64 --publish=never",
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "publish": "electron-builder",
     "electron-builder-postinstall": "electron-builder install-app-deps",
     "start": "electron ."
@@ -37,9 +37,7 @@
   "author": "Antony Courtney <antony@antonycourtney.com>",
   "license": "MIT",
   "dependencies": {
-    "aggtree": "^0.12.0",
-    "babel-cli": "^6.26.0",
-    "babel-plugin-flow-to-typescript": "^0.6.0",
+    "aggtree": "^0.14.0",
     "command-line-args": "^5.2.0",
     "command-line-usage": "^6.1.1",
     "console.table": "^0.10.0",
@@ -50,12 +48,12 @@
     "oneref": "^0.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "reltab": "^0.12.0",
-    "reltab-bigquery": "^0.12.0",
-    "reltab-duckdb": "^0.12.0",
-    "reltab-fs": "^0.12.0",
+    "reltab": "^0.14.0",
+    "reltab-bigquery": "^0.14.0",
+    "reltab-duckdb": "^0.14.0",
+    "reltab-fs": "^0.14.0",
     "source-map-support": "^0.5.21",
-    "tadviewer": "^0.12.0"
+    "tadviewer": "^0.14.0"
   },
   "devDependencies": {
     "@blueprintjs/icons": "^4.10.1",
@@ -70,7 +68,7 @@
     "css-loader": "^6.5.1",
     "duplicate-package-checker-webpack-plugin": "^3.0.0",
     "electron": "45.3.0",
-    "electron-builder": "^24.13.3",
+    "electron-builder": "^26.18.1",
     "file-loader": "^6.2.0",
     "image-webpack-loader": "^8.0.1",
     "less": "^3.13.1",
@@ -98,7 +96,8 @@
     "afterSign": "./tools/notarize.js",
     "buildNumber": "1",
     "directories": {
-      "buildResources": "buildRes"
+      "buildResources": "buildRes",
+      "output": "release"
     },
     "dmg": {
       "icon": "dmgIcon.icns",

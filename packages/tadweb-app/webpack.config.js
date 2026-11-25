@@ -2,7 +2,6 @@
 
 var webpack = require("webpack");
 var path = require("path");
-var fs = require("fs");
 
 process.traceDeprecation = true;
 
@@ -113,16 +112,6 @@ var webRender = {
     tadweb: "./src/webRenderMain.tsx",
   },
 };
-
-var nodeModules = {};
-fs.readdirSync("node_modules")
-  .filter(function (x) {
-    return [".bin"].indexOf(x) === -1;
-  })
-  .forEach(function (mod) {
-    nodeModules[mod] = "commonjs " + mod;
-  });
-nodeModules["timer"] = "timer";
 
 function merge(config, env) {
   var merged = Object.assign({}, env, config);

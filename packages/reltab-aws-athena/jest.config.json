@@ -6,5 +6,9 @@
   "testEnvironment": "node",
   "testPathIgnorePatterns": ["/node_modules/", "/__snapshots__"],
   "moduleFileExtensions": ["ts", "js"],
-  "testTimeout": 30000
+  "testTimeout": 30000,
+  "snapshotFormat": {
+    "escapeString": true,
+    "printBasicPrototype": true
+  }
 }

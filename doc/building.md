@@ -1,30 +1,29 @@
 # Building Tad from Sources
 
-## Pre-requisites: Node, Npm and Lerna
+## Pre-requisites: Node and Npm
 
-To build Tad, you should have [node](https://nodejs.org/en/) and `npm`(https://www.npmjs.com/get-npm) (included when you install Node.js) installed. The versions of these tools used for development are:
+To build Tad, you should have [node](https://nodejs.org/en/) and [npm](https://www.npmjs.com/get-npm) (included when you install Node.js) installed. Tad is developed with Node 22 (see [.nvmrc](../.nvmrc)); if you use [nvm](https://github.com/nvm-sh/nvm), run `nvm use` at the top level. For example:
 
     $ node --version
-    v19.3.0
+    v22.17.0
     $ npm --version
-    9.2.0
+    10.9.2
 
-Once you have Node installed, run `npm install` at the top level:
+## Installing dependencies and linking modules
+
+Tad is an [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) monorepo. A single `npm install` at the top level installs all dependencies (hoisted to the top-level `node_modules` where possible) and links the local packages (`reltab`, `tadviewer`, etc.) to each other:
 
     $ npm install
 
-## Installing dependencies and linking modules (Bootstrapping)
+Use `npm ci` instead for a clean install that exactly matches `package-lock.json`.
 
-Lerna supports a process called [bootstrapping](https://github.com/lerna/lerna/tree/main/commands/bootstrap#readme) that links local packages together and installs any remaining dependencies. To the extent possible, lerna tries to hoist common dependencies needed by different packages in the monorepo.
-To bootstrap Tad correctly, run the following:
+To add or upgrade a dependency of a single package, run npm from the top level with `--workspace`, e.g.:
 
-    $ npm run bootstrap
-
-This runs the standard lerna `bootstrap` command with a few extra arguments needed for how Tad's source is structured.
+    $ npm install some-package@1.2.3 --workspace tadviewer
 
 ## Building Everything
 
-After bootstrapping, run the following script to try and build everything, including the web app (tadweb-app), reference web server (tadweb-server), and desktop app:
+After installing dependencies, run the following script to try and build everything, including the web app (tadweb-app), reference web server (tadweb-server), and desktop app:
 
     $ ./tools/build-all.sh
 
@@ -92,3 +91,7 @@ Log information (from [electron-log](https://www.npmjs.com/package/electron-log)
 - on Linux: ~/.config/Tad/main.log
 - on OS X: ~/Library/Logs/Tad/main.log
 - on Windows: %USERPROFILE%\AppData\Roaming\Tad\main.log
+
+## Packaging the Desktop App
+
+`npm run dist` in `packages/tad-app` packages the desktop app with [electron-builder](https://www.electron.build/). Its output (installers, and the unpacked app in e.g. `release/mac-arm64`) goes to `packages/tad-app/release`, which is kept separate from the webpack output in `dist` so that previous builds don't get bundled into the app.

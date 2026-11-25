@@ -4,7 +4,7 @@
   "description": "ExpressJS based web server for Tad",
   "main": "dist/server.js",
   "scripts": {
-    "prepublish": "npm test",
+    "prepublishOnly": "npm test",
     "clean": "rimraf dist",
     "build": "tsc",
     "start": "npm run build && node dist/server.js",
@@ -32,12 +32,12 @@
     "express-validator": "^6.14.0",
     "loglevel": "^1.8.0",
     "node-fetch": "3.2.3",
-    "reltab": "^0.12.0",
-    "reltab-aws-athena": "^0.12.0",
-    "reltab-bigquery": "^0.12.0",
-    "reltab-duckdb": "^0.12.0",
-    "reltab-snowflake": "^0.12.0",
-    "tadweb-app": "^0.12.0",
+    "reltab": "^0.14.0",
+    "reltab-aws-athena": "^0.14.0",
+    "reltab-bigquery": "^0.14.0",
+    "reltab-duckdb": "^0.14.0",
+    "reltab-snowflake": "^0.14.0",
+    "tadweb-app": "^0.14.0",
     "typed-promisify": "^0.4.0"
   },
   "devDependencies": {

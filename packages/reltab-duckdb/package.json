@@ -5,7 +5,7 @@
   "main": "dist/reltab-duckdb.js",
   "types": "dist/reltab-duckdb.d.ts",
   "scripts": {
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "clean": "rimraf dist",
     "build": "tsc -p tsconfig-build.json",
     "test": "AWS_PROFILE=dev ./scripts/run-tests-locally.sh",
@@ -30,11 +30,11 @@
     "jest": "^29.7.0",
     "mkdirp": "^1.0.4",
     "prettier": "^2.5.1",
-    "reltab": "^0.12.0",
+    "reltab": "^0.14.0",
     "ts-jest": "^29.2.6",
     "typescript": "^4.8.3"
   },
   "peerDependencies": {
-    "reltab": "^0.12.0"
+    "reltab": "^0.14.0"
   }
 }

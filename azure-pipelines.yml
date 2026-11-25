@@ -15,18 +15,16 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: 16.x
-        displayName: "Use node.js 16"
+          versionSpec: 22.x
+        displayName: "Use node.js 22"
       - script: curl.exe -o openssl-1.1.1q.zip https://www.antonycourtney.com/files/openssl-win64/openssl-1.1.1q.zip
         displayName: "download OpenSSL"
       - script: mkdir .\openssl-1.1.1q
         displayName: "make openssl dir"
       - script: tar -xzf openssl-1.1.1q.zip -C .\openssl-1.1.1q --strip-components=1
         displayName: "extract openssl"
-      - script: npm install
-        displayName: "Install top-level npm dependencies"
-      - script: npm run bootstrap
-        displayName: "Run lerna bootstrapping"
+      - script: npm ci
+        displayName: "Install npm workspace dependencies"
       - script: node tools/buildAll.js
         displayName: "Build all packages"
       - script: npm run publish
@@ -39,7 +37,7 @@ jobs:
           }
       - task: CopyFiles@2
         inputs:
-          sourceFolder: "packages/tad-app/dist"
+          sourceFolder: "packages/tad-app/release"
           contents: "*"
           targetFolder: $(Build.ArtifactStagingDirectory)
       - task: PublishBuildArtifacts@1
@@ -54,12 +52,10 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: 16.x
-        displayName: "Use node.js 16"
-      - script: npm install
-        displayName: "Install top-level npm dependencies"
-      - script: npm run bootstrap
-        displayName: "Run lerna bootstrapping"
+          versionSpec: 22.x
+        displayName: "Use node.js 22"
+      - script: npm ci
+        displayName: "Install npm workspace dependencies"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
       - script: "( cd packages/tad-app && BUILD_BUILDNUMBER='' npm run publish )"
@@ -73,7 +69,7 @@ jobs:
           }
       - task: CopyFiles@2
         inputs:
-          contents: "packages/tad-app/dist/tad*"
+          contents: "packages/tad-app/release/tad*"
           targetFolder: $(Build.ArtifactStagingDirectory)
       - task: PublishBuildArtifacts@1
         inputs:
@@ -87,8 +83,8 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: 16.x
-        displayName: "Use node.js 16"
+          versionSpec: 22.x
+        displayName: "Use node.js 22"
       - task: DownloadSecureFile@1
         name: devCertificate
         displayName: "Download Apple Dev Certificate"
@@ -98,10 +94,8 @@ jobs:
         displayName: "Install openssl from homebrew"
       - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
         displayName: "Install jq from homebrew"
-      - script: npm install
-        displayName: "Install top-level npm dependencies"
-      - script: npm run bootstrap
-        displayName: "Run lerna bootstrapping"
+      - script: npm ci
+        displayName: "Install npm workspace dependencies"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
       - script: "( cd packages/tad-app && npm run publish )"
@@ -116,11 +110,11 @@ jobs:
           }
       - task: CopyFiles@2
         inputs:
-          contents: "packages/tad-app/dist/Tad*.zip"
+          contents: "packages/tad-app/release/Tad*.zip"
           targetFolder: $(Build.ArtifactStagingDirectory)
       - task: CopyFiles@2
         inputs:
-          contents: "packages/tad-app/dist/Tad*.dmg"
+          contents: "packages/tad-app/release/Tad*.dmg"
           targetFolder: $(Build.ArtifactStagingDirectory)
       - task: PublishBuildArtifacts@1
         inputs:

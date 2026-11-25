@@ -5,5 +5,9 @@
   "testRegex": "/test/.*test.ts",
   "testEnvironment": "node",
   "testPathIgnorePatterns": ["/node_modules/", "/__snapshots__"],
-  "moduleFileExtensions": ["ts", "js"]
+  "moduleFileExtensions": ["ts", "js"],
+  "snapshotFormat": {
+    "escapeString": true,
+    "printBasicPrototype": true
+  }
 }
