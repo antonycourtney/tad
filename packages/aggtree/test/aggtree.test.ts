@@ -8,11 +8,16 @@ import { delimiter } from "path";
 import * as log from "loglevel";
 import * as util from "./testUtils";
 import { executionAsyncId } from "async_hooks";
-import { DataSourceId, getConnection } from "reltab";
+import {
+  DataSourceConnection,
+  DataSourceId,
+  DbDataSource,
+  getConnection,
+} from "reltab";
 
 log.setLevel("info");
 
-let testCtx: reltabSqlite.SqliteContext;
+let testCtx: DataSourceConnection;
 
 const importCsv = async (db: sqlite3.Database, path: string) => {
   const md = await reltabSqlite.fastImport(db, path);
@@ -23,7 +28,7 @@ const q0 = reltab.tableQuery("barttest").project(pcols);
 
 let tree0: aggtree.VPivotTree;
 
-beforeAll(async (): Promise<reltabSqlite.SqliteContext> => {
+beforeAll(async (): Promise<DataSourceConnection> => {
   log.setLevel("info"); // use "debug" for even more verbosity
   const showQueries = true;
   const connKey: DataSourceId = {
@@ -32,9 +37,11 @@ beforeAll(async (): Promise<reltabSqlite.SqliteContext> => {
   };
   const ctx = await getConnection(connKey);
 
-  testCtx = ctx as reltabSqlite.SqliteContext;
+  testCtx = ctx;
 
-  const db = testCtx.db;
+  const dbds = testCtx as DbDataSource;
+  const driver = dbds.db as reltabSqlite.SqliteDriver;
+  const db = driver.db;
 
   await importCsv(db, "../reltab-sqlite/test/support/sample.csv");
   await importCsv(db, "../reltab-sqlite/test/support/barttest.csv");
@@ -213,6 +220,11 @@ test("async aggTree sortedTreeQuery test", async () => {
 
   const jq4 = q4.join(sq1, ["_path0"]).join(sq2, ["_path0", "_path1"]);
   const jres4 = await rtc.evalQuery(jq4);
+  // This join has no ORDER BY, so its row order is unspecified (and varies
+  // across SQLite versions); sort the rows so the snapshot is deterministic:
+  jres4.rowData.sort((r1, r2) =>
+    JSON.stringify(r1).localeCompare(JSON.stringify(r2))
+  );
 
   // console.log("tree query after sort joins:");
   // util.logTable(jres4, { maxRows: 50 });
@@ -240,7 +252,7 @@ test("basic initial view test", async () => {
 
   console.log("full sorted tree query:\n", stq.toJS());
 
-  const sqlStr = await rtc.toSql(stq);
+  const sqlStr = await (rtc as DbDataSource).getSqlForQuery(stq);
 
   console.log("SQL query: ", sqlStr);
 
