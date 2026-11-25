@@ -4,7 +4,7 @@ import commandLineArgs, {
   ParseOptions,
 } from "command-line-args";
 import getUsage from "command-line-usage";
-import log from "electron-log";
+import log from "electron-log/main";
 import * as logLevel from "loglevel";
 import * as reltab from "reltab";
 import * as reltabBigQuery from "reltab-bigquery";

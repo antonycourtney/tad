@@ -7,7 +7,7 @@
  */
 import path from "path";
 import fs from "fs";
-import log from "electron-log";
+import log from "electron-log/main";
 import electron from "electron";
 import { URL } from "url";
 const app = electron.app;

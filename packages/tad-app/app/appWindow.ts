@@ -8,7 +8,7 @@ const dialog = electron.dialog;
 const ipcMain = electron.ipcMain;
 
 import fs from "fs";
-import log from "electron-log";
+import log from "electron-log/main";
 import * as fileExport from "./fileExport";
 import * as reltab from "reltab";
 import {
@@ -28,6 +28,17 @@ let openCount = 0;
 let baseX = 0;
 let baseY = 0;
 const POS_OFFSET = 25; // pixel offset of new windows
+
+// As of Electron 43, open / save dialogs default to the Downloads
+// directory and the OS no longer remembers the last directory used,
+// so we track it ourselves:
+let lastDialogDir: string | undefined = undefined;
+
+const rememberDialogDir = (filePath: string) => {
+  if (!isIPFSPath(filePath)) {
+    lastDialogDir = path.dirname(filePath);
+  }
+};
 
 type InitMap = { [windowId: number]: boolean };
 const renderInitMap: InitMap = {};
@@ -204,6 +215,7 @@ export const createFromFile = async (
   if (!isIPFSPath(targetPath)) {
     realTargetPath = await fsPromises.realpath(targetPath);
   }
+  rememberDialogDir(realTargetPath);
   const openParams = fileOpenParams(realTargetPath);
   const win = await create(openParams);
   return win;
@@ -214,6 +226,7 @@ export const openDialog = async (
   win?: BrowserWindow
 ) => {
   const openRet = await dialog.showOpenDialog({
+    defaultPath: lastDialogDir,
     properties: [dialogType],
     /* weirdly, showOpenDialogSync doesn't seem to respect multiple filters, but does respect a
      * single filter with multiple extensions...
@@ -247,6 +260,7 @@ export const openDialog = async (
   const openPaths = openRet.filePaths;
   if (openPaths && openPaths.length > 0) {
     const filePath = openPaths[0];
+    rememberDialogDir(filePath);
     const openParams = fileOpenParams(filePath);
     if (win && isInitialized(win.id)) {
       win.webContents.send("open-file", {
@@ -326,6 +340,7 @@ export const saveAsDialog = async () => {
   const fileContents = await getAppState(win);
   const saveFilename = dialog.showSaveDialogSync(win, {
     title: "Save Tad Workspace",
+    defaultPath: lastDialogDir,
     filters: [
       {
         name: "Tad Workspace files",
@@ -338,6 +353,7 @@ export const saveAsDialog = async () => {
     // user cancelled save as...
     return;
   }
+  rememberDialogDir(saveFilename);
 
   const saveStr = serialize(fileContents);
   fs.writeFile(saveFilename, saveStr, (err) => {
@@ -366,8 +382,12 @@ const browseExportPath = async (
 
   const exportPath = dialog.showSaveDialogSync(win, {
     title: "Export Filtered Data",
+    defaultPath: lastDialogDir,
     filters: [fmtFilter],
   });
+  if (exportPath) {
+    rememberDialogDir(exportPath);
+  }
   win.webContents.send("set-export-path", { exportPath });
 };
 
