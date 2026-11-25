@@ -1,7 +1,7 @@
 /**
  * Support routines for using s3 URLs with DuckDb.
  */
-import { Connection, Database } from "duckdb-async";
+import { DuckDBConnection } from "@duckdb/node-api";
 import * as log from "loglevel";
 
 /**
@@ -13,14 +13,14 @@ import * as log from "loglevel";
  */
 const AWS_DEFAULT_REGION = "us-west-1";
 
-export async function initS3(dbConn: Connection) {
+export async function initS3(dbConn: DuckDBConnection) {
   const aws_access_key_id = process.env.AWS_ACCESS_KEY_ID;
   if (aws_access_key_id && aws_access_key_id.length > 0) {
     log.debug("AWS_ACCESS_KEY_ID env var found, initializing S3 vars");
     const s3_region = process.env.AWS_REGION ?? AWS_DEFAULT_REGION;
-    await dbConn.exec(`SET s3_region='${s3_region}'`);
-    await dbConn.exec(`SET s3_access_key_id='${aws_access_key_id}'`);
-    await dbConn.exec(
+    await dbConn.run(`SET s3_region='${s3_region}'`);
+    await dbConn.run(`SET s3_access_key_id='${aws_access_key_id}'`);
+    await dbConn.run(
       `SET s3_secret_access_key='${process.env.AWS_SECRET_ACCESS_KEY}'`
     );
     log.debug("initS3: done.");

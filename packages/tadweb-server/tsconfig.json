@@ -2,6 +2,7 @@
   "compilerOptions": {
     "module": "CommonJS",
     "strict": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": "./",
     "outDir": "./dist",
     "declaration": true,
@@ -9,8 +10,7 @@
     "importHelpers": true,
     "target": "ES6",
     "lib": ["es6", "es2017"],
-    "types": ["node"],
-    "typeRoots": ["node_modules/@types"]
+    "types": ["node"]
   },
   "include": ["./src/**/*.ts"]
 }

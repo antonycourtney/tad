@@ -4,7 +4,7 @@
 
 import * as log from "loglevel";
 import * as path from "path";
-import { Connection, Database } from "duckdb-async";
+import { DuckDBInstance } from "@duckdb/node-api";
 import * as prettyHRTime from "pretty-hrtime";
 import { initS3 } from "./s3utils";
 let uniqMap: { [cid: string]: number } = {};
@@ -50,48 +50,37 @@ const genTableName = (pathname: string): string => {
  * Native import using DuckDB's built-in import facilities.
  */
 export const nativeCSVImport = async (
-  db: Database,
+  db: DuckDBInstance,
   filePath: string,
   tableName?: string
 ): Promise<string> => {
   const importStart = process.hrtime();
 
   const dbConn = await db.connect();
-  await initS3(dbConn);
-  if (!tableName) {
-    tableName = genTableName(filePath);
-  }
-  const query = `CREATE OR REPLACE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}')`;
-  // console.log('nativeCSVImport: executing: ', query);
   try {
-    /*
-    const resObj = await dbConn.executeIterator(query);
-    const resRows = resObj.fetchAllRows() as any[];
-*/
-    const resRows = await dbConn.all(query);
-    // console.log('nativeCSVImport: result: ', resRows[0]);
-    const info = resRows[0];
-    // console.log('info.Count: \"' + info.Count + '\", type: ', typeof info.Count);
-  } catch (err) {
-    console.log("caught exception while importing: ", err);
-    console.log("retrying with SAMPLE_SIZE=-1:");
-    const noSampleQuery = `CREATE OR REPLACE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}', sample_size=-1)`;
-    try {
-      /*
-      const resObj = await dbConn.executeIterator(noSampleQuery);
-      const resRows = resObj.fetchAllRows() as any[];
-      */
-      const resRows = await dbConn.all(noSampleQuery);
-      // console.log('nativeCSVImport: result: ', resRows[0]);
-      const info = resRows[0];
-      log.debug(
-        'nativeCSVImport: info.Count: "' + info.Count + '", type: ',
-        typeof info.Count
-      );
-    } catch (noSampleErr) {
-      console.log("caught exception with no sampling: ", noSampleErr);
-      throw noSampleErr;
+    await initS3(dbConn);
+    if (!tableName) {
+      tableName = genTableName(filePath);
     }
+    const query = `CREATE OR REPLACE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}')`;
+    // console.log('nativeCSVImport: executing: ', query);
+    try {
+      await dbConn.run(query);
+    } catch (err) {
+      console.log("caught exception while importing: ", err);
+      console.log("retrying with SAMPLE_SIZE=-1:");
+      const noSampleQuery = `CREATE OR REPLACE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}', sample_size=-1)`;
+      try {
+        const reader = await dbConn.runAndReadAll(noSampleQuery);
+        const info = reader.getRowObjectsJS()[0];
+        log.debug('nativeCSVImport: info.Count: "' + info?.Count + '"');
+      } catch (noSampleErr) {
+        console.log("caught exception with no sampling: ", noSampleErr);
+        throw noSampleErr;
+      }
+    }
+  } finally {
+    dbConn.closeSync();
   }
   const importTime = process.hrtime(importStart);
   log.info(
@@ -106,25 +95,29 @@ export const nativeCSVImport = async (
  * Native import using DuckDB's built-in import facilities.
  */
 export const nativeParquetImport = async (
-  db: Database,
+  db: DuckDBInstance,
   filePath: string,
   tableName?: string
 ): Promise<string> => {
   const importStart = process.hrtime();
 
   const dbConn = await db.connect();
-  await initS3(dbConn);
-  if (!tableName) {
-    tableName = genTableName(filePath);
-  }
-  const query = `CREATE OR REPLACE VIEW ${tableName} AS SELECT * FROM parquet_scan('${filePath}')`;
-  log.debug("*** parquet import: ", query);
   try {
-    // Creating a view doesn't return a useful result.
-    await dbConn.exec(query);
-  } catch (err) {
-    console.log("caught exception while importing: ", err);
-    throw err;
+    await initS3(dbConn);
+    if (!tableName) {
+      tableName = genTableName(filePath);
+    }
+    const query = `CREATE OR REPLACE VIEW ${tableName} AS SELECT * FROM parquet_scan('${filePath}')`;
+    log.debug("*** parquet import: ", query);
+    try {
+      // Creating a view doesn't return a useful result.
+      await dbConn.run(query);
+    } catch (err) {
+      console.log("caught exception while importing: ", err);
+      throw err;
+    }
+  } finally {
+    dbConn.closeSync();
   }
   const [es, ens] = process.hrtime(importStart);
   log.info(

@@ -1,5 +1,9 @@
 # Azure Pipelines CI setup for cross-platform builds of Tad desktop app
 #
+# CI builds package (and on macOS sign and notarize) the app, but never
+# publish to GitHub Releases (`npm run dist` = electron-builder --publish=never).
+# The installers are attached to each run as pipeline artifacts.
+#
 # Set up triggers in GUI
 name: $(Build.Reason)_$(Build.SourceBranch)_$(Rev:r)
 
@@ -15,31 +19,18 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: 16.x
-        displayName: "Use node.js 16"
-      - script: curl.exe -o openssl-1.1.1q.zip https://www.antonycourtney.com/files/openssl-win64/openssl-1.1.1q.zip
-        displayName: "download OpenSSL"
-      - script: mkdir .\openssl-1.1.1q
-        displayName: "make openssl dir"
-      - script: tar -xzf openssl-1.1.1q.zip -C .\openssl-1.1.1q --strip-components=1
-        displayName: "extract openssl"
-      - script: npm install
-        displayName: "Install top-level npm dependencies"
-      - script: npm run bootstrap
-        displayName: "Run lerna bootstrapping"
+          versionSpec: 22.x
+        displayName: "Use node.js 22"
+      - script: npm ci
+        displayName: "Install npm workspace dependencies"
       - script: node tools/buildAll.js
         displayName: "Build all packages"
-      - script: npm run publish
+      - script: npm run dist
         workingDirectory: packages/tad-app
         displayName: "Build packaged tad-app with electron-builder"
-        env:
-          {
-            OPENSSL_ROOT_DIR: $(System.DefaultWorkingDirectory)/openssl-1.1.1q/x64,
-            GITHUB_TOKEN: $(GITHUB_TOKEN),
-          }
       - task: CopyFiles@2
         inputs:
-          sourceFolder: "packages/tad-app/dist"
+          sourceFolder: "packages/tad-app/release"
           contents: "*"
           targetFolder: $(Build.ArtifactStagingDirectory)
       - task: PublishBuildArtifacts@1
@@ -54,26 +45,23 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: 16.x
-        displayName: "Use node.js 16"
-      - script: npm install
-        displayName: "Install top-level npm dependencies"
-      - script: npm run bootstrap
-        displayName: "Run lerna bootstrapping"
+          versionSpec: 22.x
+        displayName: "Use node.js 22"
+      - script: npm ci
+        displayName: "Install npm workspace dependencies"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
-      - script: "( cd packages/tad-app && BUILD_BUILDNUMBER='' npm run publish )"
+      - script: "( cd packages/tad-app && BUILD_BUILDNUMBER='' npm run dist )"
         displayName: "Build packaged tad-app with electron-builder"
         env:
           {
             BUILDNUMBER: " ",
             BUILD_BUILDNUMBER: " ",
             CI_PIPELINE_IID: " ",
-            GITHUB_TOKEN: $(GITHUB_TOKEN),
           }
       - task: CopyFiles@2
         inputs:
-          contents: "packages/tad-app/dist/tad*"
+          contents: "packages/tad-app/release/tad*"
           targetFolder: $(Build.ArtifactStagingDirectory)
       - task: PublishBuildArtifacts@1
         inputs:
@@ -87,24 +75,18 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: 16.x
-        displayName: "Use node.js 16"
+          versionSpec: 22.x
+        displayName: "Use node.js 22"
       - task: DownloadSecureFile@1
         name: devCertificate
         displayName: "Download Apple Dev Certificate"
         inputs:
           secureFile: "apple-dev-certificate.p12"
-      - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl@3
-        displayName: "Install openssl from homebrew"
-      - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
-        displayName: "Install jq from homebrew"
-      - script: npm install
-        displayName: "Install top-level npm dependencies"
-      - script: npm run bootstrap
-        displayName: "Run lerna bootstrapping"
+      - script: npm ci
+        displayName: "Install npm workspace dependencies"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
-      - script: "( cd packages/tad-app && npm run publish )"
+      - script: "( cd packages/tad-app && npm run dist )"
         displayName: "Build packaged tad-app with electron-builder"
         env:
           {
@@ -112,15 +94,14 @@ jobs:
             APPLEIDPASS: $(APPLEIDPASS),
             CSC_LINK: $(devCertificate.secureFilePath),
             CSC_KEY_PASSWORD: $(APPLEIDPASS),
-            GH_TOKEN: $(GITHUB_TOKEN),
           }
       - task: CopyFiles@2
         inputs:
-          contents: "packages/tad-app/dist/Tad*.zip"
+          contents: "packages/tad-app/release/Tad*.zip"
           targetFolder: $(Build.ArtifactStagingDirectory)
       - task: CopyFiles@2
         inputs:
-          contents: "packages/tad-app/dist/Tad*.dmg"
+          contents: "packages/tad-app/release/Tad*.dmg"
           targetFolder: $(Build.ArtifactStagingDirectory)
       - task: PublishBuildArtifacts@1
         inputs:

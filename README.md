@@ -40,7 +40,7 @@ analytic operations specified in the UI.
 
 This repository is a modular refactor of the original Tad source code, with several key improvements on the original code base:
 
-- The repository is organized as a modular [Lerna](https://lerna.js.org/) based monorepo.
+- The repository is organized as a modular monorepo using [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces).
 - The code has been ported to TypeScript and the UI code has been updated to React Hooks.
 - There is support for communicating with multiple database back ends for reltab (Tad's SQL generation and query evaluation layer), in addition to the original sqlite. Current backends (in varying degrees of completeness) include DuckDb, Snowflake, Google BigQuery, and AWS Athena (Presto)
 - There is a minimal proof-of-concept web-based front-end to demonstrate how Tad can be deployed on the web.

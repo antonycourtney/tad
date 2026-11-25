@@ -11,7 +11,7 @@
     "build-dev": "npm run build-assets && webpack --mode development",
     "build-prod": "npm run build-assets && webpack --env prod --mode production",
     "build": "npm run build-prod",
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "test": "",
     "tsc": "tsc",
     "watch": "webpack --mode development --watch",
@@ -30,8 +30,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
-    "reltab": "^0.12.0",
-    "tadviewer": "^0.12.0"
+    "reltab": "^0.14.0",
+    "tadviewer": "^0.14.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.15",

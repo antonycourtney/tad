@@ -1,4 +1,11 @@
-import { Connection, Database } from "duckdb-async";
+import {
+  DuckDBConnection,
+  DuckDBInstance,
+  DuckDBTypeId,
+  DuckDBValueConverter,
+  JS,
+  JSDuckDBValueConverter,
+} from "@duckdb/node-api";
 import * as log from "loglevel";
 import {
   colIsNumeric,
@@ -39,19 +46,49 @@ const typeLookup = (tnm: string): ColumnType => {
   return ret;
 };
 
-/* A little ConnectionPool class because it turns out node-duckdb
- * doesn't allow concurrent queries on a connection.
+/*
+ * Convert DuckDb result values to JS values.
+ *
+ * We use @duckdb/node-api's standard JS conversion (BIGINT -> bigint,
+ * DATE/TIMESTAMP -> Date, BLOB -> Buffer, etc.), which matches what the
+ * older duckdb / duckdb-async client returned, except for a few types
+ * where the standard conversion yields something our renderers can't
+ * display (e.g. TIME as a bigint of micros). For those we fall back to
+ * DuckDb's own string rendering of the value.
+ */
+const tadValueConverter: DuckDBValueConverter<JS> = (
+  value,
+  type,
+  converter
+) => {
+  if (value == null) {
+    return null;
+  }
+  switch (type.typeId) {
+    case DuckDBTypeId.TIME:
+    case DuckDBTypeId.TIME_TZ:
+    case DuckDBTypeId.TIME_NS:
+    case DuckDBTypeId.INTERVAL:
+    case DuckDBTypeId.MAP:
+      return String(value);
+    default:
+      return JSDuckDBValueConverter(value, type, converter);
+  }
+};
+
+/* A little ConnectionPool class because a DuckDb connection
+ * only runs one query at a time.
  */
 class ConnectionPool {
-  db: Database;
-  private pool: Connection[];
+  db: DuckDBInstance;
+  private pool: DuckDBConnection[];
 
-  constructor(db: Database) {
+  constructor(db: DuckDBInstance) {
     this.db = db;
     this.pool = [];
   }
 
-  async take(): Promise<Connection> {
+  async take(): Promise<DuckDBConnection> {
     if (this.pool.length > 0) {
       return this.pool.pop()!;
     } else {
@@ -61,16 +98,23 @@ class ConnectionPool {
     }
   }
 
-  giveBack(conn: Connection) {
+  giveBack(conn: DuckDBConnection) {
     this.pool.push(conn);
   }
 }
 
-const parsePercentage = (s: string | undefined): number | null => {
-  if (s != undefined && s.endsWith("%")) {
-    const noPct = s.replace(/%$/, "");
-    const ret = Number.parseFloat(noPct) / 100.0;
-    return ret;
+/*
+ * Parse SUMMARIZE's null_percentage.
+ * Older DuckDb versions returned this as a VARCHAR like "12.5%";
+ * newer versions return a DECIMAL (e.g. 12.5).
+ */
+const parsePercentage = (v: unknown): number | null => {
+  if (typeof v === "number") {
+    return v / 100.0;
+  }
+  if (typeof v === "string") {
+    const ret = Number.parseFloat(v.replace(/%$/, ""));
+    return Number.isNaN(ret) ? null : ret / 100.0;
   }
   return null;
 };
@@ -174,10 +218,10 @@ export class DuckDBDriver implements DbDriver {
   readonly sourceId: DataSourceId;
   readonly dialect: SQLDialect = DuckDBDialect;
   dbfile: string;
-  db: Database;
+  db: DuckDBInstance;
   connPool: ConnectionPool;
 
-  constructor(dbfile: string, db: Database, dbConn: Connection) {
+  constructor(dbfile: string, db: DuckDBInstance, dbConn: DuckDBConnection) {
     this.dbfile = dbfile;
     this.displayName = dbfile;
     this.sourceId = { providerName: "duckdb", resourceId: dbfile };
@@ -187,10 +231,11 @@ export class DuckDBDriver implements DbDriver {
 
   async runSqlQuery(query: string): Promise<Row[]> {
     const conn = await this.connPool.take();
-    let ret: any;
+    let ret: Row[];
     try {
       log.info("runSqlQuery:\n", query);
-      ret = await conn.all(query);
+      const reader = await conn.runAndReadAll(query);
+      ret = reader.convertRowObjects(tadValueConverter) as Row[];
     } finally {
       this.connPool.giveBack(conn);
     }
@@ -263,12 +308,15 @@ export class DuckDBDriver implements DbDriver {
   }
 }
 
-const loadExtensions = async (db: Database): Promise<void> => {
+const loadExtensions = async (db: DuckDBInstance): Promise<void> => {
+  const conn = await db.connect();
   try {
-    const ret = await db.exec(`INSTALL 'httpfs'; LOAD 'httpfs'`);
+    await conn.run(`INSTALL 'httpfs'; LOAD 'httpfs'`);
   } catch (err) {
     log.error("caught exception loading extensions: ", err);
     log.error("(ignoring unloadable extensions...)");
+  } finally {
+    conn.closeSync();
   }
 };
 
@@ -276,7 +324,7 @@ const duckdbDataSourceProvider: DataSourceProvider = {
   providerName: "duckdb",
   connect: async (resourceId: any): Promise<DataSourceConnection> => {
     const dbfile = resourceId as string;
-    const db = await Database.create(dbfile);
+    const db = await DuckDBInstance.create(dbfile);
     await loadExtensions(db);
     // turn on fast parallel CSV loading:
     // await db.exec("SET experimental_parallel_csv=true;");

@@ -8,7 +8,7 @@
   "main": "dist/aggtree.js",
   "types": "dist/aggtree.d.ts",
   "scripts": {
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "clean": "rimraf dist",
     "build": "tsc -p tsconfig-build.json",
     "test": "jest --config jest.config.json --no-cache"
@@ -18,19 +18,19 @@
     "loglevel": "^1.8.0"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "@types/node": "^18.7.18",
-    "jest": "^29.7.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.20.5",
+    "jest": "^30.5.2",
     "mkdirp": "^1.0.4",
     "prettier": "^2.5.1",
-    "reltab": "^0.12.0",
-    "reltab-sqlite": "^0.12.0",
-    "ts-jest": "^29.2.6",
-    "typescript": "^4.8.3"
+    "reltab": "^0.14.0",
+    "reltab-sqlite": "^0.14.0",
+    "ts-jest": "^29.4.15",
+    "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "reltab": "^0.12.0",
-    "reltab-sqlite": "^0.12.0"
+    "reltab": "^0.14.0",
+    "reltab-sqlite": "^0.14.0"
   },
   "repository": {
     "type": "git",

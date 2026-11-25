@@ -9,10 +9,10 @@ import { autoUpdater } from "electron-updater";
 
 let updater: MenuItem | null;
 autoUpdater.autoDownload = false;
-autoUpdater.on("error", (event, error) => {
+autoUpdater.on("error", (error: Error, message?: string) => {
   dialog.showErrorBox(
     "Error: ",
-    error == null ? "unknown" : (error.stack || error).toString()
+    error == null ? message ?? "unknown" : (error.stack || error).toString()
   );
 });
 autoUpdater.on("update-available", () => {

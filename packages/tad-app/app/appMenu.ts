@@ -3,6 +3,7 @@ import * as appWindow from "./appWindow";
 import * as quickStart from "./quickStart";
 import electron, {
   MenuItem,
+  BaseWindow,
   BrowserWindow,
   KeyboardEvent,
   MenuItemConstructorOptions,
@@ -11,6 +12,13 @@ import electron, {
 const Menu = electron.Menu;
 const isDarwin = process.platform === "darwin";
 let appMenu: electron.Menu | null = null;
+// Menu click handlers receive a BaseWindow; all of Tad's windows are
+// BrowserWindows:
+const asBrowserWindow = (
+  win: BaseWindow | undefined
+): BrowserWindow | undefined =>
+  win instanceof BrowserWindow ? win : undefined;
+
 const separatorMenuItem: MenuItemConstructorOptions = {
   type: "separator",
 };
@@ -34,23 +42,23 @@ export const createMenu = () => {
     {
       label: "New Tad Window",
       accelerator: "CmdOrCtrl+N",
-      click: (item: MenuItem, focusedWindow: BrowserWindow | undefined) => {
-        appWindow.newWindow(focusedWindow);
+      click: (item: MenuItem, focusedWindow: BaseWindow | undefined) => {
+        appWindow.newWindow(asBrowserWindow(focusedWindow));
       },
     },
 
     {
       label: "Open File...",
       accelerator: "CmdOrCtrl+O",
-      click: (item: MenuItem, focusedWindow: BrowserWindow | undefined) => {
-        appWindow.openDialog("openFile", focusedWindow);
+      click: (item: MenuItem, focusedWindow: BaseWindow | undefined) => {
+        appWindow.openDialog("openFile", asBrowserWindow(focusedWindow));
       },
     },
     {
       label: "Open Directory...",
       accelerator: "CmdOrCtrl+O",
-      click: (item: MenuItem, focusedWindow: BrowserWindow | undefined) => {
-        appWindow.openDialog("openDirectory", focusedWindow);
+      click: (item: MenuItem, focusedWindow: BaseWindow | undefined) => {
+        appWindow.openDialog("openDirectory", asBrowserWindow(focusedWindow));
       },
     },
 
@@ -60,7 +68,7 @@ export const createMenu = () => {
       accelerator: "Shift+CmdOrCtrl+S",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow | undefined,
+        focusedWindow: BaseWindow | undefined,
         event: KeyboardEvent
       ) => {
         appWindow.saveAsDialog();
@@ -70,11 +78,12 @@ export const createMenu = () => {
       label: "Export...",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow | undefined,
+        focusedWindow: BaseWindow | undefined,
         event: KeyboardEvent
       ) => {
-        if (focusedWindow) {
-          appWindow.beginExport(focusedWindow);
+        const win = asBrowserWindow(focusedWindow);
+        if (win) {
+          appWindow.beginExport(win);
         }
       },
     },
@@ -84,7 +93,7 @@ export const createMenu = () => {
       label: "Export Filtered CSV...",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow | undefined,
+        focusedWindow: BaseWindow | undefined,
         event: KeyboardEvent
       ) => {
         if (focusedWindow) {
@@ -121,11 +130,14 @@ export const createMenu = () => {
       type: "checkbox",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow | undefined,
+        focusedWindow: BaseWindow | undefined,
         event: KeyboardEvent
       ) => {
         console.log("show hidden...: ", item);
-        focusedWindow?.webContents.send("set-show-hidden-cols", item.checked);
+        asBrowserWindow(focusedWindow)?.webContents.send(
+          "set-show-hidden-cols",
+          item.checked
+        );
       },
     },
   ];
@@ -134,7 +146,7 @@ export const createMenu = () => {
       label: "Quick Start Guide",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow | undefined,
+        focusedWindow: BaseWindow | undefined,
         event: KeyboardEvent
       ) => {
         quickStart.showQuickStart();
@@ -144,7 +156,7 @@ export const createMenu = () => {
       label: "Send Feedback / Bug Reports",
       click: (
         item: MenuItem,
-        focusedWindow: BrowserWindow | undefined,
+        focusedWindow: BaseWindow | undefined,
         event: KeyboardEvent
       ) => {
         electron.shell.openExternal("mailto:tad-feedback@tadviewer.com");

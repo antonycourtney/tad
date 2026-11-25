@@ -153,11 +153,32 @@ const handleInvoke = async (
   }
 };
 
+/*
+ * The experimental BigQuery and Snowflake backends connect to external
+ * services using credentials from the environment, so they are opt-in via
+ * command line flags (e.g. `npm start -- --bigquery --snowflake`).
+ */
+const initOptionalBackend = async (
+  flag: string,
+  name: string,
+  init: () => Promise<void>
+) => {
+  if (!process.argv.slice(2).includes(flag)) {
+    return;
+  }
+  try {
+    await init();
+    log.info(`${name} initialized`);
+  } catch (err) {
+    log.error(`Error initializing ${name}: `, err);
+  }
+};
+
 async function main() {
   log.setLevel(log.levels.INFO);
 
-  await initBigquery();
-  await initSnowflake();
+  await initOptionalBackend("--bigquery", "BigQuery", initBigquery);
+  await initOptionalBackend("--snowflake", "Snowflake", initSnowflake);
 
   /*
   const dbc = await initSqlite();

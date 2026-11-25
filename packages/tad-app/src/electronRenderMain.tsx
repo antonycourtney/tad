@@ -19,7 +19,7 @@ import * as reltab from "reltab";
 import log from "loglevel";
 import { ElectronTransportClient } from "./electronClient";
 import * as electron from "electron";
-import { clipboard, ipcRenderer, shell } from "electron";
+import { ipcRenderer, shell } from "electron";
 import { DataSourcePath, DataSourceId, RemoteReltabConnection } from "reltab";
 import { OpenParams } from "./openParams";
 import "./app.css";
@@ -127,12 +127,22 @@ const init = async () => {
       shell.openExternal(url);
     };
 
+    // Electron's clipboard module is no longer available in renderer
+    // processes (Electron 44+), so use the standard web Clipboard API:
+    const rendererClipboard = {
+      writeText: (text: string) => {
+        navigator.clipboard.writeText(text).catch((err) => {
+          console.error("Error copying to clipboard: ", err);
+        });
+      },
+    };
+
     const root = ReactDOM.createRoot(document.getElementById("app")!);
 
     root.render(
       <App
         newWindow={newWindowFromDSPath}
-        clipboard={clipboard}
+        clipboard={rendererClipboard}
         openURL={openURL}
         embedded={false}
         onBrowseExportPath={(exportFormat: ExportFormat) =>

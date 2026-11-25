@@ -1,4 +1,4 @@
-import * as duckdb from "duckdb-async";
+import { DuckDBInstance } from "@duckdb/node-api";
 import * as _ from "lodash";
 import * as reltab from "reltab";
 import {
@@ -36,7 +36,7 @@ test("t0 - trivial query generation", () => {
   `);
 });
 
-const importCsv = async (db: duckdb.Database, path: string) => {
+const importCsv = async (db: DuckDBInstance, path: string) => {
   await reltabDuckDB.nativeCSVImport(db, path);
 };
 
@@ -123,7 +123,12 @@ test.skip("table and schema deserialization", async () => {
 });
 
 test("basic groupBy", async () => {
-  const q3 = bartTableQuery.groupBy(["Job Family", "Title"], ["TCOE"]); // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
+  // note: [ 'TCOE' ] equivalent to [ [ 'sum', 'TCOE' ] ]
+  // sort so that snapshot doesn't depend on DuckDb's (unspecified) group order:
+  const q3 = bartTableQuery.groupBy(["Job Family", "Title"], ["TCOE"]).sort([
+    ["Job Family", true],
+    ["Title", true],
+  ]);
 
   // testCtx.showQueries = true;
   const qres = await testCtx.evalQuery(q3);
@@ -424,6 +429,38 @@ test("DuckDb timestamp types", async () => {
         "2022-02-11T14:15:45.000Z",
         "2022-02-11",
       ],
+    ]
+  `);
+});
+
+test("DuckDb value conversion", async () => {
+  const dbds = testCtx as DbDataSource;
+  const driver = dbds.db as reltabDuckDB.DuckDBDriver;
+
+  const rows = await driver.runSqlQuery(`select
+    9007199254740993::BIGINT as big,
+    123.45::DECIMAL(10,2) as dec,
+    DATE '1991-07-21' as d,
+    TIMESTAMP '2022-02-11 14:15:45' as ts,
+    '\\xAA\\xBB'::BLOB as b,
+    TIME '13:45:30' as tm,
+    INTERVAL 3 DAY as iv,
+    MAP {'k': 1} as mp,
+    NULL::TIME as null_tm`);
+  const row = rows[0];
+
+  expect(row.big).toBe(BigInt("9007199254740993"));
+  expect(row.dec).toBe(123.45);
+  expect(row.d).toEqual(new Date("1991-07-21T00:00:00.000Z"));
+  expect(row.ts).toEqual(new Date("2022-02-11T14:15:45.000Z"));
+  expect(row.b).toEqual(Buffer.from([0xaa, 0xbb]));
+  // types we render via DuckDb's own string representation:
+  expect([row.tm, row.iv, row.mp, row.null_tm]).toMatchInlineSnapshot(`
+    Array [
+      "13:45:30",
+      "3 days",
+      "{'k': 1}",
+      null,
     ]
   `);
 });

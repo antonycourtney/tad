@@ -546,9 +546,9 @@ const importData = async (
      * We're currently wrapping all inserts in one huge transaction. Should probably break
      * this into more reasonable (50K rows?) chunks.
      */
-    await db.run(dropStmt);
+    await dbRun(db, dropStmt);
     // log.debug("about to run: ", createStmt);
-    await db.run(createStmt);
+    await dbRun(db, createStmt);
     // log.debug("table created");
     // await db.run("begin");
     // const insertStmt = await db.prepare(insertStmtStr);
