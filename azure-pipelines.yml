@@ -1,5 +1,9 @@
 # Azure Pipelines CI setup for cross-platform builds of Tad desktop app
 #
+# CI builds package (and on macOS sign and notarize) the app, but never
+# publish to GitHub Releases (`npm run dist` = electron-builder --publish=never).
+# The installers are attached to each run as pipeline artifacts.
+#
 # Set up triggers in GUI
 name: $(Build.Reason)_$(Build.SourceBranch)_$(Rev:r)
 
@@ -21,13 +25,9 @@ jobs:
         displayName: "Install npm workspace dependencies"
       - script: node tools/buildAll.js
         displayName: "Build all packages"
-      - script: npm run publish
+      - script: npm run dist
         workingDirectory: packages/tad-app
         displayName: "Build packaged tad-app with electron-builder"
-        env:
-          {
-            GITHUB_TOKEN: $(GITHUB_TOKEN),
-          }
       - task: CopyFiles@2
         inputs:
           sourceFolder: "packages/tad-app/release"
@@ -51,14 +51,13 @@ jobs:
         displayName: "Install npm workspace dependencies"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
-      - script: "( cd packages/tad-app && BUILD_BUILDNUMBER='' npm run publish )"
+      - script: "( cd packages/tad-app && BUILD_BUILDNUMBER='' npm run dist )"
         displayName: "Build packaged tad-app with electron-builder"
         env:
           {
             BUILDNUMBER: " ",
             BUILD_BUILDNUMBER: " ",
             CI_PIPELINE_IID: " ",
-            GITHUB_TOKEN: $(GITHUB_TOKEN),
           }
       - task: CopyFiles@2
         inputs:
@@ -87,7 +86,7 @@ jobs:
         displayName: "Install npm workspace dependencies"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
-      - script: "( cd packages/tad-app && npm run publish )"
+      - script: "( cd packages/tad-app && npm run dist )"
         displayName: "Build packaged tad-app with electron-builder"
         env:
           {
@@ -95,7 +94,6 @@ jobs:
             APPLEIDPASS: $(APPLEIDPASS),
             CSC_LINK: $(devCertificate.secureFilePath),
             CSC_KEY_PASSWORD: $(APPLEIDPASS),
-            GH_TOKEN: $(GITHUB_TOKEN),
           }
       - task: CopyFiles@2
         inputs:
