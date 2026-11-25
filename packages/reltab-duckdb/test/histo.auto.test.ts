@@ -1,4 +1,4 @@
-import * as duckdb from "duckdb-async";
+import { DuckDBInstance } from "@duckdb/node-api";
 import * as _ from "lodash";
 import * as reltab from "reltab";
 import {

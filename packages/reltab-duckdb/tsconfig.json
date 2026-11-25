@@ -6,6 +6,7 @@
     "sourceMap": true,
     "target": "ES2015",
     "strict": true,
+    "allowSyntheticDefaultImports": true,
     "lib": ["es6", "es2017", "dom"]
   },
   "include": ["./src/*", "./test/*.ts"]
