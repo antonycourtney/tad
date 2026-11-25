@@ -96,7 +96,7 @@ const measureHeaderStringWidth = (s: string): number =>
   24 + CHAR_WIDTH * s.length;
 
 // get column width for specific column:
-const getColWidth = (
+export const getColWidth = (
   getColumnFormatter: (schema: reltab.Schema, cid: string) => CellFormatter,
   dataView: PagedDataView,
   cnm: string

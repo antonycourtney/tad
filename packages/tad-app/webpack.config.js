@@ -86,10 +86,10 @@ function config(nodeEnv) {
     optimization: {},
     plugins: [
       new webpack.IgnorePlugin({ resourceRegExp: /^\.\/stores\/appStore$/ }),
+      // Only define NODE_ENV; other environment variables (e.g. TAD_GRID,
+      // TAD_REMOTE_DEBUGGING_PORT) are read from process.env at runtime.
       new webpack.DefinePlugin({
-        "process.env": {
-          NODE_ENV: JSON.stringify(nodeEnv),
-        },
+        "process.env.NODE_ENV": JSON.stringify(nodeEnv),
       }),
     ],
   };

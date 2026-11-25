@@ -21,6 +21,15 @@ import fs from "fs";
 const dialog = electron.dialog;
 const app = electron.app;
 
+// Development / testing hook: expose the Chrome DevTools Protocol on
+// localhost (e.g. to script UI tests of the canvas-based grid).
+if (process.env.TAD_REMOTE_DEBUGGING_PORT) {
+  app.commandLine.appendSwitch(
+    "remote-debugging-port",
+    process.env.TAD_REMOTE_DEBUGGING_PORT
+  );
+}
+
 import path from "path";
 
 import pkgInfo from "../package.json";

@@ -9,12 +9,31 @@ import { ViewState } from "../ViewState";
 import * as actions from "../actions";
 import * as util from "../util";
 import { DataGrid, DataGridProps } from "./DataGrid";
+import { GlideDataGrid } from "./GlideDataGrid";
 import { SimpleClipboard } from "./SimpleClipboard";
 
 import { CellClickData } from "./CellClickData";
 import { Cell, ColumnData, SelectionChangeData } from "./SelectionChangeData";
 
 export type OpenURLFn = (url: string) => void;
+
+/*
+ * SPIKE: choose the grid implementation. Use the Glide-based grid if
+ * TAD_GRID=glide is set in the environment (Electron, where the renderer can
+ * read process.env) or localStorage.tadGrid is "glide" (e.g. the web app).
+ */
+const useGlideGrid: boolean = (() => {
+  try {
+    if (typeof process !== "undefined" && process.env?.TAD_GRID === "glide") {
+      return true;
+    }
+  } catch (e) {}
+  try {
+    return globalThis.localStorage?.getItem("tadGrid") === "glide";
+  } catch (e) {
+    return false;
+  }
+})();
 
 export interface GridPaneProps {
   appState: AppState;
@@ -206,7 +225,11 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
     embedded,
   };
 
-  return <DataGrid {...dataGridProps} />;
+  return useGlideGrid ? (
+    <GlideDataGrid {...dataGridProps} />
+  ) : (
+    <DataGrid {...dataGridProps} />
+  );
 };
 
 // TODO: It might be better to move this memoization down a level into DataGrid,
