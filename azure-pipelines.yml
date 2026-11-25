@@ -17,12 +17,6 @@ jobs:
         inputs:
           versionSpec: 22.x
         displayName: "Use node.js 22"
-      - script: curl.exe -o openssl-1.1.1q.zip https://www.antonycourtney.com/files/openssl-win64/openssl-1.1.1q.zip
-        displayName: "download OpenSSL"
-      - script: mkdir .\openssl-1.1.1q
-        displayName: "make openssl dir"
-      - script: tar -xzf openssl-1.1.1q.zip -C .\openssl-1.1.1q --strip-components=1
-        displayName: "extract openssl"
       - script: npm ci
         displayName: "Install npm workspace dependencies"
       - script: node tools/buildAll.js
@@ -32,7 +26,6 @@ jobs:
         displayName: "Build packaged tad-app with electron-builder"
         env:
           {
-            OPENSSL_ROOT_DIR: $(System.DefaultWorkingDirectory)/openssl-1.1.1q/x64,
             GITHUB_TOKEN: $(GITHUB_TOKEN),
           }
       - task: CopyFiles@2
@@ -90,10 +83,6 @@ jobs:
         displayName: "Download Apple Dev Certificate"
         inputs:
           secureFile: "apple-dev-certificate.p12"
-      - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl@3
-        displayName: "Install openssl from homebrew"
-      - script: HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
-        displayName: "Install jq from homebrew"
       - script: npm ci
         displayName: "Install npm workspace dependencies"
       - script: "node ./tools/buildAll.js"
