@@ -76,7 +76,10 @@ function openParamsDSPath(
       } else {
         targetDSPath = savedFileState.dsPath;
       }
-      viewParams = ViewParams.deserialize(savedFileState.viewParams);
+      viewParams = ViewParams.deserialize(
+        savedFileState.viewParams,
+        parsedFileState.tadFileFormatVersion
+      );
       break;
     case "empty":
       targetDSPath = null;
