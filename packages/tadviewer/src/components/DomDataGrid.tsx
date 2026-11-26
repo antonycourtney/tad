@@ -1,9 +1,8 @@
 /**
- * SPIKE: A DataGrid built from ordinary DOM elements, virtualized with
+ * Tad's default grid: built from ordinary DOM elements, virtualized with
  * TanStack Virtual (@tanstack/react-virtual) and styled after the DuckDB UI's
  * result grid. Implements the same DataGridProps as the SlickGrid DataGrid
- * and GlideDataGrid. Enable with TAD_GRID=dom (Electron) or
- * localStorage.tadGrid = "dom" (web).
+ * and GlideDataGrid, which remain selectable for comparison (see GridPane).
  *
  * Layout: one scroll container (.tad-grid-scroller) holds a "sizer" as wide
  * as all the columns and as tall as the header plus the rows (capped, see

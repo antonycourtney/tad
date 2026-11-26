@@ -89,7 +89,7 @@ With those running continuously, you should be able to just hit reload in your b
 
 ## UI Tests (desktop app)
 
-`packages/tad-app/e2e` has [Playwright](https://playwright.dev/docs/api/class-electron) tests that launch the desktop app, open generated test data (a 100,000 row Parquet file, and `.tad` files that open it sorted and pivoted) and drive the grid with the mouse. They currently test the Glide-based grid (`TAD_GRID=glide`).
+`packages/tad-app/e2e` has [Playwright](https://playwright.dev/docs/api/class-electron) tests that launch the desktop app, open generated test data (a 100,000 row Parquet file, and `.tad` files that open it sorted and pivoted) and drive the grid with the mouse and keyboard. They test the default grid, `DomDataGrid`; `TAD_GRID=glide npm run test:e2e` runs the shared tests against the Glide grid instead.
 
 ```
 cd packages/tad-app
@@ -99,7 +99,11 @@ npm run test:e2e     # or: npx playwright test -g "pivot"
 
 Each test opens its own app window on screen, with a temporary user data directory (`TAD_USER_DATA_DIR`), so it won't interfere with an installed copy of Tad. On failure, a screenshot and an accessibility snapshot of the window are saved under `e2e-results/`.
 
-The grid is drawn on a canvas, so tests read cell text from the accessibility table that Glide renders alongside it, and find cell positions through `window.__tadGrid`, which the grid exposes when `TAD_TEST_HOOKS=1` (see `e2e/glide-grid.ts`).
+Tests drive the grid through the `GridDriver` interface (`e2e/grid-driver.ts`). The DOM grid's driver (`e2e/dom-grid.ts`) reads cells straight from the page. Glide draws on a canvas, so its driver (`e2e/glide-grid.ts`) reads cell text from the accessibility table that Glide renders alongside it, and finds cell positions through `window.__tadGrid`, which the grid exposes when `TAD_TEST_HOOKS=1`.
+
+## Choosing the grid
+
+The desktop and web apps use `DomDataGrid` by default. While it replaces the older grids, they can still be selected for comparison with `TAD_GRID=slickgrid` or `TAD_GRID=glide` in the environment (desktop app), or `localStorage.tadGrid = "slickgrid"` (web app).
 
 # Additional Info
 

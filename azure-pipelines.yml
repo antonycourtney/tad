@@ -4,12 +4,13 @@
 # publish to GitHub Releases (`npm run dist` = electron-builder --publish=never).
 # The installers are attached to each run as pipeline artifacts.
 #
-# Set up triggers in GUI
 name: $(Build.Reason)_$(Build.SourceBranch)_$(Rev:r)
 
-# If we want to trigger on commits to master:
-# trigger:
-# - master
+# Build every push to master, as a check that it still builds on each
+# platform, and pull requests (the default). N.B. triggers set in the Azure
+# Pipelines web UI override these.
+trigger:
+  - master
 
 jobs:
   - job: Windows

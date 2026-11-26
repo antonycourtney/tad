@@ -19,12 +19,14 @@ import { Cell, ColumnData, SelectionChangeData } from "./SelectionChangeData";
 export type OpenURLFn = (url: string) => void;
 
 /*
- * SPIKE: choose the grid implementation: "glide" (Glide Data Grid), "dom"
- * (DomDataGrid, TanStack Virtual) or the SlickGrid DataGrid (default), from
- * TAD_GRID in the environment (Electron, where the renderer can read
- * process.env) or localStorage.tadGrid (e.g. the web app).
+ * The grid implementation: "dom" (DomDataGrid, the default), or for
+ * comparison while it replaces them, "slickgrid" (the SlickGrid DataGrid) or
+ * "glide" (Glide Data Grid). Chosen with TAD_GRID in the environment
+ * (Electron, where the renderer can read process.env) or localStorage.tadGrid
+ * (e.g. the web app).
  */
 type GridImpl = "slickgrid" | "glide" | "dom";
+const DEFAULT_GRID: GridImpl = "dom";
 const gridImpl: GridImpl = (() => {
   const known = (s: string | null | undefined): GridImpl | null =>
     s === "glide" || s === "dom" || s === "slickgrid" ? s : null;
@@ -37,9 +39,9 @@ const gridImpl: GridImpl = (() => {
     }
   } catch (e) {}
   try {
-    return known(globalThis.localStorage?.getItem("tadGrid")) ?? "slickgrid";
+    return known(globalThis.localStorage?.getItem("tadGrid")) ?? DEFAULT_GRID;
   } catch (e) {
-    return "slickgrid";
+    return DEFAULT_GRID;
   }
 })();
 
