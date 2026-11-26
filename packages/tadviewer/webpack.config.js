@@ -34,8 +34,10 @@ function config(nodeEnv) {
     },
     externalsPresets: { node: true }, // in order to ignore built-in modules like path, fs, etc.
     externals: [
-      nodeExternals(),
-      nodeExternals({ modulesDir: "../../node_modules" }),
+      // Bundle CSS imported from packages (e.g. Glide Data Grid's index.css),
+      // so that it is processed by style-loader / css-loader below:
+      nodeExternals({ allowlist: [/\.css$/] }),
+      nodeExternals({ modulesDir: "../../node_modules", allowlist: [/\.css$/] }),
     ],
     module: {
       rules: [
@@ -79,10 +81,10 @@ function config(nodeEnv) {
     optimization: {},
     plugins: [
       new webpack.IgnorePlugin({ resourceRegExp: /^\.\/stores\/appStore$/ }),
+      // Only define NODE_ENV; other environment variables (e.g. TAD_GRID)
+      // are read from process.env at runtime where available.
       new webpack.DefinePlugin({
-        "process.env": {
-          NODE_ENV: JSON.stringify(nodeEnv),
-        },
+        "process.env.NODE_ENV": JSON.stringify(nodeEnv),
       }),
     ],
   };

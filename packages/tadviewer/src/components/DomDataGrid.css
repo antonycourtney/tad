@@ -1,0 +1,295 @@
+/*
+ * Styles for DomDataGrid, after the DuckDB UI's result grid.
+ *
+ * Colors and sizes are CSS variables on .tad-grid, so an embedding app can
+ * override them. The grid's font follows --tad-font-family if it's set.
+ */
+.tad-grid {
+  --tad-grid-bg: #ffffff;
+  --tad-grid-header-bg: #fcfcfb;
+  --tad-grid-text: #1c1917;
+  --tad-grid-text-dim: #78716c;
+  --tad-grid-line: #f0efed;
+  --tad-grid-header-line: rgba(0, 0, 0, 0.15);
+  --tad-grid-hover-bg: #fafaf9;
+  --tad-grid-selection-bg: #e3f2ff;
+  --tad-grid-selection-ring: #2ba5ff;
+  --tad-grid-null-text: #67625d;
+  --tad-grid-null-bg: #f9f9f7;
+  --tad-grid-true-text: #57534e;
+  --tad-grid-link: #2965cc;
+  --tad-grid-drop: #2ba5ff;
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  background: var(--tad-grid-bg);
+  color: var(--tad-grid-text);
+  font-family: var(
+    --tad-grid-font-family,
+    var(
+      --tad-font-family,
+      Inter,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif
+    )
+  );
+  font-size: var(--tad-grid-font-size, 12px);
+  /* tabular digits and a slashed zero (Inter / SF) */
+  font-feature-settings: "tnum", "zero", "ss01", "ss02", "calt" 0;
+}
+
+.bp4-dark .tad-grid {
+  --tad-grid-bg: #22201e;
+  --tad-grid-header-bg: #2d2b28;
+  --tad-grid-text: #f3eee9;
+  --tad-grid-text-dim: #ab9f91;
+  --tad-grid-line: #33312f;
+  --tad-grid-header-line: rgba(243, 238, 233, 0.12);
+  --tad-grid-hover-bg: #282523;
+  --tad-grid-selection-bg: #274c6c;
+  --tad-grid-null-text: #bdb2a6;
+  --tad-grid-null-bg: #191817;
+  --tad-grid-true-text: #cfc5bc;
+  --tad-grid-link: #6cb4ff;
+}
+
+.tad-grid-scroller {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+}
+
+.tad-grid-sizer {
+  position: relative;
+}
+
+/* ------------------------------------------------------------------ header */
+
+.tad-grid-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.tad-grid-header-row,
+.tad-grid-histogram-row {
+  display: flex;
+}
+
+.tad-grid .tad-grid-header-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 8px;
+  background: var(--tad-grid-header-bg);
+  color: var(--tad-grid-text-dim);
+  font-weight: 500;
+  border-right: 1px solid var(--tad-grid-header-line);
+  border-bottom: 1px solid var(--tad-grid-header-line);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.tad-grid-type-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  color: var(--tad-grid-text-dim);
+  opacity: 0.8;
+}
+
+.tad-grid-type-text {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.tad-grid-header-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tad-grid-sort {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  color: var(--tad-grid-text);
+  font-size: 10px;
+}
+
+.tad-grid-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 1;
+}
+
+.tad-grid .tad-grid-histogram-cell {
+  flex: none;
+  box-sizing: border-box;
+  height: 80px;
+  overflow: hidden;
+  background: var(--tad-grid-header-bg);
+  border-right: 1px solid var(--tad-grid-header-line);
+  border-bottom: 1px solid var(--tad-grid-header-line);
+}
+
+.tad-grid-drop-indicator {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 28px;
+  margin-left: -1px;
+  background: var(--tad-grid-drop);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------- body */
+
+.tad-grid-body {
+  position: sticky;
+  /* clip rows outside the visible area, without becoming a scroll container
+     (that would break the sticky pivot column): */
+  overflow: clip;
+}
+
+.tad-grid-rows {
+  will-change: transform;
+}
+
+.tad-grid-row {
+  display: flex;
+  height: 28px;
+}
+
+.tad-grid-gap {
+  flex: none;
+}
+
+.tad-grid .tad-grid-cell {
+  flex: none;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 8px;
+  line-height: 27px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--tad-grid-bg);
+  border: none;
+  border-right: 1px solid var(--tad-grid-line);
+  border-bottom: 1px solid var(--tad-grid-line);
+  cursor: default;
+}
+
+.tad-grid-row:hover .tad-grid-cell {
+  background: var(--tad-grid-hover-bg);
+}
+
+.tad-grid .tad-grid-cell.data-cell-numeric {
+  text-align: right;
+}
+
+/* booleans are left-aligned, as in the DuckDB UI */
+.tad-grid .tad-grid-cell.tad-grid-true,
+.tad-grid .tad-grid-cell.tad-grid-false {
+  text-align: left;
+}
+
+.tad-grid-true {
+  color: var(--tad-grid-true-text);
+  font-weight: 650;
+}
+
+.tad-grid-false {
+  color: var(--tad-grid-text-dim);
+  font-weight: 350;
+}
+
+.tad-grid .tad-grid-cell.tad-grid-null {
+  background: var(--tad-grid-null-bg);
+}
+
+.tad-grid-null-text {
+  color: var(--tad-grid-null-text);
+  font-style: italic;
+}
+
+.tad-grid-sep {
+  color: var(--tad-grid-text-dim);
+}
+
+.tad-grid-cell a {
+  color: var(--tad-grid-link);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tad-grid-cell a:hover {
+  text-decoration: underline;
+}
+
+/* frozen (pivot) column */
+.tad-grid .tad-grid-frozen {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.tad-grid .tad-grid-cell.tad-grid-frozen {
+  border-right: 1px solid var(--tad-grid-header-line);
+}
+
+.tad-grid .tad-grid-pivot-cell {
+  display: flex;
+  align-items: center;
+}
+
+.tad-grid-indent,
+.tad-grid-toggle {
+  flex: none;
+  display: inline-flex;
+}
+
+.tad-grid-toggle {
+  width: 16px;
+  color: var(--tad-grid-text-dim);
+  cursor: pointer;
+}
+
+.tad-grid-pivot-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* selection */
+.tad-grid .tad-grid-cell.tad-grid-selected {
+  background: var(--tad-grid-selection-bg);
+}
+
+.tad-grid .tad-grid-cell.tad-grid-focus {
+  box-shadow: inset 0 0 0 2px var(--tad-grid-selection-ring);
+}
+
+.tad-grid:not(:focus-within) .tad-grid-cell.tad-grid-focus {
+  box-shadow: inset 0 0 0 1px var(--tad-grid-selection-ring);
+}
