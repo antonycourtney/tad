@@ -1,0 +1,638 @@
+/*
+ * The new UI's components (doc/ui-todo.md). Colours and font are the grid's
+ * (DomDataGrid.css defines its tokens on .tad-ui too), plus a few of the
+ * UI's own below. Class names start with tui- so they can't clash with
+ * Blueprint's or the old UI's while both exist.
+ */
+.tad-ui {
+  --tui-accent: #2965cc;
+  --tui-accent-hover-bg: #eef3fb;
+  --tui-surface: #ffffff;
+  --tui-subtle-bg: #f2f1ef;
+  --tui-border: #e2e0dd;
+  --tui-border-hover: #cfccc8;
+  --tui-chip-border: #dcd9d5;
+  --tui-focus: #2ba5ff;
+  --tui-focus-ring: rgba(43, 165, 255, 0.18);
+  --tui-pale: #e6eefa;
+  --tui-pale-border: #b4cbed;
+  --tui-mark: #1f56b0;
+  --tui-bar: #9bbfe6;
+  --tui-bar-off: #d6e4f5;
+  --tui-bar-on: #4f86cf;
+  --tui-code-bg: #f5f5f4;
+  --tui-shadow: 0 10px 28px rgba(28, 25, 23, 0.13), 0 1px 3px rgba(28, 25, 23, 0.08);
+  font-family: var(
+    --tad-grid-font-family,
+    var(--tad-font-family, var(--tad-grid-default-font))
+  );
+  font-size: 12px;
+  color: var(--tad-grid-text);
+  font-feature-settings: "tnum";
+}
+
+.bp4-dark .tad-ui,
+.tad-ui.tui-dark {
+  --tui-accent: #6cb4ff;
+  --tui-accent-hover-bg: #26364a;
+  --tui-surface: #2d2b28;
+  --tui-subtle-bg: #363330;
+  --tui-border: #46423e;
+  --tui-border-hover: #5a5550;
+  --tui-chip-border: #4a4641;
+  --tui-pale: #274c6c;
+  --tui-pale-border: #3f6a96;
+  --tui-mark: #cfe4ff;
+  --tui-bar: #3f6a96;
+  --tui-bar-off: #33465c;
+  --tui-bar-on: #6c9fd8;
+  --tui-code-bg: #22201e;
+  --tui-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.tad-ui button,
+.tad-ui input,
+.tad-ui select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Focus rings for the keyboard only (Blueprint shows them on every click): */
+.tad-ui :focus:not(:focus-visible) {
+  outline: none;
+}
+
+.tui-dim {
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-hint {
+  color: var(--tad-grid-text-dim);
+  font-size: 11.5px;
+}
+
+/* --- the filter bar (replaces the footer) --- */
+
+.tui-filterbar {
+  flex: none;
+  position: relative;
+  z-index: 3;
+  min-height: 38px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--tad-grid-header-bg);
+  border-top: 1px solid var(--tad-grid-header-line);
+}
+
+.tui-filterbar-icon {
+  display: inline-flex;
+  color: var(--tad-grid-text-dim);
+  margin-right: 2px;
+}
+
+.tui-filterbar-right {
+  margin-left: auto;
+  padding-left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--tad-grid-text-dim);
+  white-space: nowrap;
+}
+
+.tui-filterbar-right .footer-value {
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-filterbar-right .tui-rows-shown {
+  color: var(--tad-grid-text);
+  font-weight: 500;
+}
+
+/* --- segmented control --- */
+
+.tui-seg {
+  display: inline-flex;
+  background: var(--tui-subtle-bg);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 1px;
+}
+
+.tui-seg.tui-wide {
+  display: flex;
+}
+
+.tui-seg.tui-wide > .tui-segb {
+  flex: 1;
+}
+
+.tui-segb {
+  height: 20px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px !important;
+  color: var(--tad-grid-true-text) !important;
+}
+
+.tui-segb:hover {
+  color: var(--tad-grid-text) !important;
+}
+
+.tui-segb[aria-pressed="true"] {
+  background: var(--tui-surface);
+  color: var(--tad-grid-text) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+}
+
+/* --- filter chips --- */
+
+.tui-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  box-sizing: border-box;
+  border: 1px solid var(--tui-chip-border);
+  border-radius: 6px;
+  background: var(--tui-surface);
+  white-space: nowrap;
+}
+
+.tui-chip:hover {
+  border-color: var(--tui-border-hover);
+}
+
+.tui-chip.tui-idle {
+  border-style: dashed;
+}
+
+.tui-chip.tui-open {
+  border-color: var(--tui-focus);
+  box-shadow: 0 0 0 2px var(--tui-focus-ring);
+}
+
+.tui-chip.tui-fixed {
+  background: var(--tui-code-bg);
+  border-color: var(--tui-border);
+}
+
+.tui-chip.tui-fixed .tui-chipval {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.tui-chipmain {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 100%;
+  padding: 0 3px 0 8px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  border-radius: 6px;
+}
+
+.tui-chipmain:focus-visible {
+  outline: none;
+}
+
+.tui-chip:has(.tui-chipmain:focus-visible) {
+  border-color: var(--tui-focus);
+  box-shadow: 0 0 0 2px var(--tui-focus-ring);
+}
+
+.tui-chipname {
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-chipval {
+  font-weight: 500;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tui-iconbtn {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--tad-grid-text-dim) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex: none;
+}
+
+.tui-chip > .tui-iconbtn {
+  margin-right: 3px;
+}
+
+.tui-iconbtn:hover {
+  background: var(--tad-grid-line);
+  color: var(--tad-grid-text) !important;
+}
+
+.tui-addbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tui-accent) !important;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tui-addbtn:hover,
+.tui-addbtn[data-state="open"] {
+  background: var(--tui-accent-hover-bg);
+}
+
+.tui-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: var(--tui-accent) !important;
+  font-size: 11.5px !important;
+}
+
+.tui-link:hover {
+  text-decoration: underline;
+}
+
+/* --- popovers --- */
+
+.tui-pop {
+  z-index: 30;
+  background: var(--tui-surface);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-shadow: var(--tui-shadow);
+  padding: 4px;
+  box-sizing: border-box;
+  width: 300px;
+  max-height: var(--radix-popover-content-available-height);
+  overflow-y: auto;
+  outline: none;
+}
+
+.tui-pop.tui-narrow {
+  width: 230px;
+}
+
+.tui-poph {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px 8px 6px;
+}
+
+.tui-poph-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tui-poph-note {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--tad-grid-text-dim);
+  white-space: nowrap;
+}
+
+.tui-popf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 6px 3px;
+  border-top: 1px solid var(--tad-grid-line);
+  margin-top: 4px;
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-section {
+  padding: 0 2px 8px;
+}
+
+.tui-typeicon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  flex: none;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--tad-grid-text-dim);
+}
+
+/* --- text inputs --- */
+
+.tui-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin: 0 2px 6px;
+  padding: 0 8px;
+  border: 1px solid var(--tui-border);
+  border-radius: 6px;
+  background: var(--tui-surface);
+  color: var(--tad-grid-text-dim);
+  box-sizing: border-box;
+}
+
+.tui-search:focus-within {
+  border-color: var(--tui-focus);
+  box-shadow: 0 0 0 2px var(--tui-focus-ring);
+}
+
+.tui-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--tad-grid-text);
+}
+
+.tui-input,
+.tui-select {
+  height: 24px;
+  box-sizing: border-box;
+  border: 1px solid var(--tui-border);
+  border-radius: 5px;
+  padding: 0 7px;
+  background: var(--tui-surface);
+  color: var(--tad-grid-text);
+}
+
+.tui-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.tui-input:focus,
+.tui-select:focus {
+  outline: 0;
+  border-color: var(--tui-focus);
+  box-shadow: 0 0 0 2px var(--tui-focus-ring);
+}
+
+.tui-input::placeholder,
+.tui-search input::placeholder {
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-select {
+  cursor: pointer;
+  padding-right: 4px;
+}
+
+.tui-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px 6px;
+}
+
+.tui-frow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px 8px;
+}
+
+/* --- value lists --- */
+
+.tui-vlist {
+  max-height: 228px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.tui-vrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 26px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
+  flex: none;
+}
+
+.tui-vrow:hover {
+  background: var(--tui-subtle-bg);
+}
+
+.tui-vrow:focus-visible {
+  outline: 2px solid var(--tui-focus);
+  outline-offset: -2px;
+}
+
+.tui-vrow.tui-master {
+  border-bottom: 1px solid var(--tad-grid-line);
+  border-radius: 5px 5px 0 0;
+  margin-bottom: 2px;
+}
+
+.tui-vrow.tui-static {
+  cursor: default;
+}
+
+.tui-vrow.tui-static:hover {
+  background: transparent;
+}
+
+.tui-vrow.tui-zero .tui-vlabel {
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-box {
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 1px solid #c9c4bf;
+  border-radius: 3px;
+  background: var(--tui-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tui-mark);
+  flex: none;
+  transition: background-color 0.12s, border-color 0.12s;
+}
+
+.tui-vrow:hover .tui-box {
+  border-color: #a8a29e;
+}
+
+.tui-box.tui-on,
+.tui-box.tui-mixed,
+.tui-vrow:hover .tui-box.tui-on,
+.tui-vrow:hover .tui-box.tui-mixed {
+  background: var(--tui-pale);
+  border-color: var(--tui-pale-border);
+}
+
+.tui-vlabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tui-null {
+  font-style: italic;
+  color: var(--tad-grid-null-text);
+}
+
+.tui-vbar {
+  width: 44px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--tui-subtle-bg);
+  overflow: hidden;
+  flex: none;
+}
+
+.tui-vbar > span {
+  display: block;
+  height: 100%;
+  background: var(--tui-bar);
+  border-radius: 3px;
+}
+
+.tui-vcount {
+  min-width: 26px;
+  text-align: right;
+  color: var(--tad-grid-text-dim);
+  font-size: 11px;
+  flex: none;
+}
+
+/* --- number ranges --- */
+
+.tui-hbig {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 60px;
+  padding: 0 6px;
+}
+
+.tui-hbar {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: var(--tui-bar-off);
+  border-radius: 1px 1px 0 0;
+  cursor: pointer;
+}
+
+.tui-hbar.tui-on {
+  background: var(--tui-bar-on);
+}
+
+.tui-hbar:hover {
+  background: var(--tui-focus);
+}
+
+.tui-haxis {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 6px 0;
+  font-size: 10.5px;
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-range {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 6px 4px;
+}
+
+.tui-range label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  font-size: 10.5px;
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-range input {
+  width: 100%;
+  flex: none;
+}
+
+.tui-cond {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 5px;
+  background: var(--tui-code-bg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  overflow-wrap: anywhere;
+}
+
+/* --- menus --- */
+
+.tui-mi {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.tui-mi:hover,
+.tui-mi:focus-visible {
+  background: var(--tui-subtle-bg);
+  outline: none;
+}
+
+.tui-mi-aside {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--tad-grid-text-dim);
+}

@@ -49,9 +49,11 @@
     U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Colours and font, shared with the footer below the grid (footer.less): */
+/* Colours and font, shared with the footer below the grid (footer.less)
+ * and the new UI's components (ui/ui.css): */
 .tad-grid,
-.footer {
+.footer,
+.tad-ui {
   --tad-grid-default-font: "TadInter", Inter, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --tad-grid-bg: #ffffff;
@@ -92,7 +94,8 @@
 }
 
 .bp4-dark .tad-grid,
-.bp4-dark .footer {
+.bp4-dark .footer,
+.bp4-dark .tad-ui {
   --tad-grid-bg: #22201e;
   --tad-grid-header-bg: #2d2b28;
   --tad-grid-text: #f3eee9;
