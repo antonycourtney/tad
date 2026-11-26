@@ -21,15 +21,6 @@ import fs from "fs";
 const dialog = electron.dialog;
 const app = electron.app;
 
-// Development / testing hook: expose the Chrome DevTools Protocol on
-// localhost (e.g. to script UI tests of the canvas-based grid).
-if (process.env.TAD_REMOTE_DEBUGGING_PORT) {
-  app.commandLine.appendSwitch(
-    "remote-debugging-port",
-    process.env.TAD_REMOTE_DEBUGGING_PORT
-  );
-}
-
 // Testing hook: use a separate user data directory. This also gives the app
 // its own single instance lock, so that tests don't hand their files to an
 // already running Tad (the dev and packaged apps share a user data directory
