@@ -32,7 +32,11 @@ const expectColumns = async (grid: GridDriver, check: (ids: string[]) => void) =
 
 test.describe("sidebar", () => {
   test("hides and shows a column", async ({ openInTad }) => {
-    const { grid, controls } = await openInTad(testFile(SORTED_TAD_FILE));
+    // A small window, so that (with the sidebar open) the last column is
+    // out of view, as on CI's Windows machines:
+    const { grid, controls } = await openInTad(testFile(SORTED_TAD_FILE), {
+      windowSize: { width: 900, height: 600 },
+    });
     await controls.setShown("note", false);
     await expectColumns(grid, (ids) => expect(ids).not.toContain("note"));
     await controls.setShown("note", true);

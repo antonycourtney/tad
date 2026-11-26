@@ -42,10 +42,51 @@ export class DomGrid implements GridDriver {
     return expectRowCount(this, n);
   }
 
+  /**
+   * Every column's id, in order. Columns are virtualized, so when some
+   * aren't rendered (in a narrow window), this scrolls sideways to see them,
+   * and back.
+   */
   async columnIds(): Promise<string[]> {
-    return this.root
-      .locator('[role="columnheader"]')
-      .evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.colId!));
+    const total = Number((await this.root.getAttribute("aria-colcount")) ?? 0);
+    const ids: (string | undefined)[] = new Array(total).fill(undefined);
+    const collect = async () => {
+      const rendered = await this.root
+        .locator('[role="columnheader"]')
+        .evaluateAll((els) =>
+          els.map((el) => [Number(el.getAttribute("aria-colindex")), (el as HTMLElement).dataset.colId!])
+        );
+      for (const [i, id] of rendered as [number, string][]) {
+        ids[i - 1] = id;
+      }
+    };
+    const missing = () => ids.some((id) => id === undefined);
+    await collect();
+    if (missing()) {
+      const scroller = this.root.locator(".tad-grid-scroller");
+      const { start, scrollWidth, clientWidth } = await scroller.evaluate((el) => ({
+        start: el.scrollLeft,
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+      }));
+      const step = Math.max(50, Math.floor(clientWidth / 2));
+      for (let x = 0; missing() && x < scrollWidth; x += step) {
+        await this.scrollLeftTo(x);
+        await collect();
+      }
+      await this.scrollLeftTo(start);
+    }
+    return ids.filter((id): id is string => id !== undefined);
+  }
+
+  private async scrollLeftTo(x: number): Promise<void> {
+    await this.root.locator(".tad-grid-scroller").evaluate((el, x) => {
+      el.scrollLeft = x;
+    }, x);
+    // Let the grid render the columns now in view:
+    await this.page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    );
   }
 
   async columnIndex(columnId: string): Promise<number> {
