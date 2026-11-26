@@ -163,9 +163,11 @@ The filter bar replaces the dialog and lives in the footer.
 
 ### 8. Remove the old UI
 
+Not started: it waits on the question of when the new UI becomes the default (see "Questions to revisit"). Removing the old UI also removes the way back to it.
+
 - [ ] Remove Blueprint (core, popover2, icons), react-dnd, the Less styles, normalize.css, the old components and the switch.
   - Also uses Blueprint: the SlickGrid `DataGrid.tsx` (its `ResizeSensor`), `FocusStyleManager` in `AppPane.tsx`, and the dark mode selectors (`.bp4-dark`) in `DomDataGrid.css` and `ui.css`.
-- [ ] Release notes: the NULL behaviour change, and that alphabetical comparisons on text are now read-only.
+- [ ] Release notes: the NULL behaviour change, and that alphabetical comparisons on text are now read-only. A draft is below ("Release notes draft"), for the site's Release Notes once there's a version and date.
 
 ## Open questions
 
@@ -204,6 +206,20 @@ Choices made while working on this alone, to check:
 - Folders list data files only, so `.tad` files don't appear in the data sources panel (as before). Should they?
 - The dialog for opening a table over a changed view keeps Cancel as its default, as before. Its "Open in a new window" does nothing in the web app (a TODO in `tadweb-app`); hide it there?
 - The grid's icon for text columns is now Lucide's "T" (Blueprint's was an "A"), in both UIs.
+
+## Release notes draft
+
+For `doc/site/index.html`, when the new UI ships:
+
+- A new look for the controls around the table, built to keep the data first and to stay quick with many columns:
+  - **Filter bar** below the table: a chip for each condition. Text columns pick values from a list showing how many rows have each, or match text; number columns pick a range on a histogram. Changes apply as you make them; Esc undoes them.
+  - **Column menu** on each header (the ▾ button, or right-click): sort, pivot, filter, format, aggregation and hide.
+  - **Sidebar:** Pivot and Sort shelves you can drag to reorder, and one list of columns to show, pivot, sort, aggregate and format, with a search box.
+  - **Data sources** panel with a search box, and the open table highlighted.
+- **Behaviour change:** filters such as "is not one of" and "doesn't contain" now keep rows where the column has no value (NULL), with a checkbox to drop them. Before, they dropped those rows without saying so.
+- Comparing text alphabetically (<, ≤, >, ≥) is no longer offered. Saved views that use it still filter the same way, and show the condition as a read-only chip that can be removed.
+- Saved views (.tad files) from this version use file format 4. Most filters are saved as nested conditions now (a range is "at least … and at most …"), which older versions of Tad don't load correctly. Tad now warns when it opens a file from a newer version.
+- Fixed: quitting Tad while a query ran could crash it or make it hang.
 
 ## Ideas: not started without a go-ahead
 
