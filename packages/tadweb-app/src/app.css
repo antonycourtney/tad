@@ -1,0 +1,8 @@
+/* The app fills the window, as in tad-app (whose app.css this follows):
+   the grid scrolls, not the page. */
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}

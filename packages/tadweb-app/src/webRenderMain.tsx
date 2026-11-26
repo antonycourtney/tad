@@ -25,6 +25,7 @@ import { initAppState } from "tadviewer";
 import * as reltab from "reltab";
 import log from "loglevel";
 import { WebTransportClient } from "./reltabWebClient";
+import "./app.css";
 import { DataSourceId, DataSourcePath, RemoteReltabConnection } from "reltab";
 import _ from "lodash";
 import { useState } from "react";
