@@ -68,7 +68,7 @@ const defaultFormats = {
   boolean: { decimalPlaces: 0 },
 };
 
-const tadFile = (parquetPath: string, viewParams: object): string =>
+export const tadFile = (parquetPath: string, viewParams: object): string =>
   JSON.stringify(
     {
       tadFileFormatVersion: 2,
@@ -121,3 +121,64 @@ export async function generateTestData(dir: string): Promise<void> {
     })
   );
 }
+
+async function writeParquet(query: string, file: string): Promise<void> {
+  const db = await DuckDBInstance.create(":memory:");
+  const conn = await db.connect();
+  try {
+    await conn.run(`COPY (${query}) TO ${sqlString(file)} (FORMAT parquet)`);
+  } finally {
+    conn.closeSync();
+  }
+}
+
+/*
+ * Larger tables, generated on first use (into the same directory as the
+ * other test data) by the tests that need them.
+ */
+
+// More rows than fit in a browser's maximum element height at 28px per row
+// (about 1.2M in Chrome), to exercise the grid's scroll scaling:
+export const BIG_ROWS = 10_000_000;
+export const BIG_PARQUET_FILE = "big.parquet";
+const bigQuery = `
+  SELECT i AS id, i % 1000 AS bucket, 'row ' || i AS label
+  FROM range(${BIG_ROWS}) t(i)
+`;
+
+// Many columns of mixed types, for scrolling performance:
+export const WIDE_ROWS = 200_000;
+export const WIDE_COLUMNS = 60;
+export const WIDE_PARQUET_FILE = "wide.parquet";
+const wideColumn = (j: number): string => {
+  const name = `c${String(j).padStart(2, "0")}`;
+  switch (j % 6) {
+    case 0:
+      return `(i * ${j + 7}) % 100000 AS ${name}`;
+    case 1:
+      return `round(((i * ${j + 3}) % 100000) / 7.0, 2) AS ${name}`;
+    case 2:
+      return `'text ' || ((i * ${j + 11}) % 5000) AS ${name}`;
+    case 3:
+      return `DATE '2024-01-01' + ((i + ${j}) % 700)::INTEGER AS ${name}`;
+    case 4:
+      return `((i + ${j}) % 3 = 0) AS ${name}`;
+    default:
+      return `CASE WHEN (i + ${j}) % 4 = 0 THEN NULL ELSE 'v' || (i % 97) END AS ${name}`;
+  }
+};
+const wideQuery = `
+  SELECT i AS id, ${Array.from({ length: WIDE_COLUMNS - 1 }, (_, j) => wideColumn(j)).join(", ")}
+  FROM range(${WIDE_ROWS}) t(i)
+`;
+
+async function ensureFile(name: string, query: string): Promise<string> {
+  const file = testFile(name);
+  if (!fs.existsSync(file)) {
+    await writeParquet(query, file);
+  }
+  return file;
+}
+
+export const ensureBigTable = () => ensureFile(BIG_PARQUET_FILE, bigQuery);
+export const ensureWideTable = () => ensureFile(WIDE_PARQUET_FILE, wideQuery);

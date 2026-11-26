@@ -9,6 +9,7 @@ import { ViewState } from "../ViewState";
 import * as actions from "../actions";
 import * as util from "../util";
 import { DataGrid, DataGridProps } from "./DataGrid";
+import { DomDataGrid } from "./DomDataGrid";
 import { GlideDataGrid } from "./GlideDataGrid";
 import { SimpleClipboard } from "./SimpleClipboard";
 
@@ -18,20 +19,27 @@ import { Cell, ColumnData, SelectionChangeData } from "./SelectionChangeData";
 export type OpenURLFn = (url: string) => void;
 
 /*
- * SPIKE: choose the grid implementation. Use the Glide-based grid if
- * TAD_GRID=glide is set in the environment (Electron, where the renderer can
- * read process.env) or localStorage.tadGrid is "glide" (e.g. the web app).
+ * SPIKE: choose the grid implementation: "glide" (Glide Data Grid), "dom"
+ * (DomDataGrid, TanStack Virtual) or the SlickGrid DataGrid (default), from
+ * TAD_GRID in the environment (Electron, where the renderer can read
+ * process.env) or localStorage.tadGrid (e.g. the web app).
  */
-const useGlideGrid: boolean = (() => {
+type GridImpl = "slickgrid" | "glide" | "dom";
+const gridImpl: GridImpl = (() => {
+  const known = (s: string | null | undefined): GridImpl | null =>
+    s === "glide" || s === "dom" || s === "slickgrid" ? s : null;
   try {
-    if (typeof process !== "undefined" && process.env?.TAD_GRID === "glide") {
-      return true;
+    if (typeof process !== "undefined") {
+      const impl = known(process.env?.TAD_GRID);
+      if (impl) {
+        return impl;
+      }
     }
   } catch (e) {}
   try {
-    return globalThis.localStorage?.getItem("tadGrid") === "glide";
+    return known(globalThis.localStorage?.getItem("tadGrid")) ?? "slickgrid";
   } catch (e) {
-    return false;
+    return "slickgrid";
   }
 })();
 
@@ -225,11 +233,14 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
     embedded,
   };
 
-  return useGlideGrid ? (
-    <GlideDataGrid {...dataGridProps} />
-  ) : (
-    <DataGrid {...dataGridProps} />
-  );
+  switch (gridImpl) {
+    case "glide":
+      return <GlideDataGrid {...dataGridProps} />;
+    case "dom":
+      return <DomDataGrid {...dataGridProps} />;
+    default:
+      return <DataGrid {...dataGridProps} />;
+  }
 };
 
 // TODO: It might be better to move this memoization down a level into DataGrid,

@@ -7,20 +7,9 @@
  * GlideDataGrid exposes when TAD_TEST_HOOKS=1.
  */
 import { expect, Locator, Page } from "@playwright/test";
+import { digits, GridDriver, Modifier, Rect } from "./grid-driver";
 
-export interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-type Modifier = "Shift" | "Meta" | "Control" | "Alt";
-
-/** Strip thousands separators, e.g. "99,999" -> "99999". */
-export const digits = (s: string) => s.replace(/,/g, "");
-
-export class GlideGrid {
+export class GlideGrid implements GridDriver {
   constructor(readonly page: Page) {}
 
   /** Wait for the grid to be created and its first row to be loaded. */
@@ -61,9 +50,19 @@ export class GlideGrid {
     return idx;
   }
 
-  /** Header titles, in display order (including sort indicators). */
-  async headerTitles(): Promise<string[]> {
+  /** Header titles, in display order, including sort indicators (" ▲2"). */
+  async rawHeaderTitles(): Promise<string[]> {
     return this.page.locator('table[role="grid"] thead th').allTextContents();
+  }
+
+  async headerTitles(): Promise<string[]> {
+    return (await this.rawHeaderTitles()).map((t) => t.replace(/ [▲▼]\d*$/, ""));
+  }
+
+  async sortDirection(col: number): Promise<"ascending" | "descending" | null> {
+    const title = (await this.rawHeaderTitles())[col] ?? "";
+    const m = title.match(/ ([▲▼])\d*$/);
+    return m ? (m[1] === "▲" ? "ascending" : "descending") : null;
   }
 
   private rowCells(row: number): Locator {

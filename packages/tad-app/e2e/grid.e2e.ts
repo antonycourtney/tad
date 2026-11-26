@@ -1,5 +1,5 @@
 import { expect, test } from "./fixtures";
-import { digits } from "./glide-grid";
+import { digits } from "./grid-driver";
 import {
   COLUMNS,
   COUNTRIES_PER_REGION,
@@ -26,11 +26,11 @@ test.describe("flat table", () => {
     const col = await grid.columnIndex("quantity");
 
     await grid.clickHeader(col);
-    await expect.poll(async () => (await grid.headerTitles())[col]).toBe("quantity ▲");
+    await expect.poll(() => grid.sortDirection(col)).toBe("ascending");
     await grid.expectCellText(col, 0, "1");
 
     await grid.clickHeader(col);
-    await expect.poll(async () => (await grid.headerTitles())[col]).toBe("quantity ▼");
+    await expect.poll(() => grid.sortDirection(col)).toBe("descending");
     await grid.expectCellText(col, 0, "20");
   });
 

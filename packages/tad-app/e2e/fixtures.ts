@@ -1,6 +1,7 @@
 /*
  * Playwright fixture that launches the Tad desktop app (packages/tad-app/dist,
- * so run `npm run build-prod` first) on a file, using the Glide grid.
+ * so run `npm run build-prod` first) on a file. The grid implementation comes
+ * from TAD_GRID ("dom" by default; "glide" also has a test driver).
  */
 import {
   _electron as electron,
@@ -12,14 +13,28 @@ import {
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { DomGrid } from "./dom-grid";
 import { GlideGrid } from "./glide-grid";
+import { GridDriver } from "./grid-driver";
+
+export const GRID_IMPL = process.env.TAD_GRID ?? "dom";
+
+const gridDriver = (page: Page): GridDriver =>
+  GRID_IMPL === "glide" ? new GlideGrid(page) : new DomGrid(page);
 
 const APP_DIR = path.resolve(__dirname, "..");
 
 export interface TadWindow {
   app: ElectronApplication;
   page: Page;
-  grid: GlideGrid;
+  grid: GridDriver;
+}
+
+export interface OpenOptions {
+  /** Wait for the first rows to load (default true). */
+  waitForData?: boolean;
+  /** Window size (CSS pixels), if not the default. */
+  windowSize?: { width: number; height: number };
 }
 
 /**
@@ -42,14 +57,14 @@ async function tadWindow(app: ElectronApplication, timeoutMs = 30_000): Promise<
 
 interface TadFixtures {
   /** Launch Tad on a file, and wait for the grid's first rows. */
-  openInTad: (file: string) => Promise<TadWindow>;
+  openInTad: (file: string, options?: OpenOptions) => Promise<TadWindow>;
 }
 
 export const test = base.extend<TadFixtures>({
   openInTad: async ({}, use, testInfo) => {
     const launched: { app: ElectronApplication; page?: Page; userDataDir: string }[] =
       [];
-    await use(async (file: string) => {
+    await use(async (file: string, options: OpenOptions = {}) => {
       // A fresh user data directory per launch, so tests don't share state
       // with each other or with an installed copy of Tad:
       const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "tad-e2e-user-"));
@@ -59,7 +74,7 @@ export const test = base.extend<TadFixtures>({
         args: [".", "-f", file],
         env: {
           ...process.env,
-          TAD_GRID: process.env.TAD_GRID ?? "glide",
+          TAD_GRID: GRID_IMPL,
           TAD_TEST_HOOKS: "1",
           TAD_USER_DATA_DIR: userDataDir,
         },
@@ -68,8 +83,18 @@ export const test = base.extend<TadFixtures>({
       launched.push(entry);
       const page = await tadWindow(app);
       entry.page = page;
-      const grid = new GlideGrid(page);
-      await grid.waitForData();
+      if (options.windowSize) {
+        const { width, height } = options.windowSize;
+        await app.evaluate(({ BrowserWindow }, [w, h]) => {
+          for (const win of BrowserWindow.getAllWindows()) {
+            win.setContentSize(w, h);
+          }
+        }, [width, height]);
+      }
+      const grid = gridDriver(page);
+      if (options.waitForData ?? true) {
+        await grid.waitForData();
+      }
       return { app, page, grid };
     });
     for (const [i, { app, page, userDataDir }] of launched.entries()) {
