@@ -168,3 +168,30 @@ test.describe("view sidebar", () => {
     await page.screenshot({ path: shot("sidebar-format") });
   });
 });
+
+test.describe("dialogs", () => {
+  test.skip(UI_IMPL !== "new", "for the new UI: set TAD_UI=new");
+
+  test("export", async ({ openInTad }, testInfo) => {
+    const { app, page, controls } = await openInTad(testFile(SORTED_TAD_FILE), { windowSize });
+    await controls.setPivot(["region"]);
+    await app.evaluate(({ BrowserWindow }) => {
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send("open-export-begin-dialog", { openState: true });
+      }
+    });
+    const dialog = page.getByRole("dialog");
+    await dialog
+      .getByRole("textbox", { name: /export to file/i })
+      .fill(testInfo.outputPath("orders.parquet"));
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: shot("dialog-export") });
+    await dialog.getByRole("button", { name: "Export", exact: true }).click();
+    await expect(page.getByRole("dialog").filter({ hasText: "Exported" })).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: shot("dialog-exported") });
+  });
+});
+

@@ -23,6 +23,12 @@ import { FilterBar } from "./ui/FilterBar";
 import { ViewSidebar } from "./ui/ViewSidebar";
 import { ActivityBar as NewActivityBar } from "./ui/ActivityBar";
 import { DataSourcePanel } from "./ui/DataSourcePanel";
+import {
+  ExportDialog,
+  ExportProgressDialog as NewExportProgressDialog,
+  LoadingOverlay,
+  OpenTableDialog,
+} from "./ui/Dialogs";
 import { newUI } from "../uiImpl";
 import { LoadingModal } from "./LoadingModal";
 import * as actions from "../actions";
@@ -399,6 +405,8 @@ function timerShowModal(timer: Timer): boolean {
 
 const dndManager = createDragDropManager(HTML5Backend);
 
+const LoadingImpl = newUI ? LoadingOverlay : LoadingModal;
+
 export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   newWindow,
   appState,
@@ -456,7 +464,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     const loadingModal =
       timerShowModal(appState.appLoadingTimer) ||
       timerShowModal(viewState.loadingTimer) ? (
-        <LoadingModal embedded={embedded} />
+        <LoadingImpl embedded={embedded} />
       ) : null;
     centerPane = (
       <div className="center-app-pane">
@@ -491,7 +499,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
   } else {
     pivotSidebar = null;
     centerPane = timerShowModal(appState.appLoadingTimer) ? (
-      <LoadingModal embedded={embedded} />
+      <LoadingImpl embedded={embedded} />
     ) : null;
   }
   const dataSourceSidebar = !showDataSources ? null : newUI ? (
@@ -516,18 +524,38 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
         {pivotSidebar}
         {centerPane}
       </DndProvider>
-      <ExportBeginDialog
-        appState={appState}
-        stateRef={stateRef}
-        onBrowseExportPath={onBrowseExportPath}
-        onExportFile={onExportFile}
-      />
-      <ExportProgressDialog appState={appState} stateRef={stateRef} />
-      <ViewConfirmDialog
-        newWindow={newWindow}
-        appState={appState}
-        stateRef={stateRef}
-      />
+      {newUI ? (
+        <>
+          <ExportDialog
+            appState={appState}
+            stateRef={stateRef}
+            onBrowseExportPath={onBrowseExportPath}
+            onExportFile={onExportFile}
+          />
+          <NewExportProgressDialog appState={appState} stateRef={stateRef} />
+          <OpenTableDialog
+            open={appState.viewConfirmDialogOpen}
+            onReplace={() => handleViewConfirmDialogReplace(stateRef)}
+            onNewWindow={() => handleViewConfirmDialogNewWindow(newWindow, stateRef)}
+            onCancel={() => handleViewConfirmDialogClose(stateRef)}
+          />
+        </>
+      ) : (
+        <>
+          <ExportBeginDialog
+            appState={appState}
+            stateRef={stateRef}
+            onBrowseExportPath={onBrowseExportPath}
+            onExportFile={onExportFile}
+          />
+          <ExportProgressDialog appState={appState} stateRef={stateRef} />
+          <ViewConfirmDialog
+            newWindow={newWindow}
+            appState={appState}
+            stateRef={stateRef}
+          />
+        </>
+      )}
     </div>
   );
   return mainContents;

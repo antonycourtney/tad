@@ -158,12 +158,13 @@ The filter bar replaces the dialog and lives in the footer.
 
 ### 7. The remaining Blueprint UI
 
-- [ ] The Export dialogs, the dialog asking whether to replace the current view, the loading modal and the delayed-calculation footer.
-- [ ] The `Icon` and `Tooltip` that `DomDataGrid` still uses.
+- [x] The Export dialogs, the dialog asking whether to replace the current view, and the loading modal (`components/ui/Dialogs.tsx`, on Radix Dialog). Tested in `export.e2e.ts` (both UIs) and `data-sources.e2e.ts`. The delayed-calculation footer belongs only to the old filter dialog, so it goes with the old UI.
+- [x] The `Icon`s that `DomDataGrid` used are Lucide icons now, in both UIs. (It used no `Tooltip`.)
 
 ### 8. Remove the old UI
 
 - [ ] Remove Blueprint (core, popover2, icons), react-dnd, the Less styles, normalize.css, the old components and the switch.
+  - Also uses Blueprint: the SlickGrid `DataGrid.tsx` (its `ResizeSensor`), `FocusStyleManager` in `AppPane.tsx`, and the dark mode selectors (`.bp4-dark`) in `DomDataGrid.css` and `ui.css`.
 - [ ] Release notes: the NULL behaviour change, and that alphabetical comparisons on text are now read-only.
 
 ## Open questions
@@ -201,6 +202,8 @@ Choices made while working on this alone, to check:
 - The data sources panel's info icon shows a description as a tooltip on hover, and in a popover on click.
 - A top-level file or folder's note is the folder it's in (shortened from the start); a database's is its engine (DuckDB, BigQuery…).
 - Folders list data files only, so `.tad` files don't appear in the data sources panel (as before). Should they?
+- The dialog for opening a table over a changed view keeps Cancel as its default, as before. Its "Open in a new window" does nothing in the web app (a TODO in `tadweb-app`); hide it there?
+- The grid's icon for text columns is now Lucide's "T" (Blueprint's was an "A"), in both UIs.
 
 ## Ideas: not started without a go-ahead
 
@@ -216,3 +219,4 @@ Choices made while working on this alone, to check:
 - 2026-11-26: the column visibility tests failed on Windows CI since 72aa2a6: the window there is narrower, so the grid hadn't rendered every column. The DOM grid's test driver now scrolls sideways to find them all.
 - 2026-11-26: step 5 done: the sidebar (shelves, column list, options). The new UI's test driver no longer falls back to the Blueprint one for anything. The app bundle is 5,763,786 bytes (1,805,963 gzipped), up 85 KB with dnd-kit and the sidebar.
 - 2026-11-26: step 6 done: the data sources panel, and a new activity bar.
+- 2026-11-26: step 7 done: the dialogs and loading overlay, and Lucide icons in the DOM grid. With `TAD_UI=new`, the app shows no Blueprint components. Checked steps 5–7 in tadweb-app too, in a browser; that showed the web app's page didn't fill the window (in both UIs), now fixed.

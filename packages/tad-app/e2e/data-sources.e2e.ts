@@ -59,3 +59,28 @@ test("opens a file from a folder, and highlights it", async ({ openInTad }) => {
   await page.getByRole("button", { name: "Data sources" }).click();
   await expect(panel(page)).toHaveClass(/sidebar-collapsed/);
 });
+
+test("asks before replacing a view that has changed", async ({ openInTad }) => {
+  const dir = path.dirname(testFile(PARQUET_FILE));
+  const { page, grid, controls } = await openInTad(dir, { waitForData: false });
+  const file = panel(page).getByRole("treeitem", { name: new RegExp(PARQUET_FILE) });
+  await file.click();
+  await grid.waitForData();
+  await controls.setShown("note", false);
+  await expect.poll(() => grid.columnIds()).not.toContain("note");
+
+  await page.getByRole("button", { name: "Data sources" }).click();
+  await file.click();
+  const dialog = page.getByRole("dialog", { name: "Open table" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect.poll(() => grid.columnIds()).not.toContain("note");
+
+  await file.click();
+  await dialog.getByRole("button", { name: "Replace this view" }).click();
+  await expect(dialog).toBeHidden();
+  await expect.poll(() => grid.columnIds()).toContain("note");
+});
+

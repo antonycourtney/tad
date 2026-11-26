@@ -19,7 +19,6 @@
  * Not yet implemented: auto-scrolling while drag-selecting past the edge of
  * the grid, column histograms for the pivot column, a row number column.
  */
-import { Icon } from "@blueprintjs/core";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Popover from "@radix-ui/react-popover";
 import {
@@ -39,7 +38,18 @@ import { NumericColumnHistogram } from "./ColumnHistogram";
 import { DataGridProps, HeaderPanel } from "./DataGrid";
 import "./DomDataGrid.css";
 import { LoadingModal } from "./LoadingModal";
-import { ChevronDown } from "./ui/icons";
+import {
+  ArrowDown,
+  ArrowUp,
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  CircleHelp,
+  Clock,
+  Network,
+  Type,
+} from "./ui/icons";
 import * as ss from "./scaledScroll";
 
 const ROW_HEIGHT = 28; // 27px of content plus a 1px grid line
@@ -238,19 +248,19 @@ const TypeIcon = ({ kind }: { kind: string }) => {
     case "real":
       return <span className="tad-grid-type-text">#</span>;
     case "string":
-      return <Icon icon="font" size={11} />;
+      return <Type size={11} strokeWidth={2} />;
     case "boolean":
-      return <Icon icon="tick" size={11} />;
+      return <Check size={11} strokeWidth={2.2} />;
     case "date":
-      return <Icon icon="calendar" size={11} />;
+      return <Calendar size={11} strokeWidth={2} />;
     case "time":
     case "datetime":
     case "timestamp":
-      return <Icon icon="time" size={11} />;
+      return <Clock size={11} strokeWidth={2} />;
     case "pivot":
-      return <Icon icon="diagram-tree" size={11} />;
+      return <Network size={11} strokeWidth={2} />;
     default:
-      return <Icon icon="help" size={11} />;
+      return <CircleHelp size={11} strokeWidth={2} />;
   }
 };
 
@@ -262,7 +272,11 @@ const PivotCellContent = ({ item }: { item: DataRow }) => (
     />
     <span className="tad-grid-toggle">
       {item._isLeaf ? null : (
-        <Icon icon={item._isOpen ? "chevron-down" : "chevron-right"} size={12} />
+        item._isOpen ? (
+          <ChevronDown size={13} strokeWidth={2} />
+        ) : (
+          <ChevronRight size={13} strokeWidth={2} />
+        )
       )}
     </span>
     <span className="tad-grid-pivot-text">
@@ -1431,7 +1445,11 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
           <span className="tad-grid-header-title">{meta.title}</span>
           {si ? (
             <span className="tad-grid-sort">
-              <Icon icon={si[1] ? "arrow-up" : "arrow-down"} size={10} />
+              {si[1] ? (
+                <ArrowUp size={11} strokeWidth={2.4} />
+              ) : (
+                <ArrowDown size={11} strokeWidth={2.4} />
+              )}
               {multiSort ? si[0] + 1 : null}
             </span>
           ) : null}
