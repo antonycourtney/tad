@@ -119,6 +119,11 @@ const textOpToSqlWhere = (
 
   if (op === "IN" || op === "NOTIN") {
     const inVals: Array<string> = rhs.val as any;
+    if (inVals.length === 0) {
+      // "IN ()" isn't valid SQL. No values: IN matches nothing, and NOT IN
+      // matches everything (NULLs too, as no value is excluded).
+      return op === "IN" ? "1=0" : "1=1";
+    }
     const inStr = inVals.map(sqlEscapeString).join(", ");
     ret = valExpToSqlStr(dialect, lhs) + " " + negStr + "IN (" + inStr + ")";
   } else {
@@ -228,6 +233,12 @@ const deserializeRelExp = (jsExp: any): RelExp => {
   }
 };
 
+// Filters can nest: an opArg is either a condition or another FilterExp.
+const deserializeSubExp = (jsExp: any): SubExp =>
+  jsExp.expType === "FilterExp"
+    ? FilterExp.deserialize(jsExp)
+    : deserializeRelExp(jsExp);
+
 export class FilterExp {
   expType: "FilterExp";
   op: BoolOp;
@@ -240,7 +251,7 @@ export class FilterExp {
   }
 
   static deserialize(jsObj: any): FilterExp {
-    const opArgs = jsObj.opArgs.map(deserializeRelExp);
+    const opArgs = jsObj.opArgs.map(deserializeSubExp);
     return new FilterExp(jsObj.op, opArgs);
   } // chained operator constructors for relational expressions:
 
