@@ -548,6 +548,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
 
   const rootRef = React.useRef<HTMLDivElement>(null);
   const scrollerRef = React.useRef<HTMLDivElement>(null);
+  const bodyRef = React.useRef<HTMLDivElement>(null);
 
   const showHistograms =
     !!showColumnHistograms && !!histoMap && Object.keys(histoMap).length > 0;
@@ -921,8 +922,118 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
     }
   };
 
-  const dragSelect = React.useRef<{ start: CellPos; moved: boolean; extend: boolean } | null>(
-    null
+  /**
+   * The cell at a point, from the grid's geometry rather than the DOM, so
+   * that it works outside the grid too: the point is clamped to the visible
+   * body, as when drag-selecting past an edge.
+   */
+  const cellAtPoint = (x: number, y: number): CellPos | null => {
+    const body = bodyRef.current;
+    const scroller = scrollerRef.current;
+    if (!body || !scroller || rowCount === 0 || columns.length === 0) {
+      return null;
+    }
+    const b = body.getBoundingClientRect();
+    const s = scroller.getBoundingClientRect();
+    const yIn = clamp(y - b.top, 0, Math.max(0, b.height - 1));
+    const row = clamp(
+      Math.floor((virtualYRef.current + yIn) / ROW_HEIGHT),
+      0,
+      rowCount - 1
+    );
+    const xIn = clamp(x - s.left, 0, Math.max(0, scroller.clientWidth - 1));
+    if (frozenCount > 0 && xIn < colWidths[0]) {
+      return { row, col: 0 };
+    }
+    const contentX = xIn + scroller.scrollLeft;
+    let col = columns.length - 1;
+    for (let i = frozenCount; i < columns.length; i++) {
+      if (contentX < colStarts[i + 1]) {
+        col = i;
+        break;
+      }
+    }
+    return { row, col };
+  };
+
+  const dragSelect = React.useRef<{
+    start: CellPos;
+    moved: boolean;
+    extend: boolean;
+    x: number; // latest pointer position
+    y: number;
+    raf: number | null; // auto-scroll animation frame
+  } | null>(null);
+
+  // How far past the visible body a point is (negative: above / left):
+  const overshoot = (x: number, y: number): [number, number] => {
+    const body = bodyRef.current;
+    const scroller = scrollerRef.current;
+    if (!body || !scroller) {
+      return [0, 0];
+    }
+    const b = body.getBoundingClientRect();
+    const s = scroller.getBoundingClientRect();
+    const left = s.left + (frozenCount > 0 ? colWidths[0] : 0);
+    const right = s.left + scroller.clientWidth;
+    const dx = x < left ? x - left : x > right ? x - right : 0;
+    const dy = y < b.top ? y - b.top : y > b.bottom ? y - b.bottom : 0;
+    return [dx, dy];
+  };
+
+  // Scroll speed (pixels per frame) for a distance past the edge:
+  const autoScrollSpeed = (d: number) =>
+    d === 0 ? 0 : Math.sign(d) * Math.min(4 + Math.abs(d) / 2, 80);
+
+  const extendDragTo = (cell: CellPos) => {
+    const drag = dragSelect.current;
+    if (!drag) {
+      return;
+    }
+    if (cell.row !== drag.start.row || cell.col !== drag.start.col) {
+      drag.moved = true;
+    }
+    setSelection((s) =>
+      s && s.focus.row === cell.row && s.focus.col === cell.col
+        ? s
+        : { anchor: s?.anchor ?? cell, focus: cell }
+    );
+  };
+
+  // While drag-selecting past an edge, scroll and extend the selection:
+  const autoScrollStep = () => {
+    const drag = dragSelect.current;
+    const scroller = scrollerRef.current;
+    if (!drag || !scroller) {
+      return;
+    }
+    const [dx, dy] = overshoot(drag.x, drag.y);
+    if (dx === 0 && dy === 0) {
+      drag.raf = null;
+      return;
+    }
+    if (dy !== 0) {
+      setVirtualY(virtualYRef.current + autoScrollSpeed(dy), true, true);
+    }
+    if (dx !== 0) {
+      scroller.scrollLeft += autoScrollSpeed(dx);
+    }
+    const cell = cellAtPoint(drag.x, drag.y);
+    if (cell) {
+      extendDragTo(cell);
+    }
+    drag.raf = requestAnimationFrame(autoScrollStepRef.current);
+  };
+  const autoScrollStepRef = React.useRef(autoScrollStep);
+  autoScrollStepRef.current = autoScrollStep;
+  React.useEffect(
+    () => () => {
+      const raf = dragSelect.current?.raf;
+      if (raf != null) {
+        cancelAnimationFrame(raf);
+      }
+    },
+    []
   );
 
   const handleBodyPointerDown = (e: React.PointerEvent) => {
@@ -939,7 +1050,14 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
     setSelection(
       extend ? { anchor: selection!.anchor, focus: cell } : { anchor: cell, focus: cell }
     );
-    dragSelect.current = { start: cell, moved: false, extend };
+    dragSelect.current = {
+      start: cell,
+      moved: false,
+      extend,
+      x: e.clientX,
+      y: e.clientY,
+      raf: null,
+    };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
@@ -948,26 +1066,36 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
     if (!drag) {
       return;
     }
-    const cell = cellFromPoint(e.clientX, e.clientY);
-    if (!cell) {
-      return;
+    drag.x = e.clientX;
+    drag.y = e.clientY;
+    const cell = cellAtPoint(e.clientX, e.clientY);
+    if (cell) {
+      extendDragTo(cell);
     }
-    if (cell.row !== drag.start.row || cell.col !== drag.start.col) {
-      drag.moved = true;
+    const [dx, dy] = overshoot(e.clientX, e.clientY);
+    if ((dx !== 0 || dy !== 0) && drag.raf == null) {
+      drag.raf = requestAnimationFrame(autoScrollStepRef.current);
     }
-    setSelection((s) =>
-      s && s.focus.row === cell.row && s.focus.col === cell.col
-        ? s
-        : { anchor: s?.anchor ?? cell, focus: cell }
-    );
+  };
+
+  const endDrag = () => {
+    const drag = dragSelect.current;
+    dragSelect.current = null;
+    if (drag?.raf != null) {
+      cancelAnimationFrame(drag.raf);
+    }
+    return drag;
   };
 
   const handleBodyPointerUp = () => {
-    const drag = dragSelect.current;
-    dragSelect.current = null;
+    const drag = endDrag();
     if (drag && !drag.moved && !drag.extend) {
       clickCell(drag.start);
     }
+  };
+
+  const handleBodyPointerCancel = () => {
+    endDrag();
   };
 
   // Links in cells open through onGridClick (Tad's click handlers):
@@ -1300,6 +1428,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
                   ) : null}
                 </div>
                 <div
+                  ref={bodyRef}
                   className="tad-grid-body"
                   style={{
                     top: headerHeight,
@@ -1309,6 +1438,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
                   onPointerDown={handleBodyPointerDown}
                   onPointerMove={handleBodyPointerMove}
                   onPointerUp={handleBodyPointerUp}
+                  onPointerCancel={handleBodyPointerCancel}
                   onPointerOver={handleBodyPointerOver}
                   onClick={handleBodyClick}
                 >

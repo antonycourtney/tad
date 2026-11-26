@@ -47,7 +47,7 @@ Already done, with UI tests:
 Keyboard navigation and tables of 10M+ rows go beyond what SlickGrid did.
 
 To do:
-- [ ] Auto-scroll while drag-selecting past the edge of the grid.
+- [x] Auto-scroll while drag-selecting past the edge of the grid. It scrolls faster the further past the edge the pointer is. UI tests cover downwards and rightwards.
 - [ ] Clicking a link in a cell opens it, through `onGridClick` and `openURL`. Add a UI test, stubbing `shell.openExternal`.
 - [ ] Brushing a histogram filters the table. Add a UI test.
 - [ ] Check the web app (`tadweb-app` + `tadweb-server`) in a browser.
@@ -76,3 +76,4 @@ To do:
 - 2026-11-26: CI runs the unit tests on all platforms and the UI tests on Linux and Windows (`8206896`).
 - 2026-11-26: fixed wheel scrolling (lost small steps, top row cut off).
 - 2026-11-26: bundled Inter; fixed column widths (font mismatch, tabular digits, columns that were blank).
+- 2026-11-26: auto-scroll while drag-selecting.

@@ -9,6 +9,7 @@ import { digits } from "./grid-driver";
 import {
   BIG_ROWS,
   ensureBigTable,
+  ensureWideTable,
   N_ROWS,
   PARQUET_FILE,
   PIVOT_TAD_FILE,
@@ -173,5 +174,46 @@ test.describe("fonts and column widths", () => {
     await dom.clickCell(0, 3);
     await expect.poll(() => dom.rowCount()).toBeGreaterThan(26);
     await expect.poll(() => dom.clippedText()).toEqual([]);
+  });
+});
+
+test.describe("drag-selecting past an edge scrolls", () => {
+  test("down, below the grid", async ({ openInTad }) => {
+    const { grid, page } = await openInTad(testFile(SORTED_TAD_FILE));
+    const dom = grid as DomGrid;
+    await dom.expectCellText(0, 0, "0");
+    const start = await dom.bounds(1, 2);
+    const body = (await dom.root.locator(".tad-grid-body").boundingBox())!;
+    const visibleRows = Math.floor(body.height / ROW_HEIGHT);
+    await page.mouse.move(start.x + 5, start.y + 5);
+    await page.mouse.down();
+    await page.mouse.move(start.x + 5, body.y + body.height + 40, { steps: 5 });
+    await expect.poll(() => dom.firstVisibleRow()).toBeGreaterThan(20);
+    await page.mouse.up();
+    const focus = (await dom.focusedCell())!;
+    expect(focus.col).toBe(1);
+    expect(focus.row).toBeGreaterThan(visibleRows + 20);
+    // The selection runs from the start of the drag to the focused cell:
+    const copied = await dom.copySelection();
+    expect(copied.split("\n").length).toBe(focus.row - 2 + 1);
+  });
+
+  test("right, past the last visible column", async ({ openInTad }) => {
+    const { grid, page } = await openInTad(await ensureWideTable());
+    const dom = grid as DomGrid;
+    await dom.expectCellText(0, 0, "0");
+    const start = await dom.bounds(1, 1);
+    const scroller = dom.root.locator(".tad-grid-scroller");
+    const box = (await scroller.boundingBox())!;
+    await page.mouse.move(start.x + 5, start.y + 5);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width + 40, start.y + 5, { steps: 5 });
+    await expect
+      .poll(() => scroller.evaluate((el) => el.scrollLeft))
+      .toBeGreaterThan(500);
+    await page.mouse.up();
+    const focus = (await dom.focusedCell())!;
+    expect(focus.row).toBe(1);
+    expect(focus.col).toBeGreaterThan(8);
   });
 });
