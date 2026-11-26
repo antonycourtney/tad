@@ -12,7 +12,7 @@ import { AppState } from "../../AppState";
 import { requestColumnFilter } from "../../uiEvents";
 import { ViewState } from "../../ViewState";
 import { HeaderPanel } from "../DataGrid";
-import { editableFormat, FormatEditor, sampleValues } from "./FormatEditor";
+import { editableFormat, FormatEditor, loadedRows, sampleValues } from "./FormatEditor";
 import {
   ArrowDown,
   ArrowUp,
@@ -53,18 +53,6 @@ const Item: React.FC<{
     ) : null}
   </DropdownMenu.Item>
 );
-
-/** The rows loaded so far (for format previews). */
-function* loadedRows(viewState: ViewState, max = 200): Iterable<any> {
-  const dv = viewState.dataView;
-  if (!dv) {
-    return;
-  }
-  const n = Math.min(dv.getLength(), max);
-  for (let i = 0; i < n; i++) {
-    yield dv.getItem(i);
-  }
-}
 
 export const HeaderMenu: React.FC<HeaderMenuProps> = ({
   column,

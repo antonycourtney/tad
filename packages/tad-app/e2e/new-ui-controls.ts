@@ -1,8 +1,11 @@
 /*
- * ViewControls driver for the new UI (TAD_UI=new). So far the new UI has
- * its filter bar (below the grid) and the column header menu (with the DOM
- * grid), so the sidebar is still Blueprint's. Column formats and
- * aggregations are set through the header menu.
+ * ViewControls driver for the new UI (TAD_UI=new): the view settings
+ * sidebar, the column header menu (DOM grid only) and the filter bar.
+ *
+ * Column formats and aggregations are set through the header menu with the
+ * DOM grid, and through the sidebar with others. Columns are moved by
+ * keyboard (Space, arrow keys, Space), which also tests that dragging works
+ * from the keyboard.
  *
  * The filter bar has a chip per condition: text columns pick values or match
  * text, number columns keep a range. Each reltab condition the tests ask for
@@ -10,9 +13,15 @@
  * "all but" (NOT IN, NEQ) and negative text matches keep rows with no value
  * (see doc/ui-todo.md).
  */
-import { expect, Locator } from "@playwright/test";
-import { BlueprintControls } from "./blueprint-controls";
-import type { FilterCondition, Match, NumberFormat, TextFormat } from "./view-controls";
+import { expect, Locator, Page } from "@playwright/test";
+import type {
+  FilterCondition,
+  Match,
+  NumberFormat,
+  SortDir,
+  TextFormat,
+  ViewControls,
+} from "./view-controls";
 
 const METHOD_LABELS = { auto: "Auto", full: "Full", custom: "Custom" };
 
@@ -25,25 +34,169 @@ const MATCH_OPS: Record<string, string> = {
   NOTENDS: "notends",
 };
 
-export class NewUIControls extends BlueprintControls {
+export class NewUIControls implements ViewControls {
+  constructor(readonly page: Page) {}
+
   /** The header menu is the DOM grid's. */
   private readonly headerMenus = (process.env.TAD_GRID ?? "dom") === "dom";
 
-  // --- the column header menu ---
+  // --- the sidebar ---
 
-  private async openHeaderMenu(column: string): Promise<void> {
-    const header = this.page.locator(`.tad-grid-header-cell[data-col-id="${column}"]`);
-    await header.scrollIntoViewIfNeeded();
-    await header.click({ button: "right" });
-    await expect(this.page.getByRole("menu")).toBeVisible();
+  private get sidebar(): Locator {
+    return this.page.getByRole("complementary", { name: "View settings" });
   }
 
-  private async openFormatEditor(column: string): Promise<Locator> {
-    await this.openHeaderMenu(column);
-    await this.page.getByRole("menuitem", { name: "Format…" }).click();
-    const editor = this.page.locator(".tui-pop", { has: this.page.locator(".tui-preview") });
-    await expect(editor).toBeVisible();
-    return editor;
+  async openViewSettings(): Promise<void> {
+    if (!((await this.sidebar.getAttribute("class")) ?? "").includes("sidebar-expanded")) {
+      await this.page.locator(".activityBar button:has(.bp4-icon-pivot-table)").click();
+    }
+    await expect(this.sidebar).toHaveClass(/sidebar-expanded/);
+  }
+
+  private async setMode(mode: "Layout" | "Aggregation" | "Format"): Promise<void> {
+    await this.openViewSettings();
+    const button = this.sidebar
+      .getByRole("group", { name: "Column list shows" })
+      .getByRole("button", { name: mode, exact: true });
+    await button.click();
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+  }
+
+  private async toggle(name: string, on: boolean): Promise<void> {
+    const button = this.sidebar.getByRole("button", { name, exact: true });
+    if ((await button.getAttribute("aria-pressed")) !== String(on)) {
+      await button.click();
+    }
+    await expect(button).toHaveAttribute("aria-pressed", String(on));
+  }
+
+  async setShown(column: string, shown: boolean): Promise<void> {
+    await this.setMode("Layout");
+    await this.toggle(`Show ${column}`, shown);
+  }
+
+  async setAllShown(shown: boolean): Promise<void> {
+    await this.setMode("Layout");
+    const all = this.sidebar.getByRole("button", { name: "Show all columns" });
+    // Some shown ("mixed"): a click shows them all.
+    if ((await all.getAttribute("aria-pressed")) !== "true") {
+      await all.click();
+      await expect(all).toHaveAttribute("aria-pressed", "true");
+    }
+    if (!shown) {
+      await all.click();
+      await expect(all).toHaveAttribute("aria-pressed", "false");
+    }
+  }
+
+  private async shownOrder(): Promise<string[]> {
+    return this.sidebar
+      .locator(".tui-colrow[data-column]:not(.tui-hidden)")
+      .evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.column!));
+  }
+
+  /** Pick up a sortable item by keyboard, move it `steps` (negative: up/left), drop it. */
+  private async keyboardMove(handle: Locator, steps: number, vertical: boolean): Promise<void> {
+    await handle.focus();
+    await this.page.keyboard.press("Space");
+    await this.page.waitForTimeout(100);
+    const key = vertical ? (steps < 0 ? "ArrowUp" : "ArrowDown") : steps < 0 ? "ArrowLeft" : "ArrowRight";
+    for (let i = 0; i < Math.abs(steps); i++) {
+      await this.page.keyboard.press(key);
+      await this.page.waitForTimeout(100);
+    }
+    await this.page.keyboard.press("Space");
+  }
+
+  async moveColumnBefore(column: string, before: string): Promise<void> {
+    await this.setMode("Layout");
+    const order = await this.shownOrder();
+    const from = order.indexOf(column);
+    const target = order.indexOf(before);
+    const to = from < target ? target - 1 : target;
+    const handle = this.sidebar.locator(`.tui-colrow[data-column="${column}"] .tui-grip`);
+    await this.keyboardMove(handle, to - from, true);
+    await expect.poll(() => this.shownOrder()).toEqual(
+      (() => {
+        const next = order.filter((c) => c !== column);
+        next.splice(next.indexOf(before), 0, column);
+        return next;
+      })()
+    );
+  }
+
+  private shelfChips(shelf: "Pivot" | "Sort"): Locator {
+    return this.sidebar.getByRole("group", { name: shelf, exact: true }).locator(".tui-shelfchip");
+  }
+
+  private async clearShelf(shelf: "Pivot" | "Sort"): Promise<void> {
+    const chips = this.shelfChips(shelf);
+    for (let n = await chips.count(); n > 0; n--) {
+      await chips.first().getByRole("button", { name: /^Remove / }).click();
+      await expect(chips).toHaveCount(n - 1);
+    }
+  }
+
+  async setPivot(columns: string[]): Promise<void> {
+    await this.setMode("Layout");
+    await this.clearShelf("Pivot");
+    for (const c of columns) {
+      await this.toggle(`Pivot by ${c}`, true);
+    }
+    await expect
+      .poll(() => this.shelfChips("Pivot").evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.column)))
+      .toEqual(columns);
+  }
+
+  async setSort(keys: [string, SortDir][]): Promise<void> {
+    await this.setMode("Layout");
+    await this.clearShelf("Sort");
+    for (const [c, dir] of keys) {
+      // Ascending, then descending:
+      const button = this.sidebar.getByRole("button", { name: `Sort by ${c}`, exact: true });
+      await button.click();
+      await expect(button).toHaveAttribute("aria-pressed", "true");
+      if (dir === "desc") {
+        await button.click();
+        await expect(this.shelfChips("Sort").last().getByRole("button", { name: `Sort ${c} ascending` })).toBeVisible();
+      }
+    }
+    await expect(this.shelfChips("Sort")).toHaveCount(keys.length);
+  }
+
+  async setLeafColumn(column: string | null): Promise<void> {
+    await this.openViewSettings();
+    await this.sidebar.getByRole("combobox", { name: "Label leaf rows with" }).selectOption(column ?? "");
+  }
+
+  async setShowHistograms(on: boolean): Promise<void> {
+    await this.openViewSettings();
+    await this.setSwitch(this.sidebar, "Column histograms", on);
+  }
+
+  async setShowTotalsRow(on: boolean): Promise<void> {
+    await this.openViewSettings();
+    await this.setSwitch(this.sidebar, "Totals as top row", on);
+  }
+
+  // --- formats ---
+
+  private get formatEditor(): Locator {
+    return this.page.locator(".tui-pop", { has: this.page.locator(".tui-preview") });
+  }
+
+  /** The format editor for a column (from its header menu, or the sidebar), or a default. */
+  private async openFormatEditor(target: { column: string } | { kind: string }): Promise<Locator> {
+    if ("column" in target && this.headerMenus) {
+      await this.openHeaderMenu(target.column);
+      await this.page.getByRole("menuitem", { name: "Format…" }).click();
+    } else {
+      await this.setMode("Format");
+      const key = "column" in target ? `column:${target.column}` : `default:${target.kind}`;
+      await this.sidebar.locator(`[data-format="${key}"]`).click();
+    }
+    await expect(this.formatEditor).toBeVisible();
+    return this.formatEditor;
   }
 
   private async closeFormatEditor(editor: Locator): Promise<void> {
@@ -59,11 +212,7 @@ export class NewUIControls extends BlueprintControls {
     await expect(sw).toHaveAttribute("aria-checked", String(on));
   }
 
-  async setColumnNumberFormat(column: string, format: NumberFormat): Promise<void> {
-    if (!this.headerMenus) {
-      return super.setColumnNumberFormat(column, format);
-    }
-    const editor = await this.openFormatEditor(column);
+  private async editNumberFormat(editor: Locator, format: NumberFormat): Promise<void> {
     if (format.method) {
       const button = editor.getByRole("button", { name: METHOD_LABELS[format.method], exact: true });
       await button.click();
@@ -83,27 +232,51 @@ export class NewUIControls extends BlueprintControls {
     await this.closeFormatEditor(editor);
   }
 
-  async setColumnTextFormat(column: string, format: TextFormat): Promise<void> {
-    if (!this.headerMenus) {
-      return super.setColumnTextFormat(column, format);
-    }
-    const editor = await this.openFormatEditor(column);
+  private async editTextFormat(editor: Locator, format: TextFormat): Promise<void> {
     if (format.urlsAsLinks !== undefined) {
       await this.setSwitch(editor, "Show URLs as links", format.urlsAsLinks);
     }
     await this.closeFormatEditor(editor);
   }
 
+  async setDefaultNumberFormat(kind: "integer" | "real", format: NumberFormat): Promise<void> {
+    await this.editNumberFormat(await this.openFormatEditor({ kind }), format);
+  }
+
+  async setColumnNumberFormat(column: string, format: NumberFormat): Promise<void> {
+    await this.editNumberFormat(await this.openFormatEditor({ column }), format);
+  }
+
+  async setDefaultTextFormat(format: TextFormat): Promise<void> {
+    await this.editTextFormat(await this.openFormatEditor({ kind: "string" }), format);
+  }
+
+  async setColumnTextFormat(column: string, format: TextFormat): Promise<void> {
+    await this.editTextFormat(await this.openFormatEditor({ column }), format);
+  }
+
+  // --- aggregations ---
+
   async setAggregation(column: string, agg: string): Promise<void> {
-    if (!this.headerMenus) {
-      return super.setAggregation(column, agg);
+    const label = agg === "null" ? "none" : agg;
+    if (this.headerMenus) {
+      await this.openHeaderMenu(column);
+      await this.page.getByRole("menuitem", { name: /^Aggregation/ }).click();
+      await this.page.getByRole("menuitemradio", { name: label, exact: true }).click();
+      await expect(this.page.getByRole("menu")).toHaveCount(0);
+    } else {
+      await this.setMode("Aggregation");
+      await this.sidebar.getByRole("combobox", { name: `Aggregate ${column} with` }).selectOption(agg);
     }
-    await this.openHeaderMenu(column);
-    await this.page.getByRole("menuitem", { name: /^Aggregation/ }).click();
-    await this.page
-      .getByRole("menuitemradio", { name: agg === "null" ? "none" : agg, exact: true })
-      .click();
-    await expect(this.page.getByRole("menu")).toHaveCount(0);
+  }
+
+  // --- the column header menu ---
+
+  private async openHeaderMenu(column: string): Promise<void> {
+    const header = this.page.locator(`.tad-grid-header-cell[data-col-id="${column}"]`);
+    await header.scrollIntoViewIfNeeded();
+    await header.click({ button: "right" });
+    await expect(this.page.getByRole("menu")).toBeVisible();
   }
 
   // --- the filter bar ---

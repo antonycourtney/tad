@@ -20,6 +20,7 @@ import {
 import { GridPane, OpenURLFn } from "./GridPane";
 import { Footer } from "./Footer";
 import { FilterBar } from "./ui/FilterBar";
+import { ViewSidebar } from "./ui/ViewSidebar";
 import { newUI } from "../uiImpl";
 import { LoadingModal } from "./LoadingModal";
 import * as actions from "../actions";
@@ -438,7 +439,9 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
     viewState !== null &&
     viewState.dataView !== null
   ) {
-    pivotSidebar = (
+    pivotSidebar = newUI ? (
+      <ViewSidebar expanded={pivotPropsExpanded} viewState={viewState} stateRef={stateRef} />
+    ) : (
       <PivotSidebar
         expanded={pivotPropsExpanded}
         schema={viewState.baseSchema}

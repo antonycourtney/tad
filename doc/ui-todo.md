@@ -145,11 +145,11 @@ The filter bar replaces the dialog and lives in the footer.
 
 ### 5. Sidebar
 
-- [ ] Pivot and Sort shelves, with dragging.
-- [ ] The column list: search, and the Layout, Aggregation and Format modes.
-- [ ] The format editor.
-- [ ] The Options section, including the leaf label.
-- [ ] Dragging works from the keyboard too (dnd-kit supports this).
+- [x] Pivot and Sort shelves, with dragging (`components/ui/Shelves.tsx`).
+- [x] The column list: search, and the Layout, Aggregation and Format modes (`components/ui/ViewSidebar.tsx`).
+- [x] The format editor, for defaults as well as columns.
+- [x] The Options section, including the leaf label.
+- [x] Dragging works from the keyboard too: the UI tests move columns that way (Space, arrow keys, Space). `view-sidebar.e2e.ts` tests dragging with the mouse.
 
 ### 6. Data sources panel
 
@@ -190,6 +190,12 @@ Choices made while working on this alone, to check:
 - Right-clicking a header opens its menu below the ▾ button, not at the pointer.
 - The aggregation "null" is shown as "none" in the header menu.
 - Only the DOM grid has the header menu; the Glide grid (TAD_GRID=glide) doesn't.
+- The column list shows the displayed columns in order, then the hidden ones in the table's order. Only displayed columns can be dragged; showing a hidden column adds it at the end, as before.
+- Dragging is turned off while the column list is filtered by a search, since moving a row among a subset is ambiguous.
+- The "All columns" toggle: when some columns are hidden, a click shows them all; when all are shown, a click hides them all.
+- Sorting from the column list adds the column to the end of the sort (as the old Sort tab did), unlike the header menu, which replaces it.
+- "Label leaf rows with" is turned off unless the view is pivoted.
+- The sidebar's own type icons match the grid's (123, #, and Lucide icons for text, dates and times).
 
 ## Ideas: not started without a go-ahead
 
@@ -202,3 +208,5 @@ Choices made while working on this alone, to check:
 - 2026-11-26: step 1 done: reltab filter tests, and UI tests for the sidebar and filter dialog (`e2e/view-controls.e2e.ts`, through `ViewControls`, with a Blueprint driver). Fixed loading nested filters and empty `IN` lists. The new tests showed Tad crashing when quitting during a query; fixed (reltab-duckdb `finishPendingWork`). File versions bumped to 4, with a warning for files from newer versions.
 - 2026-11-26: steps 2 and 3 done: the filter bar, behind `TAD_UI=new`. It replaces the footer, so the row counts moved into it ("N of T rows"; "N rows, from F of T" when pivoted).
 - 2026-11-26: step 4 done: the column header menu, and the format editor. CI now runs every UI test with the new UI as well.
+- 2026-11-26: the column visibility tests failed on Windows CI since 72aa2a6: the window there is narrower, so the grid hadn't rendered every column. The DOM grid's test driver now scrolls sideways to find them all.
+- 2026-11-26: step 5 done: the sidebar (shelves, column list, options). The new UI's test driver no longer falls back to the Blueprint one for anything. The app bundle is 5,763,786 bytes (1,805,963 gzipped), up 85 KB with dnd-kit and the sidebar.

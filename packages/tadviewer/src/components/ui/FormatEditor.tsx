@@ -1,7 +1,7 @@
 /*
  * The format editor: how a column's values are shown, or the default for a
  * type of column. It goes in a popover (from the header menu's "Format…",
- * and later the sidebar's Format list).
+ * or the sidebar's Format list).
  */
 import * as React from "react";
 import { StateRef } from "oneref";
@@ -12,6 +12,7 @@ import { FormatOptions } from "../../FormatOptions";
 import { FormatMethod, NumFormatOptions } from "../../NumFormatOptions";
 import { TextFormatOptions } from "../../TextFormatOptions";
 import { ViewParams } from "../../ViewParams";
+import { ViewState } from "../../ViewState";
 import { Minus, Plus, X } from "./icons";
 
 /** A column's own format, or the default for a kind of column. */
@@ -24,7 +25,7 @@ const KIND_NAMES: Partial<Record<ColumnKind, string>> = {
   boolean: "Boolean",
 };
 
-const kindName = (kind: ColumnKind) => KIND_NAMES[kind] ?? kind;
+export const kindName = (kind: ColumnKind) => KIND_NAMES[kind] ?? kind;
 
 /** The format a target has now, if the format editor can edit it. */
 export function editableFormat(
@@ -40,6 +41,18 @@ export function editableFormat(
 }
 
 const SAMPLE_COUNT = 4;
+
+/** The rows the grid has loaded so far (for previews of formats). */
+export function* loadedRows(viewState: ViewState, max = 200): Iterable<any> {
+  const dv = viewState.dataView;
+  if (!dv) {
+    return;
+  }
+  const n = Math.min(dv.getLength(), max);
+  for (let i = 0; i < n; i++) {
+    yield dv.getItem(i);
+  }
+}
 
 /**
  * A few of a column's values, for the preview: the first distinct ones in the
@@ -61,7 +74,7 @@ export function sampleValues(rows: Iterable<any>, column: string): any[] {
   return samples;
 }
 
-const FALLBACK_SAMPLES: Partial<Record<ColumnKind, any[]>> = {
+export const FALLBACK_SAMPLES: Partial<Record<ColumnKind, any[]>> = {
   integer: [0, 42, 1234567],
   real: [3.14159265, -0.000125, 1234567.891],
   string: ["Some text", "https://example.com"],

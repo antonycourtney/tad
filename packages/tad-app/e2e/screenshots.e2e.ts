@@ -137,3 +137,34 @@ test.describe("filter bar", () => {
     await page.screenshot({ path: shot("filter-match") });
   });
 });
+
+test.describe("view sidebar", () => {
+  test.skip(UI_IMPL !== "new", "for the new UI: set TAD_UI=new");
+
+  test("layout, aggregation and format", async ({ openInTad }) => {
+    const { page, controls } = await openInTad(testFile(SORTED_TAD_FILE), { windowSize });
+    await controls.setPivot(["region", "country"]);
+    await controls.setShown("note", false);
+    await controls.setAggregation("unit_price", "avg");
+    const sidebar = page.getByRole("complementary", { name: "View settings" });
+    const mode = (name: string) =>
+      sidebar
+        .getByRole("group", { name: "Column list shows" })
+        .getByRole("button", { name, exact: true })
+        .click();
+    await mode("Layout");
+    await page.mouse.move(700, 700);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: shot("sidebar-layout") });
+
+    await mode("Aggregation");
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: shot("sidebar-aggregation") });
+
+    await mode("Format");
+    await sidebar.locator('[data-format="default:real"]').click();
+    await expect(page.locator(".tui-pop .tui-preview")).toBeVisible();
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: shot("sidebar-format") });
+  });
+});

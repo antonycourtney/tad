@@ -256,6 +256,30 @@ export const setSortDir = (
     vpUpdate((viewParams) => viewParams.setSortDir(cid, asc))
   );
 };
+export const setPivots = (cids: string[], stateRef: StateRef<AppState>): void => {
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.setVPivots(cids))
+  );
+};
+
+export const setPivotLeafColumn = (
+  cid: string | null,
+  stateRef: StateRef<AppState>
+): void => {
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.set("pivotLeafColumn", cid) as ViewParams)
+  );
+};
+
+export const setShowRoot = (show: boolean, stateRef: StateRef<AppState>): void => {
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.set("showRoot", show) as ViewParams)
+  );
+};
+
 export const toggleShowRoot = (stateRef: StateRef<AppState>): void => {
   update(
     stateRef,
