@@ -6,6 +6,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { expect, GRID_IMPL, test } from "./fixtures";
+import { UI_IMPL } from "./view-controls";
 import {
   ensureWideTable,
   PARQUET_FILE,
@@ -95,4 +96,44 @@ test("rows loading", async ({ openInTad }) => {
   await page.mouse.move(5, 700);
   await page.waitForTimeout(500);
   await page.screenshot({ path: shot("loading") });
+});
+
+// --- the new UI (TAD_UI=new) ---
+
+test.describe("filter bar", () => {
+  test.skip(UI_IMPL !== "new", "for the new UI: set TAD_UI=new");
+
+  const popover = ".tui-pop:not(.tui-narrow)";
+
+  test("values and ranges", async ({ openInTad }) => {
+    const { grid, page, controls } = await openInTad(testFile(SORTED_TAD_FILE), {
+      windowSize,
+    });
+    await grid.expectCellText(0, 0, "0");
+    await controls.setFilter("all", [
+      { column: "region", op: "NOTIN", value: ["West"] },
+      { column: "quantity", op: "GE", value: 5 },
+      { column: "note", op: "CONTAINS", value: "99" },
+    ]);
+    await page.mouse.move(5, 700);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: shot("filter-bar") });
+
+    await page.locator('.tui-chip[data-column="region"] .tui-chipmain').click();
+    await expect(page.locator(`${popover} .tui-vrow[data-value="North"]`)).toBeVisible();
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: shot("filter-values") });
+    await page.keyboard.press("Escape");
+
+    await page.locator('.tui-chip[data-column="quantity"] .tui-chipmain').click();
+    await expect(page.locator(`${popover} .tui-haxis`)).toBeVisible();
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: shot("filter-range") });
+    await page.keyboard.press("Escape");
+
+    await page.locator('.tui-chip[data-column="note"] .tui-chipmain').click();
+    await expect(page.locator(`${popover} .tui-static`).first()).toBeVisible();
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: shot("filter-match") });
+  });
 });

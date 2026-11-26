@@ -7,7 +7,8 @@
 # Every job runs the unit tests (`npm test`). The Linux and Windows jobs then
 # run the desktop app's UI tests (packages/tad-app/e2e); their results show in
 # the run's Tests tab, and on failure e2e-results/ (screenshots, accessibility
-# snapshots) is attached as an artifact.
+# snapshots) is attached as an artifact. The Linux job also runs the tests of
+# the new UI (TAD_UI=new) that's being built (doc/ui-todo.md).
 #
 name: $(Build.Reason)_$(Build.SourceBranch)_$(Rev:r)
 
@@ -113,6 +114,24 @@ jobs:
         inputs:
           pathToPublish: packages/tad-app/e2e-results
           artifactName: LinuxUITestResults
+      # The new UI (TAD_UI=new, see doc/ui-todo.md), while it's being built:
+      # the tests of what it has so far.
+      - script: xvfb-run -a --server-args="-screen 0 1920x1080x24" npx playwright test e2e/view-controls.e2e.ts e2e/filter-bar.e2e.ts
+        workingDirectory: packages/tad-app
+        displayName: "UI tests (new UI)"
+        condition: succeededOrFailed()
+        env: { CI: "true", TAD_UI: "new" }
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFormat: JUnit
+          testResultsFiles: packages/tad-app/e2e-results-new-ui/junit.xml
+          testRunTitle: "UI tests, new UI (Linux)"
+      - task: PublishBuildArtifacts@1
+        condition: failed()
+        inputs:
+          pathToPublish: packages/tad-app/e2e-results-new-ui
+          artifactName: LinuxNewUITestResults
 
   - job: macOS_latest
     timeoutInMinutes: 55

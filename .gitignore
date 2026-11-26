@@ -11,4 +11,5 @@ npm-debug.log
 lerna-debug.log
 .idea
 e2e-results
+e2e-results-new-ui
 e2e-screenshots

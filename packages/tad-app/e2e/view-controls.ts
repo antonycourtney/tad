@@ -5,10 +5,12 @@
  * Tests describe what to do ("pivot by region, then country") and check the
  * result in the grid, so the same tests run against each UI. The UI comes
  * from TAD_UI: "blueprint" (the current sidebar and filter dialog, the
- * default) has a driver in blueprint-controls.ts.
+ * default) has a driver in blueprint-controls.ts, and "new" (the filter bar,
+ * so far) in new-ui-controls.ts.
  */
 import { Page } from "@playwright/test";
 import { BlueprintControls } from "./blueprint-controls";
+import { NewUIControls } from "./new-ui-controls";
 
 export const UI_IMPL = process.env.TAD_UI ?? "blueprint";
 
@@ -97,6 +99,8 @@ export const viewControls = (page: Page): ViewControls => {
   switch (UI_IMPL) {
     case "blueprint":
       return new BlueprintControls(page);
+    case "new":
+      return new NewUIControls(page);
     default:
       throw new Error(`no view controls driver for TAD_UI=${UI_IMPL}`);
   }

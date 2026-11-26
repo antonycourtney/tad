@@ -21,6 +21,8 @@ import {
 } from "reltab";
 import * as util from "./util";
 import { QueryView } from "./QueryView";
+import { chipsToFilterExp, filterExpToChips, RangeChip } from "./filterChips";
+import { newUI } from "./uiImpl";
 
 export async function initAppState(
   rtc: reltab.ReltabConnection,
@@ -535,6 +537,28 @@ export const setHistogramBrushFilter = (
   stateRef: StateRef<AppState>
 ) => {
   let baseFE: FilterExp;
+  if (range !== null && newUI) {
+    // Set the column's range chip in the filter bar (adding one if needed):
+    const viewState = mutableGet(stateRef).viewState;
+    const { match, chips } = filterExpToChips(
+      viewState.viewParams.filterExp,
+      viewState.baseSchema
+    );
+    // An integer column's whole numbers in the brushed range:
+    const isInt = viewState.baseSchema.columnType(colId).kind === "integer";
+    const brushed: RangeChip = {
+      kind: "range",
+      column: colId,
+      op: "between",
+      min: isInt ? Math.ceil(range[0]) : range[0],
+      max: isInt ? Math.floor(range[1]) : range[1],
+      keepNull: false,
+    };
+    const i = chips.findIndex((c) => c.kind === "range" && c.column === colId);
+    const nextChips = i >= 0 ? chips.map((c, j) => (j === i ? brushed : c)) : [...chips, brushed];
+    setFilter(chipsToFilterExp({ match, chips: nextChips }), stateRef);
+    return;
+  }
   if (range !== null) {
     const appState = mutableGet(stateRef);
     const prevFE = appState.viewState.viewParams.filterExp;

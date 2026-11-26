@@ -19,6 +19,8 @@ import {
 } from "@blueprintjs/core";
 import { GridPane, OpenURLFn } from "./GridPane";
 import { Footer } from "./Footer";
+import { FilterBar } from "./ui/FilterBar";
+import { newUI } from "../uiImpl";
 import { LoadingModal } from "./LoadingModal";
 import * as actions from "../actions";
 import {
@@ -464,12 +466,21 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
           onCellClick={onCellClick}
           onSelectionChange={onSelectionChange}
         />
-        <Footer
-          appState={appState}
-          stateRef={stateRef}
-          rightFooterSlot={rightFooterSlot}
-          onFilter={onFilter}
-        />
+        {newUI ? (
+          <FilterBar
+            appState={appState}
+            stateRef={stateRef}
+            rightFooterSlot={rightFooterSlot}
+            onFilter={onFilter}
+          />
+        ) : (
+          <Footer
+            appState={appState}
+            stateRef={stateRef}
+            rightFooterSlot={rightFooterSlot}
+            onFilter={onFilter}
+          />
+        )}
       </div>
     );
   } else {

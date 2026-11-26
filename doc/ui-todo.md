@@ -99,7 +99,7 @@ The filter bar replaces the dialog and lives in the footer.
   - A number range uses `GE` and `LE` (joined by AND). "Is not between" uses `LT` OR `GT`. Equal bounds become `EQ` or `NEQ`. `IS NULL` is added with OR when NULLs are kept.
   - Is NULL and is not NULL use `ISNULL` and `NOTNULL`.
   - "Only these" with nothing ticked needs a condition that is always false. `IN ()` isn't valid SQL.
-- **Loading** turns these shapes back into chips; anything else becomes a read-only chip. In an AND filter from an older file, a `GE` and an `LE` on the same column become one range chip.
+- **Loading** turns these shapes back into chips; anything else becomes a read-only chip. In an AND filter from an older file, a `GE` and an `LE` on the same column become one range chip. A number `LT` or `GT` becomes an open-ended "is not between" range, and `= a OR = b` on a text column becomes a list of values.
 - **Fix `FilterExp.deserialize`.** It reads every `opArg` as a single condition, so a nested filter wouldn't load back correctly. It needs a unit test for the full save-and-load round trip.
 - **File version.** Files with nested filters can't be read by older versions of Tad, and older versions don't check the version number of a file before loading it.
   - Bump `VIEW_PARAMS_FORMAT_VERSION`, and `TAD_FILE_FORMAT_VERSION` in tad-app.
@@ -124,17 +124,20 @@ The filter bar replaces the dialog and lives in the footer.
 ### 2. Foundations
 
 - [x] reltab: fix `FilterExp.deserialize` for nested filters, and handle the file version (see above).
-- [ ] A small component set: Radix primitives (popover, dropdown and context menus, select, switch, checkbox, tooltip, dialog), styled in plain CSS on the grid's colour tokens, with Lucide icons and dnd-kit for dragging. Record the bundle size before and after.
-- [ ] A switch between the old and new UI, like `GRID_IMPL` for the grids.
+- [x] A small component set: Radix primitives (popover, dropdown and context menus, select, switch, checkbox, tooltip, dialog), styled in plain CSS on the grid's colour tokens, with Lucide icons and dnd-kit for dragging. Record the bundle size before and after.
+  - Each Radix primitive is its own package (`@radix-ui/react-popover` so far); add the others as they're used. Lucide icons are imported one at a time, through `components/ui/icons.ts`: tadviewer compiles to CommonJS, so importing from `lucide-react` bundled every icon (+1 MB).
+  - The styles are in `components/ui/ui.css` (`tui-` classes, under `.tad-ui`).
+  - `tadapp.bundle.js`: 5,452,377 bytes (1,729,194 gzipped) before; 5,608,899 (1,768,945 gzipped) with the filter bar and the popover, so +157 KB (+40 KB gzipped).
+- [x] A switch between the old and new UI, like `GRID_IMPL` for the grids: `TAD_UI=new` (or `localStorage.tadUI`), in `uiImpl.ts`. The UI tests take `TAD_UI` too; CI (Linux) runs the new UI's tests as well.
 
 ### 3. Filter bar
 
-- [ ] Converting between chips and `FilterExp`: pure functions with unit tests, including filters from older files.
-- [ ] Chips for text (pick values and match text) and numbers, NULL handling, read-only chips, All/Any, + Filter, Clear all.
-- [ ] The value list's queries, with the cap.
-- [ ] Applying changes as they're made, the delay before querying, and Esc to revert.
-- [ ] Histogram brushing sets the column's chip.
-- [ ] UI tests for each of these, and screenshots.
+- [x] Converting between chips and `FilterExp`: pure functions with unit tests, including filters from older files (`filterChips.ts`).
+- [x] Chips for text (pick values and match text) and numbers, NULL handling, read-only chips, All/Any, + Filter, Clear all (`components/ui/FilterBar.tsx`, `ChipEditor.tsx`).
+- [x] The value list's queries, with the cap (`filterQueries.ts`; 200 values).
+- [x] Applying changes as they're made, the delay before querying, and Esc to revert.
+- [x] Histogram brushing sets the column's chip.
+- [x] UI tests for each of these, and screenshots: the filter tests in `view-controls.e2e.ts` run against both UIs (`e2e/new-ui-controls.ts`), plus `filter-bar.e2e.ts`; screenshots with `SCREENSHOTS=1 TAD_UI=new`.
 
 ### 4. Header menu
 
@@ -177,6 +180,12 @@ Choices made while working on this alone, to check:
 - The old filter dialog's All/Any select doesn't show the saved choice. Not fixed, as the dialog is being replaced.
 - The old Columns table lists columns alphabetically; the new column list follows the display order. Is a sort-by-name option wanted?
 - Should the switch default to the new UI as soon as it does everything the old one does, or after a release with both?
+- The value list compares values as text: a date or boolean column's values are cast to VARCHAR, and the filter's `IN` list matches them as text. This works in DuckDB; other engines are untested.
+- Text matching uses `ILIKE` without escaping `%` and `_` (as the old dialog did), so searching for "50%" also matches "500". Escape them in reltab?
+- The value list's total ("Search 5 values") is an exact count of distinct values, not an approximate one. Check what it costs on large tables, and on Snowflake and BigQuery.
+- A chip that keeps every row (for example a new chip, before you change it) isn't part of the saved filter. It disappears when the view is reopened, and also when a histogram brush changes the filter.
+- Brushing an integer column's histogram keeps the whole numbers in the brushed range (so a brush from 7.6 to 11.4 keeps 8 to 11).
+- Esc reverts; clicking outside the popover (or its ×) keeps the change. There's no Cancel button.
 
 ## Ideas: not started without a go-ahead
 
@@ -187,3 +196,4 @@ Choices made while working on this alone, to check:
 
 - 2026-11-26: mock-up reviewed; plan written.
 - 2026-11-26: step 1 done: reltab filter tests, and UI tests for the sidebar and filter dialog (`e2e/view-controls.e2e.ts`, through `ViewControls`, with a Blueprint driver). Fixed loading nested filters and empty `IN` lists. The new tests showed Tad crashing when quitting during a query; fixed (reltab-duckdb `finishPendingWork`). File versions bumped to 4, with a warning for files from newer versions.
+- 2026-11-26: steps 2 and 3 done: the filter bar, behind `TAD_UI=new`. It replaces the footer, so the row counts moved into it ("N of T rows"; "N rows, from F of T" when pivoted).
