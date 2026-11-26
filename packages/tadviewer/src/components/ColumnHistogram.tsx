@@ -23,6 +23,14 @@ export interface NumericColumnHistogramProps {
     colId: string,
     range: [number, number] | null
   ) => void;
+  /**
+   * The chart's size in pixels. When given (as by DomDataGrid), the chart is
+   * drawn at that size in the grid's style: bars, the brush and the min / max
+   * values, with no y axis. Otherwise it scales to fit its container (as in
+   * the SlickGrid header row).
+   */
+  width?: number;
+  height?: number;
 }
 
 // gross hack to round to two decimal places:
@@ -33,12 +41,14 @@ function round(value: number, decimals: number): number {
       decimals
   );
 }
-export const NumericColumnHistogram = ({
+export const NumericColumnHistogram = React.memo(function NumericColumnHistogram({
   colType,
   histData,
   onHistogramBrushRange,
   onHistogramBrushFilter,
-}: NumericColumnHistogramProps) => {
+  width,
+  height,
+}: NumericColumnHistogramProps) {
   const {
     colId,
     binWidth,
@@ -72,6 +82,67 @@ export const NumericColumnHistogram = ({
     }
     onHistogramBrushFilter?.(colId, [minVal, maxVal]);
   };
+
+  if (width != null && height != null) {
+    const padding = { top: 6, bottom: 17, left: 8, right: 8 };
+    const domainMax = niceMinVal + binData.length * binWidth;
+    const plotWidth = Math.max(1, width - padding.left - padding.right);
+    const barWidth = Math.max(1, plotWidth / binData.length - 1);
+    const label = (tick: number) => tick.toLocaleString(undefined, fmtOpts);
+    // Only draw the brush when it selects part of the range:
+    const brushed = brushMinVal > niceMinVal || brushMaxVal < niceMaxVal;
+    return (
+      <VictoryChart
+        width={width}
+        height={height}
+        padding={padding}
+        domain={{ x: [niceMinVal, domainMax] }}
+        containerComponent={
+          <VictoryBrushContainer
+            responsive={false}
+            brushDimension="x"
+            brushDomain={{ x: [brushMinVal, brushMaxVal] }}
+            brushStyle={
+              brushed
+                ? {
+                    fill: "var(--tad-grid-histogram-brush)",
+                    stroke: "var(--tad-grid-selection-ring)",
+                    strokeWidth: 1,
+                  }
+                : { fill: "transparent", stroke: "none" }
+            }
+            onBrushDomainChange={handleBrush}
+            onBrushDomainChangeEnd={handleBrushEnd}
+          />
+        }
+      >
+        <VictoryAxis
+          tickValues={[niceMinVal, domainMax]}
+          tickFormat={(_tick: number, index: number) =>
+            label(index === 0 ? niceMinVal : niceMaxVal)
+          }
+          style={{
+            axis: { stroke: "var(--tad-grid-header-line)" },
+            ticks: { stroke: "none" },
+            tickLabels: {
+              fontSize: 9,
+              fontFamily: "inherit",
+              fill: "var(--tad-grid-text-dim)",
+              padding: 3,
+              textAnchor: ({ index }: any) => (index === 0 ? "start" : "end"),
+            },
+          }}
+        />
+        <VictoryBar
+          style={{ data: { fill: "var(--tad-grid-histogram-bar)" } }}
+          data={chartData}
+          x="binMid"
+          y="count"
+          barWidth={barWidth}
+        />
+      </VictoryChart>
+    );
+  }
 
   return (
     <VictoryChart
@@ -111,4 +182,4 @@ export const NumericColumnHistogram = ({
       />
     </VictoryChart>
   );
-};
+});

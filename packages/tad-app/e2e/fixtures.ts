@@ -109,7 +109,19 @@ export const test = base.extend<TadFixtures>({
         } catch (e) {}
       }
       await app.close();
-      fs.rmSync(userDataDir, { recursive: true, force: true });
+      // On Windows, Electron's helper processes can hold files in the user
+      // data directory for a moment after the app closes (EBUSY): retry, and
+      // don't fail the test over a temporary directory.
+      try {
+        fs.rmSync(userDataDir, {
+          recursive: true,
+          force: true,
+          maxRetries: 10,
+          retryDelay: 200,
+        });
+      } catch (e) {
+        console.warn(`couldn't remove ${userDataDir}: ${e}`);
+      }
     }
   },
 });

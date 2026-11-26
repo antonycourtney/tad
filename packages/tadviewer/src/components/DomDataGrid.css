@@ -64,6 +64,8 @@
   --tad-grid-true-text: #57534e;
   --tad-grid-link: #2965cc;
   --tad-grid-drop: #2ba5ff;
+  --tad-grid-histogram-bar: #9bbfe6;
+  --tad-grid-histogram-brush: rgba(43, 165, 255, 0.14);
 
   position: relative;
   width: 100%;
@@ -104,6 +106,8 @@
   --tad-grid-null-bg: #191817;
   --tad-grid-true-text: #cfc5bc;
   --tad-grid-link: #6cb4ff;
+  --tad-grid-histogram-bar: #3f6a96;
+  --tad-grid-histogram-brush: rgba(43, 165, 255, 0.2);
 }
 
 .tad-grid-scroller {

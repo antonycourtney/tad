@@ -258,6 +258,7 @@ test("brushing a column histogram filters the rows", async ({ openInTad }) => {
   const qtyCol = await dom.columnIndex("quantity");
   const histo = dom.root.locator(".tad-grid-histogram-cell").nth(qtyCol).locator("svg").first();
   await expect(histo).toBeVisible({ timeout: 30_000 });
+  await expect.poll(() => dom.clippedText()).toEqual([]);
   const b = (await histo.boundingBox())!;
   // Drag across part of the plot (inside the chart's padding):
   const y = b.y + b.height * 0.55;

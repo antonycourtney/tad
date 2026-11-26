@@ -81,7 +81,9 @@ const displayKind = (ct: reltab.ColumnType): string =>
  * Column width estimates, from text measured in the grid's font.
  */
 const CELL_PADDING = 16;
-const HEADER_EXTRAS = 16 + 22 + 18; // padding, type icon + gap, sort indicator
+// Header cell: padding (16), type icon and gap (~23), sort indicator and gap
+// (~16), and a little slack:
+const HEADER_EXTRAS = 60;
 const MAX_EST_WIDTH = 400;
 const MAX_ROWS_MEASURED = 500;
 
@@ -1347,6 +1349,8 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
                     colType={schema.columnType(meta.cid)}
                     onHistogramBrushRange={onHistogramBrushRange}
                     onHistogramBrushFilter={onHistogramBrushFilter}
+                    width={ci.size - 1}
+                    height={HISTOGRAM_HEIGHT - 1}
                   />
                 ) : null}
               </div>

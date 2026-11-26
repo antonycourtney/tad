@@ -1,6 +1,7 @@
 /*
  * Screenshots of the grid, for looking at its styling. Not part of the normal
- * test run: set SCREENSHOTS=1. Images go to e2e-results/screenshots/.
+ * test run: set SCREENSHOTS=1. Images go to e2e-screenshots/ (which, unlike
+ * e2e-results/, isn't cleared by the next test run).
  */
 import * as fs from "fs";
 import * as path from "path";
@@ -17,7 +18,7 @@ import {
 test.skip(!process.env.SCREENSHOTS, "set SCREENSHOTS=1 to take screenshots");
 
 const shot = (name: string) =>
-  path.resolve(__dirname, "..", "e2e-results", "screenshots", `${GRID_IMPL}-${name}.png`);
+  path.resolve(__dirname, "..", "e2e-screenshots", `${GRID_IMPL}-${name}.png`);
 
 const windowSize = { width: 1280, height: 720 };
 
