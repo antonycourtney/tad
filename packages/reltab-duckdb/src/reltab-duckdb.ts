@@ -29,8 +29,10 @@ import {
   TextSummaryStats,
 } from "reltab"; // eslint-disable-line
 import { initS3 } from "./s3utils";
+import { trackWork } from "./pendingWork";
 
 export * from "./csvimport";
+export { finishPendingWork, pendingWorkCount } from "./pendingWork";
 
 const columnTypes = DuckDBDialect.columnTypes;
 
@@ -92,8 +94,8 @@ class ConnectionPool {
     if (this.pool.length > 0) {
       return this.pool.pop()!;
     } else {
-      const conn = await this.db.connect();
-      await initS3(conn);
+      const conn = await trackWork(() => this.db.connect());
+      await trackWork(() => initS3(conn), conn);
       return conn;
     }
   }
@@ -234,7 +236,7 @@ export class DuckDBDriver implements DbDriver {
     let ret: Row[];
     try {
       log.info("runSqlQuery:\n", query);
-      const reader = await conn.runAndReadAll(query);
+      const reader = await trackWork(() => conn.runAndReadAll(query), conn);
       ret = reader.convertRowObjects(tadValueConverter) as Row[];
     } finally {
       this.connPool.giveBack(conn);
@@ -324,11 +326,11 @@ const duckdbDataSourceProvider: DataSourceProvider = {
   providerName: "duckdb",
   connect: async (resourceId: any): Promise<DataSourceConnection> => {
     const dbfile = resourceId as string;
-    const db = await DuckDBInstance.create(dbfile);
-    await loadExtensions(db);
+    const db = await trackWork(() => DuckDBInstance.create(dbfile));
+    await trackWork(() => loadExtensions(db));
     // turn on fast parallel CSV loading:
     // await db.exec("SET experimental_parallel_csv=true;");
-    const dbConn = await db.connect();
+    const dbConn = await trackWork(() => db.connect());
     const driver = new DuckDBDriver(dbfile, db, dbConn);
     const dsConn = new DbDataSource(driver);
     return dsConn;

@@ -494,6 +494,21 @@ const main = () => {
       }
     );
 
+    // Exiting while a DuckDB query is running crashes the process, so
+    // finish (interrupt) DuckDB work first:
+    let duckDBWorkFinished = false;
+    app.on("will-quit", (event) => {
+      if (!duckDBWorkFinished) {
+        event.preventDefault();
+        reltabDuckDB.finishPendingWork().finally(() => {
+          duckDBWorkFinished = true;
+          // Not straight away: while this will-quit is being handled,
+          // Electron ignores app.quit().
+          setImmediate(() => app.quit());
+        });
+      }
+    });
+
     app.setName("Tad");
     initApp(firstInstance)(process.argv, null);
   }

@@ -7,6 +7,7 @@ import * as path from "path";
 import { DuckDBInstance } from "@duckdb/node-api";
 import * as prettyHRTime from "pretty-hrtime";
 import { initS3 } from "./s3utils";
+import { trackWork } from "./pendingWork";
 let uniqMap: { [cid: string]: number } = {};
 
 /* add a numeric _N suffix to an identifer to make it unique */
@@ -56,22 +57,25 @@ export const nativeCSVImport = async (
 ): Promise<string> => {
   const importStart = process.hrtime();
 
-  const dbConn = await db.connect();
+  const dbConn = await trackWork(() => db.connect());
   try {
-    await initS3(dbConn);
+    await trackWork(() => initS3(dbConn), dbConn);
     if (!tableName) {
       tableName = genTableName(filePath);
     }
     const query = `CREATE OR REPLACE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}')`;
     // console.log('nativeCSVImport: executing: ', query);
     try {
-      await dbConn.run(query);
+      await trackWork(() => dbConn.run(query), dbConn);
     } catch (err) {
       console.log("caught exception while importing: ", err);
       console.log("retrying with SAMPLE_SIZE=-1:");
       const noSampleQuery = `CREATE OR REPLACE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${filePath}', sample_size=-1)`;
       try {
-        const reader = await dbConn.runAndReadAll(noSampleQuery);
+        const reader = await trackWork(
+          () => dbConn.runAndReadAll(noSampleQuery),
+          dbConn
+        );
         const info = reader.getRowObjectsJS()[0];
         log.debug('nativeCSVImport: info.Count: "' + info?.Count + '"');
       } catch (noSampleErr) {
@@ -101,9 +105,9 @@ export const nativeParquetImport = async (
 ): Promise<string> => {
   const importStart = process.hrtime();
 
-  const dbConn = await db.connect();
+  const dbConn = await trackWork(() => db.connect());
   try {
-    await initS3(dbConn);
+    await trackWork(() => initS3(dbConn), dbConn);
     if (!tableName) {
       tableName = genTableName(filePath);
     }
@@ -111,7 +115,7 @@ export const nativeParquetImport = async (
     log.debug("*** parquet import: ", query);
     try {
       // Creating a view doesn't return a useful result.
-      await dbConn.run(query);
+      await trackWork(() => dbConn.run(query), dbConn);
     } catch (err) {
       console.log("caught exception while importing: ", err);
       throw err;
