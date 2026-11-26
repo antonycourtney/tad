@@ -534,6 +534,9 @@ const createGridState = (
   return gs;
 };
 
+/** A panel shown in place of a header menu, such as "format". */
+export type HeaderPanel = string;
+
 export interface DataGridProps {
   dataView: PagedDataView | null | undefined;
   showColumnHistograms?: boolean;
@@ -557,6 +560,14 @@ export interface DataGridProps {
   ) => void;
   sortKey?: [string, boolean][];
   onSetSortKey?: (sortKey: [string, boolean][]) => void;
+  /**
+   * The new UI's column header menu (DomDataGrid only): the menu (Radix
+   * DropdownMenu content) for a column, which can replace itself with a
+   * panel (such as the format editor) through showPanel.
+   */
+  renderHeaderMenu?: (column: string, showPanel: (panel: HeaderPanel) => void) => JSX.Element;
+  /** A header menu's panel (shown in a popover), from the current view. */
+  renderHeaderPanel?: (column: string, panel: HeaderPanel, close: () => void) => JSX.Element | null;
   onGridClick?: (
     row: number,
     column: number,

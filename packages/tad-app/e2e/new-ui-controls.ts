@@ -1,6 +1,8 @@
 /*
  * ViewControls driver for the new UI (TAD_UI=new). So far the new UI has
- * only its filter bar (below the grid), so the sidebar is still Blueprint's.
+ * its filter bar (below the grid) and the column header menu (with the DOM
+ * grid), so the sidebar is still Blueprint's. Column formats and
+ * aggregations are set through the header menu.
  *
  * The filter bar has a chip per condition: text columns pick values or match
  * text, number columns keep a range. Each reltab condition the tests ask for
@@ -10,7 +12,9 @@
  */
 import { expect, Locator } from "@playwright/test";
 import { BlueprintControls } from "./blueprint-controls";
-import type { FilterCondition, Match } from "./view-controls";
+import type { FilterCondition, Match, NumberFormat, TextFormat } from "./view-controls";
+
+const METHOD_LABELS = { auto: "Auto", full: "Full", custom: "Custom" };
 
 const MATCH_OPS: Record<string, string> = {
   CONTAINS: "contains",
@@ -22,6 +26,88 @@ const MATCH_OPS: Record<string, string> = {
 };
 
 export class NewUIControls extends BlueprintControls {
+  /** The header menu is the DOM grid's. */
+  private readonly headerMenus = (process.env.TAD_GRID ?? "dom") === "dom";
+
+  // --- the column header menu ---
+
+  private async openHeaderMenu(column: string): Promise<void> {
+    const header = this.page.locator(`.tad-grid-header-cell[data-col-id="${column}"]`);
+    await header.scrollIntoViewIfNeeded();
+    await header.click({ button: "right" });
+    await expect(this.page.getByRole("menu")).toBeVisible();
+  }
+
+  private async openFormatEditor(column: string): Promise<Locator> {
+    await this.openHeaderMenu(column);
+    await this.page.getByRole("menuitem", { name: "Format…" }).click();
+    const editor = this.page.locator(".tui-pop", { has: this.page.locator(".tui-preview") });
+    await expect(editor).toBeVisible();
+    return editor;
+  }
+
+  private async closeFormatEditor(editor: Locator): Promise<void> {
+    await editor.getByRole("button", { name: "Close" }).click();
+    await expect(editor).toBeHidden();
+  }
+
+  private async setSwitch(within: Locator, name: string, on: boolean): Promise<void> {
+    const sw = within.getByRole("switch", { name });
+    if ((await sw.getAttribute("aria-checked")) !== String(on)) {
+      await sw.click();
+    }
+    await expect(sw).toHaveAttribute("aria-checked", String(on));
+  }
+
+  async setColumnNumberFormat(column: string, format: NumberFormat): Promise<void> {
+    if (!this.headerMenus) {
+      return super.setColumnNumberFormat(column, format);
+    }
+    const editor = await this.openFormatEditor(column);
+    if (format.method) {
+      const button = editor.getByRole("button", { name: METHOD_LABELS[format.method], exact: true });
+      await button.click();
+      await expect(button).toHaveAttribute("aria-pressed", "true");
+    }
+    if (format.decimals !== undefined) {
+      const input = editor.getByRole("spinbutton", { name: "Decimal places" });
+      await input.fill(String(format.decimals));
+      await expect(input).toHaveValue(String(format.decimals));
+    }
+    if (format.exponential !== undefined) {
+      await this.setSwitch(editor, "Scientific notation", format.exponential);
+    }
+    if (format.commas !== undefined) {
+      await this.setSwitch(editor, "1,000s separator", format.commas);
+    }
+    await this.closeFormatEditor(editor);
+  }
+
+  async setColumnTextFormat(column: string, format: TextFormat): Promise<void> {
+    if (!this.headerMenus) {
+      return super.setColumnTextFormat(column, format);
+    }
+    const editor = await this.openFormatEditor(column);
+    if (format.urlsAsLinks !== undefined) {
+      await this.setSwitch(editor, "Show URLs as links", format.urlsAsLinks);
+    }
+    await this.closeFormatEditor(editor);
+  }
+
+  async setAggregation(column: string, agg: string): Promise<void> {
+    if (!this.headerMenus) {
+      return super.setAggregation(column, agg);
+    }
+    await this.openHeaderMenu(column);
+    await this.page.getByRole("menuitem", { name: /^Aggregation/ }).click();
+    await this.page
+      .getByRole("menuitemradio", { name: agg === "null" ? "none" : agg, exact: true })
+      .click();
+    await expect(this.page.getByRole("menu")).toHaveCount(0);
+  }
+
+  // --- the filter bar ---
+
   private get filterBar(): Locator {
     return this.page.locator(".tui-filterbar");
   }

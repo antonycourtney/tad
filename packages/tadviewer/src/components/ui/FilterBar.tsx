@@ -22,6 +22,7 @@ import {
   Match,
   newChip,
 } from "../../filterChips";
+import { onColumnFilterRequest } from "../../uiEvents";
 import { ChipEditor, ChipEditorContext } from "./ChipEditor";
 import "./ui.css";
 
@@ -154,14 +155,31 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const addFilter = (column: string) => {
     const chip = newChip(column, schema.columnType(column));
     const [bc] = withIds([chip]);
+    // (Esc in the new chip's popover removes it.)
+    const before = latest.current;
     setBar({ ...latest.current, chips: [...latest.current.chips, bc] });
     setAddOpen(false);
     // Open the new chip's popover once the column list has closed:
     setTimeout(() => {
-      beforeOpen.current = latest.current;
+      beforeOpen.current = before;
       setOpenId(bc.id);
     }, 0);
   };
+
+  // "Filter…" in a column's header menu: open the column's chip, or add one.
+  const filterRequest = useRef<(column: string) => void>();
+  filterRequest.current = (column: string) => {
+    const existing = latest.current.chips.find((c) => c.chip.column === column);
+    if (existing) {
+      openChip(existing.id);
+    } else {
+      addFilter(column);
+    }
+  };
+  useEffect(
+    () => onColumnFilterRequest((column) => setTimeout(() => filterRequest.current?.(column), 0)),
+    []
+  );
 
   const editorContext = (id: number, column: string | null): ChipEditorContext => {
     const others = chipsToFilterExp({
@@ -284,6 +302,13 @@ const AddFilter: React.FC<{
   onPick: (column: string) => void;
 }> = ({ schema, open, onOpenChange, onPick }) => {
   const [search, setSearch] = useState("");
+  // Picking a column opens its chip's popover, which takes the focus; so the
+  // list mustn't give the focus back to "+ Filter" as it closes:
+  const picked = useRef(false);
+  const pick = (column: string) => {
+    picked.current = true;
+    onPick(column);
+  };
   const q = search.trim().toLowerCase();
   const columns = schema.columns.filter(
     (c) => q === "" || schema.displayName(c).toLowerCase().includes(q)
@@ -310,6 +335,12 @@ const AddFilter: React.FC<{
           sideOffset={8}
           collisionPadding={8}
           aria-label="Filter by column"
+          onCloseAutoFocus={(e) => {
+            if (picked.current) {
+              e.preventDefault();
+              picked.current = false;
+            }
+          }}
         >
           <div className="tui-poph">
             <span className="tui-poph-title">Filter by column</span>
@@ -325,7 +356,7 @@ const AddFilter: React.FC<{
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && columns.length > 0) {
-                  onPick(columns[0]);
+                  pick(columns[0]);
                 }
               }}
             />
@@ -338,7 +369,7 @@ const AddFilter: React.FC<{
                 role="menuitem"
                 className="tui-mi"
                 data-column={c}
-                onClick={() => onPick(c)}
+                onClick={() => pick(c)}
               >
                 <span className="tui-typeicon" aria-hidden="true">
                   {colIsNumeric(schema.columnType(c)) ? "123" : "A"}

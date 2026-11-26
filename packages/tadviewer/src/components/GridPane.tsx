@@ -8,7 +8,9 @@ import { DataRow } from "../PagedDataView";
 import { ViewState } from "../ViewState";
 import * as actions from "../actions";
 import * as util from "../util";
-import { DataGrid, DataGridProps } from "./DataGrid";
+import { DataGrid, DataGridProps, HeaderPanel } from "./DataGrid";
+import { HeaderMenu, HeaderPanelContent } from "./ui/HeaderMenu";
+import { newUI } from "../uiImpl";
 import { DomDataGrid } from "./DomDataGrid";
 import { GlideDataGrid } from "./GlideDataGrid";
 import { SimpleClipboard } from "./SimpleClipboard";
@@ -211,6 +213,37 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
 
   const isPivoted = viewParams.vpivots.length > 0;
 
+  const renderHeaderMenu = React.useMemo(
+    () =>
+      newUI
+        ? (column: string, showPanel: (panel: HeaderPanel) => void) => (
+            <HeaderMenu
+              column={column}
+              viewState={viewState}
+              stateRef={stateRef}
+              showPanel={showPanel}
+            />
+          )
+        : undefined,
+    [viewState, stateRef]
+  );
+
+  const renderHeaderPanel = React.useMemo(
+    () =>
+      newUI
+        ? (column: string, panel: HeaderPanel, close: () => void) => (
+            <HeaderPanelContent
+              column={column}
+              panel={panel}
+              viewState={viewState}
+              stateRef={stateRef}
+              onClose={close}
+            />
+          )
+        : undefined,
+    [viewState, stateRef]
+  );
+
   const dataGridProps: DataGridProps = {
     dataView,
     showColumnHistograms,
@@ -228,6 +261,8 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
     onGridClick,
     onGridSelectionChange,
     onSetColumnOrder,
+    renderHeaderMenu,
+    renderHeaderPanel,
     sortKey,
     isPivoted,
     clipboard,

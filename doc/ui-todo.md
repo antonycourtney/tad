@@ -141,7 +141,7 @@ The filter bar replaces the dialog and lives in the footer.
 
 ### 4. Header menu
 
-- [ ] The ▾ button and right-click menu, with its sort, pivot, filter, format, hide and aggregation items.
+- [x] The ▾ button and right-click menu, with its sort, pivot, filter, format, hide and aggregation items (`components/ui/HeaderMenu.tsx`; DOM grid only). "Format…" opens the format editor (`components/ui/FormatEditor.tsx`), which the sidebar will reuse.
 
 ### 5. Sidebar
 
@@ -185,7 +185,11 @@ Choices made while working on this alone, to check:
 - The value list's total ("Search 5 values") is an exact count of distinct values, not an approximate one. Check what it costs on large tables, and on Snowflake and BigQuery.
 - A chip that keeps every row (for example a new chip, before you change it) isn't part of the saved filter. It disappears when the view is reopened, and also when a histogram brush changes the filter.
 - Brushing an integer column's histogram keeps the whole numbers in the brushed range (so a brush from 7.6 to 11.4 keeps 8 to 11).
-- Esc reverts; clicking outside the popover (or its ×) keeps the change. There's no Cancel button.
+- Esc reverts; clicking outside the popover (or its ×) keeps the change. There's no Cancel button. Esc in a chip that was just added (by + Filter, or the header menu's Filter…) removes it.
+- The header menu's Sort ascending/descending replaces the sort, as clicking the header does, unless the view already sorts by that column; then it only changes that column's direction. Should it offer "Add to sort" too (Shift-click on the header does that)?
+- Right-clicking a header opens its menu below the ▾ button, not at the pointer.
+- The aggregation "null" is shown as "none" in the header menu.
+- Only the DOM grid has the header menu; the Glide grid (TAD_GRID=glide) doesn't.
 
 ## Ideas: not started without a go-ahead
 
@@ -197,3 +201,4 @@ Choices made while working on this alone, to check:
 - 2026-11-26: mock-up reviewed; plan written.
 - 2026-11-26: step 1 done: reltab filter tests, and UI tests for the sidebar and filter dialog (`e2e/view-controls.e2e.ts`, through `ViewControls`, with a Blueprint driver). Fixed loading nested filters and empty `IN` lists. The new tests showed Tad crashing when quitting during a query; fixed (reltab-duckdb `finishPendingWork`). File versions bumped to 4, with a warning for files from newer versions.
 - 2026-11-26: steps 2 and 3 done: the filter bar, behind `TAD_UI=new`. It replaces the footer, so the row counts moved into it ("N of T rows"; "N rows, from F of T" when pivoted).
+- 2026-11-26: step 4 done: the column header menu, and the format editor. CI now runs every UI test with the new UI as well.

@@ -115,8 +115,8 @@ jobs:
           pathToPublish: packages/tad-app/e2e-results
           artifactName: LinuxUITestResults
       # The new UI (TAD_UI=new, see doc/ui-todo.md), while it's being built:
-      # the tests of what it has so far.
-      - script: xvfb-run -a --server-args="-screen 0 1920x1080x24" npx playwright test e2e/view-controls.e2e.ts e2e/filter-bar.e2e.ts
+      # every UI test again, with the new UI.
+      - script: xvfb-run -a --server-args="-screen 0 1920x1080x24" npx playwright test
         workingDirectory: packages/tad-app
         displayName: "UI tests (new UI)"
         condition: succeededOrFailed()

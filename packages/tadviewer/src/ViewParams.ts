@@ -354,6 +354,11 @@ export class ViewParams
     return this.set("columnFormats", nextFmts) as ViewParams;
   }
 
+  /** The column goes back to the default format for its type. */
+  clearColumnFormat(cid: string): ViewParams {
+    return this.set("columnFormats", this.columnFormats.delete(cid)) as ViewParams;
+  }
+
   /**
    * Deserialize ViewParams saved in .tad file format version
    * `fileFormatVersion` (by default, the current version).

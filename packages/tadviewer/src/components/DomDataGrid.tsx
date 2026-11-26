@@ -20,6 +20,8 @@
  * the grid, column histograms for the pivot column, a row number column.
  */
 import { Icon } from "@blueprintjs/core";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import * as Popover from "@radix-ui/react-popover";
 import {
   defaultRangeExtractor,
   observeElementRect,
@@ -34,9 +36,10 @@ import * as React from "react";
 import * as reltab from "reltab";
 import { DataRow, PagedDataView } from "../PagedDataView";
 import { NumericColumnHistogram } from "./ColumnHistogram";
-import { DataGridProps } from "./DataGrid";
+import { DataGridProps, HeaderPanel } from "./DataGrid";
 import "./DomDataGrid.css";
 import { LoadingModal } from "./LoadingModal";
+import { ChevronDown } from "./ui/icons";
 import * as ss from "./scaledScroll";
 
 const ROW_HEIGHT = 28; // 27px of content plus a 1px grid line
@@ -407,6 +410,11 @@ const GridRow = React.memo(function GridRow({
   );
 });
 
+interface HeaderMenuState {
+  cid: string;
+  panel: HeaderPanel | null;
+}
+
 const clamp = (x: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(x, hi));
 
@@ -432,6 +440,8 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
     onGridClick,
     onGridSelectionChange,
     onSetColumnOrder,
+    renderHeaderMenu,
+    renderHeaderPanel,
     clipboard,
     embedded,
   } = props;
@@ -1124,7 +1134,9 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (rowCount === 0 || columns.length === 0) {
+    // (Keys in a header menu or popover, which React passes up from the
+    // portal they're rendered in, aren't for the grid.)
+    if (!fromGrid(e) || rowCount === 0 || columns.length === 0) {
       return;
     }
     const mod = e.metaKey || e.ctrlKey;
@@ -1200,6 +1212,82 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
 
   const [dropX, setDropX] = React.useState<number | null>(null);
 
+  /** Whether an event happened in the grid (not in a menu's portal). */
+  const fromGrid = (e: React.SyntheticEvent) =>
+    rootRef.current?.contains(e.target as Node) ?? false;
+
+  // The open header menu (new UI): its column, and the panel (such as the
+  // format editor) shown in place of the menu, if any.
+  const [headerMenu, setHeaderMenu] = React.useState<HeaderMenuState | null>(null);
+
+  const headerMenuButton = (cid: string, title: string): JSX.Element => {
+    const state = headerMenu?.cid === cid ? headerMenu : null;
+    const close = () => setHeaderMenu((m) => (m?.cid === cid ? null : m));
+    const button = (
+      <button
+        type="button"
+        className="tad-grid-header-menu-btn"
+        aria-label={`${title} column menu`}
+        aria-haspopup="menu"
+        onPointerDown={(e) => {
+          if (e.button !== 0) {
+            return;
+          }
+          if (state === null) {
+            e.preventDefault();
+            setHeaderMenu({ cid, panel: null });
+          } else if (state.panel !== null) {
+            close();
+          }
+          // (An open menu's trigger closes it.)
+        }}
+        onKeyDown={(e) => {
+          if (state === null && (e.key === "Enter" || e.key === " " || e.key === "ArrowDown")) {
+            e.preventDefault();
+            setHeaderMenu({ cid, panel: null });
+          }
+          e.stopPropagation();
+        }}
+      >
+        <ChevronDown size={12} strokeWidth={2} />
+      </button>
+    );
+    if (state === null || !renderHeaderMenu) {
+      return button;
+    }
+    if (state.panel === null) {
+      return (
+        <DropdownMenu.Root open modal={false} onOpenChange={(open) => !open && close()}>
+          <DropdownMenu.Trigger asChild>{button}</DropdownMenu.Trigger>
+          {renderHeaderMenu(cid, (panel) =>
+            // After the menu has closed:
+            setTimeout(() => setHeaderMenu({ cid, panel }), 0)
+          )}
+        </DropdownMenu.Root>
+      );
+    }
+    const panel = state.panel;
+    if (!renderHeaderPanel) {
+      return button;
+    }
+    return (
+      <Popover.Root open onOpenChange={(open) => !open && close()}>
+        <Popover.Anchor asChild>{button}</Popover.Anchor>
+        <Popover.Portal>
+          <Popover.Content
+            className="tad-ui tui-pop"
+            side="bottom"
+            align="end"
+            sideOffset={4}
+            collisionPadding={8}
+          >
+            {renderHeaderPanel(cid, panel, close)}
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+    );
+  };
+
   // Insertion index (0..n) for a column dropped at clientX:
   const dropIndexAt = (clientX: number): number => {
     const el = scrollerRef.current!;
@@ -1226,7 +1314,11 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
   };
 
   const handleHeaderPointerDown = (e: React.PointerEvent, colIndex: number) => {
-    if (e.button !== 0) {
+    if (
+      e.button !== 0 ||
+      !fromGrid(e) ||
+      (e.target as HTMLElement).closest(".tad-grid-header-menu-btn")
+    ) {
       return;
     }
     const meta = columns[colIndex];
@@ -1306,6 +1398,8 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
     return layoutColumns(colItems, frozenCount, (ci, frozenClass) => {
       const meta = columns[ci.index];
       const si = sortInfo.get(meta.cid);
+      const hasMenu = renderHeaderMenu != null && !meta.cid.startsWith("_");
+      const menuOpen = headerMenu?.cid === meta.cid;
       return (
         <div
           key={ci.index}
@@ -1314,10 +1408,22 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
           aria-sort={si ? (si[1] ? "ascending" : "descending") : undefined}
           data-col={ci.index}
           data-col-id={meta.cid}
-          className={"tad-grid-header-cell" + frozenClass}
+          className={
+            "tad-grid-header-cell" + frozenClass + (menuOpen ? " tad-grid-header-menu-open" : "")
+          }
           style={{ width: ci.size }}
           title={meta.title}
           onPointerDown={(e) => headerHandlers.current.down(e, ci.index)}
+          onContextMenu={
+            hasMenu
+              ? (e) => {
+                  if (fromGrid(e)) {
+                    e.preventDefault();
+                    setHeaderMenu({ cid: meta.cid, panel: null });
+                  }
+                }
+              : undefined
+          }
         >
           <span className="tad-grid-type-icon">
             <TypeIcon kind={meta.kind} />
@@ -1329,6 +1435,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
               {multiSort ? si[0] + 1 : null}
             </span>
           ) : null}
+          {hasMenu ? headerMenuButton(meta.cid, meta.title) : null}
           <span
             className="tad-grid-resize-handle"
             onPointerDown={(e) => headerHandlers.current.resize(e, ci.index)}
@@ -1336,7 +1443,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
         </div>
       );
     });
-  }, [colItems, frozenCount, columns, sortKey]);
+  }, [colItems, frozenCount, columns, sortKey, headerMenu, renderHeaderMenu, renderHeaderPanel]);
 
   const histogramCells = React.useMemo(
     () =>

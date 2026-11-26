@@ -453,6 +453,13 @@ export const setColumnFormatOptions = (
   );
 };
 
+export const clearColumnFormat = (cid: string, stateRef: StateRef<AppState>) => {
+  update(
+    stateRef,
+    vpUpdate((viewParams) => viewParams.clearColumnFormat(cid))
+  );
+};
+
 export const setShowHiddenCols = (
   show: boolean,
   stateRef: StateRef<AppState>

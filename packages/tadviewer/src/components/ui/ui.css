@@ -636,3 +636,161 @@
   font-size: 10.5px;
   color: var(--tad-grid-text-dim);
 }
+
+/* --- dropdown menus (Radix DropdownMenu) --- */
+
+.tui-menu {
+  z-index: 30;
+  min-width: 210px;
+  background: var(--tui-surface);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-shadow: var(--tui-shadow);
+  padding: 4px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.tui-menu.tui-submenu {
+  min-width: 170px;
+}
+
+.tui-menu .tui-mi {
+  outline: none;
+  user-select: none;
+}
+
+.tui-menu .tui-mi[data-highlighted],
+.tui-menu .tui-mi[data-state="open"] {
+  background: var(--tui-subtle-bg);
+}
+
+.tui-menu .tui-mi[data-disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tui-mi-icon {
+  flex: none;
+  display: inline-flex;
+  width: 14px;
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-mi-check {
+  margin-left: auto;
+  display: inline-flex;
+  color: var(--tui-accent);
+}
+
+.tui-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--tui-border);
+}
+
+.tui-menu-label {
+  padding: 4px 8px 6px;
+  font-size: 10.5px;
+  color: var(--tad-grid-text-dim);
+}
+
+/* --- the format editor --- */
+
+.tui-preview {
+  margin: 0 6px 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  background: var(--tui-code-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tui-preview > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tui-preview.tui-numeric > div {
+  text-align: right;
+}
+
+.tui-preview-link {
+  color: var(--tad-grid-link);
+  text-decoration: underline;
+}
+
+.tui-stepper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.tui-stepper .tui-input {
+  flex: none;
+  width: 44px;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.tui-stepper .tui-input::-webkit-inner-spin-button,
+.tui-stepper .tui-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* A labelled switch (role="switch"): a pale track with a blue mark when on. */
+.tui-switchrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.tui-switchrow:hover {
+  background: var(--tui-subtle-bg);
+}
+
+.tui-switch {
+  margin-left: auto;
+  flex: none;
+  position: relative;
+  width: 26px;
+  height: 15px;
+  border-radius: 8px;
+  background: var(--tui-border);
+  transition: background 0.12s;
+}
+
+.tui-switch > span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--tui-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: left 0.12s;
+}
+
+.tui-switchrow[aria-checked="true"] .tui-switch {
+  background: var(--tui-pale-border);
+}
+
+.tui-switchrow[aria-checked="true"] .tui-switch > span {
+  left: 13px;
+  background: var(--tui-mark);
+}
+
