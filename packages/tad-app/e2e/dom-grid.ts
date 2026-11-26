@@ -174,6 +174,17 @@ export class DomGrid implements GridDriver {
     }, row);
   }
 
+  /** Text of the rendered cells and headers that don't fit their width. */
+  async clippedText(): Promise<string[]> {
+    return this.root.evaluate((root) =>
+      Array.from(
+        root.querySelectorAll<HTMLElement>('[role="gridcell"], .tad-grid-header-title')
+      )
+        .filter((el) => el.scrollWidth > el.clientWidth)
+        .map((el) => `${el.textContent} (${el.clientWidth}px < ${el.scrollWidth}px)`)
+    );
+  }
+
   /** Index of the first fully visible row. */
   async firstVisibleRow(): Promise<number> {
     return this.root.evaluate((root) => {

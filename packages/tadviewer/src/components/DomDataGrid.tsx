@@ -86,6 +86,11 @@ const MAX_EST_WIDTH = 400;
 const MAX_ROWS_MEASURED = 500;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
+/**
+ * Width of text in a font. The grid shows tabular digits ("tnum"), which a
+ * canvas can't, so every digit is measured as a "0", plus 0.025em: Inter's
+ * tabular digits are about 3% wider than its proportional zero.
+ */
 const measureText = (text: string, font: string): number => {
   if (measureCtx == null) {
     measureCtx = document.createElement("canvas").getContext("2d");
@@ -94,7 +99,15 @@ const measureText = (text: string, font: string): number => {
     return 7 * text.length;
   }
   measureCtx.font = font;
-  return measureCtx.measureText(text).width;
+  const zeroed = text.replace(/[0-9]/g, "0");
+  let digits = 0;
+  for (let i = 0; i < zeroed.length; i++) {
+    if (zeroed.charCodeAt(i) === 48) {
+      digits++;
+    }
+  }
+  const size = parseFloat(/([\d.]+)px/.exec(font)?.[1] ?? "12");
+  return measureCtx.measureText(zeroed).width + digits * 0.025 * size;
 };
 
 const htmlText = (html: string): string =>
@@ -113,12 +126,23 @@ const DEFAULT_FONTS: GridFonts = {
   header: '500 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
 };
 
+interface WidthEstimate {
+  width: number;
+  /**
+   * Whether any of the rows measured had a value in the column. A column
+   * with none (e.g. a leaf-only column while a pivot is collapsed) is
+   * measured again when more rows are loaded.
+   */
+  hasValues: boolean;
+}
+
 function estimateColWidth(
   meta: ColumnMeta,
   dataView: PagedDataView,
   fonts: GridFonts
-): number {
+): WidthEstimate {
   let width = 0;
+  let hasValues = false;
   const offset = dataView.getOffset();
   const end = offset + Math.min(dataView.getItemCount(), MAX_ROWS_MEASURED);
   for (let i = offset; i < end; i++) {
@@ -133,17 +157,24 @@ function estimateColWidth(
         16 +
         measureText(text, item._isLeaf ? fonts.cell : "600 " + fonts.cell);
       width = Math.max(width, w);
+      hasValues = true;
     } else {
       const val = item[meta.cid];
+      if (val != null) {
+        hasValues = true;
+      }
       const [html] = cellContent(meta, val, true);
       // (bold allows for aggregate rows)
       width = Math.max(width, measureText(htmlText(html), "600 " + fonts.cell));
     }
   }
   const headerWidth = measureText(meta.title, fonts.header) + HEADER_EXTRAS;
-  return Math.round(
-    clamp(Math.max(width + CELL_PADDING + 2, headerWidth), 60, MAX_EST_WIDTH)
-  );
+  return {
+    width: Math.round(
+      clamp(Math.max(width + CELL_PADDING + 2, headerWidth), 60, MAX_EST_WIDTH)
+    ),
+    hasValues,
+  };
 }
 
 const rawText = (val: any): string => {
@@ -467,7 +498,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
   const [userWidths, setUserWidths] = React.useState<{ [cid: string]: number }>(
     {}
   );
-  const estWidths = React.useRef<{ [cid: string]: number }>({});
+  const estWidths = React.useRef<{ [cid: string]: WidthEstimate }>({});
   const estFonts = React.useRef(fonts);
   const colWidths: number[] = React.useMemo(() => {
     if (estFonts.current !== fonts) {
@@ -480,16 +511,24 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
       if (userWidth != null) {
         return userWidth;
       }
+      const isPivot = meta.cid === "_pivot";
       const cached = estWidths.current[meta.cid];
-      if (cached != null && meta.cid !== "_pivot") {
-        return cached;
-      }
       if (!hasData) {
-        return DEFAULT_COL_WIDTH;
+        return cached?.width ?? DEFAULT_COL_WIDTH;
+      }
+      // Widths are kept once measured, so they don't change as you scroll;
+      // but the pivot column is measured for each view, and a column that
+      // was blank is measured again when there are more rows:
+      if (cached != null && cached.hasValues && !isPivot) {
+        return cached.width;
       }
       const est = estimateColWidth(meta, dataView!, fonts);
+      if (cached != null && !isPivot) {
+        // (no narrower than before, so the columns don't jump around)
+        est.width = Math.max(est.width, cached.width);
+      }
       estWidths.current[meta.cid] = est;
-      return est;
+      return est.width;
     });
   }, [columns, userWidths, dataView, fonts]);
 
@@ -524,6 +563,23 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
     const cs = getComputedStyle(root);
     const cell = `${cs.fontSize} ${cs.fontFamily}`;
     setFonts((f) => (f.cell === cell ? f : { cell, header: "500 " + cell }));
+    // Measure again once the (web) font has loaded, if it wasn't already:
+    let cancelled = false;
+    const fontSet = document.fonts;
+    if (fontSet && !fontSet.check(cell)) {
+      Promise.all(
+        [cell, "500 " + cell, "600 " + cell].map((font) => fontSet.load(font))
+      )
+        .then(() => {
+          if (!cancelled) {
+            setFonts({ cell, header: "500 " + cell });
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+    };
   }, [dataView != null]);
 
   // Height of the scroller's visible area below the header:

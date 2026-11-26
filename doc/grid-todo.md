@@ -23,10 +23,12 @@ CI builds every push to master. Bugs get a regression test where one is practica
 
 - [x] **Wheel scrolling cuts off the top row.** After scrolling down and back to the top with a mouse wheel, the top row is cut off. Using the scrollbar doesn't do it. (Reported 2026-11-26.)
   - Fixed: the rows only moved when TanStack re-rendered, which it does only when the range of rows changes. Small wheel steps were therefore lost, and scrolling moved in whole-row jumps. The offset is now applied on every scroll.
-- [ ] **Some column widths are too narrow.** Examples: a cut-off "order…" header once it's sorted, and cut-off pivot totals ("4,999,950,0…").
+- [x] **Some column widths are too narrow.** Examples: a cut-off "order…" header once it's sorted, and cut-off pivot totals ("4,999,950,0…").
   - Widths are measured on a canvas, which can't use `-apple-system`, so it measures in a different font from the one shown.
   - The canvas also ignores tabular digits (`tnum`).
-- [ ] **Columns sized while blank stay narrow.** For example, `note` in a collapsed pivot shows "Order not…" once rows are expanded. SlickGrid has the same problem.
+  - Fixed: the grid now renders in the bundled Inter, which the canvas can use once it has loaded, so widths are measured again then. Digits are measured as tabular. A UI test checks that no cell or header is cut off.
+- [x] **Columns sized while blank stay narrow.** For example, `note` in a collapsed pivot shows "Order not…" once rows are expanded. SlickGrid has the same problem.
+  - Fixed: a column measured with no values is measured again as rows load. It can only get wider, so columns don't jump around.
 
 ## 3. Parity with SlickGrid
 
@@ -52,7 +54,8 @@ To do:
 
 ## 4. Styling
 
-- [ ] **Bundle the Inter font** (SIL Open Font License), so the grid looks the same on every platform and width measurement matches. This needs Inter's `tnum`/`zero`/`ss01`/`ss02` features to survive.
+- [x] **Bundle the Inter font** (SIL Open Font License), so the grid looks the same on every platform and width measurement matches. This needs Inter's `tnum`/`zero`/`ss01`/`ss02` features to survive.
+  - Done. Latin uses `inter-ui` (Inter 4.1, with every feature). The Google Fonts build (`@fontsource-variable/inter`), which lacks `zero`/`ss01`/`ss02`, covers Latin Extended and italic. The fonts are inlined in tadviewer's bundle (+320 KB).
 - [ ] **Histograms:** the axis labels are clipped. Restyle them to match the grid.
 - [ ] **Footer:** use the grid's font, size and colours rather than 14px Helvetica on grey.
 - [ ] **Rows still loading:** show a subtle placeholder instead of blank cells.
@@ -72,3 +75,4 @@ To do:
 - 2026-11-26: DOM grid made the default (`2891dd6`); `TAD_REMOTE_DEBUGGING_PORT` removed (#311).
 - 2026-11-26: CI runs the unit tests on all platforms and the UI tests on Linux and Windows (`8206896`).
 - 2026-11-26: fixed wheel scrolling (lost small steps, top row cut off).
+- 2026-11-26: bundled Inter; fixed column widths (font mismatch, tabular digits, columns that were blank).

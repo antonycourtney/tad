@@ -11,6 +11,7 @@ import {
   ensureBigTable,
   N_ROWS,
   PARQUET_FILE,
+  PIVOT_TAD_FILE,
   SORTED_TAD_FILE,
   testFile,
 } from "./test-data";
@@ -126,5 +127,51 @@ test.describe("10 million rows", () => {
     await expect.poll(() => dom.firstVisibleRow()).toBe(before + 10);
     await page.mouse.wheel(0, -3 * ROW_HEIGHT);
     await expect.poll(() => dom.firstVisibleRow()).toBe(before + 7);
+  });
+});
+
+test.describe("fonts and column widths", () => {
+  test("uses the bundled Inter font, with tabular digits", async ({ openInTad }) => {
+    const { grid } = await openInTad(testFile(SORTED_TAD_FILE));
+    const dom = grid as DomGrid;
+    await dom.expectCellText(0, 0, "0");
+    await expect.poll(() => dom.root.evaluate(() => document.fonts.check("12px TadInter"))).toBe(true);
+    const widths = await dom.root.evaluate((root) => {
+      const cell = root.querySelector('[role="gridcell"]') as HTMLElement;
+      const width = (text: string) => {
+        const s = document.createElement("span");
+        s.textContent = text;
+        cell.appendChild(s);
+        const w = s.getBoundingClientRect().width;
+        s.remove();
+        return w;
+      };
+      return [width("1111111111"), width("0000000000")];
+    });
+    expect(widths[0]).toBe(widths[1]);
+  });
+
+  test("columns are wide enough for their headers and cells", async ({ openInTad }) => {
+    const { grid, page } = await openInTad(testFile(SORTED_TAD_FILE));
+    const dom = grid as DomGrid;
+    await dom.expectCellText(0, 0, "0");
+    await page.waitForTimeout(300); // (widths are measured again once fonts load)
+    expect(await dom.clippedText()).toEqual([]);
+  });
+
+  test("pivot columns are wide enough, including after expanding", async ({
+    openInTad,
+  }) => {
+    const { grid, page } = await openInTad(testFile(PIVOT_TAD_FILE));
+    const dom = grid as DomGrid;
+    await dom.expectRowCount(6);
+    await page.waitForTimeout(300);
+    expect(await dom.clippedText()).toEqual([]);
+    // Expanding shows leaf rows, with values in columns that were blank:
+    await dom.clickCell(0, 2);
+    await dom.expectRowCount(26);
+    await dom.clickCell(0, 3);
+    await expect.poll(() => dom.rowCount()).toBeGreaterThan(26);
+    await expect.poll(() => dom.clippedText()).toEqual([]);
   });
 });

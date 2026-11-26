@@ -35,9 +35,13 @@ function config(nodeEnv) {
     externalsPresets: { node: true }, // in order to ignore built-in modules like path, fs, etc.
     externals: [
       // Bundle CSS imported from packages (e.g. Glide Data Grid's index.css),
-      // so that it is processed by style-loader / css-loader below:
-      nodeExternals({ allowlist: [/\.css$/] }),
-      nodeExternals({ modulesDir: "../../node_modules", allowlist: [/\.css$/] }),
+      // so that it is processed by style-loader / css-loader below, and the
+      // fonts it uses (inlined by the asset rule below):
+      nodeExternals({ allowlist: [/\.css$/, /\.woff2?$/] }),
+      nodeExternals({
+        modulesDir: "../../node_modules",
+        allowlist: [/\.css$/, /\.woff2?$/],
+      }),
     ],
     module: {
       rules: [

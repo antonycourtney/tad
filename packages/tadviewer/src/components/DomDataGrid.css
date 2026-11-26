@@ -2,8 +2,53 @@
  * Styles for DomDataGrid, after the DuckDB UI's result grid.
  *
  * Colors and sizes are CSS variables on .tad-grid, so an embedding app can
- * override them. The grid's font follows --tad-font-family if it's set.
+ * override them. The grid's font is Inter (bundled below), or --tad-font-family
+ * if it's set.
  */
+/*
+ * Inter (SIL Open Font License 1.1), the DuckDB UI's font, bundled so the
+ * grid looks the same everywhere:
+ * - Latin (ASCII, Latin-1, punctuation): Inter 4.1 from inter-ui, with all of
+ *   its OpenType features (the Google Fonts build lacks the slashed zero and
+ *   the ss01 / ss02 digit alternates the grid uses).
+ * - Latin Extended: the Google Fonts build (@fontsource-variable/inter).
+ * - Italic (only used for NULL): the Google Fonts build, Latin.
+ */
+@font-face {
+  font-family: "TadInter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("~inter-ui/variable-latin/InterVariable-subset.woff2") format("woff2");
+  unicode-range: U+0000, U+0020-007E, U+00A0-00AC, U+00AE-00FF, U+0131,
+    U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-200B,
+    U+2010-2027, U+202F-2055, U+2057, U+205F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+FEFF;
+}
+@font-face {
+  font-family: "TadInter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("~@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2")
+    format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+@font-face {
+  font-family: "TadInter";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("~@fontsource-variable/inter/files/inter-latin-wght-italic.woff2")
+    format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 .tad-grid {
   --tad-grid-bg: #ffffff;
   --tad-grid-header-bg: #fcfcfb;
@@ -30,6 +75,7 @@
     --tad-grid-font-family,
     var(
       --tad-font-family,
+      "TadInter",
       Inter,
       -apple-system,
       BlinkMacSystemFont,
