@@ -21,6 +21,8 @@ import { GridPane, OpenURLFn } from "./GridPane";
 import { Footer } from "./Footer";
 import { FilterBar } from "./ui/FilterBar";
 import { ViewSidebar } from "./ui/ViewSidebar";
+import { ActivityBar as NewActivityBar } from "./ui/ActivityBar";
+import { DataSourcePanel } from "./ui/DataSourcePanel";
 import { newUI } from "../uiImpl";
 import { LoadingModal } from "./LoadingModal";
 import * as actions from "../actions";
@@ -492,13 +494,20 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
       <LoadingModal embedded={embedded} />
     ) : null;
   }
-  const dataSourceSidebar = showDataSources ? (
+  const dataSourceSidebar = !showDataSources ? null : newUI ? (
+    <DataSourcePanel
+      expanded={dataSourceExpanded}
+      stateRef={stateRef}
+      openPath={viewState?.dsPath ?? null}
+    />
+  ) : (
     <DataSourceSidebar expanded={dataSourceExpanded} stateRef={stateRef} />
-  ) : null;
+  );
+  const ActivityBarImpl = newUI ? NewActivityBar : ActivityBar;
   mainContents = (
     <div className="container-fluid full-height main-container tad-app-pane">
       <DndProvider manager={dndManager}>
-        <ActivityBar
+        <ActivityBarImpl
           activity={activity}
           showDataSources={showDataSources}
           stateRef={stateRef}

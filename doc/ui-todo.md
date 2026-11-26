@@ -153,7 +153,8 @@ The filter bar replaces the dialog and lives in the footer.
 
 ### 6. Data sources panel
 
-- [ ] The tree, the search, the descriptions, and the highlighted open table.
+- [x] The tree, the search, the descriptions, and the highlighted open table (`components/ui/DataSourcePanel.tsx`), with keyboard navigation (arrow keys, Home, End, Enter). Tested in `data-sources.e2e.ts`, on a folder.
+- [x] The activity bar, with Lucide icons and labelled buttons (`components/ui/ActivityBar.tsx`).
 
 ### 7. The remaining Blueprint UI
 
@@ -196,6 +197,10 @@ Choices made while working on this alone, to check:
 - Sorting from the column list adds the column to the end of the sort (as the old Sort tab did), unlike the header menu, which replaces it.
 - "Label leaf rows with" is turned off unless the view is pivoted.
 - The sidebar's own type icons match the grid's (123, #, and Lucide icons for text, dates and times).
+- The data sources search covers what has been loaded: the sources, and the folders, databases and schemas opened so far. Searching every folder could be slow (BigQuery, Snowflake, large directories). Is that enough?
+- The data sources panel's info icon shows a description as a tooltip on hover, and in a popover on click.
+- A top-level file or folder's note is the folder it's in (shortened from the start); a database's is its engine (DuckDB, BigQuery…).
+- Folders list data files only, so `.tad` files don't appear in the data sources panel (as before). Should they?
 
 ## Ideas: not started without a go-ahead
 
@@ -210,3 +215,4 @@ Choices made while working on this alone, to check:
 - 2026-11-26: step 4 done: the column header menu, and the format editor. CI now runs every UI test with the new UI as well.
 - 2026-11-26: the column visibility tests failed on Windows CI since 72aa2a6: the window there is narrower, so the grid hadn't rendered every column. The DOM grid's test driver now scrolls sideways to find them all.
 - 2026-11-26: step 5 done: the sidebar (shelves, column list, options). The new UI's test driver no longer falls back to the Blueprint one for anything. The app bundle is 5,763,786 bytes (1,805,963 gzipped), up 85 KB with dnd-kit and the sidebar.
+- 2026-11-26: step 6 done: the data sources panel, and a new activity bar.

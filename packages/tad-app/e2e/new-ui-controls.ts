@@ -48,7 +48,7 @@ export class NewUIControls implements ViewControls {
 
   async openViewSettings(): Promise<void> {
     if (!((await this.sidebar.getAttribute("class")) ?? "").includes("sidebar-expanded")) {
-      await this.page.locator(".activityBar button:has(.bp4-icon-pivot-table)").click();
+      await this.page.getByRole("button", { name: "View settings" }).click();
     }
     await expect(this.sidebar).toHaveClass(/sidebar-expanded/);
   }

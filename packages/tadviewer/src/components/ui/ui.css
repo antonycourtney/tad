@@ -1078,3 +1078,137 @@
   border-radius: 50%;
   background: var(--tui-accent);
 }
+
+/* --- the activity bar --- */
+
+.tui-activitybar.activityBar {
+  gap: 6px;
+  padding-top: 10px;
+  box-sizing: border-box;
+  background: var(--tad-grid-header-bg);
+  border-right: 1px solid var(--tad-grid-header-line);
+}
+
+.tui-activity {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--tad-grid-text-dim);
+  cursor: pointer;
+}
+
+.tui-activity:hover {
+  background: var(--tui-subtle-bg);
+  color: var(--tad-grid-text);
+}
+
+.tui-activity[aria-pressed="true"] {
+  background: var(--tui-pale);
+  border-color: var(--tui-pale-border);
+  color: var(--tui-mark);
+}
+
+.tui-activity:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--tui-focus-ring);
+}
+
+/* --- the data sources panel --- */
+
+.tui-sidebar-inner > .tui-search {
+  margin-bottom: 8px;
+}
+
+.tui-dstree {
+  display: flex;
+  flex-direction: column;
+}
+
+.tui-dsrow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  padding-right: 4px;
+  border-radius: 5px;
+  cursor: pointer;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.tui-dsrow:hover {
+  background: var(--tui-subtle-bg);
+}
+
+.tui-dsrow:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--tui-focus-ring);
+}
+
+.tui-dsrow.tui-current {
+  background: var(--tui-pale);
+  color: var(--tui-mark);
+}
+
+.tui-dsrow[aria-busy="true"] .tui-dsicon {
+  opacity: 0.5;
+}
+
+.tui-dschev {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 20px;
+  color: var(--tad-grid-text-dim);
+  transition: transform 0.12s;
+}
+
+.tui-dschev.tui-open {
+  transform: rotate(90deg);
+}
+
+.tui-dsicon {
+  flex: none;
+  display: inline-flex;
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-dsrow.tui-current .tui-dsicon {
+  color: var(--tui-mark);
+}
+
+.tui-dsnote {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+  font-size: 11px;
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-dsinfo {
+  flex: none;
+  opacity: 0.6;
+}
+
+.tui-dsinfo:hover {
+  opacity: 1;
+}
+
+.tui-dsdesc {
+  max-width: 280px;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
