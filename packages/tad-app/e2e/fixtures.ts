@@ -1,7 +1,8 @@
 /*
  * Playwright fixture that launches the Tad desktop app (packages/tad-app/dist,
  * so run `npm run build-prod` first) on a file. The grid implementation comes
- * from TAD_GRID ("dom" by default; "glide" also has a test driver).
+ * from TAD_GRID ("dom" by default; "glide" also has a test driver), and the
+ * UI around it from TAD_UI (see view-controls.ts).
  */
 import {
   _electron as electron,
@@ -16,6 +17,7 @@ import * as path from "path";
 import { DomGrid } from "./dom-grid";
 import { GlideGrid } from "./glide-grid";
 import { GridDriver } from "./grid-driver";
+import { UI_IMPL, ViewControls, viewControls } from "./view-controls";
 
 export const GRID_IMPL = process.env.TAD_GRID ?? "dom";
 
@@ -28,6 +30,8 @@ export interface TadWindow {
   app: ElectronApplication;
   page: Page;
   grid: GridDriver;
+  /** The sidebar and filter controls (the UI comes from TAD_UI). */
+  controls: ViewControls;
 }
 
 export interface OpenOptions {
@@ -75,6 +79,7 @@ export const test = base.extend<TadFixtures>({
         env: {
           ...process.env,
           TAD_GRID: GRID_IMPL,
+          TAD_UI: UI_IMPL,
           TAD_TEST_HOOKS: "1",
           TAD_USER_DATA_DIR: userDataDir,
         },
@@ -95,7 +100,7 @@ export const test = base.extend<TadFixtures>({
       if (options.waitForData ?? true) {
         await grid.waitForData();
       }
-      return { app, page, grid };
+      return { app, page, grid, controls: viewControls(page) };
     });
     for (const [i, { app, page, userDataDir }] of launched.entries()) {
       if (page && testInfo.status !== testInfo.expectedStatus) {

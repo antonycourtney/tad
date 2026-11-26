@@ -94,6 +94,27 @@ export const tadFile = (parquetPath: string, viewParams: object): string =>
     2
   );
 
+/**
+ * Evaluate a SQL expression over the orders table, e.g. to find how many
+ * rows a filter should keep: queryOrders("count(*)", "quantity >= 15").
+ */
+export async function queryOrders(expr: string, where = "true"): Promise<number> {
+  const db = await DuckDBInstance.create(":memory:");
+  const conn = await db.connect();
+  try {
+    const reader = await conn.runAndReadAll(
+      `SELECT (${expr})::DOUBLE FROM read_parquet(${sqlString(
+        testFile(PARQUET_FILE)
+      )}) WHERE ${where}`
+    );
+    return reader.getRowsJS()[0][0] as number;
+  } finally {
+    conn.closeSync();
+  }
+}
+
+export const countOrders = (where: string) => queryOrders("count(*)", where);
+
 export async function generateTestData(dir: string): Promise<void> {
   const parquetPath = path.join(dir, PARQUET_FILE);
   const db = await DuckDBInstance.create(":memory:");
