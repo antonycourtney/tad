@@ -15,7 +15,8 @@
     "build": "npm run build-prod",
     "tsc": "tsc",
     "watch": "webpack --mode development --watch",
-    "watch-prod": "webpack --env prod --mode production --watch"
+    "watch-prod": "webpack --env prod --mode production --watch",
+    "test": "jest --config jest.config.json"
   },
   "keywords": [
     "relational",

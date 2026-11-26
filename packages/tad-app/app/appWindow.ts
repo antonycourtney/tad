@@ -322,7 +322,13 @@ export const getFilterQuery = async (win: BrowserWindow): Promise<string> => {
     win.webContents.send("request-serialize-filter-query", requestContents);
   });
 };
-const TAD_FILE_FORMAT_VERSION = 2;
+// Version of the .tad files we write. History:
+// 1: original format (contents.targetPath)
+// 2: contents.dsPath (data source path)
+// 3: "auto" number format for real columns (see tadviewer ViewParams.ts,
+//    VIEW_PARAMS_FORMAT_VERSION; files from earlier versions are migrated
+//    when loaded)
+const TAD_FILE_FORMAT_VERSION = 3;
 
 const serialize = (contents: any): string => {
   const versionedObject = {

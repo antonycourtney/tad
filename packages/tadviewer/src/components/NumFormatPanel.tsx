@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Checkbox, Label } from "@blueprintjs/core";
-import { NumFormatOptions } from "../NumFormatOptions";
+import { FormatMethod, NumFormatOptions } from "../NumFormatOptions";
 
 export interface NumFormatPanelProps {
   opts: NumFormatOptions;
@@ -19,7 +19,7 @@ export const NumFormatPanel: React.FC<NumFormatPanelProps> = ({
   ) => {
     const nextOpts = opts.set(
       "formatMethod",
-      event.target.value as "toLocaleString" | "toString"
+      event.target.value as FormatMethod
     ) as NumFormatOptions;
 
     if (onChange) {
@@ -89,10 +89,17 @@ export const NumFormatPanel: React.FC<NumFormatPanelProps> = ({
       value={opts.formatMethod}
       onChange={(event) => handleFormatMethodSelect(event)}
     >
-      <option value="toString">System Default</option>
+      <option value="auto">Automatic</option>
+      <option value="toString">Full Precision</option>
       <option value="toLocaleString">Custom</option>
     </select>
   );
+
+  // Decimal places and scientific notation only apply to Custom formatting;
+  // thousands separators apply to Automatic and Custom (unless scientific).
+  const isCustom = opts.formatMethod === "toLocaleString";
+  const commasDisabled =
+    opts.formatMethod === "toString" || (isCustom && opts.exponential);
 
   return (
     <div className="format-subpanel num-format-panel">
@@ -103,7 +110,7 @@ export const NumFormatPanel: React.FC<NumFormatPanelProps> = ({
       <Checkbox
         className="bp4-condensed"
         checked={opts.commas}
-        disabled={opts.formatMethod === "toString" || opts.exponential}
+        disabled={commasDisabled}
         onChange={(event) => handleCommasChange(event)}
         label="Use (,) as 1000s Separator"
       />
@@ -113,14 +120,14 @@ export const NumFormatPanel: React.FC<NumFormatPanelProps> = ({
           className="bp4-input"
           type="text"
           value={decimalsText}
-          disabled={opts.formatMethod === "toString"}
+          disabled={!isCustom}
           onChange={(event) => handleDecimalsChange(event)}
         />
       </label>
       <Checkbox
         className="bp4-condensed"
         checked={opts.exponential}
-        disabled={opts.formatMethod === "toString"}
+        disabled={!isCustom}
         onChange={(event) => handleExponentialChange(event)}
         label="Use Scientific (exponential) Notation"
       />

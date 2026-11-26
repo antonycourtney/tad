@@ -56,22 +56,88 @@ const defaultFormatDefaultProps: FormatDefaultsProps = {
     decimalPlaces: 0,
     formatMethod: "toLocaleString",
   }),
-  real: new NumFormatOptions(),
+  real: new NumFormatOptions({
+    formatMethod: "auto",
+  }),
   boolean: new NumFormatOptions({
     decimalPlaces: 0,
   }), // for now...
 };
 
+// Saved formats may lack fields (e.g. if saved by an older version of Tad).
+// Missing fields get the default format for the column kind, rather than the
+// generic NumFormatOptions / TextFormatOptions defaults.
+const withKindDefaults = (kindDefault: FormatOptions, saved: any): any => ({
+  ...(kindDefault as any).toJS(),
+  ...(saved ?? {}),
+});
+
 class FormatDefaults extends Immutable.Record(defaultFormatDefaultProps) {
   static deserialize(jsObj: any) {
+    const d = defaultFormatDefaultProps;
     const initMap = {
-      string: new TextFormatOptions(jsObj["string"]),
-      integer: new NumFormatOptions(jsObj["integer"]),
-      real: new NumFormatOptions(jsObj["real"]),
-      boolean: new NumFormatOptions(jsObj["boolean"]),
+      string: new TextFormatOptions(withKindDefaults(d.string, jsObj?.string)),
+      integer: new NumFormatOptions(withKindDefaults(d.integer, jsObj?.integer)),
+      real: new NumFormatOptions(withKindDefaults(d.real, jsObj?.real)),
+      boolean: new NumFormatOptions(withKindDefaults(d.boolean, jsObj?.boolean)),
     };
     return new FormatDefaults(initMap);
   }
+}
+
+/**
+ * The .tad file format version in which the saved form of ViewParams last
+ * changed. ViewParams saved in earlier versions are migrated when loaded (see
+ * migrateSavedViewParams). tad-app's TAD_FILE_FORMAT_VERSION (in
+ * app/appWindow.ts), which it writes in saved files, must be at least this.
+ */
+export const VIEW_PARAMS_FORMAT_VERSION = 3;
+
+// The built-in default format for real (floating point) columns before
+// version 3: "toString", or no formatMethod at all in files saved before
+// NumFormatOptions had one.
+const isOldRealDefault = (f: any): boolean =>
+  f != null &&
+  (f.formatMethod === undefined || f.formatMethod === "toString") &&
+  f.commas !== false &&
+  f.decimalPlaces === 2 &&
+  !f.exponential;
+
+// Number formats saved before NumFormatOptions had a formatMethod were
+// formatted with toLocaleString (i.e. what is now "Custom"):
+const migrateNumFormat = (f: any): any =>
+  f != null && f.formatMethod === undefined
+    ? { ...f, formatMethod: "toLocaleString" }
+    : f;
+
+/**
+ * Migrate ViewParams (in serialized form) saved in .tad file format version
+ * `fileFormatVersion` to the current form.
+ */
+export function migrateSavedViewParams(js: any, fileFormatVersion: number): any {
+  if (fileFormatVersion >= VIEW_PARAMS_FORMAT_VERSION) {
+    return js;
+  }
+  const defaultFormats = { ...(js.defaultFormats ?? {}) };
+  // Version 3 changed the default format for real columns to "auto"; files
+  // that still have the previous default get the new one:
+  if (isOldRealDefault(defaultFormats.real)) {
+    defaultFormats.real = { ...defaultFormats.real, formatMethod: "auto" };
+  }
+  for (const kind of ["integer", "real", "boolean"]) {
+    if (defaultFormats[kind] !== undefined) {
+      defaultFormats[kind] = migrateNumFormat(defaultFormats[kind]);
+    }
+  }
+  // Older files have text formats under the "text" column kind:
+  if (defaultFormats.string === undefined && defaultFormats.text !== undefined) {
+    defaultFormats.string = defaultFormats.text;
+  }
+  delete defaultFormats.text;
+  const columnFormats = _.mapValues(js.columnFormats ?? {}, (f: any) =>
+    f?.type === "NumFormatOptions" ? migrateNumFormat(f) : f
+  );
+  return { ...js, defaultFormats, columnFormats };
 }
 
 export interface ViewParamsProps {
@@ -281,7 +347,15 @@ export class ViewParams
     return this.set("columnFormats", nextFmts) as ViewParams;
   }
 
-  static deserialize(js: any): ViewParams {
+  /**
+   * Deserialize ViewParams saved in .tad file format version
+   * `fileFormatVersion` (by default, the current version).
+   */
+  static deserialize(
+    savedJS: any,
+    fileFormatVersion: number = VIEW_PARAMS_FORMAT_VERSION
+  ): ViewParams {
+    const js = migrateSavedViewParams(savedJS, fileFormatVersion);
     const { defaultFormats, openPaths, filterExp, columnFormats, ...rest } = js;
     const defaultFormatsObj = FormatDefaults.deserialize(defaultFormats);
     const openPathsObj = new PathTree(openPaths._rep);
