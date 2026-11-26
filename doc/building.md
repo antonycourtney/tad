@@ -87,6 +87,10 @@ Similar to above, but with three windows open:
 With those running continuously, you should be able to just hit reload in your browser on `localhost:9000` to pick up any code changes. You'll still have to run `npm run build` if you make changes in any of the other library packages (`reltab`,
 `reltab-duckdb`, `aggtree`, etc.).
 
+## Unit Tests
+
+`npm test` at the top level runs the unit tests of `reltab`, `aggtree`, `reltab-sqlite`, `reltab-duckdb` and `tadviewer`; these don't need any credentials. (The cloud drivers' tests do, and `reltab-duckdb`'s own `npm test` expects an AWS profile for its S3 tests.) CI runs these on every push to master, along with the UI tests below on Linux and Windows.
+
 ## UI Tests (desktop app)
 
 `packages/tad-app/e2e` has [Playwright](https://playwright.dev/docs/api/class-electron) tests that launch the desktop app, open generated test data (a 100,000 row Parquet file, and `.tad` files that open it sorted and pivoted) and drive the grid with the mouse and keyboard. They test the default grid, `DomDataGrid`; `TAD_GRID=glide npm run test:e2e` runs the shared tests against the Glide grid instead.

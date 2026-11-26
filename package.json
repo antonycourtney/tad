@@ -31,6 +31,7 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "build": "node tools/buildAll.js"
+    "build": "node tools/buildAll.js",
+    "test": "npm test -w reltab -w aggtree -w reltab-sqlite -w tadviewer && npm run test:run -w reltab-duckdb"
   }
 }

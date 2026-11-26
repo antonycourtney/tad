@@ -15,5 +15,8 @@ export default defineConfig({
   workers: 1,
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
-  reporter: "list",
+  // In CI, also write JUnit results (published to Azure Pipelines' Tests tab):
+  reporter: process.env.CI
+    ? [["list"], ["junit", { outputFile: "e2e-results/junit.xml" }]]
+    : "list",
 });

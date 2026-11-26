@@ -4,6 +4,11 @@
 # publish to GitHub Releases (`npm run dist` = electron-builder --publish=never).
 # The installers are attached to each run as pipeline artifacts.
 #
+# Every job runs the unit tests (`npm test`). The Linux and Windows jobs then
+# run the desktop app's UI tests (packages/tad-app/e2e); their results show in
+# the run's Tests tab, and on failure e2e-results/ (screenshots, accessibility
+# snapshots) is attached as an artifact.
+#
 name: $(Build.Reason)_$(Build.SourceBranch)_$(Rev:r)
 
 # Build every push to master, as a check that it still builds on each
@@ -26,6 +31,8 @@ jobs:
         displayName: "Install npm workspace dependencies"
       - script: node tools/buildAll.js
         displayName: "Build all packages"
+      - script: npm test
+        displayName: "Unit tests"
       - script: npm run dist
         workingDirectory: packages/tad-app
         displayName: "Build packaged tad-app with electron-builder"
@@ -38,6 +45,21 @@ jobs:
         inputs:
           pathToPublish: $(Build.ArtifactStagingDirectory)
           artifactName: WindowsBuildOutputs
+      - script: npx playwright test
+        workingDirectory: packages/tad-app
+        displayName: "UI tests"
+        env: { CI: "true" }
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFormat: JUnit
+          testResultsFiles: packages/tad-app/e2e-results/junit.xml
+          testRunTitle: "UI tests (Windows)"
+      - task: PublishBuildArtifacts@1
+        condition: failed()
+        inputs:
+          pathToPublish: packages/tad-app/e2e-results
+          artifactName: WindowsUITestResults
 
   - job: Linux
     timeoutInMinutes: 55
@@ -52,6 +74,8 @@ jobs:
         displayName: "Install npm workspace dependencies"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
+      - script: npm test
+        displayName: "Unit tests"
       - script: "( cd packages/tad-app && BUILD_BUILDNUMBER='' npm run dist )"
         displayName: "Build packaged tad-app with electron-builder"
         env:
@@ -68,6 +92,27 @@ jobs:
         inputs:
           pathToPublish: $(Build.ArtifactStagingDirectory)
           artifactName: LinuxBuildOutputs
+      # Electron's sandbox needs unprivileged user namespaces, which Ubuntu
+      # 24.04 restricts by default; the app needs a display (Xvfb):
+      - script: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          which xvfb-run || (sudo apt-get update && sudo apt-get install -y xvfb)
+        displayName: "Prepare for UI tests"
+      - script: xvfb-run -a --server-args="-screen 0 1920x1080x24" npx playwright test
+        workingDirectory: packages/tad-app
+        displayName: "UI tests"
+        env: { CI: "true" }
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFormat: JUnit
+          testResultsFiles: packages/tad-app/e2e-results/junit.xml
+          testRunTitle: "UI tests (Linux)"
+      - task: PublishBuildArtifacts@1
+        condition: failed()
+        inputs:
+          pathToPublish: packages/tad-app/e2e-results
+          artifactName: LinuxUITestResults
 
   - job: macOS_latest
     timeoutInMinutes: 55
@@ -87,6 +132,8 @@ jobs:
         displayName: "Install npm workspace dependencies"
       - script: "node ./tools/buildAll.js"
         displayName: "Build all packages"
+      - script: npm test
+        displayName: "Unit tests"
       - script: "( cd packages/tad-app && npm run dist )"
         displayName: "Build packaged tad-app with electron-builder"
         env:
