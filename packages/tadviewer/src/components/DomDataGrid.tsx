@@ -550,6 +550,24 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
 
   const virtualYRef = React.useRef(0); // virtual scroll offset of the rows
   const lastScrollTopRef = React.useRef(0);
+
+  /*
+   * The rows block is translated by (first rendered row's offset - virtual
+   * offset). This is set directly, rather than through React: TanStack only
+   * re-renders when the range of rows changes, so a scroll of a few pixels
+   * (a mouse wheel's step) wouldn't otherwise move the rows at all, and
+   * scrolling would move in whole-row jumps.
+   */
+  const rowsRef = React.useRef<HTMLDivElement>(null);
+  const firstRowStartRef = React.useRef(0); // set by each render
+  const applyRowsOffset = React.useCallback(() => {
+    const rows = rowsRef.current;
+    if (rows) {
+      const y = firstRowStartRef.current - virtualYRef.current;
+      rows.style.transform = `translateY(${y}px)`;
+    }
+  }, []);
+  React.useLayoutEffect(applyRowsOffset);
   const offsetCbRef = React.useRef<
     ((offset: number, isScrolling: boolean) => void) | null
   >(null);
@@ -593,10 +611,13 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
         el.scrollTop = ss.toPhysical(g, vy);
         lastScrollTopRef.current = el.scrollTop;
       }
+      // (TanStack re-renders here, synchronously while scrolling, if the
+      // range of rows changes; either way, move the rows to the offset:)
       offsetCbRef.current?.(vy, isScrolling);
+      applyRowsOffset();
       reportViewport();
     },
-    [reportViewport]
+    [reportViewport, applyRowsOffset]
   );
 
   const handleScroll = React.useCallback(() => {
@@ -1184,7 +1205,9 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
       />
     );
   });
-  const rowsTop = rowItems.length > 0 ? rowItems[0].start - virtualYRef.current : 0;
+  // The rows are positioned by applyRowsOffset(), after each render and on
+  // every scroll (see rowsRef):
+  firstRowStartRef.current = rowItems.length > 0 ? rowItems[0].start : 0;
 
   const physH = ss.physicalHeight(geometry);
   const lm = showLoadingModal ? <LoadingModal embedded={embedded} /> : null;
@@ -1233,10 +1256,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
                   onPointerOver={handleBodyPointerOver}
                   onClick={handleBodyClick}
                 >
-                  <div
-                    className="tad-grid-rows"
-                    style={{ transform: `translateY(${rowsTop}px)` }}
-                  >
+                  <div ref={rowsRef} className="tad-grid-rows">
                     {rows}
                   </div>
                 </div>

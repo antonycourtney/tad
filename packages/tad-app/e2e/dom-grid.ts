@@ -165,6 +165,15 @@ export class DomGrid implements GridDriver {
     return text.replace(/\r\n/g, "\n");
   }
 
+  /** A row's top relative to the top of the grid body, if it's rendered. */
+  async rowOffset(row: number): Promise<number | null> {
+    return this.root.evaluate((root, row) => {
+      const body = root.querySelector(".tad-grid-body")!.getBoundingClientRect();
+      const el = root.querySelector(`[data-row="${row}"]`);
+      return el ? el.getBoundingClientRect().top - body.top : null;
+    }, row);
+  }
+
   /** Index of the first fully visible row. */
   async firstVisibleRow(): Promise<number> {
     return this.root.evaluate((root) => {

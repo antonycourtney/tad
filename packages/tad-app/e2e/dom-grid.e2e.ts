@@ -52,6 +52,31 @@ test.describe("keyboard and selection", () => {
   });
 });
 
+test("small wheel steps move the rows smoothly, and back to the top", async ({
+  openInTad,
+}) => {
+  // A mouse wheel scrolls a few pixels at a time. The rows must follow each
+  // step (not only when a new row comes into view), and end exactly at the
+  // top after scrolling back up (they used to be left a step too high).
+  const { grid, page } = await openInTad(testFile(SORTED_TAD_FILE));
+  const dom = grid as DomGrid;
+  await dom.expectCellText(0, 0, "0");
+  const b = await dom.bounds(1, 3);
+  await page.mouse.move(b.x + 5, b.y + 5);
+
+  await page.mouse.wheel(0, 4);
+  await expect.poll(() => dom.rowOffset(0)).toBe(-4);
+
+  for (let i = 0; i < 100; i++) {
+    await page.mouse.wheel(0, 4);
+  }
+  await expect.poll(() => dom.rowOffset(20)).toBe(20 * ROW_HEIGHT - 404);
+  for (let i = 0; i < 110; i++) {
+    await page.mouse.wheel(0, -4);
+  }
+  await expect.poll(() => dom.rowOffset(0)).toBe(0);
+});
+
 test("shows NULL in leaf rows", async ({ openInTad }) => {
   const { grid } = await openInTad(testFile(PARQUET_FILE));
   const dom = grid as DomGrid;

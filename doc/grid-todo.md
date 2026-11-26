@@ -21,7 +21,8 @@ CI builds every push to master. Bugs get a regression test where one is practica
 
 ## 2. Bugs
 
-- [ ] **Wheel scrolling cuts off the top row.** After scrolling down and back to the top with a mouse wheel, the top row is cut off. Using the scrollbar doesn't do it. (Reported 2026-11-26.)
+- [x] **Wheel scrolling cuts off the top row.** After scrolling down and back to the top with a mouse wheel, the top row is cut off. Using the scrollbar doesn't do it. (Reported 2026-11-26.)
+  - Fixed: the rows only moved when TanStack re-rendered, which it does only when the range of rows changes. Small wheel steps were therefore lost, and scrolling moved in whole-row jumps. The offset is now applied on every scroll.
 - [ ] **Some column widths are too narrow.** Examples: a cut-off "order…" header once it's sorted, and cut-off pivot totals ("4,999,950,0…").
   - Widths are measured on a canvas, which can't use `-apple-system`, so it measures in a different font from the one shown.
   - The canvas also ignores tabular digits (`tnum`).
@@ -69,3 +70,5 @@ To do:
 ## Log
 
 - 2026-11-26: DOM grid made the default (`2891dd6`); `TAD_REMOTE_DEBUGGING_PORT` removed (#311).
+- 2026-11-26: CI runs the unit tests on all platforms and the UI tests on Linux and Windows (`8206896`).
+- 2026-11-26: fixed wheel scrolling (lost small steps, top row cut off).
