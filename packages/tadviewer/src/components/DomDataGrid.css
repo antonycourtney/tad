@@ -49,7 +49,11 @@
     U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-.tad-grid {
+/* Colours and font, shared with the footer below the grid (footer.less): */
+.tad-grid,
+.footer {
+  --tad-grid-default-font: "TadInter", Inter, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --tad-grid-bg: #ffffff;
   --tad-grid-header-bg: #fcfcfb;
   --tad-grid-text: #1c1917;
@@ -66,7 +70,12 @@
   --tad-grid-drop: #2ba5ff;
   --tad-grid-histogram-bar: #9bbfe6;
   --tad-grid-histogram-brush: rgba(43, 165, 255, 0.14);
+  --tad-grid-header-hover-bg: #f5f5f4;
+  --tad-grid-frozen-shadow: rgba(0, 0, 0, 0.12);
+  --tad-grid-placeholder: #eeedeb;
+}
 
+.tad-grid {
   position: relative;
   width: 100%;
   height: 100%;
@@ -75,25 +84,15 @@
   color: var(--tad-grid-text);
   font-family: var(
     --tad-grid-font-family,
-    var(
-      --tad-font-family,
-      "TadInter",
-      Inter,
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      Roboto,
-      "Helvetica Neue",
-      Arial,
-      sans-serif
-    )
+    var(--tad-font-family, var(--tad-grid-default-font))
   );
   font-size: var(--tad-grid-font-size, 12px);
   /* tabular digits and a slashed zero (Inter / SF) */
   font-feature-settings: "tnum", "zero", "ss01", "ss02", "calt" 0;
 }
 
-.bp4-dark .tad-grid {
+.bp4-dark .tad-grid,
+.bp4-dark .footer {
   --tad-grid-bg: #22201e;
   --tad-grid-header-bg: #2d2b28;
   --tad-grid-text: #f3eee9;
@@ -108,6 +107,9 @@
   --tad-grid-link: #6cb4ff;
   --tad-grid-histogram-bar: #3f6a96;
   --tad-grid-histogram-brush: rgba(43, 165, 255, 0.2);
+  --tad-grid-header-hover-bg: #363330;
+  --tad-grid-frozen-shadow: rgba(0, 0, 0, 0.4);
+  --tad-grid-placeholder: #383532;
 }
 
 .tad-grid-scroller {
@@ -152,6 +154,11 @@
   white-space: nowrap;
 }
 
+.tad-grid .tad-grid-header-cell:hover {
+  background: var(--tad-grid-header-hover-bg);
+  color: var(--tad-grid-text);
+}
+
 .tad-grid-type-icon {
   flex: none;
   display: inline-flex;
@@ -190,6 +197,27 @@
   height: 100%;
   cursor: col-resize;
   z-index: 1;
+}
+
+/* A line on the column's edge: shown when the header is hovered, and
+   highlighted when the handle is hovered or dragged. */
+.tad-grid-resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 3px;
+  width: 2px;
+  border-radius: 1px;
+}
+
+.tad-grid-header-cell:hover > .tad-grid-resize-handle::after {
+  background: var(--tad-grid-header-line);
+}
+
+.tad-grid-header-cell > .tad-grid-resize-handle:hover::after,
+.tad-grid-header-cell > .tad-grid-resize-active::after {
+  background: var(--tad-grid-selection-ring);
 }
 
 .tad-grid .tad-grid-histogram-cell {
@@ -309,6 +337,24 @@
   border-right: 1px solid var(--tad-grid-header-line);
 }
 
+/* When scrolled sideways, the frozen column casts a shadow on the columns
+   scrolled under it. (Drawn by each frozen cell, just past its right
+   border, so the cells mustn't clip it.) */
+.tad-grid.tad-grid-scrolled-x .tad-grid-frozen {
+  overflow: visible;
+}
+
+.tad-grid.tad-grid-scrolled-x .tad-grid-frozen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: -1px;
+  left: calc(100% + 1px);
+  width: 8px;
+  background: linear-gradient(to right, var(--tad-grid-frozen-shadow), transparent);
+  pointer-events: none;
+}
+
 .tad-grid .tad-grid-pivot-cell {
   display: flex;
   align-items: center;
@@ -329,6 +375,19 @@
 .tad-grid-pivot-text {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Rows still loading: a faint bar in each cell. (Not faded in: animating
+   hundreds of cells made jumping around a large table much slower.) */
+.tad-grid-loading-row .tad-grid-cell::before {
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  width: 45%;
+  max-width: 80px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--tad-grid-placeholder);
 }
 
 /* selection */

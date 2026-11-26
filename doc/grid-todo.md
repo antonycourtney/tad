@@ -58,11 +58,16 @@ To do:
   - Done. Latin uses `inter-ui` (Inter 4.1, with every feature). The Google Fonts build (`@fontsource-variable/inter`), which lacks `zero`/`ss01`/`ss02`, covers Latin Extended and italic. The fonts are inlined in tadviewer's bundle (+320 KB).
 - [x] **Histograms:** the axis labels are clipped. Restyle them to match the grid.
   - Done. The chart is drawn at the cell's pixel size, in the grid's font and colours: bars plus min/max labels, with no y axis. The brush outline only shows when part of the range is selected.
-- [ ] **Footer:** use the grid's font, size and colours rather than 14px Helvetica on grey.
-- [ ] **Rows still loading:** show a subtle placeholder instead of blank cells.
-- [ ] **Frozen pivot column:** show an edge or shadow when the table is scrolled sideways.
-- [ ] **Header:** add a hover state and show the resize handle on hover.
-- [ ] **Speed:** re-run the scrolling comparison (`PERF=1`) after these changes.
+- [x] **Footer:** use the grid's font, size and colours rather than 14px Helvetica on grey.
+  - Done. The footer shares the grid's colour tokens and font (Inter, 12px), with a single line on top instead of a grey box. It's shared by all three grids, so SlickGrid and Glide get the new footer too.
+- [x] **Rows still loading:** show a subtle placeholder instead of blank cells.
+  - Done: a faint rounded bar in each cell, aligned like the column's values. A fade-in after 150ms was tried and dropped: animating ~800 cells made jumping around the table about 10x slower (119 of 120 slow frames instead of 14).
+- [x] **Frozen pivot column:** show an edge or shadow when the table is scrolled sideways.
+  - Done: an 8px shadow past the pivot column's border, shown only when scrolled.
+- [x] **Header:** add a hover state and show the resize handle on hover.
+  - Done. A hovered header gets a slightly darker background. Its right edge shows a short line, which turns blue when the handle itself is hovered or dragged.
+- [x] **Speed:** re-run the scrolling comparison (`PERF=1`) after these changes.
+  - Frames over 17ms, out of 120 (40 for sideways): down 2 rows 0; down 20 rows 4 (was 5); jump 13–14 (was 10); sideways 2–3 (was 2). Measured while macOS's media analysis was busy in the background, so the small differences may be noise.
 
 ## 5. Ideas: not started without a go-ahead
 
@@ -79,3 +84,4 @@ To do:
 - 2026-11-26: bundled Inter; fixed column widths (font mismatch, tabular digits, columns that were blank).
 - 2026-11-26: auto-scroll while drag-selecting.
 - 2026-11-26: restyled the histograms; checked the web app; CI test fix for Windows.
+- 2026-11-26: footer restyle; header hover and resize line; frozen-column shadow; loading placeholders; perf re-run.

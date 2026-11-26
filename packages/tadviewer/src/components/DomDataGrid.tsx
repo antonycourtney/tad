@@ -679,11 +679,15 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
     [reportViewport, applyRowsOffset]
   );
 
+  // Scrolled sideways: the frozen (pivot) column shows an edge.
+  const [scrolledX, setScrolledX] = React.useState(false);
+
   const handleScroll = React.useCallback(() => {
     const el = scrollerRef.current;
     if (!el) {
       return;
     }
+    setScrolledX(el.scrollLeft > 0);
     const st = el.scrollTop;
     if (st === lastScrollTopRef.current) {
       return; // horizontal scroll, or our own write to scrollTop
@@ -1269,11 +1273,14 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
     const cid = columns[colIndex].cid;
     const startX = e.clientX;
     const startWidth = colWidths[colIndex];
+    const handle = e.currentTarget as HTMLElement;
+    handle.classList.add("tad-grid-resize-active");
     const onMove = (me: PointerEvent) => {
       const width = Math.max(MIN_COL_WIDTH, Math.round(startWidth + me.clientX - startX));
       setUserWidths((w) => (w[cid] === width ? w : { ...w, [cid]: width }));
     };
     const onUp = () => {
+      handle.classList.remove("tad-grid-resize-active");
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
@@ -1406,7 +1413,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
         {dataView ? (
           <div
             ref={rootRef}
-            className="tad-grid"
+            className={"tad-grid" + (scrolledX ? " tad-grid-scrolled-x" : "")}
             role="grid"
             aria-rowcount={rowCount + 1}
             aria-colcount={columns.length}

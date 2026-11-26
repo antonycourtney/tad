@@ -1,12 +1,18 @@
 @footer-collapsed-height: 30px;
 @footer-expanded-height: 320px;
 
+// Colours and font are the grid's (see DomDataGrid.css), with the old
+// footer's as fallbacks:
 .footer {
-  background-color: #efefef;
-  border: 1px solid #bababa;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  font-size: var(--tad-footer-font-size, 14px);
+  background-color: var(--tad-grid-header-bg, #efefef);
+  color: var(--tad-grid-text-dim, inherit);
+  border-top: 1px solid var(--tad-grid-header-line, #bababa);
+  font-family: var(
+    --tad-grid-font-family,
+    var(--tad-font-family, var(--tad-grid-default-font, inherit))
+  );
+  font-size: var(--tad-footer-font-size, 12px);
+  font-feature-settings: "tnum";
   flex: 0 0 auto;
   display: flex;
   justify-content: flex-start;
@@ -25,9 +31,11 @@
 }
 
 .footer-top-row {
-  height: @footer-collapsed-height;
+  flex: none;
+  height: (@footer-collapsed-height - 1px);
   display: flex;
   flex-direction: row;
+  align-items: center;
   padding-left: 16px;
   padding-right: 16px;
   justify-content: space-between;
@@ -46,6 +54,15 @@
   gap: 8px;
   justify-content: flex-start;
   max-width: 600px;
+}
+
+.footer-filter-block > a {
+  color: var(--tad-grid-link, #215db0);
+  font-weight: 500;
+}
+
+.footer-value {
+  color: var(--tad-grid-text, inherit);
 }
 
 .filter-summary {
