@@ -115,15 +115,15 @@ The filter bar replaces the dialog and lives in the footer.
 
 ### 1. Tests for today's behaviour
 
-- [ ] UI tests for the current sidebar and filter dialog. None exist today.
+- [x] UI tests for the current sidebar and filter dialog. None exist today.
   - Sidebar: show and hide columns, pivot, sort, reorder, aggregations, formats (defaults and single columns), leaf level, the histograms switch, the totals row.
   - Filter dialog: each operator, AND and OR, Cancel, Apply.
   - The tests check what the grid shows, and reach the controls through a driver with one implementation for the old UI and one for the new, as `grid-driver.ts` does for the grids. Most of the tests then carry over to the new UI unchanged.
-- [ ] reltab unit tests for the filter SQL: `NOT IN`, `NOT ILIKE`, nested filters, and saving then loading a filter.
+- [x] reltab unit tests for the filter SQL: `NOT IN`, `NOT ILIKE`, nested filters, and saving then loading a filter.
 
 ### 2. Foundations
 
-- [ ] reltab: fix `FilterExp.deserialize` for nested filters, and handle the file version (see above).
+- [x] reltab: fix `FilterExp.deserialize` for nested filters, and handle the file version (see above).
 - [ ] A small component set: Radix primitives (popover, dropdown and context menus, select, switch, checkbox, tooltip, dialog), styled in plain CSS on the grid's colour tokens, with Lucide icons and dnd-kit for dragging. Record the bundle size before and after.
 - [ ] A switch between the old and new UI, like `GRID_IMPL` for the grids.
 
@@ -167,6 +167,17 @@ The filter bar replaces the dialog and lives in the footer.
 - How many values should the value list show? Probably a few hundred.
 - Is Esc to revert enough, or is an explicit Cancel still needed? Decide after trying it on a large table.
 
+## Questions to revisit
+
+Choices made while working on this alone, to check:
+
+- The file versions are now 4, before anything writes a nested filter. Files saved from now on say version 4, which older versions of Tad don't check.
+- A file from a newer version of Tad still opens, after a warning that some settings may not load. Should it refuse instead?
+- Quitting Tad while a DuckDB query ran crashed it (or hung it, for a long query). Tad now interrupts running queries when quitting. The web app's server (tadweb-server) may need the same on shutdown; not done.
+- The old filter dialog's All/Any select doesn't show the saved choice. Not fixed, as the dialog is being replaced.
+- The old Columns table lists columns alphabetically; the new column list follows the display order. Is a sort-by-name option wanted?
+- Should the switch default to the new UI as soon as it does everything the old one does, or after a release with both?
+
 ## Ideas: not started without a go-ahead
 
 - A Cmd-K command palette (jump to a column, run any action).
@@ -175,3 +186,4 @@ The filter bar replaces the dialog and lives in the footer.
 ## Log
 
 - 2026-11-26: mock-up reviewed; plan written.
+- 2026-11-26: step 1 done: reltab filter tests, and UI tests for the sidebar and filter dialog (`e2e/view-controls.e2e.ts`, through `ViewControls`, with a Blueprint driver). Fixed loading nested filters and empty `IN` lists. The new tests showed Tad crashing when quitting during a query; fixed (reltab-duckdb `finishPendingWork`). File versions bumped to 4, with a warning for files from newer versions.

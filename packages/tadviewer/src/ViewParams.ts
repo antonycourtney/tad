@@ -89,9 +89,13 @@ class FormatDefaults extends Immutable.Record(defaultFormatDefaultProps) {
  * The .tad file format version in which the saved form of ViewParams last
  * changed. ViewParams saved in earlier versions are migrated when loaded (see
  * migrateSavedViewParams). tad-app's TAD_FILE_FORMAT_VERSION (in
- * app/appWindow.ts), which it writes in saved files, must be at least this.
+ * src/openParams.ts), which it writes in saved files, must be at least this.
+ *
+ * 3: "auto" number format for real columns.
+ * 4: filters can be nested (a FilterExp's opArgs can include FilterExps),
+ *    which earlier versions of Tad can't load.
  */
-export const VIEW_PARAMS_FORMAT_VERSION = 3;
+export const VIEW_PARAMS_FORMAT_VERSION = 4;
 
 // The built-in default format for real (floating point) columns before
 // version 3: "toString", or no formatMethod at all in files saved before
@@ -115,9 +119,12 @@ const migrateNumFormat = (f: any): any =>
  * `fileFormatVersion` to the current form.
  */
 export function migrateSavedViewParams(js: any, fileFormatVersion: number): any {
-  if (fileFormatVersion >= VIEW_PARAMS_FORMAT_VERSION) {
-    return js;
-  }
+  // Version 4 added nested filters, which needs no migration.
+  return fileFormatVersion < 3 ? migrateFormatsToV3(js) : js;
+}
+
+/** Number and text formats saved before version 3. */
+function migrateFormatsToV3(js: any): any {
   const defaultFormats = { ...(js.defaultFormats ?? {}) };
   // Version 3 changed the default format for real columns to "auto"; files
   // that still have the previous default get the new one:

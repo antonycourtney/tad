@@ -21,7 +21,7 @@ import { ElectronTransportClient } from "./electronClient";
 import * as electron from "electron";
 import { ipcRenderer, shell } from "electron";
 import { DataSourcePath, DataSourceId, RemoteReltabConnection } from "reltab";
-import { OpenParams } from "./openParams";
+import { OpenParams, TAD_FILE_FORMAT_VERSION } from "./openParams";
 import "./app.css";
 
 const initMainProcess = () => ipcRenderer.invoke("initMain");
@@ -64,6 +64,15 @@ function openParamsDSPath(
     case "tad":
       const parsedFileState = JSON.parse(openParams.fileContents!);
       const savedFileState = parsedFileState.contents;
+      if (parsedFileState.tadFileFormatVersion > TAD_FILE_FORMAT_VERSION) {
+        // Open it anyway: most of it may well load.
+        remoteErrorDialog(
+          "Saved by a newer version of Tad",
+          `${openParams.fileBaseName} was saved by a newer version of Tad, ` +
+            "so some of its settings may not load correctly. " +
+            "To open it fully, update Tad."
+        );
+      }
       // attempt to migrate from version 1 format:
       if (parsedFileState.tadFileFormatVersion === 1) {
         const rawTargetPath = savedFileState.targetPath;

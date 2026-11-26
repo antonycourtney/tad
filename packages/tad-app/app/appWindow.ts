@@ -3,7 +3,13 @@ import url from "url";
 import path from "path";
 import fsPromises from "fs/promises";
 import electron, { BrowserWindow, IpcMainEvent, ipcRenderer } from "electron";
-import { OpenType, OpenFSPath, OpenTad, OpenParams } from "../src/openParams";
+import {
+  OpenType,
+  OpenFSPath,
+  OpenTad,
+  OpenParams,
+  TAD_FILE_FORMAT_VERSION,
+} from "../src/openParams";
 const dialog = electron.dialog;
 const ipcMain = electron.ipcMain;
 
@@ -322,14 +328,6 @@ export const getFilterQuery = async (win: BrowserWindow): Promise<string> => {
     win.webContents.send("request-serialize-filter-query", requestContents);
   });
 };
-// Version of the .tad files we write. History:
-// 1: original format (contents.targetPath)
-// 2: contents.dsPath (data source path)
-// 3: "auto" number format for real columns (see tadviewer ViewParams.ts,
-//    VIEW_PARAMS_FORMAT_VERSION; files from earlier versions are migrated
-//    when loaded)
-const TAD_FILE_FORMAT_VERSION = 3;
-
 const serialize = (contents: any): string => {
   const versionedObject = {
     tadFileFormatVersion: TAD_FILE_FORMAT_VERSION,

@@ -121,6 +121,12 @@ describe("loading saved ViewParams", () => {
     ).toBe("toString");
   });
 
+  test("version 3: formats load as saved", () => {
+    // "Full precision" (toString) chosen for reals in version 3 is kept:
+    const vp = ViewParams.deserialize(savedViewParams(v2DefaultFormats()), 3);
+    expect(vp.defaultFormats.real.formatMethod).toBe("toString");
+  });
+
   test("current version: formats load as saved", () => {
     const vp = ViewParams.deserialize(
       savedViewParams(v2DefaultFormats()),

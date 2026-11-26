@@ -234,7 +234,13 @@ const errorDialog = async (
   fatal = false
 ): Promise<void> => {
   log.log("*** errorDialog: ", title, msg, fatal);
-  dialog.showErrorBox(title, msg);
+  if (process.env.TAD_TEST_HOOKS === "1") {
+    // UI tests can't dismiss a native dialog: record it for them instead.
+    const g = global as any;
+    g.__tadErrorDialogs = [...(g.__tadErrorDialogs ?? []), { title, msg, fatal }];
+  } else {
+    dialog.showErrorBox(title, msg);
+  }
 
   if (fatal) {
     app.quit();
