@@ -48,8 +48,8 @@ Keyboard navigation and tables of 10M+ rows go beyond what SlickGrid did.
 
 To do:
 - [x] Auto-scroll while drag-selecting past the edge of the grid. It scrolls faster the further past the edge the pointer is. UI tests cover downwards and rightwards.
-- [ ] Clicking a link in a cell opens it, through `onGridClick` and `openURL`. Add a UI test, stubbing `shell.openExternal`.
-- [ ] Brushing a histogram filters the table. Add a UI test.
+- [x] Clicking a link in a cell opens it, through `onGridClick` and `openURL`. A UI test now covers it, with `shell.openExternal` stubbed.
+- [x] Brushing a histogram filters the table. A UI test now covers it.
 - [ ] Check the web app (`tadweb-app` + `tadweb-server`) in a browser.
 
 ## 4. Styling

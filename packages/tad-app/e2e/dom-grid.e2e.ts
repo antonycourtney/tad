@@ -3,6 +3,7 @@
  * selection, NULL display, and scrolling a table taller than the browser's
  * maximum element height.
  */
+import * as fs from "fs";
 import { DomGrid, ROW_HEIGHT } from "./dom-grid";
 import { expect, GRID_IMPL, test } from "./fixtures";
 import { digits } from "./grid-driver";
@@ -14,6 +15,7 @@ import {
   PARQUET_FILE,
   PIVOT_TAD_FILE,
   SORTED_TAD_FILE,
+  tadFile,
   testFile,
 } from "./test-data";
 
@@ -216,4 +218,53 @@ test.describe("drag-selecting past an edge scrolls", () => {
     expect(focus.row).toBe(1);
     expect(focus.col).toBeGreaterThan(8);
   });
+});
+
+test("clicking a link in a cell opens it", async ({ openInTad }) => {
+  const { grid, page } = await openInTad(testFile(PARQUET_FILE));
+  const dom = grid as DomGrid;
+  const urlCol = await dom.columnIndex("order_url");
+  await dom.expectCellText(urlCol, 0, "https://example.com/orders/0");
+  // Record the URLs Tad asks the system to open, instead of opening them:
+  const stubbed = await page.evaluate(() => {
+    const { shell } = (window as any).require("electron");
+    const opened: string[] = [];
+    (window as any).__openedURLs = opened;
+    const stub = async (url: string) => {
+      opened.push(url);
+    };
+    shell.openExternal = stub;
+    return shell.openExternal === stub;
+  });
+  expect(stubbed).toBe(true);
+  await dom.cell(urlCol, 0).locator("a").click();
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__openedURLs))
+    .toEqual(["https://example.com/orders/0"]);
+});
+
+test("brushing a column histogram filters the rows", async ({ openInTad }) => {
+  const file = testFile("orders-histograms.tad");
+  fs.writeFileSync(
+    file,
+    tadFile(testFile(PARQUET_FILE), {
+      showColumnHistograms: true,
+      sortKey: [["order_id", true]],
+    })
+  );
+  const { grid, page } = await openInTad(file);
+  const dom = grid as DomGrid;
+  await dom.expectRowCount(N_ROWS);
+  const qtyCol = await dom.columnIndex("quantity");
+  const histo = dom.root.locator(".tad-grid-histogram-cell").nth(qtyCol).locator("svg").first();
+  await expect(histo).toBeVisible({ timeout: 30_000 });
+  const b = (await histo.boundingBox())!;
+  // Drag across part of the plot (inside the chart's padding):
+  const y = b.y + b.height * 0.55;
+  await page.mouse.move(b.x + b.width * 0.35, y);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width * 0.55, y, { steps: 5 });
+  await page.mouse.up();
+  await expect.poll(() => dom.rowCount(), { timeout: 30_000 }).toBeLessThan(N_ROWS);
+  expect(await dom.rowCount()).toBeGreaterThan(0);
 });
