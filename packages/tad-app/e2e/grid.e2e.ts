@@ -1,5 +1,7 @@
-import { expect, test } from "./fixtures";
+import { expect, GRID_IMPL, test } from "./fixtures";
+import { DomGrid } from "./dom-grid";
 import { digits } from "./grid-driver";
+import { UI_IMPL } from "./view-controls";
 import {
   COLUMNS,
   COUNTRIES_PER_REGION,
@@ -92,6 +94,16 @@ test.describe("pivot tree", () => {
     await grid.expectRowCount(collapsedRows + COUNTRIES_PER_REGION + ROWS_PER_COUNTRY);
     // First leaf row: orders in South (i % 5 == 1), Country 00, by order_id:
     await grid.expectCellText(orderIdCol, 4, "1");
+
+    // The new UI's pivot cells show each group's count of rows:
+    if (UI_IMPL === "new" && GRID_IMPL === "dom") {
+      const dom = grid as DomGrid;
+      const count = (n: number) => n.toLocaleString("en-US");
+      expect(await dom.pivotCount(0)).toBe(count(N_ROWS));
+      expect(await dom.pivotCount(2)).toBe(count(N_ROWS / REGIONS.length));
+      expect(await dom.pivotCount(3)).toBe(count(ROWS_PER_COUNTRY));
+      expect(await dom.pivotCount(4)).toBeNull(); // a leaf row
+    }
 
     // Collapse South:
     await grid.clickCell(0, 2);

@@ -258,11 +258,14 @@ export class NewUIControls implements ViewControls {
   // --- aggregations ---
 
   async setAggregation(column: string, agg: string): Promise<void> {
-    const label = agg === "null" ? "none" : agg;
+    const label = agg === "null" ? "None" : agg.charAt(0).toUpperCase() + agg.slice(1);
     if (this.headerMenus) {
+      // The menu's "In pivot rows, show" buttons, which leave the menu open:
       await this.openHeaderMenu(column);
-      await this.page.getByRole("menuitem", { name: /^Aggregation/ }).click();
-      await this.page.getByRole("menuitemradio", { name: label, exact: true }).click();
+      const item = this.page.getByRole("menuitemradio", { name: label, exact: true });
+      await item.click();
+      await expect(item).toHaveAttribute("aria-checked", "true");
+      await this.page.keyboard.press("Escape");
       await expect(this.page.getByRole("menu")).toHaveCount(0);
     } else {
       await this.setMode("Aggregation");

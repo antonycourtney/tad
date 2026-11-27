@@ -84,7 +84,7 @@ test("the shelves: remove, flip the sort, drag to reorder", async ({ openInTad }
     shelf(page, "Pivot").locator('[data-column="region"] .tui-shelfchip-name')
   );
   await expect.poll(() => shelfOrder(page, "Pivot")).toEqual(["country", "region"]);
-  await expectPivotTitle(page, "country > region");
+  await expectPivotTitle(page, "country › region");
 
   // × removes:
   await shelf(page, "Pivot").getByRole("button", { name: "Remove country from the pivot" }).click();
@@ -144,7 +144,7 @@ test("drag a column onto a shelf", async ({ openInTad }) => {
     shelf(page, "Pivot").locator('[data-column="country"]')
   );
   await expect.poll(() => shelfOrder(page, "Pivot")).toEqual(["region", "country"]);
-  await expectPivotTitle(page, "region > country");
+  await expectPivotTitle(page, "region › country");
 
   // Onto the Sort shelf, ascending:
   await drag(page, row("quantity").locator(".tui-grip"), shelf(page, "Sort"));
@@ -176,7 +176,7 @@ test("aggregation and format modes mark what's changed", async ({ openInTad }) =
 
   // The Real default is used by the other real column:
   await sidebar(page).locator('[data-format="default:real"]').click();
-  await expect(page.locator(".tui-pop")).toContainText("Used by 1 column");
+  await expect(page.locator(".tui-pop")).toContainText("Used by 1 real column");
 });
 
 test("leaf row labels are for pivoted views", async ({ openInTad }) => {

@@ -8,7 +8,9 @@
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
-import { ListFilter, Plus, Search, X } from "./icons";
+import { FilterGlyph } from "./glyphs";
+import { Plus, Search, X } from "./icons";
+import { typeIcon } from "./typeIcon";
 import { StateRef } from "oneref";
 import { colIsNumeric, FilterExp, Schema } from "reltab";
 import * as actions from "../../actions";
@@ -204,7 +206,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   return (
     <div className="tad-ui tui-filterbar" role="toolbar" aria-label="Filter">
       <span className="tui-filterbar-icon" title="Filters">
-        <ListFilter size={14} strokeWidth={1.8} />
+        <FilterGlyph />
       </span>
       {bar.chips.length > 1 ? (
         <div className="tui-seg" role="group" aria-label="Rows must match">
@@ -272,7 +274,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </Popover.Root>
         );
       })}
-      <AddFilter schema={schema} open={addOpen} onOpenChange={setAddOpen} onPick={addFilter} />
+      <AddFilter
+        schema={schema}
+        filtered={bar.chips.map((c) => c.chip.column)}
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        onPick={addFilter}
+      />
       {bar.chips.length > 0 ? (
         <button
           type="button"
@@ -297,10 +305,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 /** "+ Filter": pick a column to filter by. */
 const AddFilter: React.FC<{
   schema: Schema;
+  /** The columns that already have a chip. */
+  filtered: (string | null)[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPick: (column: string) => void;
-}> = ({ schema, open, onOpenChange, onPick }) => {
+}> = ({ schema, filtered, open, onOpenChange, onPick }) => {
   const [search, setSearch] = useState("");
   // Picking a column opens its chip's popover, which takes the focus; so the
   // list mustn't give the focus back to "+ Filter" as it closes:
@@ -372,9 +382,10 @@ const AddFilter: React.FC<{
                 onClick={() => pick(c)}
               >
                 <span className="tui-typeicon" aria-hidden="true">
-                  {colIsNumeric(schema.columnType(c)) ? "123" : "A"}
+                  {typeIcon(schema.columnType(c).kind)}
                 </span>
                 <span>{schema.displayName(c)}</span>
+                {filtered.includes(c) ? <span className="tui-mi-aside">filtered</span> : null}
               </button>
             ))}
             {columns.length === 0 ? (

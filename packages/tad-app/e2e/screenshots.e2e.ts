@@ -135,6 +135,42 @@ test.describe("filter bar", () => {
     await expect(page.locator(`${popover} .tui-static`).first()).toBeVisible();
     await page.waitForTimeout(500);
     await page.screenshot({ path: shot("filter-match") });
+    await page.keyboard.press("Escape");
+
+    await page.locator(".tui-filterbar .tui-addbtn").click();
+    await expect(page.locator(".tui-narrow .tui-mi").first()).toBeVisible();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: shot("filter-add") });
+  });
+});
+
+test.describe("header menu", () => {
+  test.skip(UI_IMPL !== "new" || GRID_IMPL !== "dom", "for the new UI and the DOM grid");
+
+  test("menu", async ({ openInTad }) => {
+    const { grid, page } = await openInTad(testFile(SORTED_TAD_FILE), { windowSize });
+    await grid.expectCellText(0, 0, "0");
+    const header = page.locator('.tad-grid-header-cell[data-col-id="quantity"]');
+    await header.hover();
+    await header.getByRole("button", { name: "quantity column menu" }).click();
+    await expect(page.getByRole("menu")).toBeVisible();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: shot("header-menu") });
+  });
+});
+
+test.describe("data sources", () => {
+  test.skip(UI_IMPL !== "new", "for the new UI: set TAD_UI=new");
+
+  test("panel", async ({ openInTad }) => {
+    const dir = path.dirname(testFile(PARQUET_FILE));
+    const { page, grid } = await openInTad(dir, { windowSize, waitForData: false });
+    const panel = page.getByRole("complementary", { name: "Data sources" });
+    await panel.getByRole("treeitem", { name: new RegExp(PARQUET_FILE) }).click();
+    await grid.waitForData();
+    await page.mouse.move(700, 700);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: shot("data-sources") });
   });
 });
 

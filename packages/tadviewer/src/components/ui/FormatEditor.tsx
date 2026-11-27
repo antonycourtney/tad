@@ -13,7 +13,8 @@ import { FormatMethod, NumFormatOptions } from "../../NumFormatOptions";
 import { TextFormatOptions } from "../../TextFormatOptions";
 import { ViewParams } from "../../ViewParams";
 import { ViewState } from "../../ViewState";
-import { Minus, Plus, X } from "./icons";
+import { X } from "./icons";
+import { typeIcon } from "./typeIcon";
 
 /** A column's own format, or the default for a kind of column. */
 export type FormatTarget = { column: string } | { kind: ColumnKind };
@@ -90,6 +91,38 @@ export interface FormatEditorProps {
   onClose: () => void;
 }
 
+/** What a format does, in a few words (as the header menu's Format… shows it). */
+export function formatSummary(opts: NumFormatOptions | TextFormatOptions): string {
+  if (opts instanceof TextFormatOptions) {
+    return opts.urlsAsHyperlinks ? "URLs as links" : "Plain text";
+  }
+  switch (opts.formatMethod) {
+    case "auto":
+      return "Automatic" + (opts.commas ? "" : ", no 1,000s");
+    case "toString":
+      return "Full precision";
+    default: {
+      const dp = opts.decimalPlaces ?? 0;
+      return opts.exponential
+        ? `Scientific, ${dp} dp`
+        : `${dp} decimal${dp === 1 ? "" : "s"}` + (opts.commas ? "" : ", no 1,000s");
+    }
+  }
+}
+
+/** The values a number preview shows: the largest first, then the smallest and one other. */
+const previewValues = (values: any[]): any[] => {
+  const nums = values.filter((v) => typeof v === "number" || typeof v === "bigint");
+  if (nums.length < 2) {
+    return values.slice(0, 3);
+  }
+  const sorted = [...nums].sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+  const largest = sorted[0];
+  const smallest = sorted[sorted.length - 1];
+  const other = nums.find((v) => v !== largest && v !== smallest);
+  return [largest, smallest, ...(other !== undefined ? [other] : [])];
+};
+
 export const FormatEditor: React.FC<FormatEditorProps> = ({
   target,
   viewParams,
@@ -114,41 +147,50 @@ export const FormatEditor: React.FC<FormatEditorProps> = ({
     }
   };
   const own = isColumn && viewParams.columnFormats.has(target.column);
-  const title = isColumn
-    ? `Format ${schema.displayName(target.column)}`
-    : `${kindName(kind)} default`;
-  const users = isColumn
-    ? 0
-    : schema.columns.filter(
-        (c) => schema.columnType(c).kind === kind && !viewParams.columnFormats.has(c)
-      ).length;
-  const shown = samples.length > 0 ? samples : FALLBACK_SAMPLES[kind] ?? [];
+  const kn = kindName(kind);
+  const users = schema.columns.filter(
+    (c) => schema.columnType(c).kind === kind && !viewParams.columnFormats.has(c)
+  ).length;
+  const title = isColumn ? schema.displayName(target.column) : `${kn} default`;
+  const subtitle = isColumn
+    ? own
+      ? "Its own format"
+      : `Uses the ${kn} default`
+    : `Used by ${users} ${kn.toLowerCase()} column${users === 1 ? "" : "s"}`;
+  const footNote = isColumn
+    ? own
+      ? ""
+      : "Changes apply to this column only"
+    : "Columns with their own format keep it";
+  const isNumber = opts instanceof NumFormatOptions;
+  const given = samples.length > 0 ? samples : FALLBACK_SAMPLES[kind] ?? [];
+  const shown = isNumber ? previewValues(given) : given.slice(0, 2);
   const formatter = opts.getFormatter();
   return (
     <>
-      <div className="tui-poph">
-        <span className="tui-poph-title">{title}</span>
-        <button
-          type="button"
-          className="tui-iconbtn"
-          style={{ marginLeft: "auto" }}
-          aria-label="Close"
-          onClick={onClose}
-        >
+      <div className="tui-poph tui-fmthead">
+        <span className="tui-typeicon" aria-hidden="true">
+          {typeIcon(kind)}
+        </span>
+        <div className="tui-fmttitle">
+          <span className="tui-poph-title">{title}</span>
+          <span className="tui-fmtsub">{subtitle}</span>
+        </div>
+        <button type="button" className="tui-chipx" aria-label="Close" onClick={onClose}>
           <X size={12} strokeWidth={1.8} />
         </button>
       </div>
-      <div
-        className={"tui-preview" + (opts instanceof NumFormatOptions ? " tui-numeric" : "")}
-        aria-label="Preview"
-      >
+      <div className={"tui-preview" + (isNumber ? "" : " tui-text")} aria-label="Preview">
         {shown.map((v, i) => {
           const s = formatter(v) ?? "";
-          const link = opts instanceof TextFormatOptions && s.startsWith("<a ");
+          const link = !isNumber && s.startsWith("<a ");
           return (
-            <div key={i} className={link ? "tui-preview-link" : undefined}>
+            <span
+              key={i}
+              className={(isNumber && i === 0 ? "tui-p0" : "tui-ps") + (link ? " tui-plink" : "")}
+            >
               {link ? String(v) : s}
-            </div>
+            </span>
           );
         })}
       </div>
@@ -162,30 +204,23 @@ export const FormatEditor: React.FC<FormatEditorProps> = ({
         />
       )}
       <div className="tui-popf">
-        {isColumn ? (
-          own ? (
-            <button
-              type="button"
-              className="tui-link"
-              onClick={() => actions.clearColumnFormat(target.column, stateRef)}
-            >
-              Reset to the {kindName(kind)} default
-            </button>
-          ) : (
-            <span>Uses the {kindName(kind)} default until changed here.</span>
-          )
-        ) : (
-          <span>
-            Used by {users} {users === 1 ? "column" : "columns"}
-          </span>
-        )}
+        <span className="tui-fmtfoot">{footNote}</span>
+        {own ? (
+          <button
+            type="button"
+            className="tui-link"
+            onClick={() => actions.clearColumnFormat((target as { column: string }).column, stateRef)}
+          >
+            Reset to the {kn} default
+          </button>
+        ) : null}
       </div>
     </>
   );
 };
 
 const METHODS: [FormatMethod, string, string][] = [
-  ["auto", "Auto", "Up to 12 significant digits, without floating point noise"],
+  ["auto", "Auto", "Up to 12 significant digits"],
   ["toString", "Full", "Every digit, as stored"],
   ["toLocaleString", "Custom", "A fixed number of decimal places"],
 ];
@@ -199,10 +234,12 @@ const NumberFormat: React.FC<{
   const decimals = opts.decimalPlaces ?? 0;
   const setDecimals = (n: number) =>
     set(opts.set("decimalPlaces", Math.max(0, Math.min(20, n))) as NumFormatOptions);
+  const note = METHODS.find(([m]) => m === method)?.[2] ?? "";
   return (
     <>
-      <div className="tui-section">
-        <div className="tui-seg tui-wide" role="group" aria-label="Format">
+      <div className="tui-frow">
+        <span>Method</span>
+        <div className="tui-seg" role="group" aria-label="Format">
           {METHODS.map(([m, label, title]) => (
             <button
               key={m}
@@ -217,21 +254,20 @@ const NumberFormat: React.FC<{
           ))}
         </div>
       </div>
+      <div className="tui-hint tui-methodnote">{note}</div>
       {custom ? (
         <div className="tui-frow">
           <span>Decimal places</span>
           <div className="tui-stepper">
             <button
               type="button"
-              className="tui-iconbtn"
               aria-label="Fewer decimal places"
               disabled={decimals <= 0}
               onClick={() => setDecimals(decimals - 1)}
             >
-              <Minus size={12} strokeWidth={2} />
+              −
             </button>
             <input
-              className="tui-input"
               type="number"
               min={0}
               max={20}
@@ -246,28 +282,27 @@ const NumberFormat: React.FC<{
             />
             <button
               type="button"
-              className="tui-iconbtn"
               aria-label="More decimal places"
               disabled={decimals >= 20}
               onClick={() => setDecimals(decimals + 1)}
             >
-              <Plus size={12} strokeWidth={2} />
+              +
             </button>
           </div>
         </div>
-      ) : null}
-      {custom ? (
-        <Switch
-          label="Scientific notation"
-          on={opts.exponential}
-          onChange={(on) => set(opts.set("exponential", on) as NumFormatOptions)}
-        />
       ) : null}
       {method === "auto" || (custom && !opts.exponential) ? (
         <Switch
           label="1,000s separator"
           on={opts.commas}
           onChange={(on) => set(opts.set("commas", on) as NumFormatOptions)}
+        />
+      ) : null}
+      {custom ? (
+        <Switch
+          label="Scientific notation"
+          on={opts.exponential}
+          onChange={(on) => set(opts.set("exponential", on) as NumFormatOptions)}
         />
       ) : null}
     </>

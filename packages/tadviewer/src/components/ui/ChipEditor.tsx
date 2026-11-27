@@ -6,6 +6,7 @@ import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import log from "loglevel";
 import { Check, Minus, Search, X } from "./icons";
+import { typeIcon } from "./typeIcon";
 import {
   and,
   col,
@@ -98,11 +99,9 @@ function usePassingSummary(chip: Chip, context: ChipEditorContext): string {
   return res ? `${fmtCount(res.passing)} of ${fmtCount(res.total)} rows pass` : "";
 }
 
-const TypeIcon: React.FC<{ numeric: boolean }> = ({ numeric }) => (
-  <span className="tui-typeicon" aria-hidden="true">
-    {numeric ? "123" : "A"}
-  </span>
-);
+/** The kind of the chip's column, if it has one. */
+const chipKind = (chip: Chip, context: { schema: Schema }): string | null =>
+  chip.column ? context.schema.columnType(chip.column).kind : null;
 
 const Box: React.FC<{ on: boolean; mixed?: boolean }> = ({ on, mixed }) => (
   <span className={"tui-box" + (on ? " tui-on" : mixed ? " tui-mixed" : "")}>
@@ -143,12 +142,17 @@ const NullRow: React.FC<{ on: boolean; count: number | null; onToggle: () => voi
 
 const Header: React.FC<{
   title: string;
-  numeric: boolean;
+  /** The column's kind (for its type mark), or null for a condition on no one column. */
+  kind: string | null;
   note?: string;
   onClose: () => void;
-}> = ({ title, numeric, note, onClose }) => (
+}> = ({ title, kind, note, onClose }) => (
   <div className="tui-poph">
-    <TypeIcon numeric={numeric} />
+    {kind ? (
+      <span className="tui-typeicon" aria-hidden="true">
+        {typeIcon(kind)}
+      </span>
+    ) : null}
     <span className="tui-poph-title">{title}</span>
     {note ? <span className="tui-poph-note">{note}</span> : null}
     <button
@@ -199,7 +203,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ chip, title, context, onChange,
     <>
       <Header
         title={title}
-        numeric={false}
+        kind={chipKind(chip, context)}
         note={isPick ? "counts with other filters" : undefined}
         onClose={onClose}
       />
@@ -585,7 +589,7 @@ const RangeEditor: React.FC<RangeEditorProps> = ({ chip, title, context, onChang
   const hi = numbers?.max != null ? fmt(numbers.max) : "";
   return (
     <>
-      <Header title={title} numeric={true} onClose={onClose} />
+      <Header title={title} kind={chipKind(chip, context)} onClose={onClose} />
       <div className="tui-frow">
         <span className="tui-dim">Keep rows where it</span>
         <select
@@ -692,7 +696,7 @@ const FixedEditor: React.FC<ChipEditorProps & { chip: FixedChip; title: string }
   const condition = (chip.exp as SubExp).toSqlWhere(getDefaultDialect());
   return (
     <>
-      <Header title={title} numeric={false} onClose={onClose} />
+      <Header title={title} kind={chipKind(chip, context)} onClose={onClose} />
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 6px 6px" }}>
         <code className="tui-cond">{condition}</code>
         <span className="tui-hint">

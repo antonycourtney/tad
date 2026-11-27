@@ -75,6 +75,8 @@
   --tad-grid-header-hover-bg: #f5f5f4;
   --tad-grid-frozen-shadow: rgba(0, 0, 0, 0.12);
   --tad-grid-placeholder: #eeedeb;
+  --tad-grid-menu-btn-bg: #e7e5e4;
+  --tad-grid-menu-btn-hover-bg: #d6d3d1;
 }
 
 .tad-grid {
@@ -113,6 +115,8 @@
   --tad-grid-header-hover-bg: #363330;
   --tad-grid-frozen-shadow: rgba(0, 0, 0, 0.4);
   --tad-grid-placeholder: #383532;
+  --tad-grid-menu-btn-bg: #46423e;
+  --tad-grid-menu-btn-hover-bg: #5a5550;
 }
 
 .tad-grid-scroller {
@@ -142,7 +146,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   flex: none;
   box-sizing: border-box;
   height: 28px;
@@ -176,11 +180,19 @@
   letter-spacing: -0.02em;
 }
 
+/* The marks (filtered, sort) follow the title, as in the mock-up. */
 .tad-grid-header-title {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* A filtered column's mark (new UI). */
+.tad-grid-filtered {
+  flex: none;
+  display: inline-flex;
+  color: var(--tad-grid-link);
 }
 
 .tad-grid-sort {
@@ -194,22 +206,23 @@
 
 /* The header menu's button (new UI): shown on hover, or while its menu is
    open, over the end of the title. */
+/* The ▾ button, as in the mock-up: 22px, shown on hover. */
 .tad-grid-header-menu-btn {
   position: absolute;
   top: 50%;
-  right: 6px;
+  right: 3px;
   transform: translateY(-50%);
   display: none;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   border: 0;
   border-radius: 4px;
-  background: var(--tad-grid-header-hover-bg);
+  background: var(--tad-grid-menu-btn-bg);
   box-shadow: -6px 0 6px var(--tad-grid-header-hover-bg);
-  color: var(--tad-grid-text-dim);
+  color: var(--tad-grid-text);
   cursor: pointer;
   z-index: 2;
 }
@@ -223,7 +236,7 @@
 .tad-grid-header-menu-btn:hover,
 .tad-grid-header-menu-open > .tad-grid-header-menu-btn {
   color: var(--tad-grid-text);
-  background: var(--tad-grid-line);
+  background: var(--tad-grid-menu-btn-hover-bg);
   box-shadow: -6px 0 6px var(--tad-grid-header-hover-bg);
 }
 
@@ -413,6 +426,15 @@
   width: 16px;
   color: var(--tad-grid-text-dim);
   cursor: pointer;
+}
+
+.tad-grid-pivot-count {
+  flex: none;
+  margin-left: auto;
+  padding-left: 6px;
+  font-size: 10.5px;
+  font-weight: 400;
+  color: var(--tad-grid-text-dim);
 }
 
 .tad-grid-pivot-text {

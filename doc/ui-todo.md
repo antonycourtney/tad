@@ -49,12 +49,15 @@ The design comes from a clickable mock-up reviewed on 2026-11-26 (a private arti
 ### Header menu
 
 Hover a column header for its ▾ button, or right-click the header. The menu has:
-- sort ascending, sort descending, clear sort
-- pivot by this column, or remove it from the pivot
-- Filter… (opens the column's existing chip, or adds one)
-- Format…
+- a title: the column's type mark, name and SQL type
+- sort ascending, sort descending (✓ on the current one), and Clear sort when the view sorts by the column
+- "Pivot by region", or Remove from pivot
+- Filter… (opens the column's existing chip, or adds one); "Edit filter…" when the column has one
+- Format…, with the column's format on the right ("Default", or for example "2 decimals")
 - Hide column
-- the aggregation
+- "In pivot rows, show": the aggregations as a row of buttons (Sum, Avg, Min, Max, Count, Uniq, None). Picking one leaves the menu open.
+
+The header marks a filtered column with a blue funnel after its name, and a pivoted view's rows show their count of rows in the pivot column.
 
 ### Filter bar
 
@@ -156,7 +159,7 @@ The filter bar replaces the dialog and lives in the footer.
 ### 6. Data sources panel
 
 - [x] The tree, the search, the descriptions, and the highlighted open table (`components/ui/DataSourcePanel.tsx`), with keyboard navigation (arrow keys, Home, End, Enter). Tested in `data-sources.e2e.ts`, on a folder.
-- [x] The activity bar, with Lucide icons and labelled buttons (`components/ui/ActivityBar.tsx`).
+- [x] The activity bar, with labelled buttons (`components/ui/ActivityBar.tsx`).
 
 ### 7. The remaining Blueprint UI
 
@@ -168,10 +171,11 @@ The filter bar replaces the dialog and lives in the footer.
 On 2026-11-26 the sidebar turned out to differ from the mock-up in many details (an icon toggle on every row instead of the labelled check box columns, tinted chips without separators, a wider panel). Each piece is now compared with the mock-up's source and screenshots, and brought back in line.
 
 - [x] The view settings sidebar: shelves, column list (all three modes), Options, the switches. Columns can be dragged onto a shelf, as in the mock-up. The grid's text columns are marked "A" again, as in the mock-up.
-- [ ] The activity bar and the data sources panel.
-- [ ] The header menu and the format editor.
-- [ ] The filter bar and its chip editors.
-- [ ] The dialogs and the loading overlay (not in the mock-up: they follow its style).
+- [x] The activity bar and the data sources panel: the mock-up's own icons (its SVGs, not Lucide), its 44px bar, tree rows and indents, and the "Click a table or file to open it." hint.
+- [x] The header menu and the format editor: the menu's title row and items as listed under "Header menu", the mock-up's icons (`ui/glyphs.tsx`), and its 236px width. The format editor has the mock-up's header (type mark, title, "Uses the Real default" or "Used by N real columns"), preview box, Method buttons with a note, decimal-places stepper, and footer.
+- [x] The grid header: the mock-up's pivot, sort and filtered marks, which now follow the column name; its 22px ▾ button; "region › country" as the pivot column's title; and each pivot row's count of rows.
+- [x] The filter bar and its chip editors: these were close already. The filter icon, the type marks (# for real columns) and the popover widths (288px, 220px for "+ Filter") now match, and "+ Filter" marks columns that already have a chip "filtered".
+- [x] The dialogs and the loading overlay: not in the mock-up. They already use its popover surface, labels, segmented buttons and footer rule, so they're unchanged.
 
 ### 8. Remove the old UI
 
@@ -204,7 +208,7 @@ Choices made while working on this alone, to check:
 - Esc reverts; clicking outside the popover (or its ×) keeps the change. There's no Cancel button. Esc in a chip that was just added (by + Filter, or the header menu's Filter…) removes it.
 - The header menu's Sort ascending/descending replaces the sort, as clicking the header does, unless the view already sorts by that column; then it only changes that column's direction. Should it offer "Add to sort" too (Shift-click on the header does that)?
 - Right-clicking a header opens its menu below the ▾ button, not at the pointer.
-- The aggregation "null" is shown as "none" in the header menu.
+- The aggregation "null" is shown as "None", in the header menu and the sidebar.
 - Only the DOM grid has the header menu; the Glide grid (TAD_GRID=glide) doesn't.
 - The column list shows the displayed columns in order, then the hidden ones in the table's order. Only displayed columns can be dragged to reorder them; showing a hidden column adds it at the end, as before. Any column can be dragged onto a shelf.
 - While a search filters the column list, rows can be dragged onto a shelf but not reordered, since moving a row among a subset is ambiguous.
@@ -224,7 +228,9 @@ Deliberate, and kept:
 
 - "Label leaf rows with" is turned off unless the view is pivoted.
 - Rows and chips can also be moved from the keyboard (Space, the arrow keys, Space).
-- The Format list's example for a number column is its largest loaded value, in its format. For a text column it's what the format does ("URLs as links" or "Plain text"), as in the mock-up.
+- The Format list's example for a number column is its largest loaded value, in its format. For a text column it's what the format does ("URLs as links" or "Plain text"), as in the mock-up. A default's editor previews the column its example comes from.
+- The pivot column's row counts come from the record count column (Rec), so they're shown only while Rec's aggregation is Sum (its default).
+- The Glide grid (`TAD_GRID=glide`) has neither the header menu nor the new header marks and row counts.
 
 ## Release notes draft
 
@@ -256,3 +262,4 @@ For `doc/site/index.html`, when the new UI ships:
 - 2026-11-26: step 6 done: the data sources panel, and a new activity bar.
 - 2026-11-26: step 7 done: the dialogs and loading overlay, and Lucide icons in the DOM grid. With `TAD_UI=new`, the app shows no Blueprint components. Checked steps 5–7 in tadweb-app too, in a browser; that showed the web app's page didn't fill the window (in both UIs), now fixed.
 - 2026-11-26: the sidebar didn't match the mock-up (see "Match the mock-up"). Rebuilt it from the mock-up's source: the labelled Show/Pivot/Sort columns of plain check boxes, white chips with grips and "›"/"then" between them, "asc"/"desc" sort buttons, the mock-up's 296px width, and Options pinned below a scrolling column list. Columns can now be dragged onto a shelf.
+- 2026-11-26: the rest of the new UI checked against the mock-up the same way, piece by piece (see "Match the mock-up"): the activity bar, data sources panel, header menu, format editor, grid header and filter bar now follow it. New from the mock-up: row counts in pivot rows, and a mark on filtered columns' headers.

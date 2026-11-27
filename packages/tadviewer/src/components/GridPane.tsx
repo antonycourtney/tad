@@ -11,12 +11,16 @@ import * as util from "../util";
 import { DataGrid, DataGridProps, HeaderPanel } from "./DataGrid";
 import { HeaderMenu, HeaderPanelContent } from "./ui/HeaderMenu";
 import { newUI } from "../uiImpl";
+import { filteredColumns } from "../filterChips";
 import { DomDataGrid } from "./DomDataGrid";
 import { GlideDataGrid } from "./GlideDataGrid";
 import { SimpleClipboard } from "./SimpleClipboard";
 
 import { CellClickData } from "./CellClickData";
 import { Cell, ColumnData, SelectionChangeData } from "./SelectionChangeData";
+
+/** The record count column aggtree adds to every view ("Rec", 1 per row). */
+const REC_COLUMN = "Rec";
 
 export type OpenURLFn = (url: string) => void;
 
@@ -98,8 +102,9 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
     const { schema } = dataView;
     const pivotNames = viewParams.vpivots.map((cid) => schema.displayName(cid));
     const leafCid = viewParams.pivotLeafColumn;
-    let leafPivotStr = leafCid ? " > " + schema.displayName(leafCid) : "";
-    pivotColumnDisplayName = "Pivot: " + pivotNames.join(" > ") + leafPivotStr;
+    const names = leafCid ? [...pivotNames, schema.displayName(leafCid)] : pivotNames;
+    // The new UI titles it as the mock-up does (the header shows a pivot mark):
+    pivotColumnDisplayName = newUI ? names.join(" › ") : "Pivot: " + names.join(" > ");
   }
 
   const showHiddenColumns = viewParams.showHiddenCols;
@@ -228,6 +233,22 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
     [viewState, stateRef]
   );
 
+  const filtered = React.useMemo(
+    () =>
+      newUI ? filteredColumns(viewParams.filterExp, viewState.baseSchema) : undefined,
+    [viewParams.filterExp, viewState.baseSchema]
+  );
+
+  // The new UI shows each pivot row's count of rows (as the mock-up does),
+  // from the record count column, while that sums:
+  const pivotCountColumn =
+    newUI &&
+    isPivoted &&
+    viewState.baseSchema.columns.includes(REC_COLUMN) &&
+    viewParams.getAggFn(viewState.baseSchema, REC_COLUMN) === "sum"
+      ? REC_COLUMN
+      : undefined;
+
   const renderHeaderPanel = React.useMemo(
     () =>
       newUI
@@ -264,6 +285,8 @@ const GridPaneInternal: React.FunctionComponent<GridPaneProps> = ({
     renderHeaderMenu,
     renderHeaderPanel,
     sortKey,
+    filteredColumns: filtered,
+    pivotCountColumn,
     isPivoted,
     clipboard,
     openURL,

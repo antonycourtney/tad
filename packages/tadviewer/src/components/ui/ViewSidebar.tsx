@@ -22,7 +22,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { StateRef } from "oneref";
-import { AggFn, aggFns, ColumnKind, defaultAggFn, Schema } from "reltab";
+import { AggFn, aggFns, ColumnKind, ColumnType, defaultAggFn, Schema } from "reltab";
 import * as actions from "../../actions";
 import { AppState } from "../../AppState";
 import { ViewParams } from "../../ViewParams";
@@ -37,7 +37,7 @@ import {
   sampleValues,
   Switch,
 } from "./FormatEditor";
-import { ArrowDown, ArrowUp, Calendar, Check, ChevronDown, Clock, Minus, Search } from "./icons";
+import { ArrowDown, ArrowUp, Check, ChevronDown, Minus, Search } from "./icons";
 import {
   collisions,
   dragId,
@@ -47,6 +47,7 @@ import {
   Shelves,
   useDragSensors,
 } from "./Shelves";
+import { typeIcon } from "./typeIcon";
 import "./ui.css";
 
 type Mode = "layout" | "aggregation" | "format";
@@ -69,28 +70,6 @@ const columnOrder = (schema: Schema, viewParams: ViewParams): string[] => {
   return [...shown, ...schema.columns.filter((c) => !shown.includes(c))];
 };
 
-/** A column type's mark, as the grid's header shows it. */
-export const typeIcon = (kind: string): React.ReactNode => {
-  switch (kind) {
-    case "integer":
-      return "123";
-    case "real":
-      return "#";
-    case "string":
-      return "A";
-    case "boolean":
-      return <Check size={11} strokeWidth={2} />;
-    case "date":
-      return <Calendar size={11} strokeWidth={1.8} />;
-    case "time":
-    case "datetime":
-    case "timestamp":
-      return <Clock size={11} strokeWidth={1.8} />;
-    default:
-      return "A";
-  }
-};
-
 const TypeIcon: React.FC<{ schema: Schema; column: string }> = ({ schema, column }) => (
   <span className="tui-typeicon" aria-hidden="true">
     {typeIcon(schema.columnType(column).kind)}
@@ -100,6 +79,17 @@ const TypeIcon: React.FC<{ schema: Schema; column: string }> = ({ schema, column
 /** An aggregation function's name, as the menus show it. */
 export const aggLabel = (fn: AggFn) =>
   fn === "null" ? "None" : fn.charAt(0).toUpperCase() + fn.slice(1);
+
+const AGG_ORDER: AggFn[] = ["sum", "avg", "min", "max", "count", "uniq", "null"];
+
+/** A column type's aggregation functions, in the mock-up's order. */
+export const aggChoices = (ct: ColumnType): AggFn[] => {
+  const fns = aggFns(ct);
+  return [
+    ...AGG_ORDER.filter((fn) => fns.includes(fn)),
+    ...fns.filter((fn) => !AGG_ORDER.includes(fn)),
+  ];
+};
 
 export const ViewSidebar: React.FC<ViewSidebarProps> = ({ expanded, viewState, stateRef }) => {
   const { baseSchema: schema, viewParams } = viewState;
@@ -512,7 +502,7 @@ const AggregationList: React.FC<{
                 aria-label={`Aggregate ${name} with`}
                 onChange={(e) => actions.setAggFn(c, e.target.value as AggFn, stateRef)}
               >
-                {aggFns(ct).map((fn) => (
+                {aggChoices(ct).map((fn) => (
                   <option key={fn} value={fn}>
                     {aggLabel(fn)}
                   </option>
@@ -556,9 +546,25 @@ const FormatList: React.FC<{
     }
     return max;
   };
-  /** Sample values for a default's editor: the first column of the kind that has some loaded. */
+  /**
+   * Sample values for a default's editor: those of the column the row's
+   * example comes from (for numbers, the one with the largest value), or else
+   * of the first column of the kind that has some loaded.
+   */
   const kindSamples = (kind: ColumnKind): any[] => {
-    for (const c of schema.columns.filter((c) => kindOf(c) === kind)) {
+    const columns = schema.columns.filter((c) => kindOf(c) === kind);
+    let best: string | null = null;
+    let bestMax: number | bigint | null = null;
+    if (isNumericKind(kind)) {
+      for (const c of columns) {
+        const m = largest(c);
+        if (m !== null && (bestMax === null || m > bestMax)) {
+          best = c;
+          bestMax = m;
+        }
+      }
+    }
+    for (const c of best ? [best, ...columns] : columns) {
       const vs = sampleValues(rows, c);
       if (vs.length > 0) {
         return vs;
@@ -631,7 +637,7 @@ const FormatList: React.FC<{
             <Popover.Trigger asChild>{button}</Popover.Trigger>
             <Popover.Portal>
               <Popover.Content
-                className="tad-ui tui-pop"
+                className="tad-ui tui-pop tui-fmtpop"
                 side="right"
                 align="start"
                 sideOffset={8}

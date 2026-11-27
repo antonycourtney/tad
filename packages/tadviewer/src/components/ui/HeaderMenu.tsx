@@ -6,25 +6,31 @@
 import * as React from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { StateRef } from "oneref";
-import { AggFn, aggFns } from "reltab";
+import { AggFn } from "reltab";
 import * as actions from "../../actions";
 import { AppState } from "../../AppState";
+import { filteredColumns } from "../../filterChips";
 import { requestColumnFilter } from "../../uiEvents";
 import { ViewState } from "../../ViewState";
 import { HeaderPanel } from "../DataGrid";
-import { editableFormat, FormatEditor, loadedRows, sampleValues } from "./FormatEditor";
 import {
-  ArrowDown,
-  ArrowUp,
-  Check,
-  ChevronRight,
-  EyeOff,
-  ListFilter,
-  ListTree,
-  Paintbrush,
-  Sigma,
-  X,
-} from "./icons";
+  editableFormat,
+  formatSummary,
+  FormatEditor,
+  loadedRows,
+  sampleValues,
+} from "./FormatEditor";
+import {
+  FilterGlyph,
+  FormatGlyph,
+  HideGlyph,
+  PivotGlyph,
+  SortDownGlyph,
+  SortUpGlyph,
+  TickGlyph,
+} from "./glyphs";
+import { typeIcon } from "./typeIcon";
+import { aggChoices, aggLabel } from "./ViewSidebar";
 import "./ui.css";
 
 export interface HeaderMenuProps {
@@ -35,25 +41,26 @@ export interface HeaderMenuProps {
   showPanel: (panel: HeaderPanel) => void;
 }
 
-const ICON = { size: 14, strokeWidth: 1.8 };
-
 const Item: React.FC<{
   icon?: React.ReactNode;
   checked?: boolean;
+  aside?: string;
   onSelect: () => void;
   children: React.ReactNode;
-}> = ({ icon, checked, onSelect, children }) => (
+}> = ({ icon, checked, aside, onSelect, children }) => (
   <DropdownMenu.Item className="tui-mi" onSelect={onSelect}>
     <span className="tui-mi-icon">{icon}</span>
     <span>{children}</span>
+    {aside ? <span className="tui-mi-aside">{aside}</span> : null}
     {checked ? (
       <span className="tui-mi-check" aria-label="(current)">
-        <Check size={13} strokeWidth={2} />
+        <TickGlyph />
       </span>
     ) : null}
   </DropdownMenu.Item>
 );
 
+/** The menu, as in the mock-up: a title, then sort, pivot, filter, format, hide, and the aggregation. */
 export const HeaderMenu: React.FC<HeaderMenuProps> = ({
   column,
   viewState,
@@ -66,8 +73,10 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({
   const sortAsc = sortIdx >= 0 ? sortKey[sortIdx][1] : null;
   const pivoted = viewParams.vpivots.includes(column);
   const ct = schema.columnType(column);
+  const name = schema.displayName(column);
   const agg = viewParams.getAggFn(schema, column);
-  const formattable = editableFormat({ column }, viewParams, schema) !== null;
+  const format = editableFormat({ column }, viewParams, schema);
+  const ownFormat = viewParams.columnFormats.has(column);
   // Whether the chosen item opens something that takes the focus (so the
   // menu mustn't give it back to its button as it closes):
   const focusElsewhere = React.useRef(false);
@@ -85,26 +94,28 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({
   return (
     <DropdownMenu.Portal>
       <DropdownMenu.Content
-        className="tad-ui tui-menu"
+        className="tad-ui tui-menu tui-colmenu"
         align="end"
         sideOffset={4}
         collisionPadding={8}
-        aria-label={`${schema.displayName(column)} column`}
+        aria-label={`${name} column`}
         onCloseAutoFocus={(e) => focusElsewhere.current && e.preventDefault()}
       >
-        <Item icon={<ArrowUp {...ICON} />} checked={sortAsc === true} onSelect={() => sortBy(true)}>
+        <DropdownMenu.Label className="tui-mtitle">
+          <span className="tui-typeicon" aria-hidden="true">
+            {typeIcon(ct.kind)}
+          </span>
+          <span className="tui-mtitle-name">{name}</span>
+          <span className="tui-mtitle-type">{ct.sqlTypeName.toUpperCase()}</span>
+        </DropdownMenu.Label>
+        <Item icon={<SortUpGlyph />} checked={sortAsc === true} onSelect={() => sortBy(true)}>
           Sort ascending
         </Item>
-        <Item
-          icon={<ArrowDown {...ICON} />}
-          checked={sortAsc === false}
-          onSelect={() => sortBy(false)}
-        >
+        <Item icon={<SortDownGlyph />} checked={sortAsc === false} onSelect={() => sortBy(false)}>
           Sort descending
         </Item>
         {sortIdx >= 0 ? (
           <Item
-            icon={<X {...ICON} />}
             onSelect={() =>
               actions.setSortKey(
                 sortKey.filter(([c]) => c !== column),
@@ -116,21 +127,24 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({
           </Item>
         ) : null}
         <DropdownMenu.Separator className="tui-sep" />
-        <Item icon={<ListTree {...ICON} />} onSelect={() => actions.togglePivot(column, stateRef)}>
-          {pivoted ? "Remove from pivot" : "Pivot by this column"}
+        <Item icon={<PivotGlyph />} onSelect={() => actions.togglePivot(column, stateRef)}>
+          {pivoted ? "Remove from pivot" : `Pivot by ${name}`}
         </Item>
         <Item
-          icon={<ListFilter {...ICON} />}
+          icon={<FilterGlyph />}
           onSelect={() => {
             focusElsewhere.current = true;
             requestColumnFilter(column);
           }}
         >
-          Filter…
+          {filteredColumns(viewParams.filterExp, schema).includes(column)
+            ? "Edit filter…"
+            : "Filter…"}
         </Item>
-        {formattable ? (
+        {format ? (
           <Item
-            icon={<Paintbrush {...ICON} />}
+            icon={<FormatGlyph />}
+            aside={ownFormat ? formatSummary(format) : "Default"}
             onSelect={() => {
               focusElsewhere.current = true;
               showPanel("format");
@@ -139,46 +153,30 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({
             Format…
           </Item>
         ) : null}
-        <DropdownMenu.Sub>
-          <DropdownMenu.SubTrigger className="tui-mi">
-            <span className="tui-mi-icon">
-              <Sigma {...ICON} />
-            </span>
-            <span>Aggregation</span>
-            <span className="tui-mi-aside">{agg === "null" ? "none" : agg}</span>
-            <ChevronRight size={12} strokeWidth={1.8} className="tui-dim" />
-          </DropdownMenu.SubTrigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.SubContent
-              className="tad-ui tui-menu tui-submenu"
-              sideOffset={4}
-              collisionPadding={8}
-            >
-              <DropdownMenu.Label className="tui-menu-label">
-                Pivot rows and totals show the
-              </DropdownMenu.Label>
-              <DropdownMenu.RadioGroup
-                value={agg}
-                onValueChange={(v) => actions.setAggFn(column, v as AggFn, stateRef)}
-              >
-                {aggFns(ct).map((fn) => (
-                  <DropdownMenu.RadioItem key={fn} value={fn} className="tui-mi">
-                    <span className="tui-mi-icon">
-                      <DropdownMenu.ItemIndicator>
-                        <Check size={13} strokeWidth={2} />
-                      </DropdownMenu.ItemIndicator>
-                    </span>
-                    <span>{fn === "null" ? "none" : fn}</span>
-                  </DropdownMenu.RadioItem>
-                ))}
-              </DropdownMenu.RadioGroup>
-            </DropdownMenu.SubContent>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Sub>
-        <DropdownMenu.Separator className="tui-sep" />
-        <Item icon={<EyeOff {...ICON} />} onSelect={() => actions.toggleShown(column, stateRef)}>
+        <Item icon={<HideGlyph />} onSelect={() => actions.toggleShown(column, stateRef)}>
           Hide column
         </Item>
+        <DropdownMenu.Separator className="tui-sep" />
+        <DropdownMenu.Group className="tui-mgroup">
+          <DropdownMenu.Label className="tui-mgroup-label">In pivot rows, show</DropdownMenu.Label>
+          <DropdownMenu.RadioGroup
+            className="tui-seg tui-wrap"
+            value={agg}
+            onValueChange={(v) => actions.setAggFn(column, v as AggFn, stateRef)}
+          >
+            {aggChoices(ct).map((fn) => (
+              <DropdownMenu.RadioItem
+                key={fn}
+                value={fn}
+                className="tui-segb"
+                // Picking one keeps the menu open, as in the mock-up:
+                onSelect={(e) => e.preventDefault()}
+              >
+                {aggLabel(fn)}
+              </DropdownMenu.RadioItem>
+            ))}
+          </DropdownMenu.RadioGroup>
+        </DropdownMenu.Group>
       </DropdownMenu.Content>
     </DropdownMenu.Portal>
   );

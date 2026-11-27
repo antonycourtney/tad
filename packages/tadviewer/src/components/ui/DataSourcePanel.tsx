@@ -21,17 +21,7 @@ import {
 import { throttle } from "lodash";
 import * as actions from "../../actions";
 import { AppState } from "../../AppState";
-import {
-  ChevronRight,
-  Database,
-  File,
-  Folder,
-  FolderOpen,
-  Info,
-  Layers,
-  Search,
-  Table,
-} from "./icons";
+import { Search } from "./icons";
 import "./ui.css";
 
 export interface DataSourcePanelProps {
@@ -73,20 +63,66 @@ const sourceNote = (id: DataSourceId): string => {
   return PROVIDER_NAMES[id.providerName] ?? id.providerName;
 };
 
-const KindIcon: React.FC<{ kind: DataSourceKind; open: boolean }> = ({ kind, open }) => {
-  const props = { size: 14, strokeWidth: 1.7 };
+/** One of the mock-up's 16-unit line icons. */
+const Glyph: React.FC<{ size: number; stroke: number; children: React.ReactNode }> = ({
+  size,
+  stroke,
+  children,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={stroke}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {children}
+  </svg>
+);
+
+/** The kind of node, as the mock-up draws it. */
+const KindIcon: React.FC<{ kind: DataSourceKind }> = ({ kind }) => {
   switch (kind) {
     case "DataSource":
     case "Database":
-      return <Database {...props} />;
+      return (
+        <Glyph size={14} stroke={1.3}>
+          <ellipse cx="8" cy="3.75" rx="5" ry="1.75" />
+          <path d="M3 3.75v8.5c0 .97 2.24 1.75 5 1.75s5-.78 5-1.75v-8.5" />
+          <path d="M3 8c0 .97 2.24 1.75 5 1.75S13 8.97 13 8" />
+        </Glyph>
+      );
     case "Dataset":
-      return <Layers {...props} />;
+      return (
+        <Glyph size={14} stroke={1.3}>
+          <path d="M8 2.5 14 5.5 8 8.5 2 5.5z" />
+          <path d="m2 8.5 6 3 6-3M2 11.25l6 3 6-3" />
+        </Glyph>
+      );
     case "Table":
-      return <Table {...props} />;
+      return (
+        <Glyph size={14} stroke={1.3}>
+          <rect x="2.5" y="3" width="11" height="10" rx="1.25" />
+          <path d="M2.5 6.5h11M2.5 9.75h11M6.5 6.5V13" />
+        </Glyph>
+      );
     case "Directory":
-      return open ? <FolderOpen {...props} /> : <Folder {...props} />;
+      return (
+        <Glyph size={14} stroke={1.3}>
+          <path d="M2 4.5c0-.55.45-1 1-1h3.2l1.5 1.5H13c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1H3c-.55 0-1-.45-1-1z" />
+        </Glyph>
+      );
     default:
-      return <File {...props} />;
+      return (
+        <Glyph size={14} stroke={1.3}>
+          <path d="M4 2.5h5l3 3v8H4z" />
+          <path d="M9 2.5v3h3" />
+        </Glyph>
+      );
   }
 };
 
@@ -282,10 +318,10 @@ export const DataSourcePanel: React.FC<DataSourcePanelProps> = ({
       aria-label="Data sources"
     >
       <div className="sidebar-content">
-        <div className="tui-sidebar-inner">
-          <div className="tui-sb-head">Data sources</div>
+        <div className="tui-dspanel">
+          <div className="tui-lbl">Data sources</div>
           <label className="tui-search">
-            <Search size={13} strokeWidth={1.8} />
+            <Search size={13} strokeWidth={1.6} />
             <input
               type="text"
               value={search}
@@ -315,7 +351,7 @@ export const DataSourcePanel: React.FC<DataSourcePanelProps> = ({
                   aria-busy={loading.has(t.key) || undefined}
                   tabIndex={t === current ? 0 : -1}
                   className={"tui-dsrow" + (isCurrent ? " tui-current" : "")}
-                  style={{ paddingLeft: 4 + t.depth * 16 }}
+                  style={{ paddingLeft: 4 + t.depth * 14 }}
                   title={note ? `${t.node.displayName} (${note})` : undefined}
                   onClick={() => activate(t)}
                   onFocus={() => setFocusKey(t.key)}
@@ -331,12 +367,16 @@ export const DataSourcePanel: React.FC<DataSourcePanelProps> = ({
                       }
                     }}
                   >
-                    {t.node.isContainer ? <ChevronRight size={12} strokeWidth={2} /> : null}
+                    {t.node.isContainer ? (
+                      <Glyph size={13} stroke={1.7}>
+                        <path d="m6.5 4.5 3.5 3.5-3.5 3.5" />
+                      </Glyph>
+                    ) : null}
                   </span>
                   <span className="tui-dsicon" aria-hidden="true">
-                    <KindIcon kind={t.node.kind} open={isOpen} />
+                    <KindIcon kind={t.node.kind} />
                   </span>
-                  <span className="tui-colname">{t.node.displayName}</span>
+                  <span className="tui-dsname">{t.node.displayName}</span>
                   {note ? (
                     // (rtl puts the ellipsis at the start; the mark keeps a leading "/" there)
                     <span className="tui-dsnote">{"\u200E" + note}</span>
@@ -346,11 +386,12 @@ export const DataSourcePanel: React.FC<DataSourcePanelProps> = ({
               );
             })}
             {roots.length > 0 && rows.length === 0 ? (
-              <div className="tui-hint" style={{ padding: "6px 4px" }}>
+              <div className="tui-hint" style={{ padding: "8px 4px" }}>
                 Nothing loaded matches. Folders are searched once opened.
               </div>
             ) : null}
           </div>
+          <div className="tui-hint">Click a table or file to open it.</div>
         </div>
       </div>
     </aside>
@@ -369,7 +410,10 @@ const Description: React.FC<{ text: string }> = ({ text }) => (
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <Info size={12} strokeWidth={1.8} />
+        <Glyph size={13} stroke={1.4}>
+          <circle cx="8" cy="8" r="5.75" />
+          <path d="M8 7.25v3.75M8 5h.01" />
+        </Glyph>
       </button>
     </Popover.Trigger>
     <Popover.Portal>

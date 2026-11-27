@@ -47,7 +47,7 @@ test("sorts, and clears the sort", async ({ openInTad }) => {
 
 test("pivots by a column, and stops", async ({ openInTad }) => {
   const { grid, page } = await openInTad(testFile(PARQUET_FILE));
-  await choose(page, "region", "Pivot by this column");
+  await choose(page, "region", "Pivot by region");
   await expect(header(page, "_pivot")).toBeVisible();
   await expect.poll(() => grid.rowCount()).toBeLessThan(10);
   await choose(page, "region", "Remove from pivot");
@@ -68,7 +68,7 @@ test("Filter… opens the column's chip, or adds one", async ({ openInTad }) => 
   await expect(chips).toHaveCount(0);
 
   await controls.setFilter("all", [{ column: "region", op: "IN", value: ["North"] }]);
-  await choose(page, "region", "Filter…");
+  await choose(page, "region", "Edit filter…");
   await expect(popover.locator('.tui-vrow[data-value="North"]')).toHaveAttribute(
     "aria-pressed",
     "true"

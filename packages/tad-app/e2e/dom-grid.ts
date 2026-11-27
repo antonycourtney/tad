@@ -123,7 +123,15 @@ export class DomGrid implements GridDriver {
     if ((await cell.count()) === 0) {
       return null;
     }
-    return cell.textContent();
+    // A pivot cell's value is its label (the new UI also shows the row count):
+    const label = cell.locator(".tad-grid-pivot-text");
+    return (await label.count()) > 0 ? label.textContent() : cell.textContent();
+  }
+
+  /** A pivot row's count of rows, as its pivot cell shows it (new UI), or null. */
+  async pivotCount(row: number): Promise<string | null> {
+    const count = this.root.locator(`[data-row="${row}"] .tad-grid-pivot-count`);
+    return (await count.count()) > 0 ? count.textContent() : null;
   }
 
   async expectCellText(col: number, row: number, expected: string): Promise<void> {

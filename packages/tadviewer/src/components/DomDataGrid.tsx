@@ -38,17 +38,15 @@ import { NumericColumnHistogram } from "./ColumnHistogram";
 import { DataGridProps, HeaderPanel } from "./DataGrid";
 import "./DomDataGrid.css";
 import { LoadingModal } from "./LoadingModal";
+import { Calendar, Check, CircleHelp, Clock } from "./ui/icons";
 import {
-  ArrowDown,
-  ArrowUp,
-  Calendar,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  CircleHelp,
-  Clock,
-  Network,
-} from "./ui/icons";
+  ChevronDownGlyph,
+  ChevronRightGlyph,
+  FilledFilterGlyph,
+  PivotGlyph,
+  SortDownGlyph,
+  SortUpGlyph,
+} from "./ui/glyphs";
 import * as ss from "./scaledScroll";
 
 const ROW_HEIGHT = 28; // 27px of content plus a 1px grid line
@@ -257,32 +255,38 @@ const TypeIcon = ({ kind }: { kind: string }) => {
     case "timestamp":
       return <Clock size={11} strokeWidth={2} />;
     case "pivot":
-      return <Network size={11} strokeWidth={2} />;
+      return <PivotGlyph size={13} />;
     default:
       return <CircleHelp size={11} strokeWidth={2} />;
   }
 };
 
-const PivotCellContent = ({ item }: { item: DataRow }) => (
-  <>
-    <span
-      className="tad-grid-indent"
-      style={{ width: (item._depth ?? 0) * INDENT_PER_LEVEL }}
-    />
-    <span className="tad-grid-toggle">
-      {item._isLeaf ? null : (
-        item._isOpen ? (
-          <ChevronDown size={13} strokeWidth={2} />
-        ) : (
-          <ChevronRight size={13} strokeWidth={2} />
-        )
-      )}
-    </span>
-    <span className="tad-grid-pivot-text">
-      {item._pivot == null ? "" : String(item._pivot)}
-    </span>
-  </>
-);
+/** A pivot row's count of rows, as the mock-up shows it (with 1,000s separators). */
+const formatCount = (v: unknown): string | null =>
+  typeof v === "number" || typeof v === "bigint" ? v.toLocaleString("en-US") : null;
+
+const PivotCellContent = ({ item, countColumn }: { item: DataRow; countColumn?: string }) => {
+  const count = countColumn && !item._isLeaf ? formatCount(item[countColumn]) : null;
+  return (
+    <>
+      <span
+        className="tad-grid-indent"
+        style={{ width: (item._depth ?? 0) * INDENT_PER_LEVEL }}
+      />
+      <span className="tad-grid-toggle">
+        {item._isLeaf ? null : item._isOpen ? <ChevronDownGlyph /> : <ChevronRightGlyph />}
+      </span>
+      <span className="tad-grid-pivot-text">
+        {item._pivot == null ? "" : String(item._pivot)}
+      </span>
+      {count !== null ? (
+        <span className="tad-grid-pivot-count" title={`${count} rows`}>
+          {count}
+        </span>
+      ) : null}
+    </>
+  );
+};
 
 /**
  * Lay out the visible columns of a row: frozen columns (always included by
@@ -320,6 +324,8 @@ interface GridRowProps {
   totalWidth: number;
   frozenCount: number;
   isPivoted: boolean;
+  /** The column holding a pivot row's count of rows, if the pivot cell shows it. */
+  countColumn?: string;
   /** range of selected columns in this row, or -1 */
   selFrom: number;
   selTo: number;
@@ -335,6 +341,7 @@ const GridRow = React.memo(function GridRow({
   totalWidth,
   frozenCount,
   isPivoted,
+  countColumn,
   selFrom,
   selTo,
   focusCol,
@@ -376,7 +383,7 @@ const GridRow = React.memo(function GridRow({
           className={className + " tad-grid-pivot-cell pivot-column"}
           style={style}
         >
-          <PivotCellContent item={item} />
+          <PivotCellContent item={item} countColumn={countColumn} />
         </div>
       );
     }
@@ -450,6 +457,8 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
     onHistogramBrushFilter,
     sortKey,
     onSetSortKey,
+    filteredColumns,
+    pivotCountColumn,
     onGridClick,
     onGridSelectionChange,
     onSetColumnOrder,
@@ -1262,7 +1271,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
           e.stopPropagation();
         }}
       >
-        <ChevronDown size={12} strokeWidth={2} />
+        <ChevronDownGlyph />
       </button>
     );
     if (state === null || !renderHeaderMenu) {
@@ -1288,7 +1297,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
         <Popover.Anchor asChild>{button}</Popover.Anchor>
         <Popover.Portal>
           <Popover.Content
-            className="tad-ui tui-pop"
+            className="tad-ui tui-pop tui-fmtpop"
             side="bottom"
             align="end"
             sideOffset={4}
@@ -1442,12 +1451,17 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
             <TypeIcon kind={meta.kind} />
           </span>
           <span className="tad-grid-header-title">{meta.title}</span>
+          {filteredColumns?.includes(meta.cid) ? (
+            <span className="tad-grid-filtered" title="Filtered">
+              <FilledFilterGlyph />
+            </span>
+          ) : null}
           {si ? (
             <span className="tad-grid-sort">
               {si[1] ? (
-                <ArrowUp size={11} strokeWidth={2.4} />
+                <SortUpGlyph size={11} stroke={2} />
               ) : (
-                <ArrowDown size={11} strokeWidth={2.4} />
+                <SortDownGlyph size={11} stroke={2} />
               )}
               {multiSort ? si[0] + 1 : null}
             </span>
@@ -1460,7 +1474,16 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
         </div>
       );
     });
-  }, [colItems, frozenCount, columns, sortKey, headerMenu, renderHeaderMenu, renderHeaderPanel]);
+  }, [
+    colItems,
+    frozenCount,
+    columns,
+    sortKey,
+    filteredColumns,
+    headerMenu,
+    renderHeaderMenu,
+    renderHeaderPanel,
+  ]);
 
   const histogramCells = React.useMemo(
     () =>
@@ -1518,6 +1541,7 @@ export const DomDataGrid: React.FunctionComponent<DataGridProps> = (
         totalWidth={totalWidth}
         frozenCount={frozenCount}
         isPivoted={!!isPivoted}
+        countColumn={pivotCountColumn}
         selFrom={inSel ? selRange!.c0 : -1}
         selTo={inSel ? selRange!.c1 : -1}
         focusCol={selection && selection.focus.row === r ? selection.focus.col : -1}

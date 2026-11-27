@@ -441,6 +441,19 @@ const MATCH_LABEL: Record<MatchOp, string> = {
 };
 export const matchLabel = (op: MatchOp): string => MATCH_LABEL[op];
 
+/** The columns a view's filter has conditions on. */
+export function filteredColumns(fe: FilterExp | null | undefined, schema: Schema): string[] {
+  if (!fe) {
+    return [];
+  }
+  try {
+    const columns = filterExpToChips(fe, schema).chips.map((c) => c.column);
+    return Array.from(new Set(columns.filter((c): c is string => c != null)));
+  } catch {
+    return [];
+  }
+}
+
 const valueLabel = (v: string | null) => (v === null ? "NULL" : v);
 const listSummary = (vals: (string | null)[]) =>
   vals.length <= 2 ? vals.map(valueLabel).join(", ") : `${vals.length} values`;

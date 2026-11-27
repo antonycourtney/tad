@@ -560,6 +560,10 @@ export interface DataGridProps {
   ) => void;
   sortKey?: [string, boolean][];
   onSetSortKey?: (sortKey: [string, boolean][]) => void;
+  /** The columns the view filters on (the new UI marks their headers). */
+  filteredColumns?: string[];
+  /** The column holding each pivot row's count of rows, shown in the pivot cell (new UI). */
+  pivotCountColumn?: string;
   /**
    * The new UI's column header menu (DomDataGrid only): the menu (Radix
    * DropdownMenu content) for a column, which can replace itself with a

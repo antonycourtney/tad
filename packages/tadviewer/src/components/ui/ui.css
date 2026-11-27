@@ -300,14 +300,14 @@
   box-shadow: var(--tui-shadow);
   padding: 4px;
   box-sizing: border-box;
-  width: 300px;
+  width: 288px;
   max-height: var(--radix-popover-content-available-height);
   overflow-y: auto;
   outline: none;
 }
 
 .tui-pop.tui-narrow {
-  width: 230px;
+  width: 220px;
 }
 
 .tui-poph {
@@ -645,8 +645,77 @@
 
 .tui-mi-aside {
   margin-left: auto;
+  font-size: 11px;
+  color: var(--tad-grid-text-dim);
+}
+
+/* The header menu, as in the mock-up */
+
+.tui-menu.tui-colmenu {
+  width: 236px;
+}
+
+.tui-mtitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 7px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--tad-grid-line);
+}
+
+.tui-mtitle-name {
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tui-mtitle-type {
+  margin-left: auto;
   font-size: 10.5px;
   color: var(--tad-grid-text-dim);
+}
+
+.tui-menu .tui-sep {
+  margin: 4px 0;
+  background: var(--tad-grid-line);
+}
+
+.tui-mgroup {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 4px 8px 6px;
+}
+
+.tui-mgroup-label {
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-seg.tui-wrap {
+  flex-wrap: wrap;
+}
+
+.tui-menu .tui-segb {
+  display: inline-flex;
+  align-items: center;
+  outline: none;
+  user-select: none;
+}
+
+.tui-menu .tui-segb[data-highlighted] {
+  color: var(--tad-grid-text) !important;
+  box-shadow: 0 0 0 2px var(--tui-focus-ring);
+}
+
+.tui-menu .tui-segb[data-state="checked"] {
+  background: var(--tui-surface);
+  color: var(--tad-grid-text) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
 }
 
 /* --- dropdown menus (Radix DropdownMenu) --- */
@@ -707,49 +776,147 @@
   color: var(--tad-grid-text-dim);
 }
 
-/* --- the format editor --- */
+/* --- the format editor (as in the mock-up) --- */
 
-.tui-preview {
-  margin: 0 6px 8px;
-  padding: 6px 8px;
-  border-radius: 5px;
-  background: var(--tui-code-bg);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.tui-pop.tui-fmtpop {
+  width: 272px;
 }
 
-.tui-preview > div {
+.tui-fmthead {
+  align-items: flex-start;
+}
+
+.tui-fmthead > .tui-typeicon {
+  margin-top: 2px;
+}
+
+.tui-fmttitle {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.tui-fmtsub {
+  font-size: 11px;
+  color: var(--tad-grid-text-dim);
+}
+
+.tui-fmthead > .tui-chipx {
+  margin-left: auto;
+}
+
+.tui-preview {
+  margin: 0 6px 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--tad-grid-hover-bg);
+  border: 1px solid var(--tad-grid-line);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.tui-preview > span {
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tui-preview.tui-numeric > div {
+.tui-p0 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tad-grid-text);
+}
+
+.tui-ps {
+  font-size: 12px;
+  color: var(--tad-grid-true-text);
+}
+
+.tui-ps.tui-plink {
+  color: var(--tad-grid-link);
+}
+
+.tui-fmtpop .tui-frow {
+  padding: 5px 6px;
+  min-height: 24px;
+}
+
+.tui-fmtpop .tui-switchrow {
+  min-height: 24px;
+  padding: 5px 6px;
+}
+
+.tui-fmtpop .tui-switchrow:hover {
+  background: transparent;
+}
+
+.tui-methodnote {
+  padding: 0 6px 4px;
   text-align: right;
 }
 
-.tui-preview-link {
-  color: var(--tad-grid-link);
-  text-decoration: underline;
+.tui-fmtfoot {
+  font-size: 11px;
 }
 
 .tui-stepper {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 2px;
-  margin-left: auto;
+  border: 1px solid var(--tui-border);
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--tui-surface);
 }
 
-.tui-stepper .tui-input {
-  flex: none;
-  width: 44px;
+.tui-stepper > button {
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: var(--tui-surface);
+  color: var(--tad-grid-true-text) !important;
+  font-size: 14px !important;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tui-stepper > button:hover {
+  background: var(--tui-subtle-bg);
+  color: var(--tad-grid-text) !important;
+}
+
+.tui-stepper > button:disabled,
+.tui-stepper > button:disabled:hover {
+  color: var(--tui-dash) !important;
+  background: var(--tui-surface);
+  cursor: default;
+}
+
+.tui-stepper > input {
+  width: 28px;
+  height: 22px;
+  box-sizing: border-box;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--tui-border);
+  border-right: 1px solid var(--tui-border);
+  background: var(--tui-surface);
   text-align: center;
+  font-weight: 600;
+  outline: none;
   -moz-appearance: textfield;
 }
 
-.tui-stepper .tui-input::-webkit-inner-spin-button,
-.tui-stepper .tui-input::-webkit-outer-spin-button {
+.tui-stepper > input:focus {
+  background: var(--tui-accent-hover-bg);
+}
+
+.tui-stepper > input::-webkit-inner-spin-button,
+.tui-stepper > input::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
@@ -821,21 +988,6 @@
 
 .tui-sidebar.sidebar-collapsed {
   border-right: 0;
-}
-
-.tui-sidebar-inner {
-  box-sizing: border-box;
-  width: 296px;
-  padding: 10px 12px 24px;
-}
-
-.tui-sb-head {
-  padding: 0 4px 6px;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--tad-grid-text-dim);
 }
 
 /* A section's label: PIVOT, SORT, COLUMNS, OPTIONS. */
@@ -1320,39 +1472,43 @@
   gap: 6px;
 }
 
-/* --- the activity bar --- */
+/* --- the activity bar (as in the mock-up) --- */
 
 .tui-activitybar.activityBar {
-  gap: 6px;
-  padding-top: 10px;
+  width: 44px;
+  min-width: 44px;
+  gap: 4px;
+  padding-top: 8px;
   box-sizing: border-box;
-  background: var(--tad-grid-header-bg);
-  border-right: 1px solid var(--tad-grid-header-line);
+  background: var(--tad-grid-header-hover-bg);
+  border-right: 1px solid var(--tui-hover-strong);
+}
+
+.tui-activitybar.activityBar > .tui-activity {
+  margin: 0;
 }
 
 .tui-activity {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 7px;
+  border: 0;
+  border-radius: 6px;
   background: transparent;
-  color: var(--tad-grid-text-dim);
+  color: var(--tad-grid-true-text) !important;
   cursor: pointer;
 }
 
 .tui-activity:hover {
-  background: var(--tui-subtle-bg);
-  color: var(--tad-grid-text);
+  background: var(--tui-hover-strong);
 }
 
 .tui-activity[aria-pressed="true"] {
   background: var(--tui-pale);
-  border-color: var(--tui-pale-border);
-  color: var(--tui-mark);
+  color: var(--tui-accent) !important;
 }
 
 .tui-activity:focus-visible {
@@ -1360,23 +1516,37 @@
   box-shadow: 0 0 0 2px var(--tui-focus-ring);
 }
 
-/* --- the data sources panel --- */
+/* --- the data sources panel (as in the mock-up) --- */
 
-.tui-sidebar-inner > .tui-search {
-  margin-bottom: 8px;
+.tui-dspanel {
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 12px 12px;
+}
+
+.tui-dspanel .tui-search {
+  flex: none;
+  margin: 0;
 }
 
 .tui-dstree {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
 .tui-dsrow {
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 5px;
-  min-height: 26px;
-  padding-right: 4px;
+  gap: 6px;
+  height: 26px;
+  padding-right: 6px;
   border-radius: 5px;
   cursor: pointer;
   box-sizing: border-box;
@@ -1391,9 +1561,11 @@
   box-shadow: inset 0 0 0 2px var(--tui-focus-ring);
 }
 
-.tui-dsrow.tui-current {
+.tui-dsrow.tui-current,
+.tui-dsrow.tui-current:hover {
   background: var(--tui-pale);
   color: var(--tui-mark);
+  font-weight: 500;
 }
 
 .tui-dsrow[aria-busy="true"] .tui-dsicon {
@@ -1422,29 +1594,41 @@
 }
 
 .tui-dsrow.tui-current .tui-dsicon {
-  color: var(--tui-mark);
+  color: var(--tui-accent);
+}
+
+.tui-dsname {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tui-dsnote {
   flex: 0 1 auto;
   min-width: 0;
-  max-width: 45%;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   direction: rtl;
   text-align: left;
   font-size: 11px;
+  font-weight: 400;
   color: var(--tad-grid-text-dim);
 }
 
 .tui-dsinfo {
   flex: none;
-  opacity: 0.6;
+  width: 16px;
+  height: 16px;
+  color: var(--tui-faint) !important;
+  cursor: help;
 }
 
 .tui-dsinfo:hover {
-  opacity: 1;
+  color: var(--tad-grid-text) !important;
 }
 
 .tui-dsdesc {
@@ -1453,7 +1637,6 @@
   white-space: pre-wrap;
   line-height: 1.4;
 }
-
 
 /* --- buttons --- */
 
