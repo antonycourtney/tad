@@ -1812,6 +1812,11 @@
 
 /* --- loading --- */
 
+/* The loading overlay covers the grid and filter bar, not the sidebars. */
+.tui-center {
+  position: relative;
+}
+
 .tui-loading {
   position: absolute;
   inset: 0;

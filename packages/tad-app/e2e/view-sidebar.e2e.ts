@@ -187,3 +187,21 @@ test("leaf row labels are for pivoted views", async ({ openInTad }) => {
   await controls.setPivot(["region"]);
   await expect(leaf).toBeEnabled();
 });
+
+test("the loading overlay leaves the sidebar usable", async ({ openInTad }) => {
+  const { page, controls } = await openInTad(testFile(PARQUET_FILE));
+  await controls.openViewSettings();
+  // The overlay shows only while a query takes over half a second; add it as
+  // the app does, and check it covers the grid but not the sidebar:
+  const covers = await page.evaluate(() => {
+    const pane = document.querySelector(".center-app-pane") as HTMLElement;
+    const overlay = document.createElement("div");
+    overlay.className = "tad-ui tui-loading";
+    pane.prepend(overlay);
+    const o = overlay.getBoundingClientRect();
+    const p = pane.getBoundingClientRect();
+    overlay.remove();
+    return [o.left - p.left, o.top - p.top, o.width - p.width, o.height - p.height];
+  });
+  expect(covers).toEqual([0, 0, 0, 0]);
+});

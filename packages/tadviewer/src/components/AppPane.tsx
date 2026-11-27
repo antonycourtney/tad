@@ -467,7 +467,7 @@ export const AppPane: React.FunctionComponent<AppPaneProps> = ({
         <LoadingImpl embedded={embedded} />
       ) : null;
     centerPane = (
-      <div className="center-app-pane">
+      <div className={"center-app-pane" + (newUI ? " tui-center" : "")}>
         {loadingModal}
         <GridPane
           appState={appState}
