@@ -10,6 +10,8 @@ The design comes from a clickable mock-up reviewed on 2026-11-26 (a private arti
 - it stays fast to work with tables of many columns
 - nothing the current UI can do is lost
 
+**The mock-up is the visual spec:** labels, marks, sizes, colours and spacing come from it. Before a piece is called done, screenshots of the build are compared with the mock-up side by side. Any deliberate difference is listed under "Differences from the mock-up".
+
 **How the work is done:** as for the grid (`doc/grid-todo.md`).
 - Small commits go straight to master.
 - Each one is checked first: build, then the unit tests, then the UI tests. Styling changes also get screenshots.
@@ -23,10 +25,10 @@ The design comes from a clickable mock-up reviewed on 2026-11-26 (a private arti
 
 - **Activity bar:** switches between Data sources and View settings. Clicking the active button hides the sidebar.
 - **Pivot and Sort shelves** at the top replace the Order, Pivot and Sort tabs.
-  - Each shows its columns as chips, in order. Drag a chip to reorder it, or click × to remove it.
-  - A sort chip's direction button flips it between ascending and descending.
+  - Each shows its columns as chips, in order, joined by "›" (pivot) or "then" (sort). Drag a chip to reorder it, or click × to remove it. Drag a column from the list onto a shelf to add it there.
+  - A sort chip's "asc"/"desc" button flips its direction.
 - **The column list** has one row per column, with a search box. A **Layout | Aggregation | Format** switch changes what each row shows.
-  - **Layout** has Show, Pivot and Sort toggles.
+  - **Layout** is a small table: a Column · Show · Pivot · Sort header, then plain check boxes on each row. A box is empty when off and shows a mark when on: a tick, the column's place in the pivot, or its sort direction.
     - Pivot shows the column's position in the pivot.
     - Sort cycles ascending → descending → off. It shows the column's position when sorting by more than one column.
     - An "All" row shows a three-state Show toggle (all, some, none).
@@ -42,7 +44,7 @@ The design comes from a clickable mock-up reviewed on 2026-11-26 (a private arti
   - A default's editor says how many columns use it.
   - A column with its own format gets "Reset to the Real default" (or Integer, or Text).
 - **Options:** column histograms, totals as top row, and "Label leaf rows with" (today's Pivot Tree Leaf Level).
-- **Toggles:** a ticked toggle is a pale blue tint with a dark blue mark, not solid blue.
+- **Check boxes:** a ticked box is a pale blue tint with a dark blue mark, not solid blue. Switches are blue when on.
 
 ### Header menu
 
@@ -161,6 +163,16 @@ The filter bar replaces the dialog and lives in the footer.
 - [x] The Export dialogs, the dialog asking whether to replace the current view, and the loading modal (`components/ui/Dialogs.tsx`, on Radix Dialog). Tested in `export.e2e.ts` (both UIs) and `data-sources.e2e.ts`. The delayed-calculation footer belongs only to the old filter dialog, so it goes with the old UI.
 - [x] The `Icon`s that `DomDataGrid` used are Lucide icons now, in both UIs. (It used no `Tooltip`.)
 
+### Match the mock-up
+
+On 2026-11-26 the sidebar turned out to differ from the mock-up in many details (an icon toggle on every row instead of the labelled check box columns, tinted chips without separators, a wider panel). Each piece is now compared with the mock-up's source and screenshots, and brought back in line.
+
+- [x] The view settings sidebar: shelves, column list (all three modes), Options, the switches. Columns can be dragged onto a shelf, as in the mock-up. The grid's text columns are marked "A" again, as in the mock-up.
+- [ ] The activity bar and the data sources panel.
+- [ ] The header menu and the format editor.
+- [ ] The filter bar and its chip editors.
+- [ ] The dialogs and the loading overlay (not in the mock-up: they follow its style).
+
 ### 8. Remove the old UI
 
 Not started: it waits on the question of when the new UI becomes the default (see "Questions to revisit"). Removing the old UI also removes the way back to it.
@@ -194,18 +206,25 @@ Choices made while working on this alone, to check:
 - Right-clicking a header opens its menu below the ▾ button, not at the pointer.
 - The aggregation "null" is shown as "none" in the header menu.
 - Only the DOM grid has the header menu; the Glide grid (TAD_GRID=glide) doesn't.
-- The column list shows the displayed columns in order, then the hidden ones in the table's order. Only displayed columns can be dragged; showing a hidden column adds it at the end, as before.
-- Dragging is turned off while the column list is filtered by a search, since moving a row among a subset is ambiguous.
+- The column list shows the displayed columns in order, then the hidden ones in the table's order. Only displayed columns can be dragged to reorder them; showing a hidden column adds it at the end, as before. Any column can be dragged onto a shelf.
+- While a search filters the column list, rows can be dragged onto a shelf but not reordered, since moving a row among a subset is ambiguous.
 - The "All columns" toggle: when some columns are hidden, a click shows them all; when all are shown, a click hides them all.
 - Sorting from the column list adds the column to the end of the sort (as the old Sort tab did), unlike the header menu, which replaces it.
 - "Label leaf rows with" is turned off unless the view is pivoted.
-- The sidebar's own type icons match the grid's (123, #, and Lucide icons for text, dates and times).
+- The sidebar's type marks match the grid's: 123, # and A, as in the mock-up, and Lucide icons for dates, times and booleans (which the mock-up doesn't have).
 - The data sources search covers what has been loaded: the sources, and the folders, databases and schemas opened so far. Searching every folder could be slow (BigQuery, Snowflake, large directories). Is that enough?
 - The data sources panel's info icon shows a description as a tooltip on hover, and in a popover on click.
 - A top-level file or folder's note is the folder it's in (shortened from the start); a database's is its engine (DuckDB, BigQuery…).
 - Folders list data files only, so `.tad` files don't appear in the data sources panel (as before). Should they?
 - The dialog for opening a table over a changed view keeps Cancel as its default, as before. Its "Open in a new window" does nothing in the web app (a TODO in `tadweb-app`); hide it there?
-- The grid's icon for text columns is now Lucide's "T" (Blueprint's was an "A"), in both UIs.
+
+## Differences from the mock-up
+
+Deliberate, and kept:
+
+- "Label leaf rows with" is turned off unless the view is pivoted.
+- Rows and chips can also be moved from the keyboard (Space, the arrow keys, Space).
+- The Format list's example for a number column is its largest loaded value, in its format. For a text column it's what the format does ("URLs as links" or "Plain text"), as in the mock-up.
 
 ## Release notes draft
 
@@ -214,7 +233,7 @@ For `doc/site/index.html`, when the new UI ships:
 - A new look for the controls around the table, built to keep the data first and to stay quick with many columns:
   - **Filter bar** below the table: a chip for each condition. Text columns pick values from a list showing how many rows have each, or match text; number columns pick a range on a histogram. Changes apply as you make them; Esc undoes them.
   - **Column menu** on each header (the ▾ button, or right-click): sort, pivot, filter, format, aggregation and hide.
-  - **Sidebar:** Pivot and Sort shelves you can drag to reorder, and one list of columns to show, pivot, sort, aggregate and format, with a search box.
+  - **Sidebar:** Pivot and Sort shelves (drag a column onto one, or drag a chip to reorder), and one list of columns to show, pivot, sort, aggregate and format, with a search box.
   - **Data sources** panel with a search box, and the open table highlighted.
 - **Behaviour change:** filters such as "is not one of" and "doesn't contain" now keep rows where the column has no value (NULL), with a checkbox to drop them. Before, they dropped those rows without saying so.
 - Comparing text alphabetically (<, ≤, >, ≥) is no longer offered. Saved views that use it still filter the same way, and show the condition as a read-only chip that can be removed.
@@ -236,3 +255,4 @@ For `doc/site/index.html`, when the new UI ships:
 - 2026-11-26: step 5 done: the sidebar (shelves, column list, options). The new UI's test driver no longer falls back to the Blueprint one for anything. The app bundle is 5,763,786 bytes (1,805,963 gzipped), up 85 KB with dnd-kit and the sidebar.
 - 2026-11-26: step 6 done: the data sources panel, and a new activity bar.
 - 2026-11-26: step 7 done: the dialogs and loading overlay, and Lucide icons in the DOM grid. With `TAD_UI=new`, the app shows no Blueprint components. Checked steps 5–7 in tadweb-app too, in a browser; that showed the web app's page didn't fill the window (in both UIs), now fixed.
+- 2026-11-26: the sidebar didn't match the mock-up (see "Match the mock-up"). Rebuilt it from the mock-up's source: the labelled Show/Pivot/Sort columns of plain check boxes, white chips with grips and "›"/"then" between them, "asc"/"desc" sort buttons, the mock-up's 296px width, and Options pinned below a scrolling column list. Columns can now be dragged onto a shelf.

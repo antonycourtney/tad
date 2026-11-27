@@ -21,6 +21,12 @@
   --tui-bar-off: #d6e4f5;
   --tui-bar-on: #4f86cf;
   --tui-code-bg: #f5f5f4;
+  --tui-box-border: #c9c4bf;
+  --tui-box-border-hover: #a8a29e;
+  --tui-faint: #a8a29e;
+  --tui-dash: #d6d3d1;
+  --tui-drop-bg: #eef6ff;
+  --tui-hover-strong: #e7e5e4;
   --tui-shadow: 0 10px 28px rgba(28, 25, 23, 0.13), 0 1px 3px rgba(28, 25, 23, 0.08);
   font-family: var(
     --tad-grid-font-family,
@@ -47,6 +53,12 @@
   --tui-bar-off: #33465c;
   --tui-bar-on: #6c9fd8;
   --tui-code-bg: #22201e;
+  --tui-box-border: #6b655f;
+  --tui-box-border-hover: #857e77;
+  --tui-faint: #6b655f;
+  --tui-dash: #5a5550;
+  --tui-drop-bg: #1f3346;
+  --tui-hover-strong: #46423e;
   --tui-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
@@ -742,7 +754,7 @@
   margin: 0;
 }
 
-/* A labelled switch (role="switch"): a pale track with a blue mark when on. */
+/* A labelled switch (role="switch"): a grey track, blue when on (as in the mock-up). */
 .tui-switchrow {
   display: flex;
   align-items: center;
@@ -766,40 +778,45 @@
   margin-left: auto;
   flex: none;
   position: relative;
-  width: 26px;
-  height: 15px;
+  width: 28px;
+  height: 16px;
   border-radius: 8px;
-  background: var(--tui-border);
-  transition: background 0.12s;
+  background: var(--tui-dash);
+  transition: background 0.15s;
 }
 
 .tui-switch > span {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--tui-surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  transition: left 0.12s;
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: left 0.15s;
 }
 
 .tui-switchrow[aria-checked="true"] .tui-switch {
-  background: var(--tui-pale-border);
+  background: var(--tui-accent);
 }
 
 .tui-switchrow[aria-checked="true"] .tui-switch > span {
-  left: 13px;
-  background: var(--tui-mark);
+  left: 14px;
 }
 
-/* --- the view settings sidebar --- */
+/* --- the sidebars (sizes, spacing and marks as in the mock-up) --- */
 
 .tui-sidebar.sidebar {
   background: var(--tad-grid-header-bg);
   border-right: 1px solid var(--tad-grid-header-line);
   box-sizing: border-box;
+}
+
+.tui-sidebar.sidebar-expanded,
+.tui-sidebar > .sidebar-content {
+  width: 296px;
+  min-width: 296px;
 }
 
 .tui-sidebar.sidebar-collapsed {
@@ -808,12 +825,8 @@
 
 .tui-sidebar-inner {
   box-sizing: border-box;
-  width: 340px;
+  width: 296px;
   padding: 10px 12px 24px;
-}
-
-.tui-sb-section {
-  margin-top: 16px;
 }
 
 .tui-sb-head {
@@ -825,148 +838,298 @@
   color: var(--tad-grid-text-dim);
 }
 
-.tui-sb-section > .tui-search,
-.tui-sb-section > .tui-seg {
-  margin-bottom: 6px;
+/* A section's label: PIVOT, SORT, COLUMNS, OPTIONS. */
+.tui-lbl {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tad-grid-text-dim);
 }
 
-.tui-sb-option {
-  padding: 4px 6px;
+.tui-strong {
+  font-weight: 500;
 }
 
-/* Shelves */
+/* The view settings sidebar: the shelves and Options stay put, and the column list scrolls. */
+.tui-vs {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 460px;
+  display: flex;
+  flex-direction: column;
+}
 
-.tui-shelves {
+.tui-vs .tui-search {
+  margin: 0;
+}
+
+.tui-vs-shelves {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 12px 10px;
+}
+
+.tui-vs-shelfsec {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.tui-shelf {
+.tui-vs-cols {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 12px 10px;
+}
+
+.tui-vs-colshead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  min-height: 28px;
-  padding: 4px 6px;
-  border: 1px dashed var(--tui-chip-border);
-  border-radius: 7px;
-  box-sizing: border-box;
 }
 
-.tui-shelf-title {
+.tui-vs-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.tui-vs-opts {
   flex: none;
-  width: 32px;
-  padding-top: 3px;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--tad-grid-text-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--tad-grid-line);
 }
 
-.tui-shelf-chips {
+.tui-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 22px;
+}
+
+.tui-vs-opts .tui-switchrow {
+  min-height: 22px;
+  padding: 0;
+}
+
+.tui-vs-opts .tui-switchrow:hover {
+  background: transparent;
+}
+
+/* Shelves */
+
+.tui-shelf {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  min-height: 20px;
-  flex: 1;
-  min-width: 0;
+  min-height: 32px;
+  padding: 3px;
+  box-sizing: border-box;
+  border: 1px dashed transparent;
+  border-radius: 6px;
 }
 
-.tui-shelf-chips > .tui-hint {
-  padding-top: 2px;
+.tui-shelf.tui-empty {
+  border-color: var(--tui-dash);
+  padding: 3px 8px;
+}
+
+.tui-shelf.tui-drop {
+  border-color: var(--tui-focus);
+  background: var(--tui-drop-bg);
+}
+
+.tui-shelfsep {
+  color: var(--tui-faint);
 }
 
 .tui-shelfchip {
   display: inline-flex;
   align-items: center;
-  gap: 1px;
-  height: 22px;
-  padding: 0 2px 0 0;
-  border: 1px solid var(--tui-pale-border);
-  border-radius: 5px;
-  background: var(--tui-pale);
-  color: var(--tui-mark);
+  gap: 3px;
+  height: 24px;
+  padding: 0 2px 0 3px;
   box-sizing: border-box;
+  border: 1px solid var(--tui-border);
+  border-radius: 5px;
+  background: var(--tui-surface);
+  font-weight: 500;
+}
+
+.tui-shelfchip:hover {
+  border-color: var(--tui-border-hover);
+}
+
+.tui-shelfchip.tui-drop {
+  box-shadow: -3px 0 0 var(--tui-focus);
 }
 
 .tui-shelfchip-name {
-  padding: 0 4px 0 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 100%;
   cursor: grab;
-  white-space: nowrap;
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   outline: none;
   border-radius: 4px;
+  min-width: 0;
 }
 
 .tui-shelfchip-name:focus-visible {
   box-shadow: 0 0 0 2px var(--tui-focus-ring);
 }
 
-.tui-shelfchip .tui-iconbtn {
-  width: 16px;
-  height: 16px;
-  color: var(--tui-mark);
+.tui-shelfchip-label {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tui-shelfchip .tui-grip {
+  opacity: 1;
+  width: auto;
+  color: var(--tui-faint);
+}
+
+/* What follows the pointer while dragging a column or a chip. */
+.tui-dragchip {
+  cursor: grabbing;
+  box-shadow: var(--tui-shadow);
+  color: var(--tad-grid-text);
+}
+
+.tui-dragchip .tui-shelfchip-name {
+  cursor: grabbing;
+  padding-right: 4px;
+}
+
+.tui-dirb {
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--tui-accent-hover-bg);
+  color: var(--tui-accent) !important;
+  font-size: 10.5px !important;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tui-dirb:hover {
+  background: var(--tui-pale);
+}
+
+.tui-chipx {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--tad-grid-text-dim) !important;
+  cursor: pointer;
+}
+
+.tui-chipx:hover {
+  background: var(--tad-grid-line);
+  color: var(--tad-grid-text) !important;
 }
 
 .tui-dragging {
-  position: relative;
-  z-index: 5;
-  box-shadow: var(--tui-shadow);
-  opacity: 0.95;
+  opacity: 0.4;
 }
 
-/* The column list */
+/* The column list: a header, then a row per column */
 
-.tui-collist {
+.tui-mhead {
+  flex: none;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding-left: 40px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--tad-grid-text-dim);
+  border-bottom: 1px solid var(--tad-grid-line);
+}
+
+.tui-mhead-name {
+  flex: 1 1 auto;
+}
+
+.tui-mhead-agg {
+  width: 92px;
+}
+
+.tui-mhead-example {
+  width: 134px;
+  padding-right: 8px;
+  box-sizing: border-box;
+  text-align: right;
+}
+
+.tui-tgc {
+  width: 38px;
+  flex: none;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .tui-colrow {
   display: flex;
   align-items: center;
-  gap: 6px;
-  width: 100%;
-  min-height: 28px;
-  padding: 0 4px 0 2px;
-  border: 0;
+  gap: 4px;
+  height: 26px;
   border-radius: 5px;
   background: transparent;
   box-sizing: border-box;
-  text-align: left;
 }
 
 .tui-colrow:hover {
   background: var(--tui-subtle-bg);
 }
 
-.tui-colrow.tui-dragging {
-  background: var(--tui-surface);
-}
-
 .tui-colrow.tui-allrow {
+  flex: none;
   border-bottom: 1px solid var(--tad-grid-line);
   border-radius: 0;
-  margin-bottom: 2px;
 }
 
-.tui-colrow.tui-allrow:hover {
-  background: transparent;
+.tui-allcount {
+  font-weight: 400;
+  font-size: 11px;
 }
 
 .tui-colrow.tui-hidden .tui-colname {
   color: var(--tad-grid-text-dim);
 }
 
-.tui-colrow.tui-fmtrow {
-  cursor: pointer;
-}
-
-.tui-colrow.tui-fmtrow:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--tui-focus-ring);
+.tui-defs {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--tad-grid-line);
 }
 
 .tui-grip {
@@ -976,7 +1139,7 @@
   justify-content: center;
   width: 14px;
   height: 22px;
-  color: var(--tad-grid-text-dim);
+  color: var(--tui-faint);
   cursor: grab;
   border-radius: 3px;
   outline: none;
@@ -993,90 +1156,168 @@
 }
 
 .tui-colname {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tui-tog,
-.tui-tog-space {
-  flex: none;
-  width: 26px;
-  height: 22px;
-}
-
-.tui-tog {
+/* A check box: empty when off; a pale blue tint and a dark blue mark when on. */
+.tui-tg {
+  min-width: 16px;
+  height: 16px;
+  padding: 0;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 1px;
-  padding: 0;
-  border: 1px solid transparent;
+  border: 1px solid var(--tui-box-border);
+  border-radius: 4px;
+  background: var(--tui-surface);
+  color: var(--tui-mark) !important;
+  font-size: 10px !important;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.12s, border-color 0.12s;
+}
+
+.tui-tg:hover {
+  border-color: var(--tui-box-border-hover);
+  background: var(--tad-grid-hover-bg);
+}
+
+.tui-tg[aria-pressed="true"],
+.tui-tg[aria-pressed="mixed"] {
+  background: var(--tui-pale);
+  border-color: var(--tui-pale-border);
+}
+
+.tui-tg[aria-pressed="true"]:hover,
+.tui-tg[aria-pressed="mixed"]:hover {
+  border-color: var(--tui-accent);
+}
+
+.tui-tg.tui-wide[aria-pressed="true"] {
+  padding: 0 3px;
+}
+
+/* A compact select, with its own chevron */
+
+.tui-aggwrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  margin-right: 2px;
+}
+
+.tui-aggsel {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 90px;
+  height: 22px;
+  box-sizing: border-box;
+  border: 1px solid var(--tui-border);
   border-radius: 5px;
-  background: transparent;
-  color: var(--tad-grid-text-dim);
-  opacity: 0.55;
+  background: var(--tui-surface);
+  padding: 0 20px 0 7px;
+  font-size: 11.5px !important;
   cursor: pointer;
 }
 
-.tui-colrow:hover .tui-tog {
-  opacity: 0.9;
+.tui-aggsel:hover {
+  border-color: var(--tui-border-hover);
 }
 
-.tui-tog:hover {
-  background: var(--tui-surface);
-  border-color: var(--tui-border);
+.tui-aggsel:focus {
+  outline: 0;
+  border-color: var(--tui-focus);
+  box-shadow: 0 0 0 2px var(--tui-focus-ring);
 }
 
-.tui-tog[aria-pressed="true"],
-.tui-tog[aria-pressed="mixed"] {
-  opacity: 1;
-  background: var(--tui-pale);
+.tui-aggsel:disabled {
+  cursor: default;
+  color: var(--tad-grid-text-dim) !important;
+}
+
+.tui-aggsel.tui-changed {
+  color: var(--tui-mark) !important;
+  font-weight: 600;
+  background: var(--tui-accent-hover-bg);
   border-color: var(--tui-pale-border);
-  color: var(--tui-mark);
 }
 
-.tui-tog[aria-pressed="mixed"] {
+.tui-aggsel.tui-leafsel {
+  width: 104px;
+}
+
+.tui-aggwrap > svg {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  pointer-events: none;
+  color: var(--tad-grid-text-dim);
+}
+
+/* Format: a column's example, which opens its format editor */
+
+.tui-fmtbtn {
+  flex: none;
+  width: 132px;
+  height: 22px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-right: 2px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--tad-grid-text-dim) !important;
+  font-size: 11.5px !important;
+  cursor: pointer;
+}
+
+.tui-fmtbtn:hover,
+.tui-fmtbtn[data-state="open"] {
+  background: var(--tui-hover-strong);
+  color: var(--tad-grid-text) !important;
+}
+
+.tui-fmtbtn.tui-set {
+  color: var(--tad-grid-text) !important;
+  font-weight: 500;
+}
+
+.tui-fmtbtn.tui-static,
+.tui-fmtbtn.tui-static:hover {
+  cursor: default;
   background: transparent;
 }
 
-.tui-tog-num {
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.tui-tog-num.tui-small {
-  font-size: 9px;
-}
-
-.tui-aggselect {
-  flex: none;
-  width: 84px;
-}
-
-.tui-aggselect.tui-changed {
-  color: var(--tui-accent);
-  border-color: var(--tui-pale-border);
-}
-
 .tui-fmtsample {
-  flex: none;
-  max-width: 120px;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--tad-grid-text-dim);
-  font-size: 11.5px;
 }
 
 .tui-owndot {
   flex: none;
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 3px;
   background: var(--tui-accent);
+}
+
+.tui-dothint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* --- the activity bar --- */

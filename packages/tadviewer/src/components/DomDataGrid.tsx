@@ -48,7 +48,6 @@ import {
   CircleHelp,
   Clock,
   Network,
-  Type,
 } from "./ui/icons";
 import * as ss from "./scaledScroll";
 
@@ -248,7 +247,7 @@ const TypeIcon = ({ kind }: { kind: string }) => {
     case "real":
       return <span className="tad-grid-type-text">#</span>;
     case "string":
-      return <Type size={11} strokeWidth={2} />;
+      return <span className="tad-grid-type-text">A</span>;
     case "boolean":
       return <Check size={11} strokeWidth={2.2} />;
     case "date":

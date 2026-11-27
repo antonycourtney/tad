@@ -1,13 +1,22 @@
 /*
- * The new UI's view settings sidebar: the Pivot and Sort shelves, the
- * column list (Layout, Aggregation and Format modes), and Options.
+ * The new UI's view settings sidebar, as in the mock-up: the Pivot and Sort
+ * shelves, the column list (Layout, Aggregation and Format modes) and
+ * Options. The column list scrolls; the shelves and Options stay put.
+ *
+ * Layout mode is a small table: a Column · Show · Pivot · Sort header, then
+ * a row of plain check boxes for each column. A box is empty when off, and
+ * shows a mark when on: a tick, the column's place in the pivot, or its sort
+ * direction (and place, when sorting by more than one column).
  */
 import * as React from "react";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import * as Popover from "@radix-ui/react-popover";
-import { DndContext, closestCenter } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragOverlay } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
+  SortingStrategy,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
@@ -28,19 +37,16 @@ import {
   sampleValues,
   Switch,
 } from "./FormatEditor";
+import { ArrowDown, ArrowUp, Calendar, Check, ChevronDown, Clock, Minus, Search } from "./icons";
 import {
-  ArrowDown,
-  ArrowUp,
-  Calendar,
-  Check,
-  Clock,
-  Eye,
-  GripVertical,
-  ListTree,
-  Search,
-  Type,
-} from "./icons";
-import { reordered, Shelves, useDragSensors } from "./Shelves";
+  collisions,
+  dragId,
+  Grip,
+  parseDragId,
+  placed,
+  Shelves,
+  useDragSensors,
+} from "./Shelves";
 import "./ui.css";
 
 type Mode = "layout" | "aggregation" | "format";
@@ -63,13 +69,15 @@ const columnOrder = (schema: Schema, viewParams: ViewParams): string[] => {
   return [...shown, ...schema.columns.filter((c) => !shown.includes(c))];
 };
 
-/** The column's type, as the grid's header shows it. */
-const typeIcon = (kind: string): React.ReactNode => {
+/** A column type's mark, as the grid's header shows it. */
+export const typeIcon = (kind: string): React.ReactNode => {
   switch (kind) {
     case "integer":
       return "123";
     case "real":
       return "#";
+    case "string":
+      return "A";
     case "boolean":
       return <Check size={11} strokeWidth={2} />;
     case "date":
@@ -79,7 +87,7 @@ const typeIcon = (kind: string): React.ReactNode => {
     case "timestamp":
       return <Clock size={11} strokeWidth={1.8} />;
     default:
-      return <Type size={11} strokeWidth={1.8} />;
+      return "A";
   }
 };
 
@@ -89,15 +97,67 @@ const TypeIcon: React.FC<{ schema: Schema; column: string }> = ({ schema, column
   </span>
 );
 
+/** An aggregation function's name, as the menus show it. */
+export const aggLabel = (fn: AggFn) =>
+  fn === "null" ? "None" : fn.charAt(0).toUpperCase() + fn.slice(1);
+
 export const ViewSidebar: React.FC<ViewSidebarProps> = ({ expanded, viewState, stateRef }) => {
   const { baseSchema: schema, viewParams } = viewState;
   const [mode, setMode] = useState<Mode>("layout");
   const [search, setSearch] = useState("");
+  const [dragging, setDragging] = useState<string | null>(null);
+  const sensors = useDragSensors();
   const q = search.trim().toLowerCase();
   const order = columnOrder(schema, viewParams);
   const matching =
     q === "" ? order : order.filter((c) => schema.displayName(c).toLowerCase().includes(q));
   const pivoted = viewParams.vpivots.length > 0;
+  const shown = viewParams.displayColumns;
+  const sortKey = viewParams.sortKey;
+
+  // Rows move within the list only to reorder shown columns, and not while
+  // searching (when the list isn't the column order). Any row can be dragged
+  // onto a shelf.
+  const canReorder = (column: string) => q === "" && shown.includes(column);
+  const draggingCol = dragging !== null && parseDragId(dragging)[0] === "col";
+  const reorderingList = draggingCol && canReorder(parseDragId(dragging!)[1]);
+  const listStrategy: SortingStrategy = (args) =>
+    reorderingList ? verticalListSortingStrategy(args) : null;
+
+  const onDragEnd = (e: DragEndEvent) => {
+    setDragging(null);
+    const { active, over } = e;
+    if (!over) {
+      return;
+    }
+    const [from, column] = parseDragId(active.id);
+    const [to, target] = parseDragId(over.id);
+    const shelf = to === "shelf" ? target : to;
+    if (shelf === "pivot" || shelf === "sort") {
+      const ids = shelf === "pivot" ? viewParams.vpivots : sortKey.map(([c]) => c);
+      let next: string[];
+      if (from === shelf) {
+        if (to === "shelf" || target === column) {
+          return;
+        }
+        next = arrayMove(ids, ids.indexOf(column), ids.indexOf(target));
+      } else {
+        next = placed(ids, column, to === "shelf" ? null : target);
+      }
+      if (shelf === "pivot") {
+        actions.setPivots(next, stateRef);
+      } else {
+        actions.setSortKey(
+          next.map((c) => sortKey.find(([k]) => k === c) ?? [c, true]),
+          stateRef
+        );
+      }
+    } else if (from === "col" && to === "col" && target !== column && canReorder(column)) {
+      const at = shown.includes(target) ? shown.indexOf(target) : shown.length - 1;
+      actions.setColumnOrder(arrayMove(shown, shown.indexOf(column), at), stateRef);
+    }
+  };
+
   return (
     <aside
       className={
@@ -106,115 +166,142 @@ export const ViewSidebar: React.FC<ViewSidebarProps> = ({ expanded, viewState, s
       aria-label="View settings"
     >
       <div className="sidebar-content">
-        <div className="tui-sidebar-inner">
-          <Shelves schema={schema} viewParams={viewParams} stateRef={stateRef} />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={collisions}
+          onDragStart={(e) => setDragging(String(e.active.id))}
+          onDragCancel={() => setDragging(null)}
+          onDragEnd={onDragEnd}
+        >
+          <div className="tui-vs">
+            <Shelves schema={schema} viewParams={viewParams} stateRef={stateRef} />
 
-          <section className="tui-sb-section" aria-label="Columns">
-            <div className="tui-sb-head">Columns</div>
-            <label className="tui-search">
-              <Search size={13} strokeWidth={1.8} />
-              <input
-                type="text"
-                value={search}
-                placeholder={`Find among ${schema.columns.length} columns`}
-                aria-label="Find a column"
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </label>
-            <div className="tui-seg tui-wide" role="group" aria-label="Column list shows">
-              {MODES.map(([m, label]) => (
-                <button
-                  key={m}
-                  type="button"
-                  className="tui-segb"
-                  aria-pressed={mode === m}
-                  onClick={() => setMode(m)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            {mode === "layout" ? (
-              <LayoutList
-                schema={schema}
-                viewParams={viewParams}
-                stateRef={stateRef}
-                columns={matching}
-                draggable={q === ""}
-                order={order}
-              />
-            ) : mode === "aggregation" ? (
-              <AggregationList
-                schema={schema}
-                viewParams={viewParams}
-                stateRef={stateRef}
-                columns={matching}
-              />
-            ) : (
-              <FormatList
-                viewState={viewState}
-                stateRef={stateRef}
-                columns={matching}
-                showDefaults={q === ""}
-              />
-            )}
-            {matching.length === 0 ? (
-              <div className="tui-hint" style={{ padding: "6px 4px" }}>
-                No columns match
+            <section className="tui-vs-cols" aria-label="Columns">
+              <div className="tui-vs-colshead">
+                <div className="tui-lbl">Columns</div>
+                <div className="tui-seg" role="group" aria-label="Column list shows">
+                  {MODES.map(([m, label]) => (
+                    <button
+                      key={m}
+                      type="button"
+                      className="tui-segb"
+                      aria-pressed={mode === m}
+                      onClick={() => setMode(m)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : null}
-          </section>
+              <label className="tui-search">
+                <Search size={13} strokeWidth={1.6} />
+                <input
+                  type="text"
+                  value={search}
+                  placeholder={`Find among ${schema.columns.length} columns`}
+                  aria-label="Find a column"
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </label>
+              {mode === "layout" ? (
+                <LayoutList
+                  schema={schema}
+                  viewParams={viewParams}
+                  stateRef={stateRef}
+                  columns={matching}
+                  order={order}
+                  strategy={listStrategy}
+                  canReorder={canReorder}
+                />
+              ) : mode === "aggregation" ? (
+                <AggregationList
+                  schema={schema}
+                  viewParams={viewParams}
+                  stateRef={stateRef}
+                  columns={matching}
+                />
+              ) : (
+                <FormatList
+                  viewState={viewState}
+                  stateRef={stateRef}
+                  columns={matching}
+                  showDefaults={q === ""}
+                />
+              )}
+            </section>
 
-          <section className="tui-sb-section" aria-label="Options">
-            <div className="tui-sb-head">Options</div>
-            <Switch
-              label="Column histograms"
-              on={viewParams.showColumnHistograms}
-              onChange={(on) => actions.setShowColumnHistograms(stateRef, on)}
-            />
-            <Switch
-              label="Totals as top row"
-              on={viewParams.showRoot}
-              onChange={(on) => actions.setShowRoot(on, stateRef)}
-            />
-            <div className="tui-frow tui-sb-option">
-              <span className={pivoted ? undefined : "tui-dim"}>Label leaf rows with</span>
-              <select
-                className="tui-select"
-                value={viewParams.pivotLeafColumn ?? ""}
-                disabled={!pivoted}
-                title={pivoted ? undefined : "For pivoted views"}
-                aria-label="Label leaf rows with"
-                onChange={(e) => actions.setPivotLeafColumn(e.target.value || null, stateRef)}
-              >
-                <option value="">Nothing</option>
-                {schema.columns.map((c) => (
-                  <option key={c} value={c}>
-                    {schema.displayName(c)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </section>
-        </div>
+            <section className="tui-vs-opts" aria-label="Options">
+              <div className="tui-lbl">Options</div>
+              <Switch
+                label="Column histograms"
+                on={viewParams.showColumnHistograms}
+                onChange={(on) => actions.setShowColumnHistograms(stateRef, on)}
+              />
+              <Switch
+                label="Totals as top row"
+                on={viewParams.showRoot}
+                onChange={(on) => actions.setShowRoot(on, stateRef)}
+              />
+              <div className="tui-opt">
+                <span className={pivoted ? undefined : "tui-dim"}>Label leaf rows with</span>
+                <span className="tui-aggwrap">
+                  <select
+                    className="tui-aggsel tui-leafsel"
+                    value={viewParams.pivotLeafColumn ?? ""}
+                    disabled={!pivoted}
+                    title={pivoted ? undefined : "For pivoted views"}
+                    aria-label="Label leaf rows with"
+                    onChange={(e) => actions.setPivotLeafColumn(e.target.value || null, stateRef)}
+                  >
+                    <option value="">Nothing</option>
+                    {schema.columns.map((c) => (
+                      <option key={c} value={c}>
+                        {schema.displayName(c)}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={12} strokeWidth={1.7} />
+                </span>
+              </div>
+            </section>
+          </div>
+          {createPortal(
+            <DragOverlay dropAnimation={null}>
+              {dragging ? (
+                <div className="tad-ui tui-shelfchip tui-dragchip">
+                  <span className="tui-shelfchip-name">
+                    <span className="tui-grip">
+                      <Grip />
+                    </span>
+                    <span className="tui-shelfchip-label">
+                      {schema.displayName(parseDragId(dragging)[1])}
+                    </span>
+                  </span>
+                </div>
+              ) : null}
+            </DragOverlay>,
+            document.body
+          )}
+        </DndContext>
       </div>
     </aside>
   );
 };
 
-// --- Layout: show, pivot and sort toggles; drag to reorder ---
+// --- Layout: Show, Pivot and Sort boxes; drag to reorder ---
 
-/** A toggle: a pale blue tint with a dark blue mark when on. */
-const Toggle: React.FC<{
+/** A check box: empty when off; a pale blue tint and a dark blue mark when on. */
+const Box: React.FC<{
   label: string;
   on: boolean | "mixed";
   title?: string;
+  wide?: boolean;
   onClick: () => void;
-  children: React.ReactNode;
-}> = ({ label, on, title, onClick, children }) => (
+  children?: React.ReactNode;
+}> = ({ label, on, title, wide, onClick, children }) => (
   <button
     type="button"
-    className="tui-tog"
+    className={"tui-tg" + (wide ? " tui-wide" : "")}
     aria-label={label}
     aria-pressed={on}
     title={title ?? label}
@@ -229,41 +316,50 @@ const LayoutList: React.FC<{
   viewParams: ViewParams;
   stateRef: StateRef<AppState>;
   columns: string[];
-  /** Whether rows can be dragged (not while searching). */
-  draggable: boolean;
   order: string[];
-}> = ({ schema, viewParams, stateRef, columns, draggable, order }) => {
-  const sensors = useDragSensors();
-  const shown = viewParams.displayColumns;
-  const allShown = shown.length === schema.columns.length;
-  const noneShown = shown.length === 0;
+  strategy: SortingStrategy;
+  canReorder: (column: string) => boolean;
+}> = ({ schema, viewParams, stateRef, columns, order, strategy, canReorder }) => {
+  const nShown = viewParams.displayColumns.length;
+  const total = schema.columns.length;
+  const allShown = nShown === total;
+  const noneShown = nShown === 0;
   return (
-    <div className="tui-collist" role="list" aria-label="Columns">
+    <>
+      <div className="tui-mhead" aria-hidden="true">
+        <span className="tui-mhead-name">Column</span>
+        <span className="tui-tgc">Show</span>
+        <span className="tui-tgc">Pivot</span>
+        <span className="tui-tgc">Sort</span>
+      </div>
       <div className="tui-colrow tui-allrow">
         <span className="tui-grip" />
-        <span className="tui-colname">All columns</span>
-        <Toggle
-          label="Show all columns"
-          on={allShown ? true : noneShown ? false : "mixed"}
-          title={allShown ? "Hide every column" : "Show every column"}
-          onClick={() => actions.setColumnOrder(allShown ? [] : order, stateRef)}
-        >
-          <Eye size={13} strokeWidth={1.8} />
-        </Toggle>
-        <span className="tui-tog-space" />
-        <span className="tui-tog-space" />
+        <span className="tui-typeicon" />
+        <span className="tui-colname tui-strong">
+          All{" "}
+          <span className="tui-dim tui-allcount">
+            · {nShown} of {total} shown
+          </span>
+        </span>
+        <span className="tui-tgc">
+          <Box
+            label="Show all columns"
+            on={allShown ? true : noneShown ? false : "mixed"}
+            title={allShown ? "Hide every column" : "Show every column"}
+            onClick={() => actions.setColumnOrder(allShown ? [] : order, stateRef)}
+          >
+            {allShown ? (
+              <Check size={11} strokeWidth={2.4} />
+            ) : noneShown ? null : (
+              <Minus size={10} strokeWidth={2.6} />
+            )}
+          </Box>
+        </span>
+        <span className="tui-tgc" />
+        <span className="tui-tgc" />
       </div>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={(e) => {
-          const next = reordered(shown, e);
-          if (next) {
-            actions.setColumnOrder(next, stateRef);
-          }
-        }}
-      >
-        <SortableContext items={draggable ? shown : []} strategy={verticalListSortingStrategy}>
+      <div className="tui-vs-scroll" role="list" aria-label="Columns">
+        <SortableContext items={columns.map((c) => dragId("col", c))} strategy={strategy}>
           {columns.map((c) => (
             <LayoutRow
               key={c}
@@ -271,38 +367,41 @@ const LayoutList: React.FC<{
               schema={schema}
               viewParams={viewParams}
               stateRef={stateRef}
-              draggable={draggable && shown.includes(c)}
+              reorderable={canReorder(c)}
             />
           ))}
         </SortableContext>
-      </DndContext>
-    </div>
+        {columns.length === 0 ? <NoMatches /> : null}
+      </div>
+    </>
   );
 };
+
+const NoMatches: React.FC = () => (
+  <div className="tui-hint" style={{ padding: "8px 4px" }}>
+    No columns match
+  </div>
+);
 
 const LayoutRow: React.FC<{
   column: string;
   schema: Schema;
   viewParams: ViewParams;
   stateRef: StateRef<AppState>;
-  draggable: boolean;
-}> = ({ column, schema, viewParams, stateRef, draggable }) => {
+  reorderable: boolean;
+}> = ({ column, schema, viewParams, stateRef, reorderable }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: column,
-    disabled: !draggable,
+    id: dragId("col", column),
   });
   const name = schema.displayName(column);
   const shown = viewParams.displayColumns.includes(column);
-  const pivots = viewParams.vpivots;
-  const pivotIdx = pivots.indexOf(column);
+  const pivotIdx = viewParams.vpivots.indexOf(column);
   const sortKey = viewParams.sortKey;
   const sortIdx = sortKey.findIndex(([c]) => c === column);
   const sortAsc = sortIdx >= 0 ? sortKey[sortIdx][1] : null;
   // Sort cycles: ascending, descending, off.
   const cycleSort = () => {
-    if (sortAsc === null) {
-      actions.toggleSort(column, stateRef);
-    } else if (sortAsc) {
+    if (sortAsc === true) {
       actions.setSortDir(column, false, stateRef);
     } else {
       actions.toggleSort(column, stateRef);
@@ -318,69 +417,69 @@ const LayoutRow: React.FC<{
       style={{ transform: CSS.Translate.toString(transform), transition }}
       data-column={column}
     >
-      {draggable ? (
-        <span
-          className="tui-grip"
-          {...attributes}
-          {...listeners}
-          aria-label={`Move ${name} (drag, or Space and the arrow keys)`}
-          aria-roledescription="sortable"
-        >
-          <GripVertical size={12} strokeWidth={1.8} />
-        </span>
-      ) : (
-        <span className="tui-grip" />
-      )}
+      <span
+        className="tui-grip"
+        {...attributes}
+        {...listeners}
+        aria-label={
+          reorderable
+            ? `Move ${name} (drag, or Space and the arrow keys)`
+            : `Drag ${name} onto Pivot or Sort`
+        }
+        aria-roledescription="sortable"
+        title={reorderable ? "Drag to reorder" : "Drag onto Pivot or Sort"}
+      >
+        <Grip />
+      </span>
       <TypeIcon schema={schema} column={column} />
       <span className="tui-colname" title={name}>
         {name}
       </span>
-      <Toggle
-        label={`Show ${name}`}
-        on={shown}
-        onClick={() => actions.toggleShown(column, stateRef)}
-      >
-        <Eye size={13} strokeWidth={1.8} />
-      </Toggle>
-      <Toggle
-        label={`Pivot by ${name}`}
-        on={pivotIdx >= 0}
-        onClick={() => actions.togglePivot(column, stateRef)}
-      >
-        {pivotIdx >= 0 && pivots.length > 1 ? (
-          <span className="tui-tog-num">{pivotIdx + 1}</span>
-        ) : (
-          <ListTree size={13} strokeWidth={1.8} />
-        )}
-      </Toggle>
-      <Toggle
-        label={`Sort by ${name}`}
-        on={sortIdx >= 0}
-        title={
-          sortAsc === null
-            ? `Sort by ${name}`
-            : sortAsc
-            ? "Ascending (click for descending)"
-            : "Descending (click to stop sorting)"
-        }
-        onClick={cycleSort}
-      >
-        {sortAsc === false ? (
-          <ArrowDown size={12} strokeWidth={2} />
-        ) : (
-          <ArrowUp size={12} strokeWidth={sortAsc ? 2 : 1.8} />
-        )}
-        {sortIdx >= 0 && sortKey.length > 1 ? (
-          <span className="tui-tog-num tui-small">{sortIdx + 1}</span>
-        ) : null}
-      </Toggle>
+      <span className="tui-tgc">
+        <Box
+          label={`Show ${name}`}
+          on={shown}
+          onClick={() => actions.toggleShown(column, stateRef)}
+        >
+          {shown ? <Check size={11} strokeWidth={2.4} /> : null}
+        </Box>
+      </span>
+      <span className="tui-tgc">
+        <Box
+          label={`Pivot by ${name}`}
+          on={pivotIdx >= 0}
+          onClick={() => actions.togglePivot(column, stateRef)}
+        >
+          {pivotIdx >= 0 ? pivotIdx + 1 : null}
+        </Box>
+      </span>
+      <span className="tui-tgc">
+        <Box
+          label={`Sort by ${name}`}
+          wide
+          on={sortIdx >= 0}
+          title={
+            sortAsc === null
+              ? `Sort by ${name}`
+              : sortAsc
+              ? "Ascending: click for descending"
+              : "Descending: click to stop sorting"
+          }
+          onClick={cycleSort}
+        >
+          {sortIdx >= 0 && sortKey.length > 1 ? sortIdx + 1 : null}
+          {sortAsc === true ? (
+            <ArrowUp size={9} strokeWidth={2.6} />
+          ) : sortAsc === false ? (
+            <ArrowDown size={9} strokeWidth={2.6} />
+          ) : null}
+        </Box>
+      </span>
     </div>
   );
 };
 
 // --- Aggregation: each column's aggregation function ---
-
-const aggLabel = (fn: AggFn) => (fn === "null" ? "none" : fn);
 
 const AggregationList: React.FC<{
   schema: Schema;
@@ -388,39 +487,53 @@ const AggregationList: React.FC<{
   stateRef: StateRef<AppState>;
   columns: string[];
 }> = ({ schema, viewParams, stateRef, columns }) => (
-  <div className="tui-collist" role="list" aria-label="Aggregations">
-    {columns.map((c) => {
-      const ct = schema.columnType(c);
-      const agg = viewParams.getAggFn(schema, c);
-      const changed = agg !== defaultAggFn(ct);
-      const name = schema.displayName(c);
-      return (
-        <div key={c} role="listitem" className="tui-colrow" data-column={c}>
-          <TypeIcon schema={schema} column={c} />
-          <span className="tui-colname" title={name}>
-            {name}
-          </span>
-          <select
-            className={"tui-select tui-aggselect" + (changed ? " tui-changed" : "")}
-            value={agg}
-            aria-label={`Aggregate ${name} with`}
-            onChange={(e) => actions.setAggFn(c, e.target.value as AggFn, stateRef)}
-          >
-            {aggFns(ct).map((fn) => (
-              <option key={fn} value={fn}>
-                {aggLabel(fn)}
-              </option>
-            ))}
-          </select>
-        </div>
-      );
-    })}
-  </div>
+  <>
+    <div className="tui-mhead" aria-hidden="true">
+      <span className="tui-mhead-name">Column</span>
+      <span className="tui-mhead-agg">In pivot rows</span>
+    </div>
+    <div className="tui-vs-scroll" role="list" aria-label="Aggregations">
+      {columns.map((c) => {
+        const ct = schema.columnType(c);
+        const agg = viewParams.getAggFn(schema, c);
+        const changed = agg !== defaultAggFn(ct);
+        const name = schema.displayName(c);
+        return (
+          <div key={c} role="listitem" className="tui-colrow" data-column={c}>
+            <span className="tui-grip" />
+            <TypeIcon schema={schema} column={c} />
+            <span className="tui-colname" title={name}>
+              {name}
+            </span>
+            <span className="tui-aggwrap">
+              <select
+                className={"tui-aggsel" + (changed ? " tui-changed" : "")}
+                value={agg}
+                aria-label={`Aggregate ${name} with`}
+                onChange={(e) => actions.setAggFn(c, e.target.value as AggFn, stateRef)}
+              >
+                {aggFns(ct).map((fn) => (
+                  <option key={fn} value={fn}>
+                    {aggLabel(fn)}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={12} strokeWidth={1.7} />
+            </span>
+          </div>
+        );
+      })}
+      {columns.length === 0 ? <NoMatches /> : null}
+    </div>
+    <div className="tui-hint">Shown in pivot rows and the totals row. Blue: changed from the default.</div>
+  </>
 );
 
 // --- Format: the defaults, and each column's format ---
 
 const DEFAULT_KINDS: ColumnKind[] = ["integer", "real", "string"];
+
+const isNumericKind = (kind: ColumnKind) => kind === "integer" || kind === "real";
 
 const FormatList: React.FC<{
   viewState: ViewState;
@@ -431,12 +544,21 @@ const FormatList: React.FC<{
   const { baseSchema: schema, viewParams } = viewState;
   const [open, setOpen] = useState<string | null>(null);
   const rows = Array.from(loadedRows(viewState));
-  const sample = (column: string) => sampleValues(rows, column)[0];
-  const kindColumns = (kind: ColumnKind) =>
-    schema.columns.filter((c) => schema.columnType(c).kind === kind);
-  /** Values of the first column of a kind that has some loaded. */
+  const kindOf = (column: string) => schema.columnType(column).kind as ColumnKind;
+  /** The largest loaded value of a number column (which shows the most of its format). */
+  const largest = (column: string): number | bigint | null => {
+    let max: number | bigint | null = null;
+    for (const r of rows) {
+      const v = r?.[column];
+      if ((typeof v === "number" || typeof v === "bigint") && (max === null || v > max)) {
+        max = v;
+      }
+    }
+    return max;
+  };
+  /** Sample values for a default's editor: the first column of the kind that has some loaded. */
   const kindSamples = (kind: ColumnKind): any[] => {
-    for (const c of kindColumns(kind)) {
+    for (const c of schema.columns.filter((c) => kindOf(c) === kind)) {
       const vs = sampleValues(rows, c);
       if (vs.length > 0) {
         return vs;
@@ -444,95 +566,119 @@ const FormatList: React.FC<{
     }
     return [];
   };
-  const kindSample = (kind: ColumnKind) =>
-    kindSamples(kind)[0] ?? FALLBACK_SAMPLES[kind]?.[kind === "string" ? 0 : 2] ?? null;
-  const show = (target: FormatTarget, v: any): string => {
+  /** The example a row shows: a number in its format, or what the text format does. */
+  const example = (target: FormatTarget): string => {
     const opts = editableFormat(target, viewParams, schema);
+    const kind = "column" in target ? kindOf(target.column) : target.kind;
+    if (opts && !isNumericKind(kind)) {
+      return (opts as any).urlsAsHyperlinks ? "URLs as links" : "Plain text";
+    }
+    let v: any;
+    if ("column" in target) {
+      v = isNumericKind(kind) ? largest(target.column) : sampleValues(rows, target.column)[0];
+    } else {
+      const maxes = schema.columns
+        .filter((c) => kindOf(c) === kind)
+        .map(largest)
+        .filter((m) => m !== null) as (number | bigint)[];
+      v =
+        maxes.length > 0
+          ? maxes.reduce((a, b) => (b > a ? b : a))
+          : FALLBACK_SAMPLES[kind]?.[2];
+    }
     if (v == null) {
       return "";
     }
     const s = opts ? opts.getFormatter()(v) ?? "" : String(v);
     return s.startsWith("<a ") ? String(v) : s;
   };
-  const row = (key: string, target: FormatTarget, label: React.ReactNode, value: string, own: boolean) => {
+  const row = (key: string, target: FormatTarget, label: string, own: boolean) => {
+    const isDefault = !("column" in target);
     const editable = editableFormat(target, viewParams, schema) !== null;
-    const content = (
-      <>
-        {"column" in target ? <TypeIcon schema={schema} column={target.column} /> : null}
-        <span className="tui-colname">{label}</span>
-        {own ? <span className="tui-owndot" title="Has its own format" aria-label="(own format)" /> : null}
+    const value = example(target);
+    const button = (
+      <button
+        type="button"
+        className={"tui-fmtbtn" + (own || isDefault ? " tui-set" : "")}
+        data-format={key}
+        aria-label={isDefault ? `Edit the ${label}` : `Format ${label}`}
+        title={own ? "Has its own format" : undefined}
+      >
+        {own ? <span className="tui-owndot" aria-label="(own format)" /> : null}
         <span className="tui-fmtsample">{value}</span>
-      </>
+      </button>
     );
-    if (!editable) {
-      return (
-        <div key={key} role="listitem" className="tui-colrow tui-static">
-          {content}
-        </div>
-      );
-    }
     return (
-      <Popover.Root key={key} open={open === key} onOpenChange={(o) => setOpen(o ? key : null)}>
-        <Popover.Trigger asChild>
-          <button
-            type="button"
-            role="listitem"
-            className="tui-colrow tui-fmtrow"
-            data-format={key}
-          >
-            {content}
-          </button>
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content
-            className="tad-ui tui-pop"
-            side="right"
-            align="start"
-            sideOffset={8}
-            collisionPadding={8}
-          >
-            <FormatEditor
-              target={target}
-              viewParams={viewParams}
-              schema={schema}
-              stateRef={stateRef}
-              samples={
-                "column" in target ? sampleValues(rows, target.column) : kindSamples(target.kind)
-              }
-              onClose={() => setOpen(null)}
-            />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
+      <div
+        key={key}
+        role="listitem"
+        className="tui-colrow"
+        data-column={isDefault ? undefined : (target as { column: string }).column}
+      >
+        <span className="tui-grip" />
+        <span className="tui-typeicon" aria-hidden="true">
+          {typeIcon(isDefault ? (target as { kind: ColumnKind }).kind : kindOf((target as any).column))}
+        </span>
+        <span className={"tui-colname" + (isDefault ? " tui-strong" : "")} title={label}>
+          {label}
+        </span>
+        {!editable ? (
+          <span className="tui-fmtbtn tui-static">
+            <span className="tui-fmtsample">{value}</span>
+          </span>
+        ) : (
+          <Popover.Root open={open === key} onOpenChange={(o) => setOpen(o ? key : null)}>
+            <Popover.Trigger asChild>{button}</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content
+                className="tad-ui tui-pop"
+                side="right"
+                align="start"
+                sideOffset={8}
+                collisionPadding={8}
+              >
+                <FormatEditor
+                  target={target}
+                  viewParams={viewParams}
+                  schema={schema}
+                  stateRef={stateRef}
+                  samples={
+                    "column" in target
+                      ? sampleValues(rows, target.column)
+                      : kindSamples(target.kind)
+                  }
+                  onClose={() => setOpen(null)}
+                />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+        )}
+      </div>
     );
   };
   return (
-    <div className="tui-collist" role="list" aria-label="Formats">
+    <>
+      <div className="tui-mhead" aria-hidden="true">
+        <span className="tui-mhead-name">Column</span>
+        <span className="tui-mhead-example">Example</span>
+      </div>
       {showDefaults ? (
-        <>
+        <div className="tui-defs" role="list" aria-label="Default formats">
           {DEFAULT_KINDS.map((kind) =>
-            row(
-              "default:" + kind,
-              { kind },
-              <>
-                {kindName(kind)} <span className="tui-dim">default</span>
-              </>,
-              show({ kind }, kindSample(kind)),
-              false
-            )
+            row("default:" + kind, { kind }, `${kindName(kind)} default`, false)
           )}
-          <div className="tui-sep" />
-        </>
+        </div>
       ) : null}
-      {columns.map((c) =>
-        row(
-          "column:" + c,
-          { column: c },
-          schema.displayName(c),
-          show({ column: c }, sample(c)),
-          viewParams.columnFormats.has(c)
-        )
-      )}
-    </div>
+      <div className="tui-vs-scroll" role="list" aria-label="Formats">
+        {columns.map((c) =>
+          row("column:" + c, { column: c }, schema.displayName(c), viewParams.columnFormats.has(c))
+        )}
+        {columns.length === 0 ? <NoMatches /> : null}
+      </div>
+      <div className="tui-hint tui-dothint">
+        <span className="tui-owndot" />
+        has its own format; the rest use their type's default
+      </div>
+    </>
   );
 };

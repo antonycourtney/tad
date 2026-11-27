@@ -4,7 +4,7 @@
  * themselves, are covered by view-controls.e2e.ts through the driver.
  */
 import { Locator, Page } from "@playwright/test";
-import { expect, test } from "./fixtures";
+import { expect, GRID_IMPL, test } from "./fixtures";
 import { PARQUET_FILE, testFile } from "./test-data";
 import { UI_IMPL } from "./view-controls";
 
@@ -24,6 +24,13 @@ const shownOrder = (page: Page) =>
   sidebar(page)
     .locator(".tui-colrow[data-column]:not(.tui-hidden)")
     .evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.column));
+
+/** Check the pivot column's title (which only the DOM grid's header shows). */
+const expectPivotTitle = async (page: Page, text: string) => {
+  if (GRID_IMPL === "dom") {
+    await expect(page.locator('.tad-grid-header-cell[data-col-id="_pivot"]')).toContainText(text);
+  }
+};
 
 const mode = async (page: Page, name: string) => {
   await sidebar(page)
@@ -56,6 +63,14 @@ test("the shelves: remove, flip the sort, drag to reorder", async ({ openInTad }
   await controls.setPivot(["region", "country"]);
   await controls.setSort([["quantity", "desc"]]);
 
+  // The column list's boxes show each column's place in the pivot, and the
+  // shelves join their chips with "›" and "then":
+  await expect(sidebar(page).getByRole("button", { name: "Pivot by country" })).toHaveText("2");
+  await expect(shelf(page, "Pivot")).toContainText("region›country");
+  await expect(shelf(page, "Sort").getByRole("button", { name: /^Sort quantity/ })).toHaveText(
+    "desc"
+  );
+
   // The sort arrow flips the direction:
   await shelf(page, "Sort").getByRole("button", { name: "Sort quantity ascending" }).click();
   await expect(
@@ -69,15 +84,13 @@ test("the shelves: remove, flip the sort, drag to reorder", async ({ openInTad }
     shelf(page, "Pivot").locator('[data-column="region"] .tui-shelfchip-name')
   );
   await expect.poll(() => shelfOrder(page, "Pivot")).toEqual(["country", "region"]);
-  await expect(page.locator('.tad-grid-header-cell[data-col-id="_pivot"]')).toContainText(
-    "country > region"
-  );
+  await expectPivotTitle(page, "country > region");
 
   // × removes:
   await shelf(page, "Pivot").getByRole("button", { name: "Remove country from the pivot" }).click();
   await expect.poll(() => shelfOrder(page, "Pivot")).toEqual(["region"]);
   await shelf(page, "Sort").getByRole("button", { name: "Remove quantity from the sort" }).click();
-  await expect(shelf(page, "Sort")).toContainText("Not sorted");
+  await expect(shelf(page, "Sort")).toContainText("click Sort below");
   await expect.poll(() => grid.rowCount()).toBe(5);
 });
 
@@ -103,12 +116,43 @@ test("the column list: drag to reorder, show all, search", async ({ openInTad })
   await expect(all).toHaveAttribute("aria-pressed", "true");
   await expect.poll(() => grid.columnIds()).toContain("note");
 
-  // Search narrows the list, and rows can't be dragged while searching:
-  await sidebar(page).getByRole("textbox", { name: "Find a column" }).fill("ord");
+  // Search narrows the list:
+  const search = sidebar(page).getByRole("textbox", { name: "Find a column" });
+  await search.fill("ord");
   await expect.poll(() => shownOrder(page)).toEqual(["order_id", "order_url"]);
-  await expect(row("order_id").locator(".tui-grip")).not.toHaveAttribute("aria-roledescription");
-  await sidebar(page).getByRole("textbox", { name: "Find a column" }).fill("zzz");
+  await search.fill("zzz");
   await expect(sidebar(page)).toContainText("No columns match");
+});
+
+test("drag a column onto a shelf", async ({ openInTad }) => {
+  const { page, controls } = await openInTad(testFile(PARQUET_FILE));
+  await controls.openViewSettings();
+  const row = (c: string) => sidebar(page).locator(`.tui-colrow[data-column="${c}"]`);
+  const search = sidebar(page).getByRole("textbox", { name: "Find a column" });
+
+  // Onto the empty Pivot shelf, from a search:
+  await search.fill("coun");
+  await drag(page, row("country").locator(".tui-grip"), shelf(page, "Pivot"));
+  await expect.poll(() => shelfOrder(page, "Pivot")).toEqual(["country"]);
+  await expectPivotTitle(page, "country");
+  await search.fill("");
+
+  // Onto a chip, which puts it before that chip:
+  await drag(
+    page,
+    row("region").locator(".tui-grip"),
+    shelf(page, "Pivot").locator('[data-column="country"]')
+  );
+  await expect.poll(() => shelfOrder(page, "Pivot")).toEqual(["region", "country"]);
+  await expectPivotTitle(page, "region > country");
+
+  // Onto the Sort shelf, ascending:
+  await drag(page, row("quantity").locator(".tui-grip"), shelf(page, "Sort"));
+  await expect.poll(() => shelfOrder(page, "Sort")).toEqual(["quantity"]);
+  await expect(sidebar(page).getByRole("button", { name: "Sort by quantity" })).toHaveAttribute(
+    "aria-pressed",
+    "true"
+  );
 });
 
 test("aggregation and format modes mark what's changed", async ({ openInTad }) => {
