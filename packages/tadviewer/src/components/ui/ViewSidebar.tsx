@@ -7,6 +7,10 @@
  * a row of plain check boxes for each column. A box is empty when off, and
  * shows a mark when on: a tick, the column's place in the pivot, or its sort
  * direction (and place, when sorting by more than one column).
+ *
+ * The list is in the grid's order (the shown columns, then the hidden ones),
+ * or A to Z; dragging a row reorders the grid's columns only in the grid's
+ * order. The sidebar's width is the user's (SidebarSash).
  */
 import * as React from "react";
 import { useState } from "react";
@@ -37,7 +41,8 @@ import {
   sampleValues,
   Switch,
 } from "./FormatEditor";
-import { ArrowDown, ArrowUp, Check, ChevronDown, Minus, Search } from "./icons";
+import { byName, ColumnSearch, useColumnsAZ } from "./ColumnSearch";
+import { ArrowDown, ArrowUp, Check, ChevronDown, Minus } from "./icons";
 import {
   collisions,
   dragId,
@@ -47,6 +52,7 @@ import {
   Shelves,
   useDragSensors,
 } from "./Shelves";
+import { SidebarSash, useSidebarWidthStyle } from "./SidebarSash";
 import { typeIcon } from "./typeIcon";
 import "./ui.css";
 
@@ -97,18 +103,20 @@ export const ViewSidebar: React.FC<ViewSidebarProps> = ({ expanded, viewState, s
   const [search, setSearch] = useState("");
   const [dragging, setDragging] = useState<string | null>(null);
   const sensors = useDragSensors();
+  const widthStyle = useSidebarWidthStyle();
+  const az = useColumnsAZ();
   const q = search.trim().toLowerCase();
   const order = columnOrder(schema, viewParams);
+  const listed = az ? byName(order, schema) : order;
   const matching =
-    q === "" ? order : order.filter((c) => schema.displayName(c).toLowerCase().includes(q));
-  const pivoted = viewParams.vpivots.length > 0;
+    q === "" ? listed : listed.filter((c) => schema.displayName(c).toLowerCase().includes(q));
   const shown = viewParams.displayColumns;
   const sortKey = viewParams.sortKey;
 
-  // Rows move within the list only to reorder shown columns, and not while
-  // searching (when the list isn't the column order). Any row can be dragged
-  // onto a shelf.
-  const canReorder = (column: string) => q === "" && shown.includes(column);
+  // Rows move within the list only to reorder shown columns, and only when
+  // the list is in the grid's order (not A to Z, and not while searching).
+  // Any row can be dragged onto a shelf.
+  const canReorder = (column: string) => q === "" && !az && shown.includes(column);
   const draggingCol = dragging !== null && parseDragId(dragging)[0] === "col";
   const reorderingList = draggingCol && canReorder(parseDragId(dragging!)[1]);
   const listStrategy: SortingStrategy = (args) =>
@@ -154,7 +162,9 @@ export const ViewSidebar: React.FC<ViewSidebarProps> = ({ expanded, viewState, s
         "sidebar tad-ui tui-sidebar " + (expanded ? "sidebar-expanded" : "sidebar-collapsed")
       }
       aria-label="View settings"
+      style={widthStyle}
     >
+      {expanded ? <SidebarSash /> : null}
       <div className="sidebar-content">
         <DndContext
           sensors={sensors}
@@ -183,16 +193,12 @@ export const ViewSidebar: React.FC<ViewSidebarProps> = ({ expanded, viewState, s
                   ))}
                 </div>
               </div>
-              <label className="tui-search">
-                <Search size={13} strokeWidth={1.6} />
-                <input
-                  type="text"
-                  value={search}
-                  placeholder={`Find among ${schema.columns.length} columns`}
-                  aria-label="Find a column"
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </label>
+              <ColumnSearch
+                value={search}
+                onChange={setSearch}
+                placeholder={`Find among ${schema.columns.length} columns`}
+                label="Find a column"
+              />
               {mode === "layout" ? (
                 <LayoutList
                   schema={schema}
@@ -232,27 +238,6 @@ export const ViewSidebar: React.FC<ViewSidebarProps> = ({ expanded, viewState, s
                 on={viewParams.showRoot}
                 onChange={(on) => actions.setShowRoot(on, stateRef)}
               />
-              <div className="tui-opt">
-                <span className={pivoted ? undefined : "tui-dim"}>Label leaf rows with</span>
-                <span className="tui-aggwrap">
-                  <select
-                    className="tui-aggsel tui-leafsel"
-                    value={viewParams.pivotLeafColumn ?? ""}
-                    disabled={!pivoted}
-                    title={pivoted ? undefined : "For pivoted views"}
-                    aria-label="Label leaf rows with"
-                    onChange={(e) => actions.setPivotLeafColumn(e.target.value || null, stateRef)}
-                  >
-                    <option value="">Nothing</option>
-                    {schema.columns.map((c) => (
-                      <option key={c} value={c}>
-                        {schema.displayName(c)}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={12} strokeWidth={1.7} />
-                </span>
-              </div>
             </section>
           </div>
           {createPortal(

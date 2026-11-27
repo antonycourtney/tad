@@ -323,7 +323,7 @@ const PickValues: React.FC<{
   return (
     <>
       <label className="tui-search">
-        <Search size={13} strokeWidth={1.8} />
+        <Search size={14} strokeWidth={1.6} />
         <input
           type="text"
           value={search}

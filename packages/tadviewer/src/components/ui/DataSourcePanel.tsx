@@ -22,6 +22,7 @@ import { throttle } from "lodash";
 import * as actions from "../../actions";
 import { AppState } from "../../AppState";
 import { Search } from "./icons";
+import { SidebarSash, useSidebarWidthStyle } from "./SidebarSash";
 import "./ui.css";
 
 export interface DataSourcePanelProps {
@@ -139,6 +140,7 @@ export const DataSourcePanel: React.FC<DataSourcePanelProps> = ({
   const [loading, setLoading] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [focusKey, setFocusKey] = useState<string | null>(null);
+  const widthStyle = useSidebarWidthStyle();
   const treeRef = useRef<HTMLDivElement>(null);
   const known = useRef<Map<string, TreeNode>>(new Map());
   const childrenRef = useRef(children);
@@ -316,12 +318,14 @@ export const DataSourcePanel: React.FC<DataSourcePanelProps> = ({
         "sidebar tad-ui tui-sidebar " + (expanded ? "sidebar-expanded" : "sidebar-collapsed")
       }
       aria-label="Data sources"
+      style={widthStyle}
     >
+      {expanded ? <SidebarSash /> : null}
       <div className="sidebar-content">
         <div className="tui-dspanel">
           <div className="tui-lbl">Data sources</div>
           <label className="tui-search">
-            <Search size={13} strokeWidth={1.6} />
+            <Search size={14} strokeWidth={1.6} />
             <input
               type="text"
               value={search}

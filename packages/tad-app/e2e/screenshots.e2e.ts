@@ -203,6 +203,29 @@ test.describe("view sidebar", () => {
     await page.waitForTimeout(500);
     await page.screenshot({ path: shot("sidebar-format") });
   });
+
+  test("A to Z, and a wider sidebar", async ({ openInTad }) => {
+    const { page, controls } = await openInTad(testFile(SORTED_TAD_FILE), { windowSize });
+    await controls.openViewSettings();
+    const sidebar = page.getByRole("complementary", { name: "View settings" });
+    await sidebar.getByRole("button", { name: "List columns A to Z" }).click();
+    // (once the sidebar has finished opening)
+    await expect.poll(async () => (await sidebar.boundingBox())?.width).toBe(336);
+    const sash = sidebar.getByRole("separator", { name: "Sidebar width" });
+    const box = (await sash.boundingBox())!;
+    await page.mouse.move(box.x + 3, box.y + 300);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 63, box.y + 300, { steps: 4 });
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: shot("sidebar-resizing") });
+    await page.mouse.up();
+    await page.mouse.move(900, 700);
+
+    await page.locator(".tui-filterbar .tui-addbtn").click();
+    await expect(page.locator(".tui-narrow .tui-mi").first()).toBeVisible();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: shot("filter-add-az") });
+  });
 });
 
 test.describe("dialogs", () => {

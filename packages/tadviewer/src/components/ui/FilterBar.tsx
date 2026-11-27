@@ -8,8 +8,9 @@
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
+import { byName, ColumnSearch, useColumnsAZ } from "./ColumnSearch";
 import { FilterGlyph } from "./glyphs";
-import { Plus, Search, X } from "./icons";
+import { Plus, X } from "./icons";
 import { typeIcon } from "./typeIcon";
 import { StateRef } from "oneref";
 import { colIsNumeric, FilterExp, Schema } from "reltab";
@@ -319,8 +320,9 @@ const AddFilter: React.FC<{
     picked.current = true;
     onPick(column);
   };
+  const az = useColumnsAZ();
   const q = search.trim().toLowerCase();
-  const columns = schema.columns.filter(
+  const columns = (az ? byName(schema.columns, schema) : schema.columns).filter(
     (c) => q === "" || schema.displayName(c).toLowerCase().includes(q)
   );
   return (
@@ -355,22 +357,18 @@ const AddFilter: React.FC<{
           <div className="tui-poph">
             <span className="tui-poph-title">Filter by column</span>
           </div>
-          <label className="tui-search">
-            <Search size={13} strokeWidth={1.8} />
-            <input
-              type="text"
-              value={search}
-              autoFocus
-              placeholder="Find a column"
-              aria-label="Find a column to filter"
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && columns.length > 0) {
-                  pick(columns[0]);
-                }
-              }}
-            />
-          </label>
+          <ColumnSearch
+            value={search}
+            onChange={setSearch}
+            autoFocus
+            placeholder="Find a column"
+            label="Find a column to filter"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && columns.length > 0) {
+                pick(columns[0]);
+              }
+            }}
+          />
           <div className="tui-vlist" role="menu">
             {columns.map((c) => (
               <button

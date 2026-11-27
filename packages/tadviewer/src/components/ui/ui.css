@@ -363,15 +363,70 @@
 .tui-search {
   display: flex;
   align-items: center;
-  gap: 6px;
-  height: 26px;
+  gap: 7px;
+  height: 28px;
   margin: 0 2px 6px;
-  padding: 0 8px;
+  padding: 0 9px;
   border: 1px solid var(--tui-border);
   border-radius: 6px;
   background: var(--tui-surface);
   color: var(--tad-grid-text-dim);
   box-sizing: border-box;
+}
+
+.tui-search > svg {
+  flex: none;
+}
+
+/* A column search, and the button that lists the columns A to Z. */
+.tui-findrow {
+  display: flex;
+  gap: 6px;
+  margin: 0 2px 6px;
+}
+
+.tui-findrow > .tui-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.tui-orderbtn {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--tui-border);
+  border-radius: 6px;
+  background: var(--tui-surface);
+  color: var(--tad-grid-text-dim) !important;
+  cursor: pointer;
+  transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.tui-orderbtn:hover {
+  border-color: var(--tui-border-hover);
+  color: var(--tad-grid-text) !important;
+}
+
+.tui-orderbtn[aria-pressed="true"] {
+  background: var(--tui-pale);
+  border-color: var(--tui-pale-border);
+  color: var(--tui-mark) !important;
+}
+
+.tui-orderbtn[aria-pressed="true"]:hover {
+  border-color: var(--tui-accent);
+}
+
+.tui-orderbtn:focus-visible {
+  outline: 0;
+  border-color: var(--tui-focus);
+  box-shadow: 0 0 0 2px var(--tui-focus-ring);
 }
 
 .tui-search:focus-within {
@@ -975,15 +1030,68 @@
 /* --- the sidebars (sizes, spacing and marks as in the mock-up) --- */
 
 .tui-sidebar.sidebar {
+  position: relative;
   background: var(--tad-grid-header-bg);
   border-right: 1px solid var(--tad-grid-header-line);
   box-sizing: border-box;
 }
 
+/*
+ * The width is the user's (SidebarSash sets --tui-sidebar-w), but no more
+ * than 60% of the window, so that the grid still shows.
+ */
 .tui-sidebar.sidebar-expanded,
 .tui-sidebar > .sidebar-content {
-  width: 296px;
-  min-width: 296px;
+  width: clamp(280px, var(--tui-sidebar-w, 336px), 60vw);
+  min-width: clamp(280px, var(--tui-sidebar-w, 336px), 60vw);
+}
+
+.tui-sidebar.tui-resizing {
+  transition: none;
+}
+
+/* The handle on the sidebar's right edge: a line on the border when hovered. */
+.tui-sash {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -3px;
+  width: 6px;
+  z-index: 10;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.tui-sash::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 2px;
+  background: transparent;
+  transition: background-color 0.1s;
+}
+
+.tui-sash:hover::after {
+  background: var(--tui-focus);
+  transition-delay: 0.2s;
+}
+
+.tui-sash.tui-active::after,
+.tui-sash:focus-visible::after {
+  background: var(--tui-focus);
+  transition-delay: 0s;
+}
+
+.tui-sash:focus-visible {
+  outline: 0;
+}
+
+body.tui-col-resize,
+body.tui-col-resize * {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 
 .tui-sidebar.sidebar-collapsed {
@@ -1014,6 +1122,11 @@
 
 .tui-vs .tui-search {
   margin: 0;
+}
+
+/* Room around the column search: 10px above, 8px below. */
+.tui-vs .tui-findrow {
+  margin: 4px 0 2px;
 }
 
 .tui-vs-shelves {
@@ -1421,7 +1534,12 @@
 }
 
 .tui-aggsel.tui-leafsel {
-  width: 104px;
+  width: 132px;
+}
+
+/* Under the Pivot shelf (in line with the shelf's right edge) */
+.tui-leafopt .tui-aggwrap {
+  margin-right: 0;
 }
 
 .tui-aggwrap > svg {

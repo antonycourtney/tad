@@ -4,6 +4,8 @@
  * it, or drag a column from the list onto a shelf to add it there. × removes
  * a chip, and a sort chip's asc/desc button flips its direction.
  *
+ * Under the Pivot shelf, once there's a pivot: what labels the leaf rows.
+ *
  * The drag and drop itself (one DndContext for the shelves and the column
  * list) is ViewSidebar's; the helpers it uses are here.
  */
@@ -34,7 +36,7 @@ import { Schema } from "reltab";
 import * as actions from "../../actions";
 import { AppState } from "../../AppState";
 import { ViewParams } from "../../ViewParams";
-import { ArrowDown, ArrowUp, X } from "./icons";
+import { ArrowDown, ArrowUp, ChevronDown, X } from "./icons";
 
 /** Sensors for dragging by mouse (after a few pixels, so clicks work) or keyboard. */
 export const useDragSensors = () =>
@@ -179,7 +181,9 @@ const Shelf: React.FC<{
   empty: string;
   separator: string;
   chip: (column: string) => React.ReactNode;
-}> = ({ shelf, title, columns, empty, separator, chip }) => {
+  /** Settings for the shelf, under it. */
+  children?: React.ReactNode;
+}> = ({ shelf, title, columns, empty, separator, chip, children }) => {
   const { setNodeRef } = useDroppable({ id: dragId("shelf", shelf) });
   const dropping = useDropping(shelf);
   return (
@@ -209,9 +213,37 @@ const Shelf: React.FC<{
           ))}
         </SortableContext>
       </div>
+      {children}
     </section>
   );
 };
+
+/** For a pivoted view: the column that labels the leaf rows, if any. */
+const LeafLabel: React.FC<{
+  schema: Schema;
+  viewParams: ViewParams;
+  stateRef: StateRef<AppState>;
+}> = ({ schema, viewParams, stateRef }) => (
+  <div className="tui-opt tui-leafopt">
+    <span>Label leaf rows with</span>
+    <span className="tui-aggwrap">
+      <select
+        className="tui-aggsel tui-leafsel"
+        value={viewParams.pivotLeafColumn ?? ""}
+        aria-label="Label leaf rows with"
+        onChange={(e) => actions.setPivotLeafColumn(e.target.value || null, stateRef)}
+      >
+        <option value="">Nothing</option>
+        {schema.columns.map((c) => (
+          <option key={c} value={c}>
+            {schema.displayName(c)}
+          </option>
+        ))}
+      </select>
+      <ChevronDown size={12} strokeWidth={1.7} />
+    </span>
+  </div>
+);
 
 export const Shelves: React.FC<{
   schema: Schema;
@@ -236,7 +268,11 @@ export const Shelves: React.FC<{
             onRemove={() => actions.togglePivot(c, stateRef)}
           />
         )}
-      />
+      >
+        {viewParams.vpivots.length > 0 ? (
+          <LeafLabel schema={schema} viewParams={viewParams} stateRef={stateRef} />
+        ) : null}
+      </Shelf>
       <Shelf
         shelf="sort"
         title="Sort"

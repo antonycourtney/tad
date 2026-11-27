@@ -24,10 +24,13 @@ The design comes from a clickable mock-up reviewed on 2026-11-26 (a private arti
 ### Sidebar
 
 - **Activity bar:** switches between Data sources and View settings. Clicking the active button hides the sidebar.
+- **Width:** 336px to start with. Drag the sidebar's right edge to change it (280–640px, and at most 60% of the window), or focus the edge and use the arrow keys, Home and End. A double-click goes back to 336px. Both panels share the width, and it's remembered (in localStorage).
 - **Pivot and Sort shelves** at the top replace the Order, Pivot and Sort tabs.
   - Each shows its columns as chips, in order, joined by "›" (pivot) or "then" (sort). Drag a chip to reorder it, or click × to remove it. Drag a column from the list onto a shelf to add it there.
   - A sort chip's "asc"/"desc" button flips its direction.
+  - Under the Pivot shelf, once there's a pivot: "Label leaf rows with" (today's Pivot Tree Leaf Level).
 - **The column list** has one row per column, with a search box. A **Layout | Aggregation | Format** switch changes what each row shows.
+  - A button beside the search box lists the columns A to Z instead of in the table's order. "Filter by column" in the filter bar has the same button; the two lists share the choice, which is remembered.
   - **Layout** is a small table: a Column · Show · Pivot · Sort header, then plain check boxes on each row. A box is empty when off and shows a mark when on: a tick, the column's place in the pivot, or its sort direction.
     - Pivot shows the column's position in the pivot.
     - Sort cycles ascending → descending → off. It shows the column's position when sorting by more than one column.
@@ -43,7 +46,7 @@ The design comes from a clickable mock-up reviewed on 2026-11-26 (a private arti
   - Method: Auto, Full or Custom. Custom adds a decimal-places stepper and a scientific-notation switch. The 1,000s separator switch shows where it applies. Text formats have "Show URLs as links".
   - A default's editor says how many columns use it.
   - A column with its own format gets "Reset to the Real default" (or Integer, or Text).
-- **Options:** column histograms, totals as top row, and "Label leaf rows with" (today's Pivot Tree Leaf Level).
+- **Options:** column histograms and totals as top row.
 - **Check boxes:** a ticked box is a pale blue tint with a dark blue mark, not solid blue. Switches are blue when on.
 
 ### Header menu
@@ -211,10 +214,11 @@ Choices made while working on this alone, to check:
 - The aggregation "null" is shown as "None", in the header menu and the sidebar.
 - Only the DOM grid has the header menu; the Glide grid (TAD_GRID=glide) doesn't.
 - The column list shows the displayed columns in order, then the hidden ones in the table's order. Only displayed columns can be dragged to reorder them; showing a hidden column adds it at the end, as before. Any column can be dragged onto a shelf.
-- While a search filters the column list, rows can be dragged onto a shelf but not reordered, since moving a row among a subset is ambiguous.
+- While a search filters the column list, or it's A to Z, rows can be dragged onto a shelf but not reordered, since the list isn't the grid's order then.
+- A to Z ignores case and reads numbers as numbers (c2 before c10).
 - The "All columns" toggle: when some columns are hidden, a click shows them all; when all are shown, a click hides them all.
 - Sorting from the column list adds the column to the end of the sort (as the old Sort tab did), unlike the header menu, which replaces it.
-- "Label leaf rows with" is turned off unless the view is pivoted.
+- "Label leaf rows with" appears only once the view is pivoted.
 - The sidebar's type marks match the grid's: 123, # and A, as in the mock-up, and Lucide icons for dates, times and booleans (which the mock-up doesn't have).
 - The data sources search covers what has been loaded: the sources, and the folders, databases and schemas opened so far. Searching every folder could be slow (BigQuery, Snowflake, large directories). Is that enough?
 - The data sources panel's info icon shows a description as a tooltip on hover, and in a popover on click.
@@ -226,7 +230,9 @@ Choices made while working on this alone, to check:
 
 Deliberate, and kept:
 
-- "Label leaf rows with" is turned off unless the view is pivoted.
+- The sidebar is 336px wide, not 296px, and its width can be changed. Search boxes are 28px high, not 26px, with more room around the column list's.
+- "Label leaf rows with" is under the Pivot shelf, not in Options, and appears only once the view is pivoted.
+- The column lists (the sidebar's, and "Filter by column") can be A to Z.
 - Rows and chips can also be moved from the keyboard (Space, the arrow keys, Space).
 - The Format list's example for a number column is its largest loaded value, in its format. For a text column it's what the format does ("URLs as links" or "Plain text"), as in the mock-up. A default's editor previews the column its example comes from.
 - The pivot column's row counts come from the record count column (Rec), so they're shown only while Rec's aggregation is Sum (its default).
@@ -264,3 +270,5 @@ For `doc/site/index.html`, when the new UI ships:
 - 2026-11-26: the sidebar didn't match the mock-up (see "Match the mock-up"). Rebuilt it from the mock-up's source: the labelled Show/Pivot/Sort columns of plain check boxes, white chips with grips and "›"/"then" between them, "asc"/"desc" sort buttons, the mock-up's 296px width, and Options pinned below a scrolling column list. Columns can now be dragged onto a shelf.
 - 2026-11-26: the rest of the new UI checked against the mock-up the same way, piece by piece (see "Match the mock-up"): the activity bar, data sources panel, header menu, format editor, grid header and filter bar now follow it. New from the mock-up: row counts in pivot rows, and a mark on filtered columns' headers.
 - 2026-11-26: the new UI's loading overlay covered the whole window, not just the grid, so during a slow query the sidebars couldn't be hovered or clicked. It now covers only the grid and filter bar.
+- 2026-11-26: with full-width scroll bars (macOS "Automatic" with a mouse), a long column list's boxes sat 15px left of the header's. The list and the rows above it now all leave room for a scroll bar.
+- 2026-11-27: from a review of the sidebar: it's wider (336px) and can be resized; the search boxes are taller, with more room around the column list's; the column lists can be A to Z; "Label leaf rows with" moved under the Pivot shelf.

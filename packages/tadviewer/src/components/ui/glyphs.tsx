@@ -1,6 +1,7 @@
 /*
  * The mock-up's own line icons (drawn on a 16-unit grid), where it doesn't
  * use a stock one: sort arrows, pivot, filter, format, hide, and a tick.
+ * Plus, in the same style, A to Z (for listing columns by name).
  */
 import * as React from "react";
 
@@ -85,5 +86,14 @@ export const HideGlyph = ({ size = 14, stroke = 1.5 }) => (
 export const TickGlyph = ({ size = 13, stroke = 2 }) => (
   <Glyph size={size} stroke={stroke}>
     <path d="m3.5 8.5 3 3 6-7" />
+  </Glyph>
+);
+
+/** A to Z: a down arrow beside an A over a Z (larger letters than Lucide's, to read at 16px). */
+export const AZGlyph = ({ size = 16, stroke = 1.35 }) => (
+  <Glyph size={size} stroke={stroke}>
+    <path d="M4.5 2v12M2 11.5l2.5 2.5 2.5-2.5" />
+    <path d="M9 7l2.5-5.25L14 7M9.85 5.2h3.3" />
+    <path d="M9.25 9h4.5l-4.5 5.25h4.5" />
   </Glyph>
 );

@@ -179,13 +179,104 @@ test("aggregation and format modes mark what's changed", async ({ openInTad }) =
   await expect(page.locator(".tui-pop")).toContainText("Used by 1 real column");
 });
 
-test("leaf row labels are for pivoted views", async ({ openInTad }) => {
+test("leaf row labels are for pivoted views, under the Pivot shelf", async ({ openInTad }) => {
   const { page, controls } = await openInTad(testFile(PARQUET_FILE));
   await controls.openViewSettings();
   const leaf = sidebar(page).getByRole("combobox", { name: "Label leaf rows with" });
-  await expect(leaf).toBeDisabled();
+  await expect(leaf).toHaveCount(0);
   await controls.setPivot(["region"]);
-  await expect(leaf).toBeEnabled();
+  await expect(leaf).toBeVisible();
+  const box = async (l: Locator) => (await l.boundingBox())!;
+  const [pivot, label, sort] = [
+    await box(shelf(page, "Pivot")),
+    await box(leaf),
+    await box(shelf(page, "Sort")),
+  ];
+  expect(label.y).toBeGreaterThan(pivot.y + pivot.height);
+  expect(label.y + label.height).toBeLessThan(sort.y);
+  await controls.setPivot([]);
+  await expect(leaf).toHaveCount(0);
+});
+
+test("the column lists can be A to Z", async ({ openInTad }) => {
+  const { page, controls } = await openInTad(testFile(PARQUET_FILE));
+  await controls.openViewSettings();
+  const listed = () =>
+    sidebar(page)
+      .getByRole("list", { name: "Columns" })
+      .locator(".tui-colrow[data-column]")
+      .evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.column));
+  const tableOrder = (await listed()) as string[];
+  const az = [...tableOrder].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  expect(tableOrder).not.toEqual(az);
+
+  const toggle = sidebar(page).getByRole("button", { name: "List columns A to Z" });
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(listed).toEqual(az);
+  // A to Z, rows go onto the shelves but don't reorder the grid's columns:
+  await expect(
+    sidebar(page).getByRole("button", { name: "Drag quantity onto Pivot or Sort" })
+  ).toBeVisible();
+  // Searching keeps the order:
+  await sidebar(page).getByRole("textbox", { name: "Find a column" }).fill("r");
+  await expect.poll(listed).toEqual(az.filter((c) => c.toLowerCase().includes("r")));
+  await sidebar(page).getByRole("textbox", { name: "Find a column" }).fill("");
+
+  // "Filter by column" lists the columns the same way, and can switch back:
+  await page.locator(".tui-filterbar .tui-addbtn").click();
+  const pop = page.getByRole("dialog", { name: "Filter by column" });
+  const offered = () =>
+    pop.getByRole("menuitem").evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.column));
+  await expect.poll(offered).toEqual(az);
+  await pop.getByRole("button", { name: "List columns A to Z" }).click();
+  await expect.poll(offered).toEqual(tableOrder);
+  await page.keyboard.press("Escape");
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await expect.poll(listed).toEqual(tableOrder);
+});
+
+test("the sidebar's width: drag its edge, or use the keyboard", async ({ openInTad }) => {
+  const { page, controls } = await openInTad(testFile(PARQUET_FILE));
+  await controls.openViewSettings();
+  const width = async () => Math.round((await sidebar(page).boundingBox())!.width);
+  // (once it has finished opening)
+  await expect.poll(width).toBe(336);
+  const sash = sidebar(page).getByRole("separator", { name: "Sidebar width" });
+  const dragBy = async (dx: number, then?: () => Promise<void>) => {
+    const b = (await sash.boundingBox())!;
+    await page.mouse.move(b.x + b.width / 2, b.y + 200);
+    await page.mouse.down();
+    await page.mouse.move(b.x + b.width / 2 + dx, b.y + 200, { steps: 5 });
+    await then?.();
+    await page.mouse.up();
+  };
+
+  await dragBy(60);
+  await expect.poll(width).toBe(396);
+  await expect(sash).toHaveAttribute("aria-valuenow", "396");
+  // Escape puts a drag back:
+  await dragBy(80, () => page.keyboard.press("Escape"));
+  await expect.poll(width).toBe(396);
+  // No narrower than 280:
+  await dragBy(-300);
+  await expect.poll(width).toBe(280);
+
+  // The Data sources panel has the same width:
+  await page.getByRole("button", { name: "Data sources" }).click();
+  const panel = page.getByRole("complementary", { name: "Data sources" });
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.width)).toBe(280);
+  await controls.openViewSettings();
+
+  // The keyboard: the arrow keys, Home and End; a double-click for the default:
+  await sash.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(width).toBe(296);
+  await page.keyboard.press("End");
+  await expect.poll(width).toBeGreaterThan(500);
+  await sash.dblclick();
+  await expect.poll(width).toBe(336);
 });
 
 test("the loading overlay leaves the sidebar usable", async ({ openInTad }) => {
