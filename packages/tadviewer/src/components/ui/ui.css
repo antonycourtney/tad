@@ -1052,6 +1052,25 @@
   overflow-y: auto;
 }
 
+/*
+ * The list and the rows above it (its header, the All row, the default
+ * formats) all leave room for a scroll bar, so that one appearing doesn't
+ * push the rows' check boxes out of line with the header. (Room only where
+ * scroll bars take space: none for overlay scroll bars.)
+ */
+.tui-vs-scroll,
+.tui-vs-cols > .tui-mhead,
+.tui-vs-cols > .tui-allrow,
+.tui-vs-cols > .tui-defs {
+  scrollbar-gutter: stable;
+}
+
+.tui-vs-cols > .tui-mhead,
+.tui-vs-cols > .tui-allrow,
+.tui-vs-cols > .tui-defs {
+  overflow: hidden;
+}
+
 .tui-vs-opts {
   flex: none;
   display: flex;

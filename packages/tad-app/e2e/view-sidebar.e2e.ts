@@ -5,7 +5,7 @@
  */
 import { Locator, Page } from "@playwright/test";
 import { expect, GRID_IMPL, test } from "./fixtures";
-import { PARQUET_FILE, testFile } from "./test-data";
+import { ensureWideTable, PARQUET_FILE, testFile, WIDE_PARQUET_FILE } from "./test-data";
 import { UI_IMPL } from "./view-controls";
 
 test.skip(UI_IMPL !== "new", "for the new UI");
@@ -204,4 +204,43 @@ test("the loading overlay leaves the sidebar usable", async ({ openInTad }) => {
     return [o.left - p.left, o.top - p.top, o.width - p.width, o.height - p.height];
   });
   expect(covers).toEqual([0, 0, 0, 0]);
+});
+
+test("the column list stays in line with its header when it scrolls", async ({ openInTad }) => {
+  // Enough columns for the list to scroll (with a scroll bar that takes
+  // space, where the system shows those):
+  await ensureWideTable();
+  const { page, controls } = await openInTad(testFile(WIDE_PARQUET_FILE));
+  await controls.openViewSettings();
+  const list = sidebar(page).locator(".tui-vs-scroll");
+  await expect(list.locator(".tui-colrow").first()).toBeVisible();
+  const centers = (selector: string) =>
+    sidebar(page)
+      .locator(selector)
+      .evaluateAll((els) =>
+        els.map((el) => {
+          const r = el.getBoundingClientRect();
+          return Math.round(r.left + r.width / 2);
+        })
+      );
+  const edges = (selector: string, edge: "left" | "right") =>
+    sidebar(page)
+      .locator(selector)
+      .evaluateAll((els, edge) => els.map((el) => Math.round(el.getBoundingClientRect()[edge])), edge);
+
+  // Layout: Show, Pivot and Sort, the All box, and a row's boxes:
+  const head = await centers(".tui-mhead .tui-tgc");
+  expect(head).toHaveLength(3);
+  expect(await centers(".tui-allrow .tui-tg")).toEqual([head[0]]);
+  expect(await centers(".tui-vs-scroll .tui-colrow >> nth=0 >> .tui-tg")).toEqual(head);
+
+  // Aggregation: the header over the selects:
+  await mode(page, "Aggregation");
+  const agg = await edges(".tui-mhead-agg", "left");
+  expect((await edges(".tui-vs-scroll .tui-aggwrap", "left")).slice(0, 1)).toEqual(agg);
+
+  // Format: the defaults' examples in line with the columns':
+  await mode(page, "Format");
+  const def = await edges(".tui-defs .tui-fmtbtn", "right");
+  expect((await edges(".tui-vs-scroll .tui-fmtbtn", "right")).slice(0, 1)).toEqual(def.slice(0, 1));
 });
