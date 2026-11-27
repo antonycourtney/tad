@@ -190,6 +190,7 @@ Not started: it waits on the question of when the new UI becomes the default (se
 
 ## Open questions
 
+- **Not forgotten — to come back to:** in the new UI's column list, hover styling sometimes shows only while the pointer moves, then goes when it stops, at first after opening the sidebar (reported 2026-11-26; it stops happening after a while). Not reproduced under Playwright. The overlay bug found while looking (ee6131c) is fixed, but it isn't the cause. Questions asked, still to answer: does a tooltip (the name's `title`) appear when the hover goes? Is Tad the active app at the time (opened from the command line, it may not be)? Is it a large table, or during a spinner? If it's the tooltip, show the name's tooltip only when the name is cut off.
 - How many values should the value list show? Probably a few hundred.
 - Is Esc to revert enough, or is an explicit Cancel still needed? Decide after trying it on a large table.
 
@@ -228,11 +229,8 @@ Choices made while working on this alone, to check:
 
 ## Differences from the mock-up
 
-Deliberate, and kept:
+Deliberate, and kept. (The mock-up was brought up to date on 2026-11-27 with the sidebar's width and resizing, the 28px search boxes, "Label leaf rows with" under Pivot, the A to Z lists and the footer's row counts.)
 
-- The sidebar is 336px wide, not 296px, and its width can be changed. Search boxes are 28px high, not 26px, with more room around the column list's.
-- "Label leaf rows with" is under the Pivot shelf, not in Options, and appears only once the view is pivoted.
-- The column lists (the sidebar's, and "Filter by column") can be A to Z.
 - Rows and chips can also be moved from the keyboard (Space, the arrow keys, Space).
 - The Format list's example for a number column is its largest loaded value, in its format. For a text column it's what the format does ("URLs as links" or "Plain text"), as in the mock-up. A default's editor previews the column its example comes from.
 - The pivot column's row counts come from the record count column (Rec), so they're shown only while Rec's aggregation is Sum (its default).
@@ -256,6 +254,7 @@ For `doc/site/index.html`, when the new UI ships:
 
 - A Cmd-K command palette (jump to a column, run any action).
 - Dark mode. The new CSS uses the grid's colour tokens, so it would be possible.
+- Proposed in the mock-up (2026-11-27), waiting on review: calculated columns (a formula bar over the grid, templates from a column's header menu, checking and suggestions), column pivots (Rows, Columns and Values shelves; a two-level header) and colors by value (a palette per number column, from its header menu or format editor).
 
 ## Log
 
