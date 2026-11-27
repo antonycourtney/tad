@@ -254,7 +254,14 @@ For `doc/site/index.html`, when the new UI ships:
 
 - A Cmd-K command palette (jump to a column, run any action).
 - Dark mode. The new CSS uses the grid's colour tokens, so it would be possible.
-- Proposed in the mock-up (2026-11-27), waiting on review: calculated columns (a formula bar over the grid, templates from a column's header menu, checking and suggestions), column pivots (Rows, Columns and Values shelves; a two-level header) and colors by value (a palette per number column, from its header menu or format editor).
+- Proposed in the mock-up (2026-11-27), waiting on review: calculated columns (a formula bar over the grid, templates from a column's header menu, checking and suggestions), column pivots (Rows, Columns and Values shelves; stacked headers) and colors by value (a palette per number column, from its header menu or format editor). Decided in the first review:
+  - A template opens the formula bar with its expression filled in, rather than adding the column straight away, so it's clear what it does.
+  - Pivoting columns by more than one column gives stacked headers (one header row per column, each group spanning its children), not one row of combined labels. A header options popover sets the labels' styles (2026-Q1, Q1 2026, Q1 '26, 1Q26), the values' display names, the order, and the totals.
+  - Calculated columns, column pivots, colors and header options are all saved in .tad files.
+  - Expressions are DuckDB SQL. The other reltab drivers aren't supported, so they needn't handle them.
+  - Templates follow the most common derived columns in other tools (Power Query, Tableau, Power BI, Looker): date parts, arithmetic with another column, ranges ("bins"), text parts. The menu item is "New column ›".
+  - The colors' direction (whether high or low values are darker) is a choice per column.
+- A study of working with many columns at once (2026-11-27), in the mock-up: one selection shared by the column list and the grid's headers (click, ⌘-click, Shift-click; select all, invert, by type); every control on a selected column applies to the whole selection; a menu and format editor for a set, showing "Mixed" where they differ; an undo toast for changes to many columns; colors and aggregations as type defaults, like formats, with a column's own setting overriding them.
 
 ## Log
 
@@ -271,3 +278,4 @@ For `doc/site/index.html`, when the new UI ships:
 - 2026-11-26: the new UI's loading overlay covered the whole window, not just the grid, so during a slow query the sidebars couldn't be hovered or clicked. It now covers only the grid and filter bar.
 - 2026-11-26: with full-width scroll bars (macOS "Automatic" with a mouse), a long column list's boxes sat 15px left of the header's. The list and the rows above it now all leave room for a scroll bar.
 - 2026-11-27: from a review of the sidebar: it's wider (336px) and can be resized; the search boxes are taller, with more room around the column list's; the column lists can be A to Z; "Label leaf rows with" moved under the Pivot shelf.
+- 2026-11-27: the proposals reviewed (see Ideas for the decisions); stacked headers, header options and a many-columns study added to the mock-up.
