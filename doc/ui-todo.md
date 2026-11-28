@@ -262,6 +262,7 @@ For `doc/site/index.html`, when the new UI ships:
   - Templates follow the most common derived columns in other tools (Power Query, Tableau, Power BI, Looker): date parts, arithmetic with another column, ranges ("bins"), text parts. The menu item is "New column ›".
   - The colors' direction (whether high or low values are darker) is a choice per column.
 - A study of working with many columns at once (2026-11-27), in the mock-up: one selection shared by the column list and the grid's headers (click, ⌘-click, Shift-click; select all, invert, by type); every control on a selected column applies to the whole selection; a menu and format editor for a set, showing "Mixed" where they differ; an undo toast for changes to many columns; colors and aggregations as type defaults, like formats, with a column's own setting overriding them.
+- A sidebar redesign built on that study (2026-11-27), in the mock-up: the column list, the shelves' chips and the grid's headers only select; a settings panel under the list shows the selection's attributes, each as the same kind of row (Show, Pivot, Sort; Aggregate, Format, Colors, Palette, Low → high), with Mixed, a blue mark for a column's own setting and ↺ back to its type default. The Layout / Aggregation / Format modes and the per-row check boxes go. Rows show a tag for each setting of their own; type defaults are selected like columns; with nothing selected, the panel shows the view's options.
 
 ## Log
 
@@ -279,3 +280,4 @@ For `doc/site/index.html`, when the new UI ships:
 - 2026-11-26: with full-width scroll bars (macOS "Automatic" with a mouse), a long column list's boxes sat 15px left of the header's. The list and the rows above it now all leave room for a scroll bar.
 - 2026-11-27: from a review of the sidebar: it's wider (336px) and can be resized; the search boxes are taller, with more room around the column list's; the column lists can be A to Z; "Label leaf rows with" moved under the Pivot shelf.
 - 2026-11-27: the proposals reviewed (see Ideas for the decisions); stacked headers, header options and a many-columns study added to the mock-up.
+- 2026-11-27: a sidebar redesign study added to the mock-up (see Ideas).
